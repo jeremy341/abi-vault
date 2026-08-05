@@ -1,24 +1,13 @@
 import Link from "next/link";
 import { Show } from "@clerk/nextjs";
+import AbiLogo from "@/components/AbiLogo";
 
 export default function StartPage() {
   return (
     <main className="min-h-[100dvh] bg-canvas text-ink">
       {/* Header: the logo links back to the welcome screen. */}
       <header className="px-6 py-6 sm:px-10 sm:py-8">
-        <Link
-          href="/"
-          className="flex items-center gap-2.5"
-          aria-label="Abi Manager Startseite"
-        >
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-ink text-sm font-semibold text-white">
-            A
-          </span>
-
-          <span className="text-sm font-semibold tracking-tight">
-            Abi Manager
-          </span>
-        </Link>
+        <AbiLogo />
       </header>
 
       {/* Main content: this is the centered welcome area. */}

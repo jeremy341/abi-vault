@@ -1,20 +1,26 @@
 import Link from "next/link";
 
+type AbiLogoProps = {
+    className?: string;
+    size?: "default" | "large";
+};
 
-export default function AbiLogo({ className = "" }: { className?: string }) {
+export default function AbiLogo({ className = "", size = "default" }: AbiLogoProps) {
+    const isLarge = size === "large";
+
     return (
         <Link
             href="/"
-            className={`flex items-center gap-2.5 ${className}`}
+            className={`flex items-center ${isLarge ? "gap-3" : "gap-2.5"} ${className}`}
             aria-label="Abi Manager Startseite"
         >
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-ink text-sm font-semibold text-white">
-            A
-          </span>
+            <span className={`brand-link flex items-center justify-center rounded-lg bg-ink font-semibold text-white dark:bg-black dark:text-white ${isLarge ? "h-10 w-10 text-base" : "h-8 w-8 text-sm"}`}>
+                A
+            </span>
 
-            <span className="text-sm font-semibold tracking-tight">
-            Abi Manager
-          </span>
+            <span className={`${isLarge ? "text-base" : "text-sm"} font-semibold tracking-tight`}>
+                Abi Manager
+            </span>
         </Link>
     );
 }

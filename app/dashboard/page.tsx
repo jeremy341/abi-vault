@@ -1,20 +1,36 @@
-import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
+import Klassenkasse from "@/components/dashboard/Klassenkasse";
+import styles from "./dashboard.module.css";
 
-export default async function DashboardPage() {
-  const { isAuthenticated } = await auth();
-
-  if (!isAuthenticated) {
-    redirect("/sign-in");
-  }
-
+export default function DashboardPage() {
   return (
-      <section className="p-8">
-        <p className="text-sm text-muted">Abi 2026</p>
+    <section className={styles.page}>
+      <div className={styles.grid}>
+        <div className={`${styles.column} ${styles.leftColumn}`}>
+          <Klassenkasse />
 
-        <h1 className="mt-2 text-3xl font-semibold">
-          Übersicht
-        </h1>
-      </section>
+          <div
+            className={styles.placeholder}
+            aria-label="Transaktionsverlauf wird später ergänzt"
+          />
+        </div>
+
+        <div className={`${styles.column} ${styles.rightColumn}`}>
+          <div
+            className={styles.placeholder}
+            aria-label="Ziele werden später ergänzt"
+          />
+
+          <div
+            className={styles.placeholder}
+            aria-label="Ausgaben nach Kategorie werden später ergänzt"
+          />
+
+          <div
+            className={styles.placeholder}
+            aria-label="Prüfhinweise werden später ergänzt"
+          />
+        </div>
+      </div>
+    </section>
   );
 }

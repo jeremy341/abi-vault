@@ -17,14 +17,16 @@ import { usePathname } from "next/navigation";
 import {
   Sidebar as ShadcnSidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarHeader,
+  SidebarFooter,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import dashboardStyles from "@/app/dashboard/dashboard.module.css";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const navigationItems = [
   { label: "Übersicht", href: "/dashboard", icon: LayoutDashboard },
@@ -43,16 +45,16 @@ export default function Sidebar() {
   return (
     <ShadcnSidebar
       collapsible="icon"
-      className="border-sidebar-border bg-white"
+      className="overflow-hidden rounded-l-3xl border-sidebar-border bg-white dark:bg-sidebar"
     >
-      <SidebarHeader className="px-4 py-6">
+      <SidebarHeader className={`${dashboardStyles.sidebarHeader} px-6 py-7`}>
         <AbiLogo className="ml-0" />
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
+        <SidebarGroup className={`${dashboardStyles.sidebarGroup} px-4 py-3`}>
           <SidebarGroupContent>
-            <SidebarMenu className="gap-2">
+            <SidebarMenu className={`${dashboardStyles.sidebarMenu} gap-2`}>
               {navigationItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href;
@@ -63,7 +65,7 @@ export default function Sidebar() {
                       render={<Link href={item.href} />}
                       isActive={isActive}
                       tooltip={item.label}
-                      className="h-11 px-3 text-muted-foreground data-active:bg-blue-50 data-active:text-black-600"
+                      className={`${dashboardStyles.sidebarMenuButton} h-14 gap-3 rounded-xl px-4 text-[15px] text-black/55 transition-[background-color,color,transform] duration-200 hover:translate-x-0.5 hover:bg-black/[0.025] hover:text-ink active:scale-[0.99] data-active:bg-black/[0.045] data-active:text-ink motion-reduce:transform-none dark:text-white/65 dark:hover:bg-white/[0.06] dark:hover:text-white dark:data-active:bg-white/[0.1] dark:data-active:text-white [&_svg]:size-5 [&_svg]:stroke-[1.7]`}
                     >
                       <Icon />
                       <span>{item.label}</span>
@@ -76,10 +78,8 @@ export default function Sidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="px-4 py-4">
-        <p className="text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
-          Abi 2026
-        </p>
+      <SidebarFooter className="hidden px-4 py-4 md:flex">
+        <ThemeToggle />
       </SidebarFooter>
     </ShadcnSidebar>
   );

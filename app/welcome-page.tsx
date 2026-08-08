@@ -4,9 +4,9 @@ import AbiLogo from "@/components/AbiLogo";
 
 export default function StartPage() {
   return (
-    <main className="min-h-[100dvh] bg-canvas text-ink">
+    <main className="soft-grid flex min-h-[100dvh] flex-col overflow-hidden">
       {/* Header: the logo links back to the welcome screen. */}
-      <header className="px-6 py-6 sm:px-10 sm:py-8">
+      <header className="px-6 py-8 sm:px-8 sm:py-10">
         <AbiLogo />
       </header>
 

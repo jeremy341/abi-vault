@@ -1,0 +1,178 @@
+.shell {
+  --shell-gutter: clamp(0.5rem, 0.85vw, 1rem);
+  height: 100dvh;
+  overflow: hidden;
+  padding: var(--shell-gutter);
+}
+
+.frame {
+  --dashboard-sidebar-width: 13rem;
+  height: calc(100dvh - (var(--shell-gutter) * 2));
+  min-height: 0 !important;
+  max-width: 2400px;
+}
+
+.main {
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.header {
+  flex: 0 0 auto;
+}
+
+.page {
+  display: flex;
+  width: 100%;
+  max-width: 2100px;
+  min-height: 0;
+  flex: 1 1 0%;
+  margin-inline: auto;
+  padding: 0 clamp(1rem, 2vw, 3rem) clamp(1rem, 1.8vh, 2rem);
+}
+
+.grid {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  gap: clamp(1rem, 1.5vw, 1.5rem);
+}
+
+.column {
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  gap: clamp(1rem, 1.5vw, 1.5rem);
+}
+
+.placeholder {
+  min-height: 15rem;
+  border: 1px solid rgb(0 0 0 / 0.08);
+  border-radius: 1.25rem;
+  background: white;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+}
+
+:global(.dark) .placeholder {
+  border-color: rgb(255 255 255 / 0.1);
+  background: var(--card);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.2);
+}
+
+@media (min-width: 1280px) {
+  .frame {
+    --dashboard-sidebar-width: 14rem;
+  }
+
+  .grid {
+    height: 100%;
+    grid-template-columns: minmax(0, 1.03fr) minmax(0, 0.97fr);
+  }
+
+  .leftColumn {
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .rightColumn {
+    grid-template-rows: minmax(0, 1.12fr) minmax(0, 1fr) minmax(0, 0.98fr);
+  }
+
+  .placeholder {
+    min-height: 0;
+  }
+}
+
+@media (min-width: 1600px) {
+  .frame {
+    --dashboard-sidebar-width: 16rem;
+  }
+
+  .page {
+    max-width: 1880px;
+    padding-inline: clamp(2rem, 2vw, 2.5rem);
+  }
+}
+
+@media (min-width: 2200px) {
+  .shell {
+    --shell-gutter: 1rem;
+  }
+
+  .frame {
+    --dashboard-sidebar-width: 19rem;
+    max-width: none;
+  }
+
+  .page {
+    max-width: none;
+    padding-inline: 2rem;
+  }
+
+  .grid {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    gap: 2rem;
+  }
+
+  .column {
+    gap: 2rem;
+  }
+
+  .sidebarHeader {
+    padding: 2rem 2rem 1.75rem;
+  }
+
+  .sidebarGroup {
+    padding-inline: 1.25rem;
+  }
+
+  .sidebarMenu {
+    gap: 0.625rem;
+  }
+
+  .sidebarMenuButton {
+    height: 3.75rem;
+    gap: 0.875rem;
+    padding-inline: 1.125rem;
+    font-size: 1rem;
+  }
+
+  .sidebarMenuButton svg {
+    width: 1.375rem;
+    height: 1.375rem;
+  }
+}
+
+@media (min-width: 1280px) and (max-height: 850px) {
+  .header {
+    min-height: 5.25rem;
+    padding-top: 1rem;
+    padding-bottom: 0.75rem;
+  }
+
+  .headerTitle {
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+  }
+
+  .headerDescription {
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+
+  .cohortButton {
+    height: 3rem;
+  }
+
+  .page {
+    padding-bottom: 0.75rem;
+  }
+
+  .grid,
+  .column {
+    gap: 0.75rem;
+  }
+}

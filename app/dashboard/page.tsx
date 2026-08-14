@@ -1,34 +1,27 @@
 import Klassenkasse from "@/components/dashboard/Klassenkasse";
+import { GoalsPanel, ReviewPanel, SpendingByCategory, TransactionHistory } from "@/components/dashboard/DashboardPanels";
 import styles from "./dashboard.module.css";
 
 export default function DashboardPage() {
   return (
     <section className={styles.page}>
+      <div className={styles.mobileIntro}>
+        <h1>Finanzübersicht</h1>
+        <p>Klassenfinanzen auf einen Blick.</p>
+      </div>
       <div className={styles.grid}>
         <div className={`${styles.column} ${styles.leftColumn}`}>
           <Klassenkasse />
 
-          <div
-            className={styles.placeholder}
-            aria-label="Transaktionsverlauf wird später ergänzt"
-          />
+          <TransactionHistory />
         </div>
 
         <div className={`${styles.column} ${styles.rightColumn}`}>
-          <div
-            className={styles.placeholder}
-            aria-label="Ziele werden später ergänzt"
-          />
+          <GoalsPanel />
 
-          <div
-            className={styles.placeholder}
-            aria-label="Ausgaben nach Kategorie werden später ergänzt"
-          />
+          <SpendingByCategory />
 
-          <div
-            className={styles.placeholder}
-            aria-label="Prüfhinweise werden später ergänzt"
-          />
+          <ReviewPanel />
         </div>
       </div>
     </section>

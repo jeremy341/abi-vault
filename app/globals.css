@@ -181,7 +181,7 @@ body {
   --canvas: #111113;
   --surface: #1b1b1f;
   --ink: #f5f5f5;
-  --line: #34343a;
+  --line: #4a4a54;
   --soft: #25252a;
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
@@ -224,6 +224,21 @@ body {
   opacity: 0.08;
 }
 
+@keyframes field-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); }
+}
+
+.field-shake {
+  animation: field-shake 420ms ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .field-shake {
+    animation: none;
+  }
+}
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -234,4 +249,111 @@ body {
   html {
     @apply font-sans;
   }
+}
+
+/* Clerk dark surfaces: white ink, visible rules, restrained orange accent. */
+.dark .cl-card,
+.dark .cl-modalContent,
+.dark .cl-userProfile-rootBox,
+.dark .cl-userProfilePage,
+.dark .cl-userButtonPopoverCard {
+  background: #161618 !important;
+  border-color: rgb(255 255 255 / 0.2) !important;
+  color: #ffffff !important;
+}
+
+.dark .cl-card *,
+.dark .cl-modalContent *,
+.dark .cl-userProfile-rootBox *,
+.dark .cl-userProfilePage *,
+.dark .cl-userButtonPopoverCard * {
+  border-color: rgb(255 255 255 / 0.2) !important;
+}
+
+.dark .cl-card h1,
+.dark .cl-card h2,
+.dark .cl-card h3,
+.dark .cl-modalContent h1,
+.dark .cl-modalContent h2,
+.dark .cl-modalContent h3,
+.dark .cl-userProfile-rootBox h1,
+.dark .cl-userProfile-rootBox h2,
+.dark .cl-userProfile-rootBox h3,
+.dark .cl-userButtonPopoverCard h1,
+.dark .cl-userButtonPopoverCard h2,
+.dark .cl-userButtonPopoverCard h3,
+.dark .cl-userProfile-rootBox [class*="title"],
+.dark .cl-userProfile-rootBox [class*="identifier"] {
+  color: #ffffff !important;
+}
+
+.dark .cl-card p,
+.dark .cl-card label,
+.dark .cl-card span,
+.dark .cl-modalContent p,
+.dark .cl-modalContent label,
+.dark .cl-modalContent span,
+.dark .cl-userProfile-rootBox p,
+.dark .cl-userProfile-rootBox label,
+.dark .cl-userProfile-rootBox span,
+.dark .cl-userButtonPopoverCard p,
+.dark .cl-userButtonPopoverCard label,
+.dark .cl-userButtonPopoverCard span {
+  color: #d4d4d8 !important;
+}
+
+.dark .cl-userProfile-rootBox input,
+.dark .cl-userProfile-rootBox textarea,
+.dark .cl-userProfile-rootBox select {
+  background: #1f1f22 !important;
+  color: #ffffff !important;
+  border-color: rgb(255 255 255 / 0.28) !important;
+}
+
+.dark .cl-footer,
+.dark .cl-userButtonPopoverFooter {
+  background: #161618 !important;
+  border-color: rgb(255 255 255 / 0.2) !important;
+  color: #a1a1aa !important;
+}
+
+.dark .cl-footerAction,
+.dark .cl-userButtonPopoverFooterAction {
+  color: #ff7a00 !important;
+}
+/* Final Clerk contrast pass: white ink and lifted hover surfaces in dark mode. */
+.dark .cl-userProfile-rootBox *,
+.dark .cl-userButtonPopoverCard * {
+  color: #ffffff !important;
+}
+
+.dark .cl-userProfile-rootBox p,
+.dark .cl-userProfile-rootBox label,
+.dark .cl-userProfile-rootBox [class*="secondary"],
+.dark .cl-userButtonPopoverCard [class*="secondary"] {
+  color: #d4d4d8 !important;
+}
+
+.dark .cl-userProfile-rootBox button:hover,
+.dark .cl-userProfile-rootBox a:hover,
+.dark .cl-userProfile-rootBox [role="button"]:hover,
+.dark .cl-userButtonPopoverCard button:hover,
+.dark .cl-userButtonPopoverCard a:hover,
+.dark .cl-userButtonPopoverCard [role="button"]:hover {
+  background: #2c2c31 !important;
+  color: #ffffff !important;
+}
+
+.dark .cl-userProfile-rootBox [class*="headerTitle"],
+.dark .cl-userProfile-rootBox [class*="HeaderTitle"],
+.dark .cl-userProfile-rootBox [class*="title"] {
+  color: #ffffff !important;
+}
+
+.dark .cl-footer svg,
+.dark .cl-footer img,
+.dark .cl-userButtonPopoverFooter svg,
+.dark .cl-userButtonPopoverFooter img {
+  filter: brightness(0) invert(1) !important;
+  opacity: 0.9 !important;
 }

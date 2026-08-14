@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
+import { filterLetters, isValidFutureExpiry, previewCardNumber } from "@/lib/card-format";
 import AccountCard, { type AccountCardDetails } from "@/components/dashboard/AccountCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +34,10 @@ function formatCardNumber(value: string) {
     return digits.match(/.{1,4}/g)?.join(" ") ?? "";
 }
 
+function invalidFieldClass(error?: string) {
+    return error ? "field-shake border-red-500 text-red-600 focus-visible:border-red-500 focus-visible:ring-red-500/30 dark:text-red-300" : "";
+}
+
 function formatExpiry(value: string) {
     const digits = value.replace(/\D/g, "").slice(0, 4);
     return digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits;
@@ -41,14 +46,42 @@ function formatExpiry(value: string) {
 export default function EditCardModal({ open, card, onClose, onSave, onDelete }: EditCardModalProps) {
     const [selectedColor, setSelectedColor] = useState(card?.color ?? cardColors[0].value);
     const [values, setValues] = useState<FormValues>({
-        accountName: card?.accountName ?? "",
-        cardNumber: card?.cardNumber ?? "",
-        holder: card?.holder ?? "",
-        expiry: card?.expiry ?? "",
+        accountName: "",
+        cardNumber: "",
+        holder: "",
+        expiry: "",
     });
     const [errors, setErrors] = useState<FormErrors>({});
+    const errorTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    useEffect(() => () => {
+        if (errorTimer.current) clearTimeout(errorTimer.current);
+    }, []);
+
+    function scheduleErrorDismissal() {
+        if (errorTimer.current) clearTimeout(errorTimer.current);
+        errorTimer.current = setTimeout(() => {
+            setErrors({});
+            errorTimer.current = null;
+        }, 2200);
+    }
 
     if (!open || !card) return null;
+
+
+    function handleExpiryChange(value: string) {
+        const digits = value.replace(/\D/g, "").slice(0, 4);
+        const month = digits.slice(0, 2);
+        const invalidMonth = (digits.length > 0 && !["0", "1"].includes(digits[0])) ||
+            (month.length === 2 && (month === "00" || Number(month) > 12));
+
+        const next = formatExpiry(value);
+        updateValue("expiry", next);
+        if (invalidMonth || (next.length === 5 && !isValidFutureExpiry(next))) {
+            setErrors((current) => ({ ...current, expiry: "Ungültiges Ablaufdatum." }));
+            scheduleErrorDismissal();
+        }
+    }
 
     function updateValue(field: keyof FormValues, value: string) {
         setValues((current) => ({ ...current, [field]: value }));
@@ -61,9 +94,12 @@ export default function EditCardModal({ open, card, onClose, onSave, onDelete }:
         if (!values.accountName.trim()) nextErrors.accountName = "Bitte einen Kontonamen eingeben.";
         if (values.cardNumber.replace(/\D/g, "").length !== 16) nextErrors.cardNumber = "Die Kartennummer muss 16 Ziffern enthalten.";
         if (!values.holder.trim()) nextErrors.holder = "Bitte den Karteninhaber eingeben.";
-        if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(values.expiry)) nextErrors.expiry = "Format: MM/YY, zum Beispiel 06/21.";
+        if (!isValidFutureExpiry(values.expiry)) nextErrors.expiry = "Ungültiges Ablaufdatum.";
         setErrors(nextErrors);
-        if (Object.keys(nextErrors).length > 0) return;
+        if (Object.keys(nextErrors).length > 0) {
+            scheduleErrorDismissal();
+            return;
+        }
         onSave({ ...values, color: selectedColor });
     }
 
@@ -71,6 +107,7 @@ export default function EditCardModal({ open, card, onClose, onSave, onDelete }:
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4 backdrop-blur-[2px]">
             <form
                 onSubmit={handleSubmit}
+                noValidate
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="edit-card-title"
@@ -85,7 +122,7 @@ export default function EditCardModal({ open, card, onClose, onSave, onDelete }:
                 </div>
 
                 <div className="mt-6 flex justify-center rounded-xl bg-[#f7f7f5] px-4 py-6 dark:bg-black/20">
-                    <AccountCard cardColor={selectedColor} details={values} />
+                    <AccountCard cardColor={selectedColor} details={{ ...values, accountName: values.accountName || "Bankkonto", cardNumber: values.cardNumber || previewCardNumber, holder: values.holder || "Mike Smith", expiry: values.expiry || "06/21" }} />
                 </div>
 
                 <div className="my-6 h-px bg-black/10 dark:bg-white/10" />
@@ -110,10 +147,10 @@ export default function EditCardModal({ open, card, onClose, onSave, onDelete }:
                 <section aria-labelledby="edit-card-information-title">
                     <h3 id="edit-card-information-title" className="text-sm font-semibold">Karteninformationen</h3>
                     <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                        <Field label="Kontoname" error={errors.accountName}><Input required maxLength={32} value={values.accountName} onChange={(event) => updateValue("accountName", event.target.value)} /></Field>
-                        <Field label="Kartennummer" error={errors.cardNumber}><Input required inputMode="numeric" maxLength={19} value={values.cardNumber} onChange={(event) => updateValue("cardNumber", formatCardNumber(event.target.value))} /></Field>
-                        <Field label="Karteninhaber" error={errors.holder}><Input required maxLength={40} value={values.holder} onChange={(event) => updateValue("holder", event.target.value)} /></Field>
-                        <Field label="Ablaufdatum" error={errors.expiry}><Input required inputMode="numeric" maxLength={5} value={values.expiry} onChange={(event) => updateValue("expiry", formatExpiry(event.target.value))} /></Field>
+                        <Field label="Kontoname" error={errors.accountName}><Input required aria-invalid={Boolean(errors.accountName)} className={invalidFieldClass(errors.accountName)} maxLength={20} placeholder="Klassenkasse" value={values.accountName} onChange={(event) => updateValue("accountName", filterLetters(event.target.value, 20))} /></Field>
+                        <Field label="Kartennummer" error={errors.cardNumber}><Input required aria-invalid={Boolean(errors.cardNumber)} className={invalidFieldClass(errors.cardNumber)} inputMode="numeric" placeholder="1234 5678 9012 3456" maxLength={19} value={values.cardNumber} onChange={(event) => updateValue("cardNumber", formatCardNumber(event.target.value))} /></Field>
+                        <Field label="Karteninhaber" error={errors.holder}><Input required aria-invalid={Boolean(errors.holder)} className={invalidFieldClass(errors.holder)} maxLength={20} placeholder="Max Mustermann" value={values.holder} onChange={(event) => updateValue("holder", filterLetters(event.target.value, 20))} /></Field>
+                        <Field label="Ablaufdatum"><Input required inputMode="numeric" placeholder="06/28" maxLength={5} value={values.expiry} onChange={(event) => handleExpiryChange(event.target.value)} aria-invalid={Boolean(errors.expiry)} className={invalidFieldClass(errors.expiry)} /></Field>
                     </div>
                 </section>
 
@@ -130,5 +167,5 @@ export default function EditCardModal({ open, card, onClose, onSave, onDelete }:
 }
 
 function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
-    return <label className="grid gap-1.5 text-sm font-medium">{label}{children}{error ? <span className="text-xs font-normal text-red-600">{error}</span> : null}</label>;
+    return <label className="grid gap-1.5 text-sm font-medium">{label}{children}<span aria-live="polite" className={`min-h-4 overflow-hidden text-xs font-normal text-red-600 transition-all duration-500 dark:text-red-300 ${error ? "translate-y-0 opacity-100" : "-translate-y-1 opacity-0"}`}>{error || "\u00a0"}</span></label>;
 }

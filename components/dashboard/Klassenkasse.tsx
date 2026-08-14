@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState, type PointerEvent } from "react";
 import { ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AccountCard, { type AccountCardDetails } from "@/components/dashboard/AccountCard";
@@ -23,10 +23,27 @@ export default function Klassenkasse() {
     const [isAddCardOpen, setIsAddCardOpen] = useState(false);
     const [editingCardId, setEditingCardId] = useState<string | null>(null);
     const [editingCard, setEditingCard] = useState<AccountCardDetails | null>(null);
+    const touchStartX = useRef<number | null>(null);
     const currentCard = cards[cardIndex];
 
     function moveCard(direction: -1 | 1) {
         setCardIndex((current) => (current + direction + cards.length) % cards.length);
+    }
+
+    function handlePointerDown(event: PointerEvent<HTMLDivElement>) {
+        if (event.pointerType === "touch") {
+            touchStartX.current = event.clientX;
+        }
+    }
+
+    function handlePointerUp(event: PointerEvent<HTMLDivElement>) {
+        if (event.pointerType !== "touch" || touchStartX.current === null) return;
+
+        const distance = event.clientX - touchStartX.current;
+        touchStartX.current = null;
+
+        if (Math.abs(distance) < 48) return;
+        moveCard(distance < 0 ? 1 : -1);
     }
 
     function saveCard(details: AccountCardDetails) {
@@ -68,7 +85,7 @@ export default function Klassenkasse() {
     }
 
     return (
-        <Card className="w-full min-w-0 gap-0 rounded-2xl bg-card py-0 shadow-sm">
+        <Card className="w-full min-w-0 shrink-0 gap-0 rounded-2xl bg-card py-0 shadow-sm">
             <CardHeader className="px-5 pb-0 pt-5 sm:px-6 lg:px-7 lg:pt-6 min-[2200px]:px-8 min-[2200px]:pt-7">
                 <CardTitle className="text-xl font-semibold tracking-tight lg:text-2xl min-[2200px]:text-[1.65rem]">
                     Klassenkasse
@@ -76,17 +93,22 @@ export default function Klassenkasse() {
             </CardHeader>
 
             <CardContent className="px-4 pb-4 pt-3 sm:px-5 sm:pb-5 lg:px-6 lg:pb-6 lg:pt-4 min-[2200px]:px-7 min-[2200px]:pb-7 min-[2200px]:pt-5">
-                <div className="grid min-w-0 items-center gap-y-4 lg:grid-cols-[24px_minmax(250px,340px)_24px_1px_minmax(160px,1fr)] lg:gap-x-2 lg:gap-y-0 min-[2200px]:grid-cols-[32px_minmax(390px,440px)_32px_1px_minmax(220px,1fr)] min-[2200px]:gap-x-4">
+                <div className="grid min-w-0 grid-cols-[32px_minmax(0,1fr)_32px] items-center gap-x-1 gap-y-4 lg:grid-cols-[24px_minmax(250px,340px)_24px_1px_minmax(160px,1fr)] lg:gap-x-2 lg:gap-y-0 min-[2200px]:grid-cols-[32px_minmax(390px,440px)_32px_1px_minmax(220px,1fr)] min-[2200px]:gap-x-4">
                     <button
                         type="button"
                         aria-label="Vorherige Karte"
                         onClick={() => moveCard(-1)}
-                        className="hidden size-6 items-center justify-center rounded-md text-ink transition-transform hover:-translate-x-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink lg:inline-flex"
+                        className="inline-flex size-8 items-center justify-center justify-self-center rounded-full bg-white text-ink shadow-[0_4px_16px_rgb(0_0_0_/_10%)] transition-transform hover:-translate-x-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink lg:size-6 lg:rounded-md lg:bg-transparent lg:shadow-none"
                     >
                         <ChevronLeft className="size-6" strokeWidth={1.75} />
                     </button>
 
-                    <div className="w-full max-w-[340px] justify-self-center min-[2200px]:max-w-[440px]">
+                    <div
+                        className="col-start-2 w-full max-w-[340px] touch-pan-y justify-self-center min-[2200px]:max-w-[440px]"
+                        onPointerDown={handlePointerDown}
+                        onPointerUp={handlePointerUp}
+                        onPointerCancel={() => { touchStartX.current = null; }}
+                    >
                         <div key={currentCard.id} className={cardStyles.switchIn}>
                             {currentCard.variant === "add" ? (
                                 <button
@@ -113,7 +135,7 @@ export default function Klassenkasse() {
                             {cards.map((card, index) => (
                                 <span
                                     key={card.id}
-                                    className={`h-2 w-2 rounded-full ${index === cardIndex ? "bg-ink" : "bg-black/15"}`}
+                                    className={`h-2 w-2 rounded-full ${index === cardIndex ? "bg-ink" : "bg-black/15 dark:bg-white/35"}`}
                                 />
                             ))}
                         </div>
@@ -123,14 +145,14 @@ export default function Klassenkasse() {
                         type="button"
                         aria-label="Nächste Karte"
                         onClick={() => moveCard(1)}
-                        className="hidden size-6 items-center justify-center rounded-md text-ink transition-transform hover:translate-x-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink lg:inline-flex"
+                        className="col-start-3 inline-flex size-8 items-center justify-center justify-self-center rounded-full bg-white text-ink shadow-[0_4px_16px_rgb(0_0_0_/_10%)] transition-transform hover:translate-x-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink lg:size-6 lg:rounded-md lg:bg-transparent lg:shadow-none"
                     >
                         <ChevronRight className="size-6" strokeWidth={1.75} />
                     </button>
 
-                    <div className="hidden h-full w-px bg-black/15 lg:block" aria-hidden="true" />
+                    <div className="hidden h-full w-px bg-black/15 dark:bg-white/45 lg:block" aria-hidden="true" />
 
-                    <div className="flex min-w-0 flex-col justify-center lg:pl-4 min-[2200px]:pl-6">
+                    <div className="col-span-3 flex min-w-0 flex-col justify-center lg:col-span-1 lg:pl-4 min-[2200px]:pl-6">
                         <span className="text-sm text-muted-foreground lg:text-base min-[2200px]:text-lg">Gesamt verfügbar</span>
                         <strong className="whitespace-nowrap text-3xl font-semibold tracking-tight text-ink tabular-nums lg:text-4xl min-[2200px]:text-[2.75rem]">
                             2.850,75 €
@@ -141,7 +163,7 @@ export default function Klassenkasse() {
                     </div>
                 </div>
 
-                <div className="mt-4 flex min-h-16 items-center gap-3 rounded-xl bg-green-50 px-4 py-3 lg:mt-5 lg:gap-4 lg:px-5 min-[2200px]:min-h-20 min-[2200px]:gap-5 min-[2200px]:px-6">
+                <div className="mt-4 flex min-h-16 items-center gap-3 rounded-xl bg-green-50 px-4 py-3 lg:mt-5 lg:gap-4 lg:px-5 min-[2200px]:min-h-20 min-[2200px]:gap-5 min-[2200px]:px-6 min-[2200px]:py-4">
                     <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-green-600 text-white lg:size-10 min-[2200px]:size-11">
                         <Check className="size-5 lg:size-6" strokeWidth={2.5} />
                     </span>

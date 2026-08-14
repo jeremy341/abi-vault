@@ -78,7 +78,7 @@ export default function Sidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="hidden px-4 py-4 md:flex">
+      <SidebarFooter className="flex px-4 py-4">
         <ThemeToggle />
       </SidebarFooter>
     </ShadcnSidebar>

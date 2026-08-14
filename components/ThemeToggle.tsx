@@ -1,23 +1,10 @@
 "use client";
 
 import { Moon, Sun } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useTheme } from "@/components/theme-provider";
 
 export default function ThemeToggle() {
-    const [dark, setDark] = useState(() =>
-        typeof window !== "undefined" && window.localStorage.getItem("abi-theme") === "dark",
-    );
-
-    useEffect(() => {
-        document.documentElement.classList.toggle("dark", dark);
-    }, [dark]);
-
-    function toggleTheme() {
-        const next = !dark;
-        setDark(next);
-        document.documentElement.classList.toggle("dark", next);
-        window.localStorage.setItem("abi-theme", next ? "dark" : "light");
-    }
+    const { dark, toggleTheme } = useTheme();
 
     return (
         <button

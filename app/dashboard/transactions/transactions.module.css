@@ -33,23 +33,43 @@
 .headingGroup h2 { margin: 0; font-size: 1.5rem; font-weight: 600; letter-spacing: -.025em; }
 .headingGroup > span { border: 1px solid rgb(0 0 0 / .065); border-radius: .55rem; background: rgb(0 0 0 / .035); padding: .35rem .7rem; color: var(--muted-foreground); font-size: .8rem; }
 .primaryButton, .filterButton, .controlButton { display: inline-flex; height: 3rem; align-items: center; justify-content: center; gap: .6rem; border-radius: .75rem; white-space: nowrap; font-size: .875rem; font-weight: 600; }
-.primaryButton { border: 0; background: var(--ink); padding: 0 1.15rem; color: var(--surface); cursor: pointer; transition: opacity .18s ease, transform .18s ease; }
+.primaryButton { border: 0; background: var(--ink); padding: 0 1.15rem; color: var(--surface); cursor: pointer; transition: opacity .18s ease, transform .18s ease, box-shadow .18s ease; }
 .primaryButton:hover { opacity: .82; }
 .primaryButton:active, .filterButton:active, .controlButton:active { transform: translateY(1px); }
 .primaryButton svg, .filterButton svg, .controlButton svg { width: 1.1rem; height: 1.1rem; }
 
 .filters { display: grid; grid-template-columns: minmax(230px, 1.45fr) minmax(170px, .85fr) minmax(160px, .8fr) minmax(200px, .95fr) auto; gap: .8rem; padding: 1rem 1.5rem; }
 .searchField, .selectField, .controlButton { height: 3rem; min-width: 0; border: 1px solid rgb(0 0 0 / .1); border-radius: .75rem; background: var(--surface); color: var(--ink); }
-.searchField { display: flex; align-items: center; gap: .7rem; padding: 0 .9rem; }
+.searchField { display: flex; align-items: center; gap: .7rem; padding: 0 .9rem; transition: border-color .18s ease, box-shadow .18s ease; }
 .searchField svg, .selectField svg { width: 1.1rem; height: 1.1rem; flex: none; }
 .searchField input { min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; color: var(--ink); font: inherit; font-size: .875rem; }
 .searchField input::placeholder { color: var(--muted-foreground); }
-.selectField { position: relative; display: flex; align-items: center; }
+.selectField { position: relative; display: flex; align-items: center; transition: border-color .18s ease, box-shadow .18s ease; }
 .selectField select { width: 100%; height: 100%; appearance: none; border: 0; outline: 0; background: transparent; padding: 0 2.4rem 0 .9rem; color: var(--ink); cursor: pointer; font: inherit; font-size: .875rem; }
+.selectField option, .pageSize option, .formField select option { background: var(--surface); color: var(--ink); }
 .selectField svg { position: absolute; right: .8rem; pointer-events: none; }
-.controlButton { justify-content: space-between; padding: 0 .9rem; cursor: pointer; font-weight: 400; }
+.dropdown { position: relative; min-width: 0; }
+.dropdownLabel { display: block; margin-bottom: .4rem; color: var(--ink); font-size: .8rem; font-weight: 600; }
+.dropdownTrigger { display: flex; width: 100%; height: 3rem; align-items: center; justify-content: space-between; gap: .75rem; border: 1px solid rgb(0 0 0 / .1); border-radius: .75rem; background: var(--surface); padding: 0 .9rem; color: var(--ink); cursor: pointer; font: inherit; font-size: .875rem; text-align: left; transition: border-color .18s ease, box-shadow .18s ease; }
+.dropdownTrigger span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dropdownTrigger svg { width: 1.1rem; height: 1.1rem; flex: none; }
+.dropdownTrigger:hover, .dropdownTrigger:focus-visible { border-color: var(--ink); outline: 2px solid rgb(0 0 0 / .12); outline-offset: 2px; }
+.dropdownMenu { position: absolute; z-index: 20; top: calc(100% + .35rem); right: 0; left: 0; display: grid; gap: .2rem; padding: .3rem; border: 1px solid rgb(0 0 0 / .12); border-radius: .75rem; background: var(--surface); box-shadow: 0 .8rem 1.5rem rgb(0 0 0 / .14); }
+.dropdownMenuTop { top: auto; bottom: calc(100% + .35rem); }
+.dropdownOption { display: flex; width: 100%; min-height: 2.35rem; align-items: center; justify-content: space-between; gap: .75rem; border: 0; border-radius: .45rem; background: transparent; padding: .45rem .65rem; color: var(--ink); cursor: pointer; font: inherit; font-size: .8rem; text-align: left; }
+.dropdownOption:hover, .dropdownOption:focus-visible, .dropdownOptionActive { background: var(--ink); color: var(--surface); outline: 0; }
+.dropdownOption svg { width: 1rem; height: 1rem; flex: none; }
+.filterDropdown { width: 100%; }
+.formDropdown { width: 100%; }
+.formDropdown .dropdownTrigger { height: 2.75rem; }
+.pageSizeDropdown { width: 4.25rem; flex: none; }
+.pageSizeDropdown .dropdownTrigger { height: 2.25rem; border-radius: .6rem; padding-inline: .65rem; font-size: .8rem; }
+.controlButton { justify-content: space-between; padding: 0 .9rem; cursor: pointer; font-weight: 400; transition: border-color .18s ease, box-shadow .18s ease; }
 .controlButton span { overflow: hidden; text-overflow: ellipsis; }
-.filterButton { border: 0; background: var(--ink); padding: 0 1.05rem; color: var(--surface); cursor: pointer; }
+.filterButton { border: 0; background: var(--ink); padding: 0 1.05rem; color: var(--surface); cursor: pointer; transition: opacity .18s ease, transform .18s ease, box-shadow .18s ease; }
+.filterButton:hover { opacity: .82; }
+.searchField:hover, .selectField:hover, .controlButton:hover, .pageSize label:hover, .pageButtons button:hover:not(:disabled) { border-color: rgb(0 0 0 / .22); }
+.searchField:focus-within, .selectField:focus-within, .controlButton:focus-visible, .primaryButton:focus-visible, .filterButton:focus-visible, .pageSize label:focus-within, .pageButtons button:focus-visible, .row:focus-visible, .iconButton:focus-visible, .secondaryButton:focus-visible { border-color: var(--ink); outline: 2px solid rgb(0 0 0 / .12); outline-offset: 2px; }
 
 .tableWrap { display: flex; min-height: 0; flex: 1 1 auto; flex-direction: column; margin: 0 1.5rem; overflow: hidden; border: 1px solid rgb(0 0 0 / .09); border-radius: .8rem; }
 .tableHeader, .row { display: grid; grid-template-columns: minmax(250px, 1.45fr) minmax(130px, .8fr) 130px 130px minmax(170px, .9fr); align-items: center; gap: 1rem; }
@@ -105,7 +125,8 @@
 .checkRow { display: flex; align-items: center; gap: .6rem; padding: .25rem 0; color: var(--ink); cursor: pointer; font-size: .8rem; font-weight: 400; }
 .checkRow input { width: 1rem; height: 1rem; margin: 0; accent-color: var(--ink); cursor: pointer; }
 .amountFields { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; }
-.inlineField { display: flex; height: 2.6rem; align-items: center; overflow: hidden; border: 1px solid rgb(0 0 0 / .11); border-radius: .7rem; color: var(--ink); font-size: .75rem; }
+.inlineField { display: flex; height: 2.6rem; align-items: center; overflow: hidden; border: 1px solid rgb(0 0 0 / .11); border-radius: .7rem; color: var(--ink); font-size: .75rem; transition: border-color .18s ease, box-shadow .18s ease; }
+.inlineField:focus-within { border-color: var(--ink); outline: 2px solid rgb(0 0 0 / .12); outline-offset: 2px; }
 .inlineField span { display: inline-flex; height: 100%; align-items: center; border-right: 1px solid rgb(0 0 0 / .08); padding: 0 .65rem; }
 .inlineField input { min-width: 0; flex: 1; height: 100%; border: 0; outline: 0; background: transparent; padding: 0 .65rem; color: var(--ink); font: inherit; }
 .segmented { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); overflow: hidden; border: 1px solid rgb(0 0 0 / .11); border-radius: .65rem; }
@@ -113,7 +134,9 @@
 .segmented button:last-child { border-right: 0; }
 .segmented .segmentActive { background: var(--ink); color: var(--surface); }
 .formField { display: grid; gap: .4rem; color: var(--ink); font-size: .8rem; font-weight: 600; }
-.formField select, .formField input { height: 2.75rem; border: 1px solid rgb(0 0 0 / .12); border-radius: .7rem; background: var(--surface); padding: 0 .75rem; color: var(--ink); font: inherit; font-weight: 400; }
+.formField select, .formField input { height: 2.75rem; border: 1px solid rgb(0 0 0 / .12); border-radius: .7rem; background: var(--surface); padding: 0 .75rem; color: var(--ink); font: inherit; font-weight: 400; transition: border-color .18s ease, box-shadow .18s ease; }
+.formField select:hover, .formField input:hover { border-color: rgb(0 0 0 / .22); }
+.formField select:focus-visible, .formField input:focus-visible { border-color: var(--ink); outline: 2px solid rgb(0 0 0 / .12); outline-offset: 2px; }
 .accountSelect { position: relative; }
 .accountTrigger { display: flex; width: 100%; height: 2.75rem; align-items: center; justify-content: space-between; border: 1px solid rgb(0 0 0 / .12); border-radius: .7rem; background: var(--surface); padding: 0 .75rem; color: var(--ink); cursor: pointer; font: inherit; font-weight: 400; text-align: left; }
 .accountTrigger:hover, .accountTrigger:focus-visible { border-color: var(--ink); outline: 0; }
@@ -126,7 +149,7 @@
 .modalFooter { display: flex; align-items: center; justify-content: space-between; gap: .75rem; border-top: 1px solid rgb(0 0 0 / .08); padding: .85rem 1.25rem 1rem; }
 .modalFooter > div { display: flex; gap: .6rem; }
 .secondaryButton { height: 3rem; border: 1px solid rgb(0 0 0 / .12); border-radius: .75rem; background: var(--surface); padding: 0 1rem; color: var(--ink); cursor: pointer; font-size: .875rem; font-weight: 600; }
-.secondaryButton:hover { background: rgb(0 0 0 / .035); }
+.secondaryButton:hover { background: rgb(0 0 0 / .035); border-color: rgb(0 0 0 / .22); }
 .detailGrid { display: grid; grid-template-columns: 1fr 1.4fr; gap: .9rem; padding: 1.25rem; font-size: .875rem; }
 .detailGrid span { color: var(--muted-foreground); }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
@@ -137,6 +160,10 @@
 :global(.dark) .tableHeader { background: rgb(255 255 255 / .035); }
 :global(.dark) .row:hover { background: rgb(255 255 255 / .045); }
 :global(.dark) .primaryButton, :global(.dark) .filterButton { background: #f5f5f5; color: #161618; }
+:global(.dark) .searchField:hover, :global(.dark) .selectField:hover, :global(.dark) .controlButton:hover, :global(.dark) .pageSize label:hover, :global(.dark) .pageButtons button:hover:not(:disabled) { border-color: rgb(255 255 255 / .28); }
+:global(.dark) .searchField:focus-within, :global(.dark) .selectField:focus-within, :global(.dark) .controlButton:focus-visible, :global(.dark) .primaryButton:focus-visible, :global(.dark) .filterButton:focus-visible, :global(.dark) .pageSize label:focus-within, :global(.dark) .pageButtons button:focus-visible, :global(.dark) .row:focus-visible, :global(.dark) .iconButton:focus-visible, :global(.dark) .secondaryButton:focus-visible, :global(.dark) .inlineField:focus-within, :global(.dark) .formField select:focus-visible, :global(.dark) .formField input:focus-visible { border-color: #f5f5f5; outline-color: rgb(255 255 255 / .2); }
+:global(.dark) .accountTrigger, :global(.dark) .accountMenu, :global(.dark) .formField select, :global(.dark) .formField input { border-color: rgb(255 255 255 / .14); }
+:global(.dark) .dropdownTrigger, :global(.dark) .dropdownMenu { border-color: rgb(255 255 255 / .14); }
 
 @media (min-width: 1600px) { .page { max-width: 1880px; padding-inline: clamp(2rem, 2vw, 2.5rem); } }
 @media (min-width: 2200px) { .page { max-width: none; gap: 1.75rem; padding-inline: 2rem; } .kpiGrid { gap: 1.75rem; } .kpiCard { min-height: 9.25rem; padding-inline: 2rem; } .listHeader, .filters, .pagination { padding-inline: 2rem; } .tableWrap { margin-inline: 2rem; } }

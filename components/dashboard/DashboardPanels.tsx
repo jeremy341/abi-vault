@@ -26,7 +26,6 @@ const transactions = [
   { title: "Druck Nachzahlung", category: "Material", date: "02.05.2024", amount: "-75,00 €", tone: "violet", icon: FileText },
   { title: "Dekoration Klassenraum", category: "Material", date: "30.04.2024", amount: "-96,40 €", tone: "orange", icon: Sparkles },
   { title: "Sponsoring Klassenfest", category: "Veranstaltung", date: "28.04.2024", amount: "+480,00 €", tone: "green", icon: CircleDollarSign },
-  { title: "Erstattung Busfahrt", category: "Veranstaltung", date: "26.04.2024", amount: "+120,00 €", tone: "green", icon: CircleDollarSign },
 ];
 
 const goals = [
@@ -64,7 +63,7 @@ export function TransactionHistory() {
             const Icon = transaction.icon;
             const tone = transaction.tone === "green" ? "bg-green-50 text-green-600 dark:bg-green-500/15" : transaction.tone === "orange" ? "bg-orange-50 text-orange-500 dark:bg-orange-500/15" : "bg-violet-50 text-violet-600 dark:bg-violet-500/15";
             return (
-              <div key={transaction.title} className={`grid gap-2 px-2 py-3.5 text-sm sm:grid-cols-[minmax(0,1.5fr)_minmax(90px,0.9fr)_100px_110px_24px] sm:items-center sm:gap-3 min-[1280px]:max-[2199px]:py-3 min-[2200px]:min-h-14 min-[2200px]:py-3 ${index >= 7 ? "hidden min-[2200px]:grid" : ""} ${index >= transactions.length - 1 ? "min-[1280px]:max-[2199px]:hidden" : ""}`}>
+              <div key={transaction.title} className={`grid gap-2 px-2 py-3.5 text-sm sm:grid-cols-[minmax(0,1.5fr)_minmax(90px,0.9fr)_100px_110px_24px] sm:items-center sm:gap-3 min-[1280px]:max-[2199px]:py-3 min-[2200px]:min-h-10 min-[2200px]:py-3 ${index >= 7 ? "hidden min-[2200px]:grid" : ""} ${index >= transactions.length - 3 ? "min-[1280px]:max-[2199px]:hidden" : ""}`}>
                 <div className="flex min-w-0 items-center gap-2.5 font-medium text-ink"><IconBubble tone={tone}><Icon className="size-4" /></IconBubble><span className="truncate">{transaction.title}</span></div>
                 <span className="pl-10 text-xs text-muted-foreground sm:pl-0 sm:text-sm">{transaction.category}</span>
                 <span className="pl-10 text-xs text-muted-foreground sm:pl-0 sm:text-sm">{transaction.date}</span>
@@ -121,10 +120,10 @@ export function SpendingByCategory() {
   return (
     <Card className="rounded-2xl bg-card py-0 shadow-sm">
       <CardHeader className="px-5 pb-0 pt-5 sm:px-6 lg:px-7 lg:pt-6"><CardTitle className="text-xl font-semibold tracking-tight lg:text-2xl">Ausgaben nach Kategorie</CardTitle></CardHeader>
-      <CardContent className="space-y-4 px-5 pb-5 pt-4 sm:px-6 lg:px-7 min-[2200px]:space-y-8 min-[2200px]:pb-6 min-[2200px]:pt-5">
+      <CardContent className="space-y-4 px-5 pb-5 pt-4 sm:px-6 lg:px-7 min-[1280px]:max-[2199px]:space-y-2 min-[1280px]:max-[2199px]:pt-2 min-[2200px]:space-y-1 min-[2200px]:pb-6 min-[2200px]:pt-1">
         {categories.map((category) => {
           const Icon = category.icon;
-          return <div key={category.title} className="grid min-h-12 grid-cols-[36px_minmax(90px,120px)_minmax(0,1fr)_40px] items-center gap-3 text-sm min-[2200px]:min-h-[4.5rem] min-[2200px]:grid-cols-[40px_minmax(110px,140px)_minmax(0,1fr)_44px] min-[2200px]:gap-4 min-[2200px]:text-base">
+          return <div key={category.title} className="grid min-h-12 grid-cols-[36px_minmax(90px,120px)_minmax(0,1fr)_40px] items-center gap-3 text-sm min-[1280px]:max-[2199px]:min-h-10 min-[2200px]:min-h-20 min-[2200px]:grid-cols-[40px_minmax(110px,140px)_minmax(0,1fr)_44px] min-[2200px]:gap-4 min-[2200px]:text-base">
             <IconBubble tone={category.bubble} className="min-[2200px]:size-10"><Icon className="size-4 min-[2200px]:size-5" /></IconBubble>
             <span className="font-medium text-ink">{category.title}</span>
             <div>
@@ -143,7 +142,7 @@ export function ReviewPanel() {
   return (
     <Card className="rounded-2xl bg-card py-0 shadow-sm">
       <CardHeader className="px-5 pb-0 pt-5 sm:px-6 lg:px-7 lg:pt-6"><CardTitle className="text-xl font-semibold tracking-tight lg:text-2xl">Zu prüfen</CardTitle></CardHeader>
-      <CardContent className="space-y-2 px-5 pb-7 pt-2 sm:px-6 lg:px-7">
+      <CardContent className="space-y-2 px-5 pb-7 pt-2 sm:px-6 lg:px-7 min-[1280px]:max-[2199px]:pt-0">
         <Link href="/dashboard/receipts" className="flex items-center gap-3 rounded-lg border border-black/[0.08] px-3 py-2.5 text-sm transition-colors hover:bg-black/[0.03] dark:border-white/15 dark:hover:bg-white/[0.06]"><AlertTriangle className="size-5 text-amber-500" /><span className="flex-1">3 Belege warten auf Prüfung</span><ArrowRight className="size-4" /></Link>
         <Link href="/dashboard/transactions" className="flex items-center gap-3 rounded-lg border border-black/[0.08] px-3 py-2.5 text-sm transition-colors hover:bg-black/[0.03] dark:border-white/15 dark:hover:bg-white/[0.06]"><Info className="size-5" /><span className="flex-1">1 Bargeldzahlung fehlt</span><ArrowRight className="size-4" /></Link>
         <Link href="/dashboard/receipts" className="hidden items-center gap-3 rounded-lg border border-black/[0.08] px-3 py-2.5 text-sm transition-colors hover:bg-black/[0.03] min-[2200px]:flex min-[2200px]:py-3 dark:border-white/15 dark:hover:bg-white/[0.06]"><FileText className="size-5 text-muted-foreground" /><span className="flex-1">1 Beleg ohne Kategorie</span><ArrowRight className="size-4" /></Link>

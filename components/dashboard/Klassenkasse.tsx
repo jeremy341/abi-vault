@@ -85,7 +85,7 @@ export default function Klassenkasse() {
     }
 
     return (
-        <Card className="w-full min-w-0 shrink-0 gap-0 rounded-2xl bg-card py-0 shadow-sm">
+        <Card className="w-full min-w-0 shrink-0 gap-0 rounded-2xl bg-white/85 py-0 shadow-[0_12px_28px_rgb(0_0_0_/_0.07)] backdrop-blur-[3px] dark:bg-card/85">
             <CardHeader className="px-5 pb-0 pt-5 sm:px-6 lg:px-7 lg:pt-6 min-[2200px]:px-8 min-[2200px]:pt-7">
                 <CardTitle className="text-xl font-semibold tracking-tight lg:text-2xl min-[2200px]:text-[1.65rem]">
                     Klassenkasse
@@ -158,18 +158,18 @@ export default function Klassenkasse() {
                             2.850,75 €
                         </strong>
                         <p className="text-sm text-muted-foreground lg:text-base min-[2200px]:mt-1 min-[2200px]:text-lg">
-                            Bankkonto · <span className="text-green-600">API verbunden</span>
+                            Bankkonto · <span className="text-[var(--ui-positive)]">API verbunden</span>
                         </p>
                     </div>
                 </div>
 
-                <div className="mt-4 flex min-h-16 items-center gap-3 rounded-xl bg-green-50 px-4 py-3 lg:mt-5 lg:gap-4 lg:px-5 min-[2200px]:min-h-20 min-[2200px]:gap-5 min-[2200px]:px-6 min-[2200px]:py-4">
-                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-green-600 text-white lg:size-10 min-[2200px]:size-11">
+                <div className="mt-4 flex min-h-16 items-center gap-3 rounded-xl bg-[var(--ui-positive-soft)] px-4 py-3 lg:mt-5 lg:gap-4 lg:px-5 min-[2200px]:min-h-20 min-[2200px]:gap-5 min-[2200px]:px-6 min-[2200px]:py-4">
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--ui-positive)] text-white lg:size-10 min-[2200px]:size-11">
                         <Check className="size-5 lg:size-6" strokeWidth={2.5} />
                     </span>
                     <div className="text-sm lg:text-base min-[2200px]:text-lg">
-                        <strong className="block font-semibold text-green-700">Kasse stimmt überein</strong>
-                        <span className="text-green-700">Übereinstimmung: 100 %</span>
+                        <strong className="block font-semibold text-[var(--ui-positive)]">Kasse stimmt überein</strong>
+                        <span className="text-[var(--ui-positive)]">Übereinstimmung: 100 %</span>
                     </div>
                 </div>
             </CardContent>

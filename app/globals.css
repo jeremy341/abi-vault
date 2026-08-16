@@ -42,6 +42,48 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Shared product UI contract: neutral finance surfaces with semantic accents. */
+  --ui-font: var(--font-geist-sans), sans-serif;
+  --ui-ink: #1d1d1f;
+  --ui-muted-ink: oklch(0.556 0 0);
+  --ui-canvas: #fafafa;
+  --ui-surface: #ffffff;
+  --ui-border: rgb(0 0 0 / 0.10);
+  --ui-border-subtle: rgb(0 0 0 / 0.08);
+  --ui-border-focus: rgb(29 29 31 / 0.85);
+  --ui-card-radius: 1rem;
+  --ui-control-radius: 0.7rem;
+  --ui-control-height: 2.75rem;
+  --ui-page-gap: 1.5rem;
+  --ui-card-gap: 1.5rem;
+  --ui-compact-gap: .75rem;
+  --ui-fixed-table-rows: 10;
+  --ui-receipt-table-rows: 9;
+  --ui-page-max: 2100px;
+  --ui-page-padding-inline: clamp(1rem, 2vw, 3rem);
+  --ui-page-padding-bottom: clamp(1rem, 1.8vh, 2rem);
+  --ui-card-shadow: 0 1px 2px rgb(0 0 0 / .035);
+  --ui-data-shadow: 0 1px 2px rgb(0 0 0 / .035);
+  --ui-modal-shadow: 0 1.5rem 3rem rgb(0 0 0 / .2);
+  --ui-table-border: rgb(0 0 0 / .08);
+  --ui-badge-radius: 999px;
+  --ui-badge-padding-inline: .55rem;
+  --ui-badge-padding-block: .22rem;
+  --ui-section-title-size: 1.5rem;
+  --ui-table-header-size: 0.75rem;
+  --ui-table-row-size: 0.875rem;
+  --ui-meta-size: 0.75rem;
+  --ui-positive: #16a34a;
+  --ui-positive-soft: #eaf8ef;
+  --ui-negative: #ef3038;
+  --ui-negative-soft: #fff0f1;
+  --ui-warning: #d97706;
+  --ui-warning-soft: #fff5e5;
+  --ui-violet: #7048e8;
+  --ui-violet-soft: #f1edff;
+  --ui-orange: #e98b00;
+  --ui-orange-soft: #fff5e8;
 }
 
 @theme inline {
@@ -96,8 +138,30 @@
 body {
   background: var(--canvas);
   color: var(--ink);
-  font-family: var(--font-geist-sans), sans-serif;
+  font-family: var(--ui-font);
 }
+
+/* Shared dropdown contract used by the data pages. */
+.ui-dropdown { position: relative; min-width: 0; }
+.ui-dropdown-label { display: block; margin-bottom: .4rem; color: var(--ui-ink); font-size: .8rem; font-weight: 600; }
+.ui-dropdown-trigger { display: flex; width: 100%; height: var(--ui-control-height); align-items: center; justify-content: space-between; gap: .75rem; border: 1px solid var(--ui-border); border-radius: var(--ui-control-radius); background: var(--ui-surface); padding: 0 .9rem; color: var(--ui-ink); cursor: pointer; font: inherit; font-size: .875rem; text-align: left; transition: border-color .18s ease, box-shadow .18s ease; }
+.ui-dropdown-trigger span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ui-dropdown-trigger svg { width: 1.1rem; height: 1.1rem; flex: none; }
+.ui-dropdown-trigger:hover, .ui-dropdown-trigger:focus-visible { border-color: var(--ui-border-focus); outline: 2px solid rgb(0 0 0 / .12); outline-offset: 2px; }
+.ui-dropdown-menu { position: absolute; z-index: 30; top: calc(100% + .35rem); right: 0; left: 0; display: grid; gap: .2rem; padding: .3rem; border: 1px solid var(--ui-border); border-radius: var(--ui-control-radius); background: var(--ui-surface); box-shadow: 0 .8rem 1.5rem rgb(0 0 0 / .14); }
+.ui-dropdown-menu-top { top: auto; bottom: calc(100% + .35rem); }
+.ui-dropdown-option { display: flex; width: 100%; min-height: 2.35rem; align-items: center; justify-content: space-between; gap: .75rem; border: 0; border-radius: .45rem; background: transparent; padding: .45rem .65rem; color: var(--ui-ink); cursor: pointer; font: inherit; font-size: .8rem; text-align: left; }
+.ui-dropdown-option:hover, .ui-dropdown-option:focus-visible, .ui-dropdown-option-active { background: var(--ui-ink); color: var(--ui-surface); outline: 0; }
+.ui-dropdown-option svg { width: 1rem; height: 1rem; flex: none; }
+
+/* Shared compact previous/current/next pagination contract. */
+.ui-pagination-buttons { display: flex; align-items: center; gap: .55rem; }
+.ui-pagination-buttons button { display: inline-flex; width: 1.85rem; height: 1.85rem; align-items: center; justify-content: center; border: 0; border-radius: .6rem; background: transparent; color: var(--ui-muted-ink); cursor: pointer; }
+.ui-pagination-buttons button:hover:not(:disabled) { background: rgb(0 0 0 / .035); color: var(--ui-ink); }
+.ui-pagination-buttons button:focus-visible { border-color: var(--ui-border-focus); outline: 2px solid rgb(0 0 0 / .12); outline-offset: 2px; }
+.ui-pagination-buttons button svg { width: 1rem; height: 1rem; }
+.ui-pagination-buttons .ui-pagination-current { background: rgb(0 0 0 / .045); color: var(--ui-ink); }
+.ui-pagination-buttons button:disabled { cursor: not-allowed; opacity: .35; }
 
 .soft-grid {
   position: relative;
@@ -214,6 +278,89 @@ body {
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+  --ui-ink: #f5f5f5;
+  --ui-muted-ink: oklch(0.708 0 0);
+  --ui-canvas: #111113;
+  --ui-surface: #1b1b1f;
+  --ui-border: rgb(255 255 255 / 0.14);
+  --ui-border-subtle: rgb(255 255 255 / 0.12);
+  --ui-border-focus: rgb(255 255 255 / 0.9);
+  --ui-positive-soft: rgb(34 197 94 / 0.15);
+  --ui-negative-soft: rgb(239 68 68 / 0.14);
+  --ui-warning-soft: rgb(245 158 11 / 0.14);
+  --ui-violet-soft: rgb(112 72 232 / 0.16);
+  --ui-orange-soft: rgb(234 139 0 / 0.16);
+}
+
+.dark .ui-dropdown-trigger,
+.dark .ui-dropdown-menu {
+  border-color: var(--ui-border);
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+}
+
+.dark .ui-dropdown-option:hover,
+.dark .ui-dropdown-option:focus-visible,
+.dark .ui-dropdown-option-active {
+  background: var(--ui-ink);
+  color: var(--ui-surface);
+}
+
+.dark .ui-pagination-buttons button { color: var(--ui-muted-ink); }
+.dark .ui-pagination-buttons button:hover:not(:disabled) { background: rgb(255 255 255 / .06); color: var(--ui-ink); }
+.dark .ui-pagination-buttons button:focus-visible { border-color: var(--ui-border-focus); outline-color: rgb(255 255 255 / .2); }
+.dark .ui-pagination-buttons .ui-pagination-current { background: rgb(255 255 255 / .1); color: var(--ui-ink); }
+
+@media (min-width: 2200px) {
+  :root,
+  .dark {
+    --ui-page-gap: 2rem;
+    --ui-card-gap: 2rem;
+    --ui-page-max: none;
+    --ui-page-padding-inline: 2rem;
+  }
+}
+
+@media (min-width: 1600px) and (max-width: 2199px) {
+  :root,
+  .dark {
+    --ui-page-max: 1880px;
+    --ui-page-padding-inline: clamp(2rem, 2vw, 2.5rem);
+  }
+}
+
+.ui-badge {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  border-radius: var(--ui-badge-radius);
+  padding: var(--ui-badge-padding-block) var(--ui-badge-padding-inline);
+  font-size: var(--ui-meta-size);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.ui-data-table {
+  box-shadow: var(--ui-data-shadow);
+}
+
+.ui-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.ui-focus-ring:focus-visible {
+  border-color: var(--ui-border-focus);
+  outline: 2px solid rgb(0 0 0 / .12);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-motion-safe,
+  .ui-motion-safe::before,
+  .ui-motion-safe::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 
 .dark .soft-grid {

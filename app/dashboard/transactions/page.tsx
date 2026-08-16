@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ArrowDown,
   ArrowUp,
@@ -8,8 +8,6 @@ import {
   CalendarDays,
   Check,
   ChevronDown,
-  ChevronLeft,
-  ChevronRight,
   CircleDollarSign,
   Equal,
   FileText,
@@ -22,6 +20,9 @@ import {
   X,
 } from "lucide-react";
 import styles from "./transactions.module.css";
+import { Dialog } from "@/components/ui/dialog";
+import { FieldDropdown, type FieldDropdownOption } from "@/components/ui/field-dropdown";
+import { Pagination } from "@/components/ui/pagination";
 
 type Category = "Material" | "Sonstiges" | "Veranstaltung";
 type FilterType = "Einnahmen" | "Ausgaben";
@@ -64,15 +65,7 @@ const displayDate = (date: Date) => `${String(date.getDate()).padStart(2, "0")}.
 const displayAmount = (amount: number) => `${amount >= 0 ? "+" : "-"}${Math.abs(amount).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
 
 function Overlay({ children, onClose, label, className }: { children: React.ReactNode; onClose: () => void; label: string; className?: string }) {
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
-
-  return <div className={styles.overlay} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-    <div className={`${styles.modal} ${className ?? ""}`} role="dialog" aria-modal="true" aria-label={label}>{children}</div>
-  </div>;
+  return <Dialog label={label} onClose={onClose} overlayClassName={styles.overlay} dialogClassName={`${styles.modal} ${className ?? ""}`}>{children}</Dialog>;
 }
 
 function StyledDropdown({
@@ -92,18 +85,7 @@ function StyledDropdown({
   className?: string;
   placement?: "bottom" | "top";
 }) {
-  const [open, setOpen] = useState(false);
-  const selectedOption = options.find((option) => option.value === value) ?? options[0];
-
-  return <div className={`${styles.dropdown} ${className}`}>
-    {label ? <span className={styles.dropdownLabel}>{label}</span> : null}
-    <button type="button" className={styles.dropdownTrigger} aria-label={ariaLabel} aria-haspopup="listbox" aria-expanded={open} onClick={() => setOpen((current) => !current)}>
-      <span>{selectedOption.label}</span><ChevronDown />
-    </button>
-    {open ? <div className={`${styles.dropdownMenu} ${placement === "top" ? styles.dropdownMenuTop : ""}`} role="listbox" aria-label={ariaLabel}>
-      {options.map((option) => <button type="button" role="option" aria-selected={option.value === value} className={`${styles.dropdownOption} ${option.value === value ? styles.dropdownOptionActive : ""}`} key={option.value} onClick={() => { onChange(option.value); setOpen(false); }}>{option.label}{option.value === value ? <Check /> : null}</button>)}
-    </div> : null}
-  </div>;
+  return <FieldDropdown ariaLabel={ariaLabel} label={label} value={value} options={options as readonly FieldDropdownOption[]} onChange={onChange} className={className} placement={placement} />;
 }
 
 export default function TransactionsPage() {
@@ -137,7 +119,7 @@ export default function TransactionsPage() {
   const [addOpen, setAddOpen] = useState(false);
   const [selected, setSelected] = useState<Transaction | null>(null);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const pageSize = 10;
   const [newTitle, setNewTitle] = useState("");
   const [newAmount, setNewAmount] = useState("");
   const [newCategory, setNewCategory] = useState<Category>("Sonstiges");
@@ -162,6 +144,8 @@ export default function TransactionsPage() {
 
   const pages = Math.max(1, Math.ceil(results.length / pageSize));
   const visible = results.slice((page - 1) * pageSize, page * pageSize);
+  const rangeStart = results.length ? (page - 1) * pageSize + 1 : 0;
+  const rangeEnd = Math.min(page * pageSize, results.length);
   const totalIncome = items.filter((item) => item.amount >= 0).reduce((sum, item) => sum + item.amount, 0);
   const totalExpense = items.filter((item) => item.amount < 0).reduce((sum, item) => sum + Math.abs(item.amount), 0);
   const netBalance = totalIncome - totalExpense;
@@ -169,8 +153,8 @@ export default function TransactionsPage() {
     query.trim() ? 1 : 0,
     category !== "Alle" ? 1 : 0,
     type !== "Alle" ? 1 : 0,
-    selectedCategories.length,
-    selectedTypes.length,
+    selectedCategories.length ? 1 : 0,
+    selectedTypes.length ? 1 : 0,
     start || end ? 1 : 0,
     minAmount || maxAmount ? 1 : 0,
     receiptFilter !== "Alle" ? 1 : 0,
@@ -228,7 +212,7 @@ export default function TransactionsPage() {
 
     <article className={styles.listCard}>
       <header className={styles.listHeader}>
-        <div className={styles.headingGroup}><h2>Alle Transaktionen</h2><span>{activeFilterCount} Filter</span></div>
+        <div className={styles.headingGroup}><h2>Alle Transaktionen</h2><span>{activeFilterCount} aktive Filter</span></div>
         <button type="button" className={styles.primaryButton} onClick={() => setAddOpen(true)}><Plus />Transaktion hinzufügen</button>
       </header>
 
@@ -240,14 +224,14 @@ export default function TransactionsPage() {
         <button type="button" className={styles.filterButton} onClick={openFilters}><Filter />Filter</button>
       </div>
 
-      <div className={styles.tableWrap}>
+      <div className={`${styles.tableWrap} ui-data-table`}>
         <div className={styles.tableHeader}><span>Transaktion</span><span>Kategorie</span><span>Datum</span><span>Betrag</span><span>Beleg</span></div>
         <div className={styles.rows}>
           {visible.map((transaction) => { const Icon = transaction.icon; return <button type="button" className={styles.row} key={transaction.id} onClick={() => setSelected(transaction)}>
             <span className={styles.transactionName}><span className={`${styles.iconBubble} ${toneClasses[transaction.tone]}`}><Icon /></span><span>{transaction.title}</span></span>
-            <span><span className={`${styles.categoryTag} ${toneClasses[transaction.tone]}`}>{transaction.category}</span></span>
-            <span className={styles.muted}>{transaction.date}</span>
-            <span className={transaction.amount >= 0 ? styles.positive : styles.negative}>{displayAmount(transaction.amount)}</span>
+            <span><span className={`ui-badge ${styles.categoryTag} ${toneClasses[transaction.tone]}`}>{transaction.category}</span></span>
+            <span className={`ui-tabular ${styles.muted}`}>{transaction.date}</span>
+            <span className={`ui-tabular ${transaction.amount >= 0 ? styles.positive : styles.negative}`}>{displayAmount(transaction.amount)}</span>
             <span className={styles.receipt}>{transaction.receipt ? <><Paperclip /><span>{transaction.receipt}</span></> : <span>—</span>}</span>
           </button>; })}
         </div>
@@ -256,8 +240,8 @@ export default function TransactionsPage() {
       {!visible.length ? <div className={styles.emptyState}><Search /><strong>Keine Transaktionen gefunden</strong><span>Ändere die Suche oder setze die Filter zurück.</span><button type="button" onClick={resetFilters}>Filter zurücksetzen</button></div> : null}
 
       <footer className={styles.pagination}>
-        <div className={styles.pageSize}><span>Zeige</span><StyledDropdown ariaLabel="Transaktionen pro Seite" value={String(pageSize)} onChange={(value) => { setPageSize(Number(value)); setPage(1); }} className={styles.pageSizeDropdown} placement="top" options={[{ value: "5", label: "5" }, { value: "10", label: "10" }, { value: "20", label: "20" }]} /><span>von {results.length}</span></div>
-        <div className={styles.pageButtons}><button type="button" aria-label="Vorherige Seite" disabled={page === 1} onClick={() => setPage((value) => value - 1)}><ChevronLeft /></button>{Array.from({ length: pages }, (_, index) => index + 1).map((number) => <button type="button" className={number === page ? styles.currentPage : ""} key={number} onClick={() => setPage(number)}>{number}</button>)}<button type="button" aria-label="Nächste Seite" disabled={page === pages} onClick={() => setPage((value) => value + 1)}><ChevronRight /></button></div>
+        <span>{rangeStart}–{rangeEnd} von {results.length}</span>
+        <Pagination page={page} pageCount={pages} onPageChange={setPage} className={styles.pageButtons} />
       </footer>
     </article>
 

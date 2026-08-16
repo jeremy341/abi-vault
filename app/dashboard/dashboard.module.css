@@ -30,11 +30,11 @@
 .page {
   display: flex;
   width: 100%;
-  max-width: 2100px;
+  max-width: var(--ui-page-max);
   min-height: 0;
   flex: 1 1 0%;
   margin-inline: auto;
-  padding: 0 clamp(1rem, 2vw, 3rem) clamp(1rem, 1.8vh, 2rem);
+  padding: 0 var(--ui-page-padding-inline) var(--ui-page-padding-bottom);
 }
 
 .grid {
@@ -43,14 +43,14 @@
   width: 100%;
   min-width: 0;
   min-height: 0;
-  gap: clamp(1rem, 1.5vw, 1.5rem);
+  gap: var(--ui-page-gap);
 }
 
 .column {
   display: grid;
   min-width: 0;
   min-height: 0;
-  gap: clamp(1rem, 1.5vw, 1.5rem);
+  gap: var(--ui-page-gap);
 }
 
 @media (min-width: 1280px) {
@@ -112,8 +112,8 @@
   }
 
   .page {
-    max-width: 1880px;
-    padding-inline: clamp(2rem, 2vw, 2.5rem);
+    max-width: var(--ui-page-max);
+    padding-inline: var(--ui-page-padding-inline);
   }
 }
 
@@ -128,8 +128,8 @@
   }
 
   .page {
-    max-width: none;
-    padding-inline: 2rem;
+    max-width: var(--ui-page-max);
+    padding-inline: var(--ui-page-padding-inline);
   }
 
   .grid {
@@ -205,6 +205,6 @@
 
   .grid,
   .column {
-    gap: 0.75rem;
+    gap: var(--ui-compact-gap);
   }
 }

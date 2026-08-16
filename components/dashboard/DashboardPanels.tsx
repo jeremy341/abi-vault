@@ -36,8 +36,8 @@ const goals = [
 
 const categories = [
   { title: "Veranstaltung", amount: "1.740,00 € von 3.000,00 €", progress: 58, color: "bg-black dark:bg-white", bubble: "bg-black/[0.04] text-ink dark:bg-white/[0.08]", icon: Sparkles },
-  { title: "Material", amount: "384,90 € von 1.200,00 €", progress: 32, color: "bg-green-500", bubble: "bg-green-50 text-green-600 dark:bg-green-500/15", icon: Package },
-  { title: "Sonstiges", amount: "185,50 € von 1.000,00 €", progress: 10, color: "bg-amber-400", bubble: "bg-amber-50 text-amber-500 dark:bg-amber-500/15", icon: MoreHorizontal },
+  { title: "Material", amount: "384,90 € von 1.200,00 €", progress: 32, color: "bg-[var(--ui-positive)]", bubble: "bg-[var(--ui-positive-soft)] text-[var(--ui-positive)] dark:bg-green-500/15", icon: Package },
+  { title: "Sonstiges", amount: "185,50 € von 1.000,00 €", progress: 10, color: "bg-[var(--ui-warning)]", bubble: "bg-[var(--ui-warning-soft)] text-[var(--ui-warning)] dark:bg-amber-500/15", icon: MoreHorizontal },
 ];
 
 function IconBubble({ tone, children, className = "" }: { tone: string; children: React.ReactNode; className?: string }) {
@@ -46,7 +46,7 @@ function IconBubble({ tone, children, className = "" }: { tone: string; children
 
 export function TransactionHistory() {
   return (
-    <Card className="h-full rounded-2xl bg-card py-0 shadow-sm">
+    <Card className="h-full rounded-2xl bg-white/85 py-0 shadow-[0_12px_28px_rgb(0_0_0_/_0.07)] backdrop-blur-[3px] dark:bg-card/85">
       <CardHeader className="px-5 pb-0 pt-5 sm:px-6 lg:px-7 lg:pt-6">
         <CardTitle className="text-xl font-semibold tracking-tight lg:text-2xl">Transaktionsverlauf</CardTitle>
       </CardHeader>
@@ -61,13 +61,13 @@ export function TransactionHistory() {
         <div className="divide-y divide-black/10 dark:divide-white/10">
           {transactions.map((transaction, index) => {
             const Icon = transaction.icon;
-            const tone = transaction.tone === "green" ? "bg-green-50 text-green-600 dark:bg-green-500/15" : transaction.tone === "orange" ? "bg-orange-50 text-orange-500 dark:bg-orange-500/15" : "bg-violet-50 text-violet-600 dark:bg-violet-500/15";
+            const tone = transaction.tone === "green" ? "bg-[var(--ui-positive-soft)] text-[var(--ui-positive)] dark:bg-green-500/15" : transaction.tone === "orange" ? "bg-[var(--ui-orange-soft)] text-[var(--ui-orange)] dark:bg-orange-500/15" : "bg-[var(--ui-violet-soft)] text-[var(--ui-violet)] dark:bg-violet-500/15";
             return (
               <div key={transaction.title} className={`grid gap-2 px-2 py-3.5 text-sm sm:grid-cols-[minmax(0,1.5fr)_minmax(90px,0.9fr)_100px_110px_24px] sm:items-center sm:gap-3 min-[1280px]:max-[2199px]:py-3 min-[2200px]:min-h-10 min-[2200px]:py-3 ${index >= 7 ? "hidden min-[2200px]:grid" : ""} ${index >= transactions.length - 3 ? "min-[1280px]:max-[2199px]:hidden" : ""}`}>
                 <div className="flex min-w-0 items-center gap-2.5 font-medium text-ink"><IconBubble tone={tone}><Icon className="size-4" /></IconBubble><span className="truncate">{transaction.title}</span></div>
                 <span className="pl-10 text-xs text-muted-foreground sm:pl-0 sm:text-sm">{transaction.category}</span>
-                <span className="pl-10 text-xs text-muted-foreground sm:pl-0 sm:text-sm">{transaction.date}</span>
-                <span className={`whitespace-nowrap pl-10 font-medium tabular-nums sm:pl-0 ${transaction.amount.startsWith("+") ? "text-green-600" : "text-red-500"}`}>{transaction.amount}</span>
+                <span className="ui-tabular pl-10 text-xs text-muted-foreground sm:pl-0 sm:text-sm">{transaction.date}</span>
+                <span className={`whitespace-nowrap pl-10 font-medium tabular-nums sm:pl-0 ${transaction.amount.startsWith("+") ? "text-[var(--ui-positive)]" : "text-[var(--ui-negative)]"}`}>{transaction.amount}</span>
                 <FileText className="hidden size-4 text-muted-foreground sm:block" />
               </div>
             );
@@ -94,7 +94,7 @@ export function GoalsPanel() {
   const hasAdditionalGoal = goalItems.length > goals.length;
 
   return (
-    <Card className="rounded-2xl bg-card py-0 shadow-sm">
+    <Card className="rounded-2xl bg-white/85 py-0 shadow-[0_12px_28px_rgb(0_0_0_/_0.07)] backdrop-blur-[3px] dark:bg-card/85">
       <CardHeader className="flex-row items-center justify-between px-5 pb-0 pt-5 sm:px-6 lg:px-7 lg:pt-6">
         <CardTitle className="text-xl font-semibold tracking-tight lg:text-2xl">Ziele</CardTitle>
         <button type="button" onClick={addGoal} className="inline-flex items-center gap-2 text-sm font-medium text-ink transition-opacity hover:opacity-65"><Plus className="size-5" /> Ziel hinzufügen</button>
@@ -118,7 +118,7 @@ export function GoalsPanel() {
 
 export function SpendingByCategory() {
   return (
-    <Card className="rounded-2xl bg-card py-0 shadow-sm">
+    <Card className="rounded-2xl bg-white/85 py-0 shadow-[0_12px_28px_rgb(0_0_0_/_0.07)] backdrop-blur-[3px] dark:bg-card/85">
       <CardHeader className="px-5 pb-0 pt-5 sm:px-6 lg:px-7 lg:pt-6"><CardTitle className="text-xl font-semibold tracking-tight lg:text-2xl">Ausgaben nach Kategorie</CardTitle></CardHeader>
       <CardContent className="space-y-4 px-5 pb-5 pt-4 sm:px-6 lg:px-7 min-[1280px]:max-[2199px]:space-y-2 min-[1280px]:max-[2199px]:pt-2 min-[2200px]:space-y-1 min-[2200px]:pb-6 min-[2200px]:pt-1">
         {categories.map((category) => {
@@ -140,10 +140,10 @@ export function SpendingByCategory() {
 
 export function ReviewPanel() {
   return (
-    <Card className="rounded-2xl bg-card py-0 shadow-sm">
+    <Card className="rounded-2xl bg-white/85 py-0 shadow-[0_12px_28px_rgb(0_0_0_/_0.07)] backdrop-blur-[3px] dark:bg-card/85">
       <CardHeader className="px-5 pb-0 pt-5 sm:px-6 lg:px-7 lg:pt-6"><CardTitle className="text-xl font-semibold tracking-tight lg:text-2xl">Zu prüfen</CardTitle></CardHeader>
       <CardContent className="space-y-2 px-5 pb-7 pt-2 sm:px-6 lg:px-7 min-[1280px]:max-[2199px]:pt-0">
-        <Link href="/dashboard/receipts" className="flex items-center gap-3 rounded-lg border border-black/[0.08] px-3 py-2.5 text-sm transition-colors hover:bg-black/[0.03] dark:border-white/15 dark:hover:bg-white/[0.06]"><AlertTriangle className="size-5 text-amber-500" /><span className="flex-1">3 Belege warten auf Prüfung</span><ArrowRight className="size-4" /></Link>
+        <Link href="/dashboard/receipts" className="flex items-center gap-3 rounded-lg border border-black/[0.08] px-3 py-2.5 text-sm transition-colors hover:bg-black/[0.03] dark:border-white/15 dark:hover:bg-white/[0.06]"><AlertTriangle className="size-5 text-[var(--ui-warning)]" /><span className="flex-1">3 Belege warten auf Prüfung</span><ArrowRight className="size-4" /></Link>
         <Link href="/dashboard/transactions" className="flex items-center gap-3 rounded-lg border border-black/[0.08] px-3 py-2.5 text-sm transition-colors hover:bg-black/[0.03] dark:border-white/15 dark:hover:bg-white/[0.06]"><Info className="size-5" /><span className="flex-1">1 Bargeldzahlung fehlt</span><ArrowRight className="size-4" /></Link>
         <Link href="/dashboard/receipts" className="hidden items-center gap-3 rounded-lg border border-black/[0.08] px-3 py-2.5 text-sm transition-colors hover:bg-black/[0.03] min-[2200px]:flex min-[2200px]:py-3 dark:border-white/15 dark:hover:bg-white/[0.06]"><FileText className="size-5 text-muted-foreground" /><span className="flex-1">1 Beleg ohne Kategorie</span><ArrowRight className="size-4" /></Link>
         <Link href="/dashboard/transactions" className="mt-2 flex h-10 items-center justify-center gap-2 rounded-lg bg-black text-sm font-medium text-white transition-opacity hover:opacity-80 min-[2200px]:mt-3 min-[2200px]:h-12 dark:bg-white dark:text-black"><Plus className="size-5" /> Transaktion hinzufügen</Link>

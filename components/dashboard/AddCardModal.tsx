@@ -2,6 +2,7 @@
 
 import { X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import AccountCard, { type AccountCardDetails } from "@/components/dashboard/AccountCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -67,6 +68,7 @@ export default function AddCardModal({ open, onClose, onSave }: AddCardModalProp
     }
 
     if (!open) return null;
+    if (typeof document === "undefined") return null;
 
 
     function handleExpiryChange(value: string) {
@@ -109,7 +111,7 @@ export default function AddCardModal({ open, onClose, onSave }: AddCardModalProp
         setErrors({});
     }
 
-    return (
+    return createPortal((
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4 backdrop-blur-[2px]">
             <form
                 onSubmit={handleSubmit}
@@ -178,7 +180,7 @@ export default function AddCardModal({ open, onClose, onSave }: AddCardModalProp
                 </div>
             </form>
         </div>
-    );
+    ), document.body);
 }
 
 function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {

@@ -1,9 +1,10 @@
 # Abi Manager UI — Remaining Design Mismatches
 
-> Updated 2026-08-14 after the P2 consistency pass. P1 foundations and all actionable P2 items are resolved; the account-card animation remains intentionally unchanged by request.
+> Updated 2026-08-16 after the P0/P3 cleanup. The Account card animation remains intentionally unchanged by request.
 
 ## Priority key
 
+- **P0** — shared behavior or accessibility contract
 - **P2** — local inconsistency or maintainability issue
 - **P3** — polish or future documentation issue
 
@@ -12,8 +13,17 @@
 | Priority | Surface | Current state | Suggested future decision |
 |---|---|---|---|
 | P2 | Account card animation | The account-card sweep/tilt remains the strongest animation in the product | Keep only if it remains an intentional identity anchor |
-| P3 | Document language | Root `html lang` remains English while product copy is German | Change locale metadata when the product locale is finalized |
-| P3 | Empty and placeholder pages | Secondary routes do not yet share a fully reusable page-intro and empty-state component | Extract the pattern when those pages become real |
+
+## Resolved P0 contracts
+
+- Shared pagination, dropdown, button, and dialog primitives are implemented and used by the Transactions and Receipts pages.
+- Dialogs expose accessible labels, modal semantics, Escape handling, and click-outside dismissal.
+- Dropdowns expose listbox semantics, selected-state feedback, and keyboard-friendly button triggers.
+
+## Resolved P3 polish
+
+- Root document language now matches the German product copy with `lang="de"`.
+- Secondary pages use the shared `PagePlaceholder` composition and the same page-container, card, typography, border, and shadow language as the Dashboard.
 
 ## Resolved P1 foundations
 

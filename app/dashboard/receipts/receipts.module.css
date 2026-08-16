@@ -40,7 +40,7 @@
 
 /* Dashboard-aligned typography and rhythm, without changing the receipt layout. */
 .summaryGrid { gap: var(--ui-card-gap); }
-.listHeader h2 { font-size: var(--ui-section-title-size); }
+.listHeader h2 { font-size: var(--ui-section-title-size); font-weight: 600; letter-spacing: -.025em; }
 .tableHeader { font-size: var(--ui-table-header-size); }
 .row { font-size: var(--ui-table-row-size); }
 

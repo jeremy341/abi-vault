@@ -1,6 +1,5 @@
+import PagePlaceholder from "@/components/dashboard/PagePlaceholder";
+
 export default function GoalsPage() {
-  return (
-    <section className="p-8">
-    </section>
-  );
+  return <PagePlaceholder title="Ziele" description="Sparziele planen und Fortschritte verfolgen." />;
 }

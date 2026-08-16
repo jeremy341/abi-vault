@@ -27,6 +27,51 @@
 .mobileIntro {
   display: none;
 }
+
+.placeholderPage {
+  display: flex;
+  width: 100%;
+  max-width: var(--ui-page-max);
+  min-height: 0;
+  flex: 1 1 0%;
+  margin-inline: auto;
+  padding: 0 var(--ui-page-padding-inline) var(--ui-page-padding-bottom);
+}
+
+.emptyState {
+  display: grid;
+  width: 100%;
+  align-content: center;
+  justify-items: center;
+  min-height: 18rem;
+  margin: auto 0;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-card-radius);
+  background: var(--ui-surface);
+  box-shadow: var(--ui-card-shadow);
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+.emptyState > span {
+  color: var(--ui-muted-ink);
+  font-size: var(--ui-meta-size);
+}
+
+.emptyState h2 {
+  margin: .5rem 0 0;
+  color: var(--ui-ink);
+  font-size: var(--ui-section-title-size);
+  font-weight: 600;
+  letter-spacing: -.025em;
+}
+
+.emptyState p {
+  max-width: 34rem;
+  margin: .5rem 0 0;
+  color: var(--ui-muted-ink);
+  font-size: .9rem;
+}
 .page {
   display: flex;
   width: 100%;

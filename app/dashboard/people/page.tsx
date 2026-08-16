@@ -1,8 +1,5 @@
+import PagePlaceholder from "@/components/dashboard/PagePlaceholder";
+
 export default function PeoplePage() {
-  return (
-    <section className="p-8">
-      <p className="text-sm text-muted">Abi 2026</p>
-      <h1 className="mt-2 text-3xl font-semibold">Personen</h1>
-    </section>
-  );
+  return <PagePlaceholder title="Personen" description="Mitglieder und Rollen verwalten." />;
 }

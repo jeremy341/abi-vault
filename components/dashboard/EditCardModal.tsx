@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { filterLetters, isValidFutureExpiry, previewCardNumber } from "@/lib/card-format";
 import AccountCard, { type AccountCardDetails } from "@/components/dashboard/AccountCard";
@@ -67,6 +68,7 @@ export default function EditCardModal({ open, card, onClose, onSave, onDelete }:
     }
 
     if (!open || !card) return null;
+    if (typeof document === "undefined") return null;
 
 
     function handleExpiryChange(value: string) {
@@ -103,7 +105,7 @@ export default function EditCardModal({ open, card, onClose, onSave, onDelete }:
         onSave({ ...values, color: selectedColor });
     }
 
-    return (
+    return createPortal((
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4 backdrop-blur-[2px]">
             <form
                 onSubmit={handleSubmit}
@@ -163,7 +165,7 @@ export default function EditCardModal({ open, card, onClose, onSave, onDelete }:
                 </div>
             </form>
         </div>
-    );
+    ), document.body);
 }
 
 function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {

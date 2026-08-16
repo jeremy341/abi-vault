@@ -81,6 +81,14 @@ Spacing rules:
 
 ## Shared component contracts
 
+### Secondary-page placeholder
+
+Source: `components/dashboard/PagePlaceholder.tsx`
+
+- Secondary routes use the shared page-container inset and a neutral card-based empty state.
+- Placeholder cards use the Dashboard surface, border, radius, shadow, section-title typography, and muted metadata roles.
+- The global Dashboard header remains the single page-title source; placeholder content communicates the page’s current readiness without introducing a second navigation pattern.
+
 ### Field dropdown
 
 Source: `components/ui/field-dropdown.tsx`

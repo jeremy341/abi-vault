@@ -5,17 +5,18 @@ import {
   ArrowDown,
   ArrowUp,
   BusFront,
+  CakeSlice,
   CalendarDays,
   Check,
   ChevronDown,
-  CircleDollarSign,
+  HandCoins,
   Equal,
   FileText,
   Filter,
   Paperclip,
   Plus,
   Search,
-  Sparkles,
+  PartyPopper,
   TrendingUp,
   X,
 } from "lucide-react";
@@ -45,18 +46,18 @@ type Transaction = {
 
 const initialTransactions: Transaction[] = [
   { id: 1, title: "Druck Abizeitung", category: "Material", date: "12.05.2024", amount: -320, receipt: "Rechnung_Abizeitung.pdf", reviewStatus: "Geprüft", account: "Bankkonto", tone: "violet", icon: FileText },
-  { id: 2, title: "Kuchenverkauf", category: "Sonstiges", date: "11.05.2024", amount: 185.5, reviewStatus: "Geprüft", account: "Barkasse", tone: "green", icon: Sparkles },
-  { id: 3, title: "Dekoration Abiball", category: "Veranstaltung", date: "08.05.2024", amount: -184.9, receipt: "Bon_Abiball.jpg", reviewStatus: "Zu prüfen", account: "Bankkonto", tone: "orange", icon: Sparkles },
-  { id: 4, title: "Spende Eltern", category: "Sonstiges", date: "07.05.2024", amount: 250, reviewStatus: "Geprüft", account: "Barkasse", tone: "green", icon: CircleDollarSign },
+  { id: 2, title: "Kuchenverkauf", category: "Sonstiges", date: "11.05.2024", amount: 185.5, reviewStatus: "Geprüft", account: "Barkasse", tone: "green", icon: CakeSlice },
+  { id: 3, title: "Dekoration Abiball", category: "Veranstaltung", date: "08.05.2024", amount: -184.9, receipt: "Bon_Abiball.jpg", reviewStatus: "Zu prüfen", account: "Bankkonto", tone: "orange", icon: PartyPopper },
+  { id: 4, title: "Spende Eltern", category: "Sonstiges", date: "07.05.2024", amount: 250, reviewStatus: "Geprüft", account: "Barkasse", tone: "green", icon: HandCoins },
   { id: 5, title: "Busfahrt Abifahrt", category: "Veranstaltung", date: "05.05.2024", amount: -1200, receipt: "Rechnung_Busfahrt.pdf", reviewStatus: "Geprüft", account: "Bankkonto", tone: "violet", icon: BusFront },
-  { id: 6, title: "Mitgliedsbeitrag", category: "Sonstiges", date: "03.05.2024", amount: 120, reviewStatus: "Geprüft", account: "Bankkonto", tone: "green", icon: CircleDollarSign },
+  { id: 6, title: "Mitgliedsbeitrag", category: "Sonstiges", date: "03.05.2024", amount: 120, reviewStatus: "Geprüft", account: "Bankkonto", tone: "green", icon: HandCoins },
   { id: 7, title: "Druck Nachzahlung", category: "Material", date: "02.05.2024", amount: -75, receipt: "Rechnung_Nachdruck.pdf", reviewStatus: "Geprüft", account: "Bankkonto", tone: "violet", icon: FileText },
-  { id: 8, title: "Dekoration Klassenraum", category: "Material", date: "30.04.2024", amount: -96.4, reviewStatus: "Zu prüfen", account: "Barkasse", tone: "orange", icon: Sparkles },
-  { id: 9, title: "Spende Förderverein", category: "Sonstiges", date: "28.04.2024", amount: 300, reviewStatus: "Geprüft", account: "Bankkonto", tone: "green", icon: CircleDollarSign },
+  { id: 8, title: "Dekoration Klassenraum", category: "Material", date: "30.04.2024", amount: -96.4, reviewStatus: "Zu prüfen", account: "Barkasse", tone: "orange", icon: PartyPopper },
+  { id: 9, title: "Spende Förderverein", category: "Sonstiges", date: "28.04.2024", amount: 300, reviewStatus: "Geprüft", account: "Bankkonto", tone: "green", icon: HandCoins },
   { id: 10, title: "Busreservierung Abifahrt", category: "Veranstaltung", date: "26.04.2024", amount: -420, receipt: "Reservierung_Abifahrt.pdf", reviewStatus: "Geprüft", account: "Bankkonto", tone: "violet", icon: BusFront },
-  { id: 11, title: "Kuchenzutaten Einkauf", category: "Material", date: "24.04.2024", amount: -64.8, reviewStatus: "Zu prüfen", account: "Barkasse", tone: "orange", icon: Sparkles },
-  { id: 12, title: "Tombola Preise", category: "Veranstaltung", date: "22.04.2024", amount: -142, reviewStatus: "Geprüft", account: "Barkasse", tone: "violet", icon: Sparkles },
-  { id: 13, title: "Abiball Ticketverkauf", category: "Sonstiges", date: "20.04.2024", amount: 540, reviewStatus: "Geprüft", account: "Barkasse", tone: "green", icon: CircleDollarSign },
+  { id: 11, title: "Kuchenzutaten Einkauf", category: "Material", date: "24.04.2024", amount: -64.8, reviewStatus: "Zu prüfen", account: "Barkasse", tone: "orange", icon: CakeSlice },
+  { id: 12, title: "Tombola Preise", category: "Veranstaltung", date: "22.04.2024", amount: -142, reviewStatus: "Geprüft", account: "Barkasse", tone: "violet", icon: PartyPopper },
+  { id: 13, title: "Abiball Ticketverkauf", category: "Sonstiges", date: "20.04.2024", amount: 540, reviewStatus: "Geprüft", account: "Barkasse", tone: "green", icon: HandCoins },
 ];
 
 const toneClasses = { violet: styles.violet, green: styles.green, orange: styles.orange };
@@ -185,7 +186,7 @@ export default function TransactionsPage() {
     setItems((current) => [{
       id: Date.now(), title: newTitle.trim(), category: newCategory, date: displayDate(new Date()),
       amount: newType === "Ausgabe" ? -Math.abs(amount) : Math.abs(amount), reviewStatus: "Zu prüfen", account: newAccount, tone: newType === "Einnahme" ? "green" : "violet",
-      icon: newType === "Einnahme" ? CircleDollarSign : FileText,
+      icon: newType === "Einnahme" ? HandCoins : FileText,
     }, ...current]);
     setNewTitle(""); setNewAmount(""); setNewAccount("Barkasse"); setAddOpen(false); setPage(1);
   }

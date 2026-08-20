@@ -5,27 +5,29 @@ import {
   AlertTriangle,
   ArrowRight,
   BusFront,
-  CircleDollarSign,
+  CalendarDays,
+  CakeSlice,
   FileText,
+  HandCoins,
   Info,
   MoreHorizontal,
   Package,
   Plus,
-  Sparkles,
+  PartyPopper,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import dashboardStyles from "@/app/dashboard/dashboard.module.css";
 
 const transactions = [
   { title: "Druck Abizeitung", category: "Material", date: "12.05.2024", amount: "-320,00 €", tone: "violet", icon: FileText },
-  { title: "Kuchenverkauf", category: "Sonstiges", date: "11.05.2024", amount: "+185,50 €", tone: "green", icon: Sparkles },
-  { title: "Dekoration Abiball", category: "Veranstaltung", date: "08.05.2024", amount: "-184,90 €", tone: "orange", icon: Sparkles },
-  { title: "Spende Eltern", category: "Sonstiges", date: "07.05.2024", amount: "+250,00 €", tone: "green", icon: CircleDollarSign },
+  { title: "Kuchenverkauf", category: "Sonstiges", date: "11.05.2024", amount: "+185,50 €", tone: "green", icon: CakeSlice },
+  { title: "Dekoration Abiball", category: "Veranstaltung", date: "08.05.2024", amount: "-184,90 €", tone: "orange", icon: PartyPopper },
+  { title: "Spende Eltern", category: "Sonstiges", date: "07.05.2024", amount: "+250,00 €", tone: "green", icon: HandCoins },
   { title: "Busfahrt Abifahrt", category: "Veranstaltung", date: "05.05.2024", amount: "-1.200,00 €", tone: "violet", icon: BusFront },
-  { title: "Mitgliedsbeitrag", category: "Sonstiges", date: "03.05.2024", amount: "+120,00 €", tone: "green", icon: CircleDollarSign },
+  { title: "Mitgliedsbeitrag", category: "Sonstiges", date: "03.05.2024", amount: "+120,00 €", tone: "green", icon: HandCoins },
   { title: "Druck Nachzahlung", category: "Material", date: "02.05.2024", amount: "-75,00 €", tone: "violet", icon: FileText },
-  { title: "Dekoration Klassenraum", category: "Material", date: "30.04.2024", amount: "-96,40 €", tone: "orange", icon: Sparkles },
-  { title: "Sponsoring Klassenfest", category: "Veranstaltung", date: "28.04.2024", amount: "+480,00 €", tone: "green", icon: CircleDollarSign },
+  { title: "Dekoration Klassenraum", category: "Material", date: "30.04.2024", amount: "-96,40 €", tone: "orange", icon: PartyPopper },
+  { title: "Sponsoring Klassenfest", category: "Veranstaltung", date: "28.04.2024", amount: "+480,00 €", tone: "green", icon: HandCoins },
 ];
 
 const goals = [
@@ -35,7 +37,7 @@ const goals = [
 ];
 
 const categories = [
-  { title: "Veranstaltung", amount: "1.740,00 € von 3.000,00 €", progress: 58, color: "bg-black dark:bg-white", bubble: "bg-black/[0.04] text-ink dark:bg-white/[0.08]", icon: Sparkles },
+  { title: "Veranstaltung", amount: "1.740,00 € von 3.000,00 €", progress: 58, color: "bg-black dark:bg-white", bubble: "bg-black/[0.04] text-ink dark:bg-white/[0.08]", icon: CalendarDays },
   { title: "Material", amount: "384,90 € von 1.200,00 €", progress: 32, color: "bg-[var(--ui-positive)]", bubble: "bg-[var(--ui-positive-soft)] text-[var(--ui-positive)] dark:bg-green-500/15", icon: Package },
   { title: "Sonstiges", amount: "185,50 € von 1.000,00 €", progress: 10, color: "bg-[var(--ui-warning)]", bubble: "bg-[var(--ui-warning-soft)] text-[var(--ui-warning)] dark:bg-amber-500/15", icon: MoreHorizontal },
 ];
@@ -61,10 +63,10 @@ export function TransactionHistory() {
         <div className="divide-y divide-black/10 dark:divide-white/10">
           {transactions.map((transaction, index) => {
             const Icon = transaction.icon;
-            const tone = transaction.tone === "green" ? "bg-[var(--ui-positive-soft)] text-[var(--ui-positive)] dark:bg-green-500/15" : transaction.tone === "orange" ? "bg-[var(--ui-orange-soft)] text-[var(--ui-orange)] dark:bg-orange-500/15" : "bg-[var(--ui-violet-soft)] text-[var(--ui-violet)] dark:bg-violet-500/15";
+            const tone = "bg-black/[0.035] text-ink dark:bg-white/[0.08] dark:text-white/80";
             return (
               <div key={transaction.title} className={`${index >= 6 ? dashboardStyles.landscapeSummaryHidden : ""} grid gap-2 px-2 py-3.5 text-sm sm:grid-cols-[minmax(0,1.5fr)_minmax(90px,0.9fr)_100px_110px_24px] sm:items-center sm:gap-3 min-[1280px]:max-[2199px]:py-3 min-[2200px]:min-h-10 min-[2200px]:py-3 ${index >= 7 ? "hidden min-[2200px]:grid" : ""} ${index >= transactions.length - 3 ? "min-[1280px]:max-[2199px]:hidden" : ""}`}>
-                <div className="flex min-w-0 items-center gap-2.5 font-medium text-ink"><IconBubble tone={tone}><Icon className="size-4" /></IconBubble><span className="truncate">{transaction.title}</span></div>
+                <div className="flex min-w-0 items-center gap-2.5 font-medium text-ink"><IconBubble tone={tone}><Icon className="size-4 stroke-[1.7]" /></IconBubble><span className="truncate">{transaction.title}</span></div>
                 <span className="pl-10 text-xs text-muted-foreground sm:pl-0 sm:text-sm">{transaction.category}</span>
                 <span className="ui-tabular pl-10 text-xs text-muted-foreground sm:pl-0 sm:text-sm">{transaction.date}</span>
                 <span className={`whitespace-nowrap pl-10 font-medium tabular-nums sm:pl-0 ${transaction.amount.startsWith("+") ? "text-[var(--ui-positive)]" : "text-[var(--ui-negative)]"}`}>{transaction.amount}</span>

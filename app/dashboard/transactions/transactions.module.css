@@ -74,9 +74,8 @@
 .iconBubble { display: inline-flex; width: 2rem; height: 2rem; flex: none; align-items: center; justify-content: center; border-radius: 999px; }
 .iconBubble svg { width: 1rem; height: 1rem; }
 .categoryTag { display: inline-flex; max-width: 100%; border-radius: 999px; padding: .22rem .55rem; font-size: .75rem; line-height: 1; }
-.violet { background: var(--ui-violet-soft); color: var(--ui-violet); }
-.green { background: var(--ui-positive-soft); color: var(--ui-positive); }
-.orange { background: var(--ui-orange-soft); color: var(--ui-orange); }
+.violet, .green, .orange { background: rgb(0 0 0 / .035); color: var(--ui-ink); }
+.iconBubble svg { stroke-width: 1.7; }
 .muted { color: var(--muted-foreground); }
 .receipt { display: flex; min-width: 0; align-items: center; gap: .55rem; color: var(--muted-foreground); }
 .receipt svg { width: 1.05rem; height: 1.05rem; flex: none; color: var(--ink); }

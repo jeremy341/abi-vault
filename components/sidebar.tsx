@@ -65,6 +65,8 @@ export default function Sidebar() {
                       render={<Link href={item.href} />}
                       isActive={isActive}
                       tooltip={item.label}
+                      aria-label={item.label}
+                      title={item.label}
                       className={`${dashboardStyles.sidebarMenuButton} h-14 gap-3 rounded-xl px-4 text-[15px] text-black/55 transition-[background-color,color,transform] duration-200 hover:translate-x-0.5 hover:bg-black/[0.025] hover:text-ink active:scale-[0.99] data-active:bg-black/[0.045] data-active:text-ink motion-reduce:transform-none dark:text-white/65 dark:hover:bg-white/[0.06] dark:hover:text-white dark:data-active:bg-white/[0.1] dark:data-active:text-white [&_svg]:size-5 [&_svg]:stroke-[1.7]`}
                     >
                       <Icon />

@@ -23,6 +23,7 @@ import styles from "./transactions.module.css";
 import { Dialog } from "@/components/ui/dialog";
 import { FieldDropdown, type FieldDropdownOption } from "@/components/ui/field-dropdown";
 import { Pagination } from "@/components/ui/pagination";
+import { useResponsivePageSize } from "@/hooks/use-responsive-page-size";
 
 type Category = "Material" | "Sonstiges" | "Veranstaltung";
 type FilterType = "Einnahmen" | "Ausgaben";
@@ -119,11 +120,12 @@ export default function TransactionsPage() {
   const [addOpen, setAddOpen] = useState(false);
   const [selected, setSelected] = useState<Transaction | null>(null);
   const [page, setPage] = useState(1);
-  const pageSize = 10;
+  const pageSize = useResponsivePageSize({ defaultSize: 10, landscapeSize: 6, wideSize: 10 });
   const [newTitle, setNewTitle] = useState("");
   const [newAmount, setNewAmount] = useState("");
   const [newCategory, setNewCategory] = useState<Category>("Sonstiges");
   const [newType, setNewType] = useState<"Einnahme" | "Ausgabe">("Einnahme");
+  const [newAccount, setNewAccount] = useState<Exclude<AccountFilter, "Alle Konten">>("Barkasse");
 
   const results = useMemo(() => items.filter((item) => {
     const search = query.trim().toLowerCase();
@@ -143,9 +145,10 @@ export default function TransactionsPage() {
   }).sort((a, b) => parseDate(b.date).getTime() - parseDate(a.date).getTime()), [accountFilter, category, end, items, maxAmount, minAmount, query, receiptFilter, reviewFilter, selectedCategories, selectedTypes, start, type]);
 
   const pages = Math.max(1, Math.ceil(results.length / pageSize));
-  const visible = results.slice((page - 1) * pageSize, page * pageSize);
-  const rangeStart = results.length ? (page - 1) * pageSize + 1 : 0;
-  const rangeEnd = Math.min(page * pageSize, results.length);
+  const currentPage = Math.min(page, pages);
+  const visible = results.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const rangeStart = results.length ? (currentPage - 1) * pageSize + 1 : 0;
+  const rangeEnd = Math.min(currentPage * pageSize, results.length);
   const totalIncome = items.filter((item) => item.amount >= 0).reduce((sum, item) => sum + item.amount, 0);
   const totalExpense = items.filter((item) => item.amount < 0).reduce((sum, item) => sum + Math.abs(item.amount), 0);
   const netBalance = totalIncome - totalExpense;
@@ -181,10 +184,10 @@ export default function TransactionsPage() {
     if (!newTitle.trim() || !Number.isFinite(amount)) return;
     setItems((current) => [{
       id: Date.now(), title: newTitle.trim(), category: newCategory, date: displayDate(new Date()),
-      amount: newType === "Ausgabe" ? -Math.abs(amount) : Math.abs(amount), reviewStatus: "Zu prüfen", account: "Barkasse", tone: newType === "Einnahme" ? "green" : "violet",
+      amount: newType === "Ausgabe" ? -Math.abs(amount) : Math.abs(amount), reviewStatus: "Zu prüfen", account: newAccount, tone: newType === "Einnahme" ? "green" : "violet",
       icon: newType === "Einnahme" ? CircleDollarSign : FileText,
     }, ...current]);
-    setNewTitle(""); setNewAmount(""); setAddOpen(false); setPage(1);
+    setNewTitle(""); setNewAmount(""); setNewAccount("Barkasse"); setAddOpen(false); setPage(1);
   }
 
   const dateLabel = start || end
@@ -229,10 +232,10 @@ export default function TransactionsPage() {
         <div className={styles.rows}>
           {visible.map((transaction) => { const Icon = transaction.icon; return <button type="button" className={styles.row} key={transaction.id} onClick={() => setSelected(transaction)}>
             <span className={styles.transactionName}><span className={`${styles.iconBubble} ${toneClasses[transaction.tone]}`}><Icon /></span><span>{transaction.title}</span></span>
-            <span><span className={`ui-badge ${styles.categoryTag} ${toneClasses[transaction.tone]}`}>{transaction.category}</span></span>
-            <span className={`ui-tabular ${styles.muted}`}>{transaction.date}</span>
-            <span className={`ui-tabular ${transaction.amount >= 0 ? styles.positive : styles.negative}`}>{displayAmount(transaction.amount)}</span>
-            <span className={styles.receipt}>{transaction.receipt ? <><Paperclip /><span>{transaction.receipt}</span></> : <span>—</span>}</span>
+            <span data-label="Kategorie"><span className={`ui-badge ${styles.categoryTag} ${toneClasses[transaction.tone]}`}>{transaction.category}</span></span>
+            <span data-label="Datum" className={`ui-tabular ${styles.muted}`}>{transaction.date}</span>
+            <span data-label="Betrag" className={`ui-tabular ${transaction.amount >= 0 ? styles.positive : styles.negative}`}>{displayAmount(transaction.amount)}</span>
+            <span data-label="Beleg" className={styles.receipt}>{transaction.receipt ? <><Paperclip /><span>{transaction.receipt}</span></> : <span>—</span>}</span>
           </button>; })}
         </div>
       </div>
@@ -241,7 +244,7 @@ export default function TransactionsPage() {
 
       <footer className={styles.pagination}>
         <span>{rangeStart}–{rangeEnd} von {results.length}</span>
-        <Pagination page={page} pageCount={pages} onPageChange={setPage} className={styles.pageButtons} />
+        <Pagination page={currentPage} pageCount={pages} onPageChange={setPage} className={styles.pageButtons} />
       </footer>
     </article>
 
@@ -250,11 +253,57 @@ export default function TransactionsPage() {
     {filterOpen ? <Overlay className={styles.filterModal} label="Transaktionen filtern" onClose={() => setFilterOpen(false)}><div className={styles.modalHeader}><div><h2>Transaktionen filtern</h2><p>Wähle die Kriterien aus, nach denen du die Transaktionen anzeigen möchtest.</p></div><button type="button" className={styles.iconButton} onClick={() => setFilterOpen(false)} aria-label="Filter schließen"><X /></button></div><div className={`${styles.modalBody} ${styles.filterModalBody}`}>
       <div className={styles.filterColumns}><fieldset className={styles.filterGroup}><legend>Kategorie</legend>{(["Material", "Sonstiges", "Veranstaltung"] as Category[]).map((value) => <label className={styles.checkRow} key={value}><input type="checkbox" checked={draftCategories.includes(value)} onChange={() => toggleDraftCategory(value)} /><span>{value}</span></label>)}</fieldset><fieldset className={styles.filterGroup}><legend>Typ</legend>{(["Einnahmen", "Ausgaben"] as FilterType[]).map((value) => <label className={styles.checkRow} key={value}><input type="checkbox" checked={draftTypes.includes(value)} onChange={() => toggleDraftType(value)} /><span>{value}</span></label>)}</fieldset></div>
       <div className={styles.modalSection}><span className={styles.modalSectionLabel}>Betrag</span><div className={styles.amountFields}><label className={styles.inlineField}><span>Von</span><input aria-label="Betrag von" inputMode="decimal" value={draftMinAmount} onChange={(event) => setDraftMinAmount(event.target.value)} placeholder="0,00 €" /></label><label className={styles.inlineField}><span>Bis</span><input aria-label="Betrag bis" inputMode="decimal" value={draftMaxAmount} onChange={(event) => setDraftMaxAmount(event.target.value)} placeholder="1.000,00 €" /></label></div></div>
-      <div className={styles.filterColumns}><fieldset className={styles.filterGroup}><legend>Belegstatus</legend><div className={styles.segmented}>{(["Alle", "Vorhanden", "Fehlt"] as ReceiptFilter[]).map((value) => <button type="button" key={value} className={draftReceiptFilter === value ? styles.segmentActive : ""} onClick={() => setDraftReceiptFilter(value)}>{value}</button>)}</div></fieldset><fieldset className={styles.filterGroup}><legend>Prüfstatus</legend><div className={styles.segmented}>{(["Alle", "Geprüft", "Zu prüfen"] as ReviewFilter[]).map((value) => <button type="button" key={value} className={draftReviewFilter === value ? styles.segmentActive : ""} onClick={() => setDraftReviewFilter(value)}>{value}</button>)}</div></fieldset></div>
-      <div className={styles.formField}><span id="account-filter-label">Konto / Kasse</span><div className={styles.accountSelect}><button type="button" className={styles.accountTrigger} aria-haspopup="listbox" aria-expanded={accountMenuOpen} aria-labelledby="account-filter-label" onClick={() => setAccountMenuOpen((open) => !open)}><span>{draftAccountFilter}</span><ChevronDown /></button>{accountMenuOpen ? <div className={styles.accountMenu} role="listbox" aria-label="Konto / Kasse">{(["Alle Konten", "Bankkonto", "Barkasse"] as AccountFilter[]).map((value) => <button type="button" role="option" aria-selected={draftAccountFilter === value} className={`${styles.accountOption} ${draftAccountFilter === value ? styles.accountOptionActive : ""}`} key={value} onClick={() => { setDraftAccountFilter(value); setAccountMenuOpen(false); }}>{value}{draftAccountFilter === value ? <Check /> : null}</button>)}</div> : null}</div></div>
-    </div><div className={styles.modalFooter}><button type="button" className={styles.secondaryButton} onClick={() => { resetFilters(); setFilterOpen(false); }}>Zurücksetzen</button><div><button type="button" className={styles.secondaryButton} onClick={() => setFilterOpen(false)}>Abbrechen</button><button type="button" className={styles.primaryButton} onClick={applyFilters}>Filter anwenden</button></div></div></Overlay> : null}
+      <div className={styles.filterColumns}>
+        <fieldset className={styles.filterGroup}>
+          <legend>Belegstatus</legend>
+          <div className={styles.segmented}>
+            {(["Alle", "Vorhanden", "Fehlt"] as ReceiptFilter[]).map((value) => (
+              <button type="button" key={value} className={draftReceiptFilter === value ? styles.segmentActive : ""} onClick={() => setDraftReceiptFilter(value)}>{value}</button>
+            ))}
+          </div>
+        </fieldset>
+        <fieldset className={styles.filterGroup}>
+          <legend>Prüfstatus</legend>
+          <div className={styles.segmented}>
+            {(["Alle", "Geprüft", "Zu prüfen"] as ReviewFilter[]).map((value) => (
+              <button type="button" key={value} className={draftReviewFilter === value ? styles.segmentActive : ""} onClick={() => setDraftReviewFilter(value)}>{value}</button>
+            ))}
+          </div>
+        </fieldset>
+      </div>
 
-    {addOpen ? <Overlay label="Transaktion hinzufügen" onClose={() => setAddOpen(false)}><div className={styles.modalHeader}><div><h2>Transaktion hinzufügen</h2><p>Erfasse eine neue Einnahme oder Ausgabe.</p></div><button type="button" className={styles.iconButton} onClick={() => setAddOpen(false)} aria-label="Dialog schließen"><X /></button></div><div className={styles.modalBody}><label className={styles.formField}><span>Bezeichnung</span><input autoFocus value={newTitle} onChange={(event) => setNewTitle(event.target.value)} placeholder="z. B. Sponsoring Schule" /></label><div className={styles.dateFields}><StyledDropdown ariaLabel="Typ auswählen" label="Typ" value={newType} onChange={(value) => setNewType(value as typeof newType)} className={styles.formDropdown} options={[{ value: "Einnahme", label: "Einnahme" }, { value: "Ausgabe", label: "Ausgabe" }]} /><StyledDropdown ariaLabel="Kategorie auswählen" label="Kategorie" value={newCategory} onChange={(value) => setNewCategory(value as Category)} className={styles.formDropdown} options={[{ value: "Material", label: "Material" }, { value: "Sonstiges", label: "Sonstiges" }, { value: "Veranstaltung", label: "Veranstaltung" }]} /></div><label className={styles.formField}><span>Betrag</span><input inputMode="decimal" value={newAmount} onChange={(event) => setNewAmount(event.target.value)} placeholder="0,00" /></label></div><div className={styles.modalFooter}><span /><div><button type="button" className={styles.secondaryButton} onClick={() => setAddOpen(false)}>Abbrechen</button><button type="button" className={styles.primaryButton} onClick={addTransaction}>Hinzufügen</button></div></div></Overlay> : null}
+      <StyledDropdown
+        ariaLabel="Konto oder Kasse auswählen"
+        label="Konto / Kasse"
+        value={draftAccountFilter}
+        onChange={(value) => setDraftAccountFilter(value as AccountFilter)}
+        className={styles.formDropdown}
+        placement="bottom"
+        options={[
+          { value: "Alle Konten", label: "Alle Konten" },
+          { value: "Bankkonto", label: "Bankkonto" },
+          { value: "Barkasse", label: "Barkasse" },
+        ]}
+      />
+    </div>
+    <div className={styles.modalFooter}>
+      <button type="button" className={styles.secondaryButton} onClick={() => { resetFilters(); setFilterOpen(false); }}>Zurücksetzen</button>
+      <div>
+        <button type="button" className={styles.secondaryButton} onClick={() => setFilterOpen(false)}>Abbrechen</button>
+        <button type="button" className={styles.primaryButton} onClick={applyFilters}>Filter anwenden</button>
+      </div>
+    </div>
+  </Overlay> : null}
+
+    {addOpen ? <Overlay label="Transaktion hinzufügen" onClose={() => setAddOpen(false)}><div className={styles.modalHeader}><div><h2>Transaktion hinzufügen</h2><p>Erfasse eine neue Einnahme oder Ausgabe.</p></div><button type="button" className={styles.iconButton} onClick={() => setAddOpen(false)} aria-label="Dialog schließen"><X /></button></div><div className={styles.modalBody}>
+      <label className={styles.formField}><span>Bezeichnung</span><input autoFocus value={newTitle} onChange={(event) => setNewTitle(event.target.value)} placeholder="z. B. Sponsoring Schule" /></label>
+      <div className={styles.dateFields}>
+        <StyledDropdown ariaLabel="Typ auswählen" label="Typ" value={newType} onChange={(value) => setNewType(value as typeof newType)} className={styles.formDropdown} options={[{ value: "Einnahme", label: "Einnahme" }, { value: "Ausgabe", label: "Ausgabe" }]} />
+        <StyledDropdown ariaLabel="Kategorie auswählen" label="Kategorie" value={newCategory} onChange={(value) => setNewCategory(value as Category)} className={styles.formDropdown} options={[{ value: "Material", label: "Material" }, { value: "Sonstiges", label: "Sonstiges" }, { value: "Veranstaltung", label: "Veranstaltung" }]} />
+      </div>
+      <label className={styles.formField}><span>Betrag</span><input inputMode="decimal" value={newAmount} onChange={(event) => setNewAmount(event.target.value)} placeholder="0,00" /></label>
+      <StyledDropdown ariaLabel="Konto auswählen" label="Konto" value={newAccount} onChange={(value) => setNewAccount(value as Exclude<AccountFilter, "Alle Konten">)} className={styles.formDropdown} options={[{ value: "Bankkonto", label: "Bankkonto" }, { value: "Barkasse", label: "Barkasse" }]} />
+    </div><div className={styles.modalFooter}><span /><div><button type="button" className={styles.secondaryButton} onClick={() => setAddOpen(false)}>Abbrechen</button><button type="button" className={styles.primaryButton} onClick={addTransaction}>Hinzufügen</button></div></div></Overlay> : null}
 
     {selected ? <Overlay label="Transaktionsdetails" onClose={() => setSelected(null)}><div className={styles.modalHeader}><div><h2>{selected.title}</h2><p>Transaktionsdetails</p></div><button type="button" className={styles.iconButton} onClick={() => setSelected(null)} aria-label="Details schließen"><X /></button></div><div className={styles.detailGrid}><span>Kategorie</span><strong>{selected.category}</strong><span>Datum</span><strong>{selected.date}</strong><span>Betrag</span><strong className={selected.amount >= 0 ? styles.positive : styles.negative}>{displayAmount(selected.amount)}</strong><span>Beleg</span><strong>{selected.receipt ?? "Kein Beleg"}</strong></div></Overlay> : null}
   </section>;

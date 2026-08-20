@@ -386,7 +386,9 @@ At widths below 1280px, columns collapse into ordered content sections. The desk
 | `<760px` | Page padding becomes 1rem, KPI cards stack, list headers stack, filters stack, tables gain horizontal scrolling |
 | `<900px` | Receipt summaries stack; receipt filters stack; tables use a wide min-width |
 | `<1150px` | Transaction KPI trend moves below content; filter grid becomes two columns |
-| `<1280px` | Dashboard columns collapse into one ordered flow |
+| `768–1099px` | iPad portrait uses an icon rail, compact header, ordered dashboard flow, touch-sized controls, and card-style Transaction/Receipt rows |
+| `1100–1399px` | iPad landscape uses a scroll-free compact dashboard and six-row paginated Transaction/Receipt tables |
+| `<1280px` | Outside the explicit tablet landscape branch, Dashboard columns collapse into one ordered flow |
 | `1280–2199px` | Dashboard and transaction layouts use compact row/panel spacing; dashboard history hides trailing rows |
 | `>=1600px` | Page max-width/padding expands for wide desktop |
 | `>=2200px` | Dashboard sidebar, panels, labels, rows, spacing, and visible content enlarge; receipts and transactions use wider columns and taller surfaces |

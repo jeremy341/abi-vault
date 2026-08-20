@@ -80,7 +80,7 @@ export default function DashboardHeader() {
                 <button
                     type="button"
                     aria-label="Benachrichtigungen"
-                    className="rounded-lg p-2 hover:bg-black/[0.04] dark:hover:bg-white/[0.08]"
+                    className="rounded-lg p-2 hover:bg-black/[0.04] md:size-11 dark:hover:bg-white/[0.08]"
                 >
                     <Bell className="size-6" />
                 </button>

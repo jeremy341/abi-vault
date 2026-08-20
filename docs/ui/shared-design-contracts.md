@@ -172,6 +172,10 @@ Existing local page buttons remain in place where changing their markup would al
 ## Responsive contract
 
 - Target desktop references are 1920×1080 and 2560×1440.
+- Tablet/iPad support spans 768–1399px and uses a persistent 5.25rem icon rail, a 6rem page header, 1.25rem page/card rhythm, and touch-safe controls.
+- Tablet portrait (768–1099px) converts Transactions and Receipts tables into labeled card rows; tablet landscape (1100–1399px) preserves compact full tables with six records per page.
+- Dashboard portrait uses one ordered scrolling flow; dashboard landscape is a scroll-free at-a-glance overview with a compact bank card, five recent transactions, simplified goals, and condensed category/review cards.
+- Tablet pages may scroll vertically, but must not introduce document- or main-level horizontal overflow.
 - The shared wide-screen token branch begins at `min-width: 2200px`.
 - Dashboard, Transactions, and Receipts keep their current page-specific compositions and viewport containment.
 - Main shell overflow remains contained; shared contracts must not introduce document-level scrolling.
@@ -188,10 +192,11 @@ Existing local page buttons remain in place where changing their markup would al
 
 ## Verification baseline
 
-The current implementation was checked in the in-app browser at 1920×1080 and 2560×1440:
+The current implementation was checked in the in-app browser at 768×1024, 820×1180, 1180×820, 1366×1024, 1920×1080, and 2560×1440:
 
-- Dashboard, Transactions, and Receipts remained within the viewport.
-- No document-level scrolling was introduced.
+- All dashboard routes remain free of horizontal overflow at tablet sizes.
+- Tablet portrait uses card rows for Transactions and Receipts; tablet landscape retains compact tables with all columns visible.
+- Dashboard, Transactions, and Receipts retain their established desktop viewport containment.
 - Transactions filter dialog opened with the shared dialog behavior.
 - Receipts status dropdown opened with the shared dropdown behavior.
 - Lint and `git diff --check` passed after the contract changes.

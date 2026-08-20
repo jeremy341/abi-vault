@@ -253,3 +253,315 @@
     gap: var(--ui-compact-gap);
   }
 }
+
+/* Tablet / iPad shell: compact rail, touch-sized header, responsive content flow. */
+@media (min-width: 768px) and (max-width: 1399px) {
+  .shell {
+    --shell-gutter: 0.625rem;
+  }
+
+  .frame {
+    --dashboard-sidebar-width: 5.25rem;
+  }
+
+  .sidebarHeader {
+    display: flex;
+    justify-content: center;
+    padding: 1.25rem 0.75rem 1rem;
+  }
+
+  .sidebarHeader > a {
+    justify-content: center;
+  }
+
+  .sidebarHeader > a > span:last-child,
+  .sidebarMenuButton span,
+  :global([data-sidebar="footer"]) button span {
+    display: none;
+  }
+
+  .sidebarGroup {
+    padding-inline: 0.75rem;
+  }
+
+  .sidebarMenu {
+    gap: 0.5rem;
+  }
+
+  .sidebarMenuButton {
+    width: 3.5rem;
+    height: 3.5rem;
+    justify-content: center;
+    margin-inline: auto;
+    padding: 0;
+  }
+
+  .sidebarMenuButton svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  :global([data-sidebar="footer"]) {
+    justify-content: center;
+    padding: 0.75rem;
+  }
+
+  :global([data-sidebar="footer"]) button {
+    width: 3.5rem;
+    min-height: 3.5rem;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .header {
+    min-height: 6rem;
+    padding: 1.25rem 1.5rem 1rem;
+  }
+
+  .headerTitle {
+    font-size: 2rem;
+    line-height: 2.25rem;
+  }
+
+  .headerDescription {
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+
+  .cohortButton {
+    height: 3rem;
+    padding-inline: 1rem;
+    font-size: 0.875rem;
+  }
+
+  .page,
+  .placeholderPage {
+    flex: 0 0 auto;
+    padding-inline: 1.25rem;
+    padding-bottom: 1.5rem;
+  }
+
+  .grid,
+  .column {
+    gap: 1.25rem;
+  }
+
+  .grid {
+    min-height: auto;
+    flex: 0 0 auto;
+  }
+
+  .grid [data-slot="card"] {
+    height: auto;
+    flex-shrink: 0;
+  }
+
+  .emptyState {
+    min-height: 22rem;
+    margin-top: 1rem;
+  }
+}
+
+@media (min-width: 1100px) and (max-width: 1399px) {
+  .grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.03fr) minmax(0, 0.97fr);
+    align-items: start;
+  }
+
+  .leftColumn,
+  .rightColumn {
+    display: grid;
+    align-content: start;
+    gap: 1.25rem;
+  }
+}
+
+/* iPad landscape is an at-a-glance dashboard: compact summaries, no page scroll. */
+@media (min-width: 1100px) and (max-width: 1399px) and (orientation: landscape) {
+  .page {
+    min-height: 0;
+    flex: 1 1 0%;
+    padding-bottom: 1rem;
+  }
+
+  .grid {
+    height: 100%;
+    min-height: 0;
+    flex: 1 1 0%;
+    overflow: hidden;
+  }
+
+  .leftColumn,
+  .rightColumn {
+    height: 100%;
+    min-height: 0;
+    align-content: start;
+  }
+
+  .leftColumn {
+    grid-template-rows: 17.5rem 28rem;
+  }
+
+  .rightColumn {
+    grid-template-rows: 17.5rem 13.5rem 13.25rem;
+  }
+
+  .grid [data-slot="card"] {
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .cashPanelHeader {
+    padding: 1rem 1.25rem 0;
+  }
+
+  .cashPanelContent {
+    padding: .75rem 1.25rem 1rem;
+  }
+
+  .accountCardSlot {
+    max-width: 15.625rem;
+  }
+
+  .accountBalance {
+    padding-left: .75rem;
+  }
+
+  .accountBalance > span,
+  .accountBalance > p {
+    font-size: .75rem;
+    line-height: 1.1rem;
+  }
+
+  .accountBalance > strong {
+    font-size: 1.75rem;
+    line-height: 2rem;
+  }
+
+  .accountStatus {
+    min-height: 3rem;
+    margin-top: .75rem;
+    gap: .75rem;
+    padding: .5rem .75rem;
+  }
+
+  .accountStatus > span {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .accountStatus > div {
+    font-size: .75rem;
+    line-height: 1rem;
+  }
+
+  .transactionPanel [data-slot="card-header"],
+  .goalsPanel [data-slot="card-header"],
+  .spendingPanel [data-slot="card-header"],
+  .reviewPanel [data-slot="card-header"] {
+    padding: 1rem 1.25rem 0;
+  }
+
+  .transactionPanel [data-slot="card-title"],
+  .goalsPanel [data-slot="card-title"],
+  .spendingPanel [data-slot="card-title"],
+  .reviewPanel [data-slot="card-title"] {
+    font-size: 1.125rem;
+    line-height: 1.5rem;
+  }
+
+  .transactionPanel [data-slot="card-content"] {
+    padding-inline: 1.25rem;
+    padding-bottom: 1rem;
+  }
+
+  .transactionPanel [data-slot="card-content"] > div:first-child {
+    padding-bottom: .35rem;
+  }
+
+  .transactionPanel [data-slot="card-content"] > div:nth-child(2) > div {
+    padding-block: .55rem;
+    font-size: .75rem;
+  }
+
+  .landscapeSummaryHidden {
+    display: none;
+  }
+
+  .transactionPanel [data-slot="card-content"] > a {
+    margin-top: .5rem;
+    font-size: .75rem;
+  }
+
+  .goalsPanel [data-slot="card-content"] {
+    padding: .75rem 1.25rem 1rem;
+  }
+
+  .goalGrid {
+    gap: .625rem;
+  }
+
+  .goalItem {
+    padding: .75rem;
+  }
+
+  .goalItem h3 {
+    font-size: .75rem;
+  }
+
+  .goalItem > strong {
+    margin-top: .5rem;
+    font-size: 1.25rem;
+  }
+
+  .goalSaved,
+  .goalDate {
+    display: none;
+  }
+
+  .goalItem > div {
+    margin-top: .75rem;
+    gap: .5rem;
+  }
+
+  .goalItem > div span {
+    font-size: .7rem;
+  }
+
+  .spendingPanel [data-slot="card-content"] {
+    padding: .35rem 1.25rem .75rem;
+  }
+
+  .spendingPanel [data-slot="card-content"] > div {
+    min-height: 2.25rem;
+    gap: .625rem;
+    font-size: .75rem;
+  }
+
+  .spendingPanel [data-slot="card-content"] > div + div {
+    margin-top: .15rem;
+  }
+
+  .spendingPanel [data-slot="card-content"] p {
+    margin-top: .1rem;
+    font-size: .65rem;
+  }
+
+  .reviewPanel [data-slot="card-content"] {
+    padding: .35rem 1.25rem .75rem;
+  }
+
+  .reviewPanel [data-slot="card-content"] > a {
+    min-height: 2.5rem;
+    padding-block: .5rem;
+    font-size: .75rem;
+  }
+
+  .reviewPanel [data-slot="card-content"] > a:last-child {
+    height: 2.5rem;
+    margin-top: .5rem;
+  }
+}

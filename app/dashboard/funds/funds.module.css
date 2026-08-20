@@ -1,0 +1,1286 @@
+.page {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  max-width: var(--ui-page-max);
+  min-height: 0;
+  flex: 1 1 0%;
+  flex-direction: column;
+  gap: var(--ui-page-gap);
+  margin-inline: auto;
+  padding: 0 var(--ui-page-padding-inline) var(--ui-page-padding-bottom);
+  color: var(--ink);
+}
+
+/* =========================================================================
+   1. TOP TWO-COLUMN HUB: BANK CARD HUB & CASH BOX HUB
+   ========================================================================= */
+.topHubGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: var(--ui-page-gap);
+  align-items: stretch;
+}
+
+.hubCard {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-card-radius);
+  background: var(--card);
+  padding: 1.5rem;
+  box-shadow: 0 1px 2px rgb(0 0 0 / .035);
+  gap: 1.25rem;
+  justify-content: space-between;
+}
+
+.hubHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  border-bottom: 1px solid var(--ui-border-subtle);
+  padding-bottom: .85rem;
+}
+
+.hubTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+}
+
+.hubTitleGroup h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -.02em;
+}
+
+.hubIconBubble {
+  display: inline-flex;
+  width: 2rem;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--ui-violet-soft);
+  color: var(--ui-violet);
+  flex: none;
+}
+
+.hubIconBubbleCash {
+  background: var(--ui-orange-soft);
+  color: var(--ui-orange);
+}
+
+.hubIconBubble svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+/* Card Showcase inside Left Hub */
+.cardDisplayArea {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.cardStage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .65rem;
+  width: 100%;
+}
+
+.carouselNav {
+  display: inline-flex;
+  width: 2rem;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--ui-border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgb(0 0 0 / .05);
+  transition: transform .15s ease, background-color .15s ease;
+  flex: none;
+}
+
+.carouselNav:hover {
+  background: rgb(0 0 0 / .04);
+  transform: scale(1.06);
+}
+
+.carouselNav svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.cardSlot {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.cardPills {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.cardPill {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .25rem .65rem;
+  border: 1px solid var(--ui-border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ui-muted-ink);
+  font-size: .75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .15s ease;
+}
+
+.cardPill:hover {
+  border-color: rgb(0 0 0 / .25);
+  color: var(--ink);
+}
+
+.cardPillActive {
+  background: var(--ui-ink);
+  color: var(--ui-surface);
+  border-color: var(--ui-ink);
+}
+
+.cardPillDot {
+  width: .4rem;
+  height: .4rem;
+  border-radius: 999px;
+}
+
+.cardPillAdd {
+  border-style: dashed;
+}
+
+/* Card details row */
+.cardSummaryRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: .75rem;
+  border-top: 1px solid var(--ui-border-subtle);
+}
+
+.cardBalanceInfo {
+  display: grid;
+  gap: .15rem;
+}
+
+.cardBalanceInfo span {
+  font-size: .78rem;
+  color: var(--ui-muted-ink);
+}
+
+.cardBalanceInfo strong {
+  font-size: 1.45rem;
+  font-weight: 600;
+  letter-spacing: -.03em;
+  color: var(--ink);
+}
+
+.cardActionButtons {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+/* Right Hub (Cash / Cash Count / Reconciliation) */
+.cashHubBody {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  height: 100%;
+  justify-content: space-between;
+}
+
+.cashBalanceHighlight {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-radius: .8rem;
+  background: rgb(0 0 0 / .02);
+  border: 1px solid var(--ui-border-subtle);
+  padding: .9rem 1.15rem;
+}
+
+.cashBalanceHighlight div {
+  display: grid;
+  gap: .15rem;
+}
+
+.cashBalanceHighlight span {
+  font-size: .78rem;
+  color: var(--ui-muted-ink);
+}
+
+.cashBalanceHighlight strong {
+  font-size: 1.45rem;
+  font-weight: 600;
+  letter-spacing: -.03em;
+  color: var(--ink);
+}
+
+.reconcileStatusBox {
+  display: flex;
+  align-items: center;
+  gap: .85rem;
+  border-radius: .8rem;
+  padding: .85rem 1rem;
+  background: var(--ui-positive-soft);
+  color: var(--ui-positive);
+}
+
+.reconcileIcon {
+  display: inline-flex;
+  width: 2rem;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--ui-positive);
+  color: #fff;
+  flex: none;
+}
+
+.reconcileIcon svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.reconcileStatusBox div strong {
+  display: block;
+  font-size: .88rem;
+  font-weight: 600;
+}
+
+.reconcileStatusBox div span {
+  font-size: .75rem;
+}
+
+.reconcileInfoList {
+  display: grid;
+  gap: .45rem;
+  font-size: .8rem;
+}
+
+.reconcileInfoRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  padding: .25rem 0;
+  border-bottom: 1px dashed var(--ui-border-subtle);
+}
+
+.reconcileInfoRow:last-child {
+  border-bottom: 0;
+}
+
+.reconcileInfoRow span {
+  color: var(--ui-muted-ink);
+}
+
+.reconcileInfoRow strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.cashHubActions {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+}
+
+/* =========================================================================
+   2. MIDDLE BANKING DETAILS BANNER
+   ========================================================================= */
+.bankDetailsCard {
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-card-radius);
+  background: var(--card);
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 1px 2px rgb(0 0 0 / .035);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.bankDetailsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.bankDetailsHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+
+.bankDetailsHeaderLeft h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -.02em;
+}
+
+.bankDetailsHeaderLeft p {
+  margin: .15rem 0 0;
+  color: var(--ui-muted-ink);
+  font-size: .78rem;
+}
+
+.bankDetailsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.bankDetailBox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  border: 1px solid var(--ui-border-subtle);
+  border-radius: .75rem;
+  background: rgb(0 0 0 / .018);
+  padding: .75rem 1rem;
+}
+
+.bankDetailBox div {
+  display: grid;
+  gap: .2rem;
+  min-width: 0;
+}
+
+.bankDetailBox span {
+  font-size: .72rem;
+  color: var(--ui-muted-ink);
+}
+
+.bankDetailBox strong {
+  font-size: .88rem;
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.copyButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--ui-border);
+  border-radius: .5rem;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  transition: all .15s ease;
+  flex: none;
+}
+
+.copyButton:hover {
+  background: rgb(0 0 0 / .05);
+  transform: scale(1.05);
+}
+
+.copyButton svg {
+  width: .95rem;
+  height: .95rem;
+}
+
+/* =========================================================================
+   3. BOTTOM AUDIT & SECURITY GRID
+   ========================================================================= */
+.bottomGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(20rem, .85fr);
+  gap: var(--ui-page-gap);
+  align-items: stretch;
+}
+
+.auditCard,
+.securityCard {
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-card-radius);
+  background: var(--card);
+  box-shadow: 0 1px 2px rgb(0 0 0 / .035);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.panelHeader {
+  display: flex;
+  min-height: 4.75rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--ui-border-subtle);
+  padding: 1.15rem 1.5rem;
+}
+
+.panelHeader h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -.025em;
+}
+
+.panelHeader p {
+  margin: .2rem 0 0;
+  color: var(--ui-muted-ink);
+  font-size: .78rem;
+}
+
+.auditTableWrap {
+  display: flex;
+  flex-direction: column;
+  margin: 1rem 1.5rem 1.5rem;
+  border: 1px solid var(--ui-border-subtle);
+  border-radius: .8rem;
+  overflow: hidden;
+}
+
+.auditTableHeader,
+.auditTableRow {
+  display: grid;
+  grid-template-columns: 110px minmax(130px, 1fr) 110px 110px 100px;
+  align-items: center;
+  gap: .75rem;
+  padding: .65rem 1rem;
+  font-size: .8rem;
+}
+
+.auditTableHeader {
+  background: rgb(0 0 0 / .02);
+  border-bottom: 1px solid var(--ui-border-subtle);
+  color: var(--ui-muted-ink);
+  font-weight: 600;
+}
+
+.auditTableRow {
+  border-bottom: 1px solid var(--ui-border-subtle);
+  color: var(--ink);
+}
+
+.auditTableRow:last-child {
+  border-bottom: 0;
+}
+
+.auditBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .25rem;
+  padding: .2rem .55rem;
+  border-radius: 999px;
+  background: var(--ui-positive-soft);
+  color: var(--ui-positive);
+  font-size: .72rem;
+  font-weight: 600;
+}
+
+/* Security / Signatories Panel */
+.securityBody {
+  padding: 1.25rem 1.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  justify-content: space-between;
+  height: 100%;
+}
+
+.fourEyesBox {
+  display: flex;
+  align-items: center;
+  gap: .85rem;
+  border-radius: .8rem;
+  padding: .9rem 1.15rem;
+  background: var(--ui-violet-soft);
+  color: var(--ui-violet);
+}
+
+.fourEyesIcon {
+  display: inline-flex;
+  width: 2.25rem;
+  height: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--ui-violet);
+  color: #fff;
+  flex: none;
+}
+
+.fourEyesIcon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.fourEyesBox div strong {
+  display: block;
+  font-size: .88rem;
+  font-weight: 600;
+}
+
+.fourEyesBox div span {
+  font-size: .75rem;
+}
+
+.signatoriesList {
+  display: grid;
+  gap: .65rem;
+}
+
+.signatoryItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  border: 1px solid var(--ui-border-subtle);
+  border-radius: .75rem;
+  padding: .75rem 1rem;
+  background: rgb(0 0 0 / .018);
+}
+
+.signatoryItemLeft {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+
+.signatoryItemLeft div {
+  display: grid;
+  gap: .15rem;
+}
+
+.signatoryItemLeft strong {
+  font-size: .85rem;
+  color: var(--ink);
+}
+
+.signatoryItemLeft span {
+  font-size: .72rem;
+  color: var(--ui-muted-ink);
+}
+
+/* =========================================================================
+   4. BUTTONS & CONTROLS
+   ========================================================================= */
+.primaryButton,
+.secondaryButton,
+.smallSecondaryButton,
+.smallPrimaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  border-radius: .75rem;
+  white-space: nowrap;
+  font-size: .875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity .18s ease, transform .18s ease;
+}
+
+.primaryButton {
+  min-height: 3rem;
+  border: 0;
+  background: var(--ui-ink);
+  padding: 0 1.15rem;
+  color: var(--ui-surface);
+}
+
+.primaryButton:hover {
+  opacity: .85;
+}
+
+.secondaryButton {
+  min-height: 3rem;
+  border: 1px solid var(--ui-border);
+  background: var(--ui-surface);
+  padding: 0 1rem;
+  color: var(--ui-ink);
+}
+
+.secondaryButton:hover {
+  background: rgb(0 0 0 / .035);
+}
+
+.smallPrimaryButton {
+  min-height: 2.35rem;
+  border: 0;
+  background: var(--ui-ink);
+  padding: 0 .9rem;
+  color: var(--ui-surface);
+  font-size: .8rem;
+}
+
+.smallPrimaryButton:hover {
+  opacity: .85;
+}
+
+.smallSecondaryButton {
+  min-height: 2.35rem;
+  border: 1px solid var(--ui-border);
+  background: var(--ui-surface);
+  padding: 0 .85rem;
+  color: var(--ui-ink);
+  font-size: .8rem;
+}
+
+.smallSecondaryButton:hover {
+  background: rgb(0 0 0 / .035);
+}
+
+.primaryButton:active,
+.secondaryButton:active,
+.smallPrimaryButton:active,
+.smallSecondaryButton:active {
+  transform: translateY(1px);
+}
+
+.primaryButton svg,
+.secondaryButton svg,
+.smallPrimaryButton svg,
+.smallSecondaryButton svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* =========================================================================
+   5. DENOMINATION CALCULATOR IN MODAL
+   ========================================================================= */
+.denominationGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: .5rem;
+  border: 1px solid var(--ui-border-subtle);
+  border-radius: .75rem;
+  padding: .75rem;
+  background: rgb(0 0 0 / .018);
+}
+
+.denominationItem {
+  display: grid;
+  gap: .25rem;
+  text-align: center;
+}
+
+.denominationItem span {
+  font-size: .72rem;
+  color: var(--ui-muted-ink);
+  font-weight: 600;
+}
+
+.denominationItem input {
+  height: 2.25rem;
+  border: 1px solid var(--ui-border);
+  border-radius: .5rem;
+  text-align: center;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: .85rem;
+  font-weight: 500;
+}
+
+/* =========================================================================
+   6. MODALS
+   ========================================================================= */
+.overlay {
+  position: fixed;
+  z-index: 70;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgb(0 0 0 / .24);
+  backdrop-filter: blur(3px);
+  overscroll-behavior: contain;
+  animation: modal-fade-in .16s ease-out;
+}
+
+.modal {
+  width: min(38rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  border: 1px solid var(--ui-border);
+  border-radius: 1rem;
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  box-shadow: var(--ui-modal-shadow);
+  animation: modal-pop-in .18s ease-out;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--ui-border-subtle);
+  padding: 1.25rem 1.5rem;
+}
+
+.modalTitle {
+  display: flex;
+  align-items: center;
+  gap: .9rem;
+}
+
+.modalTitle > span {
+  display: inline-flex;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--ui-violet-soft);
+  color: var(--ui-violet);
+}
+
+.modalTitle svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.modalTitle h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  letter-spacing: -.02em;
+}
+
+.modalTitle p {
+  margin: .25rem 0 0;
+  color: var(--ui-muted-ink);
+  font-size: .82rem;
+}
+
+.closeButton {
+  display: inline-flex;
+  width: 2.75rem;
+  height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: .65rem;
+  background: transparent;
+  color: var(--ui-ink);
+  cursor: pointer;
+}
+
+.closeButton:hover {
+  background: rgb(0 0 0 / .045);
+}
+
+.closeButton svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.modalBody {
+  display: grid;
+  gap: 1.25rem;
+  padding: 1.25rem 1.5rem 1rem;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.formFieldFull {
+  grid-column: span 2;
+}
+
+.formField {
+  display: grid;
+  gap: .45rem;
+  color: var(--ui-ink);
+  font-size: .8rem;
+  font-weight: 600;
+}
+
+.formField input,
+.formField select {
+  width: 100%;
+  height: var(--ui-control-height);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-control-radius);
+  background: var(--ui-surface);
+  padding: 0 .8rem;
+  color: var(--ui-ink);
+  outline: 0;
+  font: inherit;
+  font-weight: 400;
+}
+
+.formField input:hover,
+.formField select:hover {
+  border-color: rgb(0 0 0 / .22);
+}
+
+.amountField {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-control-radius);
+  background: var(--ui-surface);
+}
+
+.amountField input {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  border-radius: 0;
+}
+
+.amountField input:focus-visible {
+  outline: 0;
+}
+
+.amountField > span {
+  display: inline-flex;
+  height: 100%;
+  align-items: center;
+  border-left: 1px solid var(--ui-border-subtle);
+  padding-inline: .75rem;
+  color: var(--ui-muted-ink);
+  font-size: .8rem;
+  font-weight: 500;
+}
+
+.formError {
+  min-height: 1rem;
+  margin: 0;
+  color: var(--ui-negative);
+  font-size: .75rem;
+}
+
+.modalFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .65rem;
+  border-top: 1px solid var(--ui-border-subtle);
+  padding: 1rem 1.5rem 1.25rem;
+}
+
+/* Comparison Preview in Count Modal */
+.countPreview {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: .75rem;
+  border: 1px solid var(--ui-border-subtle);
+  border-radius: .8rem;
+  background: rgb(0 0 0 / .018);
+  padding: 1rem;
+  text-align: center;
+}
+
+.countPreview div span {
+  display: block;
+  font-size: .75rem;
+  color: var(--ui-muted-ink);
+  margin-bottom: .25rem;
+}
+
+.countPreview div strong {
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -.02em;
+}
+
+@keyframes modal-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modal-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-.35rem) scale(.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* =========================================================================
+   7. RESPONSIVE BREAKPOINTS
+   ========================================================================= */
+@media (max-width: 1099px) {
+  .topHubGrid {
+    grid-template-columns: 1fr;
+  }
+  .bottomGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding-inline: 1rem;
+  }
+  .topHubGrid {
+    grid-template-columns: 1fr;
+  }
+  .bottomGrid {
+    grid-template-columns: 1fr;
+  }
+  .bankDetailsGrid {
+    grid-template-columns: 1fr;
+  }
+  .auditTableHeader {
+    display: none;
+  }
+  .auditTableRow {
+    grid-template-columns: 1fr;
+    gap: .35rem;
+  }
+  .cardSummaryRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .cashHubActions {
+    flex-direction: column;
+    width: 100%;
+  }
+  .cashHubActions button {
+    width: 100%;
+  }
+  .denominationGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .primaryButton,
+  .secondaryButton,
+  .carouselNav,
+  .smallPrimaryButton,
+  .smallSecondaryButton {
+    transition: none;
+  }
+  .overlay,
+  .modal {
+    animation: none;
+  }
+}
+
+/* Finance workspace: compact overview, tabbed detail, and one visual rhythm. */
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--ui-card-gap);
+}
+
+.summaryCard {
+  display: grid;
+  min-height: 6.5rem;
+  align-content: center;
+  gap: .2rem;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-card-radius);
+  background: var(--ui-surface);
+  padding: 1rem 1.25rem;
+  box-shadow: var(--ui-card-shadow);
+}
+
+.summaryCard > span,
+.summaryCard > small {
+  color: var(--ui-muted-ink);
+  font-size: .75rem;
+}
+
+.summaryCard > strong {
+  overflow: hidden;
+  color: var(--ui-ink);
+  font-size: 1.55rem;
+  line-height: 1.1;
+  letter-spacing: -.035em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.summaryCard > .summaryStatus {
+  color: var(--ui-positive);
+}
+
+.financeWorkspace {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  gap: 0;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-card-radius);
+  background: var(--ui-surface);
+  box-shadow: var(--ui-card-shadow);
+}
+
+.workspaceHeader {
+  display: flex;
+  min-height: 5.25rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--ui-border-subtle);
+  padding: 1rem 1.5rem;
+}
+
+.workspaceHeader h2,
+.accountManager h3 {
+  margin: 0;
+  font-size: var(--ui-section-title-size);
+  font-weight: 600;
+  letter-spacing: -.025em;
+}
+
+.workspaceHeader p,
+.accountManager p {
+  margin: .25rem 0 0;
+  color: var(--ui-muted-ink);
+  font-size: .78rem;
+}
+
+.workspaceTabs {
+  height: 2.5rem;
+  flex: none;
+}
+
+.workspaceTabs button {
+  min-width: 7.75rem;
+  padding-inline: .8rem;
+}
+
+.tabContent {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+
+.tabContent .topHubGrid {
+  min-width: 0;
+  gap: 1rem;
+}
+
+.tabContent .hubCard {
+  min-width: 0;
+  min-height: 0;
+  gap: .75rem;
+  border-color: var(--ui-border-subtle);
+  padding: 1rem 1.15rem;
+  box-shadow: none;
+}
+
+.tabContent .hubHeader {
+  padding-bottom: .65rem;
+}
+
+.tabContent .cardDisplayArea {
+  gap: .5rem;
+}
+
+.tabContent .cardSlot {
+  max-width: 280px;
+}
+
+.tabContent .cardSummaryRow {
+  padding-top: .65rem;
+}
+
+.tabContent .cashHubBody {
+  gap: .65rem;
+}
+
+.tabContent .cashBalanceHighlight,
+.tabContent .reconcileStatusBox {
+  padding: .7rem .85rem;
+}
+
+.tabContent .reconcileInfoRow {
+  padding-block: .4rem;
+}
+
+.activityCard {
+  overflow: hidden;
+  border: 1px solid var(--ui-border-subtle);
+  border-radius: .85rem;
+  background: var(--ui-surface);
+}
+
+.activityCard .panelHeader {
+  min-height: 4.25rem;
+  padding: .9rem 1.1rem;
+}
+
+.activityCard .panelHeader > svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  color: var(--ui-muted-ink);
+}
+
+.activityList {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.activityRow {
+  display: grid;
+  min-height: 4rem;
+  grid-template-columns: 2rem minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: .65rem;
+  border-bottom: 1px solid var(--ui-border-subtle);
+  padding: .55rem 1rem;
+  transition: background-color .14s ease;
+}
+
+.activityRow:nth-child(odd) {
+  border-right: 1px solid var(--ui-border-subtle);
+}
+
+.activityRow:nth-last-child(-n + 2) {
+  border-bottom: 0;
+}
+
+.activityRow:hover {
+  background: rgb(0 0 0 / .025);
+}
+
+.activityIcon {
+  display: inline-flex;
+  width: 1.8rem;
+  height: 1.8rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgb(0 0 0 / .045);
+  color: var(--ui-ink);
+  font-weight: 600;
+}
+
+.activityIdentity {
+  display: grid;
+  min-width: 0;
+  gap: .15rem;
+}
+
+.activityIdentity strong {
+  overflow: hidden;
+  font-size: .78rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activityIdentity small,
+.activityRow time {
+  color: var(--ui-muted-ink);
+  font-size: .68rem;
+  white-space: nowrap;
+}
+
+.activityRow > strong {
+  font-size: .78rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.activityPositive { color: var(--ui-positive); }
+.activityNegative { color: var(--ui-negative); }
+
+.accountManager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border: 1px solid var(--ui-border-subtle);
+  border-radius: .85rem;
+  padding: 1rem 1.1rem;
+}
+
+.accountManagerActions {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+}
+
+.tabContent .bankDetailsCard,
+.tabContent .auditCard,
+.tabContent .securityCard {
+  border-color: var(--ui-border-subtle);
+  box-shadow: none;
+}
+
+.tabContent > .cardPills {
+  justify-content: flex-start;
+  padding-top: .15rem;
+}
+
+@media (min-width: 2200px) {
+  .summaryCard { min-height: 7.5rem; padding-inline: 1.5rem; }
+  .summaryCard > strong { font-size: 1.8rem; }
+  .workspaceHeader, .tabContent { padding-inline: 2rem; }
+  .tabContent .cardSlot { max-width: 320px; }
+}
+
+@media (min-width: 768px) and (max-width: 1399px) {
+  .page { gap: 1rem; padding-inline: 1.25rem; padding-bottom: 1.25rem; }
+  .summaryGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+  .summaryCard { min-height: 5.25rem; padding: .75rem 1rem; }
+  .summaryCard > strong { font-size: 1.35rem; }
+  .workspaceHeader { padding-inline: 1.25rem; }
+  .tabContent { padding: 1rem 1.25rem 1.25rem; }
+  .workspaceTabs button { min-width: 0; }
+}
+
+@media (max-width: 1099px) {
+  .activityList { grid-template-columns: 1fr; }
+  .activityRow:nth-child(odd) { border-right: 0; }
+  .activityRow:nth-last-child(2) { border-bottom: 1px solid var(--ui-border-subtle); }
+}
+
+@media (max-width: 760px) {
+  .summaryGrid { grid-template-columns: 1fr; }
+  .workspaceHeader { align-items: stretch; flex-direction: column; }
+  .workspaceTabs { width: 100%; overflow-x: auto; }
+  .workspaceTabs button { min-width: max-content; }
+  .accountManager { align-items: stretch; flex-direction: column; }
+  .accountManagerActions { align-items: stretch; flex-direction: column; }
+  .activityRow { grid-template-columns: 2rem minmax(0, 1fr) auto; }
+  .activityRow time { display: none; }
+}

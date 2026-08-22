@@ -1,6 +1,16 @@
 "use client";
 
-import { ArrowRight, CalendarDays, CheckCircle2, CircleDollarSign, Pencil, Plus, Target, Trash2, X } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarDays,
+  CheckCircle2,
+  CircleDollarSign,
+  Pencil,
+  Plus,
+  Target,
+  Trash2,
+  X,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import { Dialog } from "@/components/ui/dialog";
 import styles from "./goals.module.css";
@@ -14,13 +24,39 @@ type Goal = {
 };
 
 const initialGoals: Goal[] = [
-  { title: "Abiball", target: 3000, saved: 2100, progress: 70, date: "15.05.2026" },
-  { title: "Abizeitung", target: 1200, saved: 540, progress: 45, date: "30.04.2026" },
-  { title: "Reserve", target: 1000, saved: 800, progress: 80, date: "01.07.2026" },
+  {
+    title: "Abiball",
+    target: 3000,
+    saved: 2100,
+    progress: 70,
+    date: "15.05.2026",
+  },
+  {
+    title: "Abizeitung",
+    target: 1200,
+    saved: 540,
+    progress: 45,
+    date: "30.04.2026",
+  },
+  {
+    title: "Reserve",
+    target: 1000,
+    saved: 800,
+    progress: 80,
+    date: "01.07.2026",
+  },
 ];
 
-const euro = new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
-const euroPrecise = new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", minimumFractionDigits: 2 });
+const euro = new Intl.NumberFormat("de-DE", {
+  style: "currency",
+  currency: "EUR",
+  maximumFractionDigits: 0,
+});
+const euroPrecise = new Intl.NumberFormat("de-DE", {
+  style: "currency",
+  currency: "EUR",
+  minimumFractionDigits: 2,
+});
 
 export default function GoalsPage() {
   const [goals, setGoals] = useState<Goal[]>(initialGoals);
@@ -33,13 +69,23 @@ export default function GoalsPage() {
   const [deadline, setDeadline] = useState("");
   const [formError, setFormError] = useState("");
 
-  const totalTarget = useMemo(() => goals.reduce((sum, goal) => sum + goal.target, 0), [goals]);
-  const totalSaved = useMemo(() => goals.reduce((sum, goal) => sum + goal.saved, 0), [goals]);
-  const overallProgress = totalTarget ? Math.round((totalSaved / totalTarget) * 100) : 0;
+  const totalTarget = useMemo(
+    () => goals.reduce((sum, goal) => sum + goal.target, 0),
+    [goals],
+  );
+  const totalSaved = useMemo(
+    () => goals.reduce((sum, goal) => sum + goal.saved, 0),
+    [goals],
+  );
+  const overallProgress = totalTarget
+    ? Math.round((totalSaved / totalTarget) * 100)
+    : 0;
 
   const previewTarget = Number(targetAmount.replace(",", ".")) || 0;
   const previewSaved = Number(savedAmount.replace(",", ".")) || 0;
-  const previewProgress = previewTarget ? Math.min(100, Math.round((previewSaved / previewTarget) * 100)) : 0;
+  const previewProgress = previewTarget
+    ? Math.min(100, Math.round((previewSaved / previewTarget) * 100))
+    : 0;
 
   function closeModal() {
     setModalOpen(false);
@@ -84,11 +130,15 @@ export default function GoalsPage() {
     const saved = Number(savedAmount.replace(",", ".")) || 0;
 
     if (!goalName.trim() || !target || target <= 0 || !deadline) {
-      setFormError("Bitte Name, Zielbetrag und Zieldatum vollständig ausfüllen.");
+      setFormError(
+        "Bitte Name, Zielbetrag und Zieldatum vollständig ausfüllen.",
+      );
       return;
     }
     if (saved < 0 || saved > target) {
-      setFormError("Der bereits gesparte Betrag muss zwischen 0 € und dem Zielbetrag liegen.");
+      setFormError(
+        "Der bereits gesparte Betrag muss zwischen 0 € und dem Zielbetrag liegen.",
+      );
       return;
     }
 
@@ -108,8 +158,8 @@ export default function GoalsPage() {
                 progress,
                 date: formattedDate,
               }
-            : g
-        )
+            : g,
+        ),
       );
     } else {
       // Add new goal
@@ -203,8 +253,12 @@ export default function GoalsPage() {
                   <h3>{goal.title}</h3>
                   <Target aria-hidden="true" />
                 </div>
-                <strong className={styles.goalTarget}>{euro.format(goal.target)}</strong>
-                <p className={styles.goalSaved}>{euroPrecise.format(goal.saved)} gesammelt</p>
+                <strong className={styles.goalTarget}>
+                  {euro.format(goal.target)}
+                </strong>
+                <p className={styles.goalSaved}>
+                  {euroPrecise.format(goal.saved)} gesammelt
+                </p>
                 <div className={styles.progressLine}>
                   <div className={styles.progressTrack}>
                     <span style={{ width: `${goal.progress}%` }} />
@@ -216,7 +270,9 @@ export default function GoalsPage() {
                     <CalendarDays aria-hidden="true" />
                     Ziel: {goal.date}
                   </span>
-                  <span>{euroPrecise.format(goal.target - goal.saved)} offen</span>
+                  <span>
+                    {euroPrecise.format(goal.target - goal.saved)} offen
+                  </span>
                 </div>
               </article>
             ))}
@@ -253,17 +309,28 @@ export default function GoalsPage() {
               {goals
                 .slice()
                 .sort((a, b) =>
-                  a.date.split(".").reverse().join("").localeCompare(b.date.split(".").reverse().join(""))
+                  a.date
+                    .split(".")
+                    .reverse()
+                    .join("")
+                    .localeCompare(b.date.split(".").reverse().join("")),
                 )
                 .slice(0, 3)
                 .map((goal) => {
-                  const originalIndex = goals.findIndex((g) => g.title === goal.title);
+                  const originalIndex = goals.findIndex(
+                    (g) => g.title === goal.title,
+                  );
                   return (
                     <button
                       type="button"
                       className={styles.upcomingItem}
                       key={`upcoming-${goal.title}`}
-                      onClick={() => openEditModal(goal, originalIndex >= 0 ? originalIndex : 0)}
+                      onClick={() =>
+                        openEditModal(
+                          goal,
+                          originalIndex >= 0 ? originalIndex : 0,
+                        )
+                      }
                     >
                       <div>
                         <strong>{goal.title}</strong>
@@ -280,7 +347,9 @@ export default function GoalsPage() {
 
       {modalOpen && (
         <Dialog
-          label={editingGoalIndex !== null ? "Ziel anpassen" : "Ziel hinzufügen"}
+          label={
+            editingGoalIndex !== null ? "Ziel anpassen" : "Ziel hinzufügen"
+          }
           onClose={closeModal}
           overlayClassName={styles.overlay}
           dialogClassName={styles.modal}
@@ -296,7 +365,11 @@ export default function GoalsPage() {
                   )}
                 </span>
                 <div>
-                  <h2>{editingGoalIndex !== null ? "Ziel anpassen" : "Ziel hinzufügen"}</h2>
+                  <h2>
+                    {editingGoalIndex !== null
+                      ? "Ziel anpassen"
+                      : "Ziel hinzufügen"}
+                  </h2>
                   <p>
                     {editingGoalIndex !== null
                       ? "Details, Beträge und Fortschritt dieses Sparziels bearbeiten."
@@ -315,12 +388,20 @@ export default function GoalsPage() {
             </header>
 
             <div className={styles.modalBody}>
-              <section className={styles.goalPreview} aria-label="Vorschau des Ziels">
+              <section
+                className={styles.goalPreview}
+                aria-label="Vorschau des Ziels"
+              >
                 <div className={styles.goalCardHeader}>
-                  <h3>{goalName.trim() || (editingGoalIndex !== null ? "Zielname" : "Neues Ziel")}</h3>
+                  <h3>
+                    {goalName.trim() ||
+                      (editingGoalIndex !== null ? "Zielname" : "Neues Ziel")}
+                  </h3>
                   <Target aria-hidden="true" />
                 </div>
-                <strong>{previewTarget ? euro.format(previewTarget) : "0 €"}</strong>
+                <strong>
+                  {previewTarget ? euro.format(previewTarget) : "0 €"}
+                </strong>
                 <p>{euroPrecise.format(previewSaved)} gesammelt</p>
                 <div className={styles.progressLine}>
                   <div className={styles.progressTrack}>
@@ -424,7 +505,9 @@ export default function GoalsPage() {
                   Abbrechen
                 </button>
                 <button type="submit" className={styles.primaryButton}>
-                  {editingGoalIndex !== null ? "Änderungen speichern" : "Ziel hinzufügen"}
+                  {editingGoalIndex !== null
+                    ? "Änderungen speichern"
+                    : "Ziel hinzufügen"}
                 </button>
               </div>
             </footer>

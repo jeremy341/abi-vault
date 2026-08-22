@@ -10,7 +10,13 @@ type DialogProps = {
   dialogClassName: string;
 };
 
-export function Dialog({ children, onClose, label, overlayClassName, dialogClassName }: DialogProps) {
+export function Dialog({
+  children,
+  onClose,
+  label,
+  overlayClassName,
+  dialogClassName,
+}: DialogProps) {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
@@ -28,7 +34,12 @@ export function Dialog({ children, onClose, label, overlayClassName, dialogClass
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <div className={dialogClassName} role="dialog" aria-modal="true" aria-label={label}>
+      <div
+        className={dialogClassName}
+        role="dialog"
+        aria-modal="true"
+        aria-label={label}
+      >
         {children}
       </div>
     </div>

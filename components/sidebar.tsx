@@ -30,7 +30,11 @@ import ThemeToggle from "@/components/ThemeToggle";
 
 const navigationItems = [
   { label: "Übersicht", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Transaktionen", href: "/dashboard/transactions", icon: ReceiptText },
+  {
+    label: "Transaktionen",
+    href: "/dashboard/transactions",
+    icon: ReceiptText,
+  },
   { label: "Belege", href: "/dashboard/receipts", icon: FileText },
   { label: "Ziele", href: "/dashboard/goals", icon: Target },
   { label: "Kasse & Konten", href: "/dashboard/funds", icon: WalletCards },

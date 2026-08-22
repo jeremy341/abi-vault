@@ -21,7 +21,6 @@ export default function StartPage() {
             Einnahmen, Ausgaben, Belege und Spendenziele an einem Ort.
           </p>
 
-
           <div className="mt-9 flex justify-center gap-3">
             <Show when="signed-out">
               <Link href="/sign-in" className="action-link">
@@ -38,7 +37,6 @@ export default function StartPage() {
               </Link>
             </Show>
           </div>
-
         </div>
       </section>
     </main>

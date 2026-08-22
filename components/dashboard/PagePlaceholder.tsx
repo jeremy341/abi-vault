@@ -5,9 +5,15 @@ type PagePlaceholderProps = {
   description: string;
 };
 
-export default function PagePlaceholder({ title, description }: PagePlaceholderProps) {
+export default function PagePlaceholder({
+  title,
+  description,
+}: PagePlaceholderProps) {
   return (
-    <section className={styles.placeholderPage} aria-labelledby="page-placeholder-title">
+    <section
+      className={styles.placeholderPage}
+      aria-labelledby="page-placeholder-title"
+    >
       <div className={styles.emptyState}>
         <span>Abi 2026</span>
         <h2 id="page-placeholder-title">{title}</h2>

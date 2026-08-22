@@ -40,8 +40,7 @@ export default function SignInPage() {
                 cardBox: "w-full shadow-none",
                 card: "w-full rounded-2xl border border-black/[0.08] bg-white p-2 shadow-[0_16px_50px_rgb(0_0_0/0.08)]",
                 header: "hidden",
-                formButtonPrimary:
-                  "rounded-xl bg-ink shadow-sm hover:bg-black",
+                formButtonPrimary: "rounded-xl bg-ink shadow-sm hover:bg-black",
                 formFieldInput:
                   "rounded-xl border-line bg-white shadow-none focus:border-ink",
                 socialButtonsBlockButton:

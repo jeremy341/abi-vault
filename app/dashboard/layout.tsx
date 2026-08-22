@@ -28,7 +28,9 @@ export default async function DashboardLayout({
       >
         <Sidebar />
 
-        <SidebarInset className={`${styles.main} min-w-0 bg-white dark:bg-background`}>
+        <SidebarInset
+          className={`${styles.main} min-w-0 bg-white dark:bg-background`}
+        >
           <DashboardHeader />
 
           {children}

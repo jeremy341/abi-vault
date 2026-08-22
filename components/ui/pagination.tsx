@@ -7,7 +7,12 @@ type PaginationProps = {
   className?: string;
 };
 
-export function Pagination({ page, pageCount, onPageChange, className = "" }: PaginationProps) {
+export function Pagination({
+  page,
+  pageCount,
+  onPageChange,
+  className = "",
+}: PaginationProps) {
   return (
     <div className={`ui-pagination-buttons ${className}`}>
       <button

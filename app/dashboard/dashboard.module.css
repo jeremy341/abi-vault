@@ -23,7 +23,6 @@
   flex: 0 0 auto;
 }
 
-
 .mobileIntro {
   display: none;
 }
@@ -59,18 +58,318 @@
 }
 
 .emptyState h2 {
-  margin: .5rem 0 0;
+  margin: 0.5rem 0 0;
   color: var(--ui-ink);
   font-size: var(--ui-section-title-size);
   font-weight: 600;
-  letter-spacing: -.025em;
+  letter-spacing: -0.025em;
 }
 
 .emptyState p {
   max-width: 34rem;
-  margin: .5rem 0 0;
+  margin: 0.5rem 0 0;
   color: var(--ui-muted-ink);
-  font-size: .9rem;
+  font-size: 0.9rem;
+}
+
+/* Klassenkasse card surface. Keep the dashboard card system readable in CSS. */
+.cashPanelCard {
+  width: 100%;
+  min-width: 0;
+  flex-shrink: 0;
+  gap: 0;
+  border-radius: 1rem;
+  background: rgb(255 255 255 / 0.85);
+  padding: 0;
+  box-shadow: 0 12px 28px rgb(0 0 0 / 0.07);
+  backdrop-filter: blur(3px);
+}
+
+.cashPanelHeaderBase {
+  padding: 1.25rem 1.25rem 0;
+}
+
+.cashPanelTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+.cashPanelContentBase {
+  padding: 0.75rem 1rem 1rem;
+}
+
+.cashCarousel {
+  display: grid;
+  min-width: 0;
+  align-items: center;
+  gap: 0.25rem 0.25rem;
+}
+
+.cashCarouselMulti {
+  grid-template-columns: 2rem minmax(0, 1fr) 2rem;
+}
+
+.cashCarouselSingle {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.cashCarouselButton {
+  display: inline-flex;
+  width: 2rem;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
+  justify-self: center;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.1);
+  transition:
+    transform 0.18s ease,
+    background-color 0.18s ease;
+}
+
+.cashCarouselButton:hover {
+  background: rgb(0 0 0 / 0.035);
+}
+.cashPreviousButton:hover {
+  transform: translateX(-2px);
+}
+.cashNextButton:hover {
+  transform: translateX(2px);
+}
+.cashCarouselButton:focus-visible {
+  outline: 2px solid var(--ui-border-focus);
+  outline-offset: 2px;
+}
+
+.cashCardSlot {
+  grid-column: 2;
+  width: 100%;
+  max-width: 340px;
+  min-width: 0;
+  justify-self: center;
+  touch-action: pan-y;
+}
+
+.cashCarouselSingle .cashCardSlot {
+  grid-column: 1;
+}
+.cashCardButton {
+  display: block;
+  width: 100%;
+  border-radius: 20px;
+  text-align: left;
+}
+.cashCardButton:focus-visible {
+  outline: 2px solid var(--ui-border-focus);
+  outline-offset: 4px;
+}
+.cashMobileIndicators {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+.cashMobileIndicator {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.15);
+}
+.cashMobileIndicatorActive {
+  background: var(--ui-ink);
+}
+
+.cashBalanceDivider {
+  display: none;
+  width: 1px;
+  height: 100%;
+  background: rgb(0 0 0 / 0.15);
+}
+
+.cashBalance {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.cashBalanceMulti {
+  grid-column: 1 / -1;
+}
+.cashBalanceSingle {
+  grid-column: 1;
+}
+.cashBalanceLabel,
+.cashBalanceMeta {
+  color: var(--ui-muted-ink);
+  font-size: 0.875rem;
+}
+.cashBalanceAmount {
+  color: var(--ui-ink);
+  font-size: 1.875rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+.cashBalanceMeta {
+  margin-top: 0.25rem;
+}
+.cashBalanceMeta span {
+  color: var(--ui-positive);
+}
+
+.cashStatus {
+  display: flex;
+  min-height: 4rem;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  border-radius: 0.75rem;
+  background: var(--ui-positive-soft);
+  padding: 0.75rem 1rem;
+}
+
+.cashStatusIcon {
+  display: inline-flex;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--ui-positive);
+  color: white;
+}
+
+.cashStatusText {
+  display: grid;
+  gap: 0.1rem;
+  font-size: 0.875rem;
+}
+.cashStatusText strong,
+.cashStatusText span {
+  color: var(--ui-positive);
+}
+.cashStatusText strong {
+  font-weight: 600;
+}
+
+@media (min-width: 1024px) {
+  .cashPanelHeaderBase {
+    padding: 1.5rem 1.75rem 0;
+  }
+  .cashPanelContentBase {
+    padding: 1rem 1.5rem 1.5rem;
+  }
+  .cashCarouselMulti {
+    grid-template-columns: 1.5rem minmax(250px, 340px) 1.5rem 1px minmax(
+        160px,
+        1fr
+      );
+    gap: 0.5rem;
+  }
+  .cashCarouselSingle {
+    grid-template-columns: minmax(250px, 340px) 1px minmax(160px, 1fr);
+    gap: 0.5rem;
+  }
+  .cashCarouselButton {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 0.4rem;
+    background: transparent;
+    box-shadow: none;
+  }
+  .cashCardSlot,
+  .cashCarouselSingle .cashCardSlot {
+    grid-column: 2;
+  }
+  .cashCarouselSingle .cashCardSlot {
+    grid-column: 1;
+  }
+  .cashBalanceDivider {
+    display: block;
+    grid-column: 4;
+  }
+  .cashCarouselSingle .cashBalanceDivider {
+    grid-column: 2;
+  }
+  .cashBalanceMulti,
+  .cashBalanceSingle {
+    grid-column: 5;
+    padding-left: 1rem;
+  }
+  .cashCarouselSingle .cashBalanceSingle {
+    grid-column: 3;
+  }
+  .cashBalanceLabel,
+  .cashBalanceMeta {
+    font-size: 1rem;
+  }
+  .cashBalanceAmount {
+    font-size: 2.25rem;
+  }
+  .cashStatus {
+    margin-top: 1.25rem;
+    gap: 1rem;
+    padding-inline: 1.25rem;
+  }
+}
+
+@media (min-width: 2200px) {
+  .cashPanelHeaderBase {
+    padding: 1.75rem 2rem 0;
+  }
+  .cashPanelContentBase {
+    padding: 1.25rem 1.75rem 1.75rem;
+  }
+  .cashCarouselMulti {
+    grid-template-columns: 2rem minmax(390px, 440px) 2rem 1px minmax(220px, 1fr);
+    gap: 1rem;
+  }
+  .cashCarouselSingle {
+    grid-template-columns: minmax(390px, 440px) 1px minmax(220px, 1fr);
+    gap: 1rem;
+  }
+  .cashCardSlot,
+  .cashCarouselSingle .cashCardSlot {
+    max-width: 440px;
+  }
+  .cashCarouselButton {
+    width: 2rem;
+    height: 2rem;
+  }
+  .cashBalanceMulti,
+  .cashBalanceSingle {
+    padding-left: 1.5rem;
+  }
+  .cashBalanceAmount {
+    font-size: 2.75rem;
+  }
+  .cashStatus {
+    min-height: 5rem;
+    margin-top: 1.25rem;
+    gap: 1.25rem;
+    padding: 1rem 1.5rem;
+  }
+  .cashStatusIcon {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+  .cashStatusText {
+    font-size: 1.125rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cashCarouselButton {
+    transition: none;
+  }
 }
 .page {
   display: flex;
@@ -118,9 +417,11 @@
   }
 
   .rightColumn {
-    grid-template-rows: var(--dashboard-top-panel-height) minmax(0, 1fr) minmax(0, 0.98fr);
+    grid-template-rows: var(--dashboard-top-panel-height) minmax(0, 1fr) minmax(
+        0,
+        0.98fr
+      );
   }
-
 }
 
 @media (max-width: 1279px) {
@@ -419,7 +720,7 @@
   }
 
   .cashPanelContent {
-    padding: .75rem 1.25rem 1rem;
+    padding: 0.75rem 1.25rem 1rem;
   }
 
   .accountCardSlot {
@@ -427,12 +728,12 @@
   }
 
   .accountBalance {
-    padding-left: .75rem;
+    padding-left: 0.75rem;
   }
 
   .accountBalance > span,
   .accountBalance > p {
-    font-size: .75rem;
+    font-size: 0.75rem;
     line-height: 1.1rem;
   }
 
@@ -443,9 +744,9 @@
 
   .accountStatus {
     min-height: 3rem;
-    margin-top: .75rem;
-    gap: .75rem;
-    padding: .5rem .75rem;
+    margin-top: 0.75rem;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
   }
 
   .accountStatus > span {
@@ -454,7 +755,7 @@
   }
 
   .accountStatus > div {
-    font-size: .75rem;
+    font-size: 0.75rem;
     line-height: 1rem;
   }
 
@@ -479,12 +780,12 @@
   }
 
   .transactionPanel [data-slot="card-content"] > div:first-child {
-    padding-bottom: .35rem;
+    padding-bottom: 0.35rem;
   }
 
   .transactionPanel [data-slot="card-content"] > div:nth-child(2) > div {
-    padding-block: .55rem;
-    font-size: .75rem;
+    padding-block: 0.55rem;
+    font-size: 0.75rem;
   }
 
   .landscapeSummaryHidden {
@@ -492,28 +793,28 @@
   }
 
   .transactionPanel [data-slot="card-content"] > a {
-    margin-top: .5rem;
-    font-size: .75rem;
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
   }
 
   .goalsPanel [data-slot="card-content"] {
-    padding: .75rem 1.25rem 1rem;
+    padding: 0.75rem 1.25rem 1rem;
   }
 
   .goalGrid {
-    gap: .625rem;
+    gap: 0.625rem;
   }
 
   .goalItem {
-    padding: .75rem;
+    padding: 0.75rem;
   }
 
   .goalItem h3 {
-    font-size: .75rem;
+    font-size: 0.75rem;
   }
 
   .goalItem > strong {
-    margin-top: .5rem;
+    margin-top: 0.5rem;
     font-size: 1.25rem;
   }
 
@@ -523,45 +824,45 @@
   }
 
   .goalItem > div {
-    margin-top: .75rem;
-    gap: .5rem;
+    margin-top: 0.75rem;
+    gap: 0.5rem;
   }
 
   .goalItem > div span {
-    font-size: .7rem;
+    font-size: 0.7rem;
   }
 
   .spendingPanel [data-slot="card-content"] {
-    padding: .35rem 1.25rem .75rem;
+    padding: 0.35rem 1.25rem 0.75rem;
   }
 
   .spendingPanel [data-slot="card-content"] > div {
     min-height: 2.25rem;
-    gap: .625rem;
-    font-size: .75rem;
+    gap: 0.625rem;
+    font-size: 0.75rem;
   }
 
   .spendingPanel [data-slot="card-content"] > div + div {
-    margin-top: .15rem;
+    margin-top: 0.15rem;
   }
 
   .spendingPanel [data-slot="card-content"] p {
-    margin-top: .1rem;
-    font-size: .65rem;
+    margin-top: 0.1rem;
+    font-size: 0.65rem;
   }
 
   .reviewPanel [data-slot="card-content"] {
-    padding: .35rem 1.25rem .75rem;
+    padding: 0.35rem 1.25rem 0.75rem;
   }
 
   .reviewPanel [data-slot="card-content"] > a {
     min-height: 2.5rem;
-    padding-block: .5rem;
-    font-size: .75rem;
+    padding-block: 0.5rem;
+    font-size: 0.75rem;
   }
 
   .reviewPanel [data-slot="card-content"] > a:last-child {
     height: 2.5rem;
-    margin-top: .5rem;
+    margin-top: 0.5rem;
   }
 }

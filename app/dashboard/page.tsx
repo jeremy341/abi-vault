@@ -1,5 +1,10 @@
 import Klassenkasse from "@/components/dashboard/Klassenkasse";
-import { GoalsPanel, ReviewPanel, SpendingByCategory, TransactionHistory } from "@/components/dashboard/DashboardPanels";
+import {
+  GoalsPanel,
+  ReviewPanel,
+  SpendingByCategory,
+  TransactionHistory,
+} from "@/components/dashboard/DashboardPanels";
 import styles from "./dashboard.module.css";
 
 export default function DashboardPage() {

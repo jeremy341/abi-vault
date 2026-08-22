@@ -21,8 +21,10 @@ export function isValidFutureExpiry(value: string, now = new Date()) {
   const currentMonth = now.getMonth() + 1;
   const currentYear = now.getFullYear();
 
-  return expiryYear > currentYear ||
-    (expiryYear === currentYear && expiryMonth >= currentMonth);
+  return (
+    expiryYear > currentYear ||
+    (expiryYear === currentYear && expiryMonth >= currentMonth)
+  );
 }
 export function filterLetters(value: string, maxLength: number) {
   return value.replace(/[^\p{L}\s'-]/gu, "").slice(0, maxLength);

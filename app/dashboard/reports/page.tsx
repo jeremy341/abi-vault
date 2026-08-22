@@ -2,9 +2,7 @@
 
 import {
   AlertTriangle,
-  ArrowDownRight,
   ArrowRight,
-  ArrowUpRight,
   CheckCircle2,
   Download,
   FileSpreadsheet,
@@ -12,8 +10,26 @@ import {
   Info,
   ReceiptText,
 } from "lucide-react";
-import { useMemo, useState } from "react";
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { useState } from "react";
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  PolarAngleAxis,
+  PolarGrid,
+  PolarRadiusAxis,
+  Radar,
+  RadarChart,
+  XAxis,
+  YAxis,
+} from "recharts";
 import {
   ChartConfig,
   ChartContainer,
@@ -24,7 +40,12 @@ import {
 } from "@/components/ui/chart";
 import { FieldDropdown } from "@/components/ui/field-dropdown";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import styles from "./reports.module.css";
 
 const cashflowData = [
@@ -49,10 +70,26 @@ const goals = [
 ];
 
 const reviewItems = [
-  { title: "3 Belege warten auf Prüfung", detail: "Zuletzt aktualisiert heute, 12:18 Uhr", tone: "warning" },
-  { title: "1 Bargeldzahlung ohne Beleg", detail: "Kuchenverkauf vom 11.05.2024", tone: "neutral" },
-  { title: "1 Beleg ohne Transaktionszuordnung", detail: "Bon_Bäckerei.jpg", tone: "neutral" },
-  { title: "Kassenabgleich vollständig", detail: "Letzter Kassensturz am 15.05.2024", tone: "positive" },
+  {
+    title: "3 Belege warten auf Prüfung",
+    detail: "Zuletzt aktualisiert heute, 12:18 Uhr",
+    tone: "warning",
+  },
+  {
+    title: "1 Bargeldzahlung ohne Beleg",
+    detail: "Kuchenverkauf vom 11.05.2024",
+    tone: "neutral",
+  },
+  {
+    title: "1 Beleg ohne Transaktionszuordnung",
+    detail: "Bon_Bäckerei.jpg",
+    tone: "neutral",
+  },
+  {
+    title: "Kassenabgleich vollständig",
+    detail: "Letzter Kassensturz am 15.05.2024",
+    tone: "positive",
+  },
 ];
 
 const chartConfig = {
@@ -64,6 +101,46 @@ const chartConfig = {
     label: "Ausgaben",
     theme: { light: "#a1a1aa", dark: "#71717a" },
   },
+} satisfies ChartConfig;
+
+const analysisBalance = [
+  { month: "Jan 2026", balance: 820 },
+  { month: "Feb 2026", balance: 1280 },
+  { month: "Mär 2026", balance: 2010 },
+  { month: "Apr 2026", balance: 3160 },
+  { month: "Mai 2026", balance: 2850.75 },
+  { month: "Jun 2026", balance: 3476 },
+];
+
+const analysisFlow = [
+  { month: "Jan", income: 980, expenses: 560 },
+  { month: "Feb", income: 2240, expenses: 1120 },
+  { month: "Mär", income: 2480, expenses: 1380 },
+  { month: "Apr", income: 3000, expenses: 1680 },
+  { month: "Mai", income: 3020, expenses: 2100 },
+  { month: "Jun", income: 2950, expenses: 2503.1 },
+];
+
+const analysisSpend = [
+  { name: "Veranstaltung", value: 1447.4, share: 58 },
+  { name: "Material", value: 676.2, share: 27 },
+  { name: "Sonstiges", value: 379.5, share: 15 },
+];
+
+const analysisProfile = [
+  { name: "Zielerreichung", current: 72, target: 80 },
+  { name: "Liquidität", current: 86, target: 75 },
+  { name: "Belegstatus", current: 68, target: 90 },
+  { name: "Kassenabgleich", current: 100, target: 100 },
+  { name: "Planerfüllung", current: 74, target: 85 },
+];
+
+const analysisChartConfig = {
+  balance: { label: "Kontostand", color: "#18181b" },
+  income: { label: "Einnahmen", color: "#18181b" },
+  expenses: { label: "Ausgaben", color: "#a1a1aa" },
+  current: { label: "Aktuell", color: "#18181b" },
+  target: { label: "Ziel", color: "#a1a1aa" },
 } satisfies ChartConfig;
 
 const money = new Intl.NumberFormat("de-DE", {
@@ -78,8 +155,6 @@ export default function ReportsPage() {
   const [category, setCategory] = useState("alle-kategorien");
   const [exportMessage, setExportMessage] = useState("");
 
-  const totals = useMemo(() => ({ income: 1395.5, expenses: 2503.1, net: -1107.6 }), []);
-
   function prepareExport(format: string) {
     setExportMessage(`${format}-Bericht wurde vorbereitet.`);
   }
@@ -87,27 +162,41 @@ export default function ReportsPage() {
   return (
     <TooltipProvider>
       <section className={styles.page}>
-        <div className={styles.summaryGrid}>
-          <SummaryCard label="Einnahmen" value={money.format(totals.income)} icon={<ArrowDownRight />} meta="+18,6 % zum Vormonat" tone="positive" />
-          <SummaryCard label="Ausgaben" value={money.format(totals.expenses)} icon={<ArrowUpRight />} meta="+9,3 % zum Vormonat" tone="neutral" />
-          <SummaryCard label="Netto" value={money.format(totals.net)} icon={<ReceiptText />} meta="Aktueller Zeitraum" tone="neutral" />
-          <SummaryCard label="Prüfbedarf" value="4 Vorgänge" icon={<AlertTriangle />} meta="3 Belege, 1 Barzahlung" tone="warning" />
-        </div>
-
         <Tabs defaultValue="overview" className={styles.reportWorkspace}>
-          <header className={styles.workspaceHeader}>
-            <div>
-              <h2>Klassenfinanzen-Bericht</h2>
-              <p>Cashflow, Kategorien und offene Prüfungen.</p>
-            </div>
+          <header className={styles.referenceTabsHeader}>
             <TabsList variant="line" className={styles.workspaceTabs}>
               <TabsTrigger value="overview">Übersicht</TabsTrigger>
+              <TabsTrigger value="analysis">Analysen</TabsTrigger>
               <TabsTrigger value="review">Prüfung</TabsTrigger>
               <TabsTrigger value="export">Export</TabsTrigger>
             </TabsList>
           </header>
 
           <TabsContent value="overview" className={styles.tabContent}>
+            <div className={styles.analysisKpiGrid}>
+              <AnalysisKpi
+                label="Netto"
+                value="1.107,60 €"
+                meta="+342,55 € vs. Vormonat"
+                positive
+              />
+              <AnalysisKpi
+                label="Liquidität"
+                value="3.476,00 €"
+                meta="+1.236,25 € vs. Vormonat"
+                positive
+              />
+              <AnalysisKpi
+                label="Ausgaben"
+                value="2.503,10 €"
+                meta="−215,40 € vs. Vormonat"
+              />
+              <AnalysisKpi
+                label="Prüfbedarf"
+                value="4"
+                meta="Belege / Transaktionen"
+              />
+            </div>
             <div className={styles.filters}>
               <FieldDropdown
                 ariaLabel="Berichtszeitraum"
@@ -140,7 +229,11 @@ export default function ReportsPage() {
                   { value: "sonstiges", label: "Sonstiges" },
                 ]}
               />
-              <button type="button" className={styles.exportShortcut} onClick={() => prepareExport("PDF")}>
+              <button
+                type="button"
+                className={styles.exportShortcut}
+                onClick={() => prepareExport("PDF")}
+              >
                 <Download aria-hidden="true" />
                 Bericht exportieren
               </button>
@@ -154,16 +247,38 @@ export default function ReportsPage() {
                     <p>Monatliche Einnahmen und Ausgaben</p>
                   </div>
                   <Tooltip>
-                    <TooltipTrigger render={<button type="button" className={styles.infoButton} aria-label="Diagramminformationen" />}>
+                    <TooltipTrigger
+                      render={
+                        <button
+                          type="button"
+                          className={styles.infoButton}
+                          aria-label="Diagramminformationen"
+                        />
+                      }
+                    >
                       <Info aria-hidden="true" />
                     </TooltipTrigger>
-                    <TooltipContent>Bewege den Mauszeiger über einen Balken für genaue Werte.</TooltipContent>
+                    <TooltipContent>
+                      Bewege den Mauszeiger über einen Balken für genaue Werte.
+                    </TooltipContent>
                   </Tooltip>
                 </header>
-                <ChartContainer config={chartConfig} className={styles.cashflowChart}>
-                  <BarChart accessibilityLayer data={cashflowData} margin={{ left: 2, right: 8, top: 12, bottom: 0 }}>
+                <ChartContainer
+                  config={chartConfig}
+                  className={styles.cashflowChart}
+                >
+                  <BarChart
+                    accessibilityLayer
+                    data={cashflowData}
+                    margin={{ left: 2, right: 8, top: 12, bottom: 0 }}
+                  >
                     <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                    <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={10} />
+                    <XAxis
+                      dataKey="month"
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={10}
+                    />
                     <YAxis
                       tickLine={false}
                       axisLine={false}
@@ -181,7 +296,12 @@ export default function ReportsPage() {
                         <ChartTooltipContent
                           formatter={(value, name) => (
                             <div className={styles.tooltipValue}>
-                              <span>{chartConfig[name as keyof typeof chartConfig]?.label}</span>
+                              <span>
+                                {
+                                  chartConfig[name as keyof typeof chartConfig]
+                                    ?.label
+                                }
+                              </span>
                               <strong>{money.format(Number(value))}</strong>
                             </div>
                           )}
@@ -189,20 +309,45 @@ export default function ReportsPage() {
                       }
                     />
                     <ChartLegend content={<ChartLegendContent />} />
-                    <Bar dataKey="income" fill="var(--color-income)" radius={[5, 5, 0, 0]} activeBar={{ fillOpacity: .72 }} />
-                    <Bar dataKey="expenses" fill="var(--color-expenses)" radius={[5, 5, 0, 0]} activeBar={{ fillOpacity: .72 }} />
+                    <Bar
+                      dataKey="income"
+                      fill="var(--color-income)"
+                      radius={[5, 5, 0, 0]}
+                      activeBar={{ fillOpacity: 0.72 }}
+                    />
+                    <Bar
+                      dataKey="expenses"
+                      fill="var(--color-expenses)"
+                      radius={[5, 5, 0, 0]}
+                      activeBar={{ fillOpacity: 0.72 }}
+                    />
                   </BarChart>
                 </ChartContainer>
               </article>
 
               <aside className={styles.insightColumn}>
                 <article className={styles.categoryPanel}>
-                  <header className={styles.panelHeader}><div><h3>Ausgaben nach Kategorie</h3><p>Aktueller Zeitraum</p></div></header>
+                  <header className={styles.panelHeader}>
+                    <div>
+                      <h3>Ausgaben nach Kategorie</h3>
+                      <p>Aktueller Zeitraum</p>
+                    </div>
+                  </header>
                   <div className={styles.categoryList}>
                     {categories.map((item, index) => (
                       <div className={styles.categoryItem} key={item.name}>
-                        <div><strong>{item.name}</strong><span>{money.format(item.amount)}</span></div>
-                        <div className={styles.categoryBar}><span style={{ width: `${item.share}%`, opacity: 1 - index * .24 }} /></div>
+                        <div>
+                          <strong>{item.name}</strong>
+                          <span>{money.format(item.amount)}</span>
+                        </div>
+                        <div className={styles.categoryBar}>
+                          <span
+                            style={{
+                              width: `${item.share}%`,
+                              opacity: 1 - index * 0.24,
+                            }}
+                          />
+                        </div>
                         <b>{item.share}%</b>
                       </div>
                     ))}
@@ -210,14 +355,29 @@ export default function ReportsPage() {
                 </article>
 
                 <article className={styles.goalPanel}>
-                  <header className={styles.panelHeader}><div><h3>Zielbeiträge</h3><p>Finanzierung der aktuellen Sparziele</p></div></header>
+                  <header className={styles.panelHeader}>
+                    <div>
+                      <h3>Zielbeiträge</h3>
+                      <p>Finanzierung der aktuellen Sparziele</p>
+                    </div>
+                  </header>
                   <div className={styles.goalList}>
                     {goals.map((goal) => {
-                      const progress = Math.round((goal.saved / goal.target) * 100);
-                      return <div className={styles.goalItem} key={goal.name}>
-                        <div><strong>{goal.name}</strong><span>{money.format(goal.saved)} von {money.format(goal.target)}</span></div>
-                        <b>{progress}%</b>
-                      </div>;
+                      const progress = Math.round(
+                        (goal.saved / goal.target) * 100,
+                      );
+                      return (
+                        <div className={styles.goalItem} key={goal.name}>
+                          <div>
+                            <strong>{goal.name}</strong>
+                            <span>
+                              {money.format(goal.saved)} von{" "}
+                              {money.format(goal.target)}
+                            </span>
+                          </div>
+                          <b>{progress}%</b>
+                        </div>
+                      );
                     })}
                   </div>
                 </article>
@@ -225,27 +385,461 @@ export default function ReportsPage() {
             </div>
           </TabsContent>
 
+          <TabsContent
+            value="analysis"
+            className={`${styles.tabContent} ${styles.analysisTab}`}
+          >
+            <div className={styles.analysisKpiGrid}>
+              <AnalysisKpi
+                label="Netto"
+                value="1.107,60 €"
+                meta="+342,55 € vs. Vormonat"
+                positive
+              />
+              <AnalysisKpi
+                label="Liquidität"
+                value="3.476,00 €"
+                meta="+1.236,25 € vs. Vormonat"
+                positive
+              />
+              <AnalysisKpi
+                label="Ausgaben"
+                value="2.503,10 €"
+                meta="−215,40 € vs. Vormonat"
+              />
+              <AnalysisKpi
+                label="Prüfbedarf"
+                value="4"
+                meta="Belege / Transaktionen"
+              />
+            </div>
+            <div className={styles.analysisFilters}>
+              <FieldDropdown
+                ariaLabel="Analysezeitraum"
+                value={period}
+                onChange={setPeriod}
+                options={[
+                  { value: "6-monate", label: "Jan - Jun 2026" },
+                  { value: "abi-jahr", label: "Abi-Jahr 2026" },
+                  { value: "gesamt", label: "Gesamter Zeitraum" },
+                ]}
+              />
+              <FieldDropdown
+                ariaLabel="Analysekonto"
+                value={account}
+                onChange={setAccount}
+                options={[
+                  { value: "alle-konten", label: "Alle Konten" },
+                  { value: "klassenkonto", label: "Klassenkonto" },
+                  { value: "barkasse", label: "Barkasse" },
+                ]}
+              />
+              <FieldDropdown
+                ariaLabel="Analysekategorie"
+                value={category}
+                onChange={setCategory}
+                options={[
+                  { value: "alle-kategorien", label: "Alle Kategorien" },
+                  { value: "veranstaltung", label: "Alle Kategorien" },
+                  { value: "material", label: "Material" },
+                ]}
+              />
+              <button
+                type="button"
+                className={styles.resetButton}
+                onClick={() => {
+                  setPeriod("6-monate");
+                  setAccount("alle-konten");
+                  setCategory("alle-kategorien");
+                }}
+              >
+                Filter zurücksetzen
+              </button>
+            </div>
+            <div className={styles.analysisGrid}>
+              <ChartPanel
+                title="Kontostand-Verlauf"
+                subtitle="Verfügbarer Bestand nach Monat"
+                className={styles.analysisWidePanel}
+              >
+                <ChartContainer
+                  config={analysisChartConfig}
+                  className={styles.analysisChart}
+                >
+                  <AreaChart
+                    accessibilityLayer
+                    data={analysisBalance}
+                    margin={{ left: 0, right: 8, top: 8, bottom: 0 }}
+                  >
+                    <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="month"
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={8}
+                    />
+                    <YAxis
+                      tickLine={false}
+                      axisLine={false}
+                      width={50}
+                      tickFormatter={(value) =>
+                        `${(Number(value) / 1000).toLocaleString("de-DE", { maximumFractionDigits: 1 })}k €`
+                      }
+                    />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Area
+                      dataKey="balance"
+                      type="monotone"
+                      fill="var(--color-balance)"
+                      fillOpacity={0.12}
+                      stroke="var(--color-balance)"
+                      strokeWidth={2}
+                      activeDot={{ r: 4 }}
+                    />
+                  </AreaChart>
+                </ChartContainer>
+              </ChartPanel>
+
+              <ChartPanel
+                title="Ausgaben nach Kategorie"
+                subtitle="Verteilung im Berichtszeitraum"
+              >
+                <div className={styles.donutLayout}>
+                  <ChartContainer
+                    config={analysisChartConfig}
+                    className={styles.donutChart}
+                  >
+                    <PieChart accessibilityLayer>
+                      <ChartTooltip
+                        content={<ChartTooltipContent nameKey="name" />}
+                      />
+                      <Pie
+                        data={analysisSpend}
+                        dataKey="value"
+                        nameKey="name"
+                        innerRadius={48}
+                        outerRadius={78}
+                        paddingAngle={2}
+                        strokeWidth={1}
+                      >
+                        {analysisSpend.map((entry, index) => (
+                          <Cell
+                            key={entry.name}
+                            fill={["#18181b", "#a1a1aa", "#d4d4d8"][index]}
+                          />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  </ChartContainer>
+                  <div className={styles.donutLegend}>
+                    {analysisSpend.map((entry, index) => (
+                      <div key={entry.name}>
+                        <span>
+                          <i
+                            style={{
+                              background: ["#18181b", "#a1a1aa", "#d4d4d8"][
+                                index
+                              ],
+                            }}
+                          />
+                          {entry.name}
+                        </span>
+                        <strong>{entry.share}%</strong>
+                        <small>{money.format(entry.value)}</small>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </ChartPanel>
+
+              <ChartPanel
+                title="Einnahmen & Ausgaben"
+                subtitle="Monatlicher Vergleich"
+                className={styles.analysisWidePanel}
+              >
+                <ChartContainer
+                  config={analysisChartConfig}
+                  className={styles.analysisChart}
+                >
+                  <LineChart
+                    accessibilityLayer
+                    data={analysisFlow}
+                    margin={{ left: 0, right: 8, top: 8, bottom: 0 }}
+                  >
+                    <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="month"
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={8}
+                    />
+                    <YAxis
+                      tickLine={false}
+                      axisLine={false}
+                      width={50}
+                      tickFormatter={(value) =>
+                        `${(Number(value) / 1000).toLocaleString("de-DE", { maximumFractionDigits: 1 })}k €`
+                      }
+                    />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Line
+                      dataKey="income"
+                      type="monotone"
+                      stroke="var(--color-income)"
+                      strokeWidth={2}
+                      dot={{ r: 3 }}
+                    />
+                    <Line
+                      dataKey="expenses"
+                      type="monotone"
+                      stroke="var(--color-expenses)"
+                      strokeWidth={2}
+                      strokeDasharray="5 4"
+                      dot={{ r: 3 }}
+                    />
+                  </LineChart>
+                </ChartContainer>
+              </ChartPanel>
+
+              <ChartPanel
+                title="Finanzprofil"
+                subtitle="Aktuell im Vergleich zum Ziel"
+              >
+                <ChartContainer
+                  config={analysisChartConfig}
+                  className={styles.radarChart}
+                >
+                  <RadarChart
+                    accessibilityLayer
+                    data={analysisProfile}
+                    outerRadius="68%"
+                  >
+                    <PolarGrid />
+                    <PolarAngleAxis dataKey="name" tick={{ fontSize: 10 }} />
+                    <PolarRadiusAxis
+                      angle={90}
+                      domain={[0, 100]}
+                      tick={{ fontSize: 9 }}
+                    />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Radar
+                      name="Aktuell"
+                      dataKey="current"
+                      stroke="var(--color-current)"
+                      fill="var(--color-current)"
+                      fillOpacity={0.12}
+                      strokeWidth={2}
+                    />
+                    <Radar
+                      name="Ziel"
+                      dataKey="target"
+                      stroke="var(--color-target)"
+                      fill="transparent"
+                      strokeDasharray="5 4"
+                      strokeWidth={2}
+                    />
+                  </RadarChart>
+                </ChartContainer>
+              </ChartPanel>
+            </div>
+          </TabsContent>
+
           <TabsContent value="review" className={styles.tabContent}>
-            <section className={styles.reviewGrid}>
-              {reviewItems.map((item) => (
-                <button type="button" className={styles.reviewItem} key={item.title}>
-                  <span className={`${styles.reviewIcon} ${styles[item.tone]}`}>
-                    {item.tone === "positive" ? <CheckCircle2 /> : item.tone === "warning" ? <AlertTriangle /> : <ReceiptText />}
-                  </span>
-                  <span><strong>{item.title}</strong><small>{item.detail}</small></span>
-                  <ArrowRight aria-hidden="true" />
-                </button>
-              ))}
-            </section>
+            <div className={styles.reviewSummaryGrid}>
+              <article>
+                <span>Offene Belege</span>
+                <strong>3</strong>
+                <small>Warten auf Prüfung</small>
+              </article>
+              <article>
+                <span>Ohne Zuordnung</span>
+                <strong>1</strong>
+                <small>Beleg zuordnen</small>
+              </article>
+              <article>
+                <span>Abgleich</span>
+                <strong className={styles.analysisPositive}>100 %</strong>
+                <small>Kassenbestand stimmt</small>
+              </article>
+            </div>
+            <div className={styles.reviewLayout}>
+              <section className={styles.reviewQueue}>
+                <header className={styles.reviewSectionHeader}>
+                  <div>
+                    <h3>Offene Vorgänge</h3>
+                    <p>Arbeite die wichtigsten Prüfungen der Reihe nach ab.</p>
+                  </div>
+                  <span>4 Vorgänge</span>
+                </header>
+                <div className={styles.reviewQueueList}>
+                  {reviewItems.map((item) => (
+                    <button
+                      type="button"
+                      className={styles.reviewQueueItem}
+                      key={item.title}
+                    >
+                      <span
+                        className={`${styles.reviewIcon} ${styles[item.tone]}`}
+                      >
+                        {item.tone === "positive" ? (
+                          <CheckCircle2 />
+                        ) : item.tone === "warning" ? (
+                          <AlertTriangle />
+                        ) : (
+                          <ReceiptText />
+                        )}
+                      </span>
+                      <span>
+                        <strong>{item.title}</strong>
+                        <small>{item.detail}</small>
+                      </span>
+                      <b>{item.tone === "positive" ? "Erledigt" : "Öffnen"}</b>
+                      <ArrowRight aria-hidden="true" />
+                    </button>
+                  ))}
+                </div>
+              </section>
+              <aside className={styles.reviewStatusPanel}>
+                <header className={styles.reviewSectionHeader}>
+                  <div>
+                    <h3>Prüfstatus</h3>
+                    <p>Alle relevanten Vorgänge</p>
+                  </div>
+                  <Info aria-hidden="true" />
+                </header>
+                <div className={styles.reviewStatusValue}>
+                  <strong>4</strong>
+                  <span>Vorgänge insgesamt</span>
+                </div>
+                <div className={styles.reviewStatusBars}>
+                  <div>
+                    <span>
+                      <b>Geprüft</b>
+                      <b>18</b>
+                    </span>
+                    <i>
+                      <em style={{ width: "82%" }} />
+                    </i>
+                  </div>
+                  <div>
+                    <span>
+                      <b>Zu prüfen</b>
+                      <b>3</b>
+                    </span>
+                    <i>
+                      <em style={{ width: "14%" }} />
+                    </i>
+                  </div>
+                  <div>
+                    <span>
+                      <b>Ohne Zuordnung</b>
+                      <b>1</b>
+                    </span>
+                    <i>
+                      <em style={{ width: "5%" }} />
+                    </i>
+                  </div>
+                </div>
+              </aside>
+            </div>
           </TabsContent>
 
           <TabsContent value="export" className={styles.tabContent}>
-            <section className={styles.exportGrid}>
-              <ExportCard icon={<FileText />} title="PDF-Bericht" description="Kompakte Übersicht zum Teilen" onClick={() => prepareExport("PDF")} />
-              <ExportCard icon={<FileSpreadsheet />} title="Excel-Datei" description="Alle Werte zur Weiterverarbeitung" onClick={() => prepareExport("Excel")} />
-              <ExportCard icon={<ReceiptText />} title="Prüfprotokoll" description="Belege und offene Vorgänge" onClick={() => prepareExport("Prüfprotokoll")} />
+            <section className={styles.exportWorkspace}>
+              <header className={styles.exportSectionHeader}>
+                <div>
+                  <h3>Berichte exportieren</h3>
+                  <p>
+                    Wähle einen Bericht und sichere die aktuellen Finanzdaten
+                    für eure Unterlagen.
+                  </p>
+                </div>
+                <Download aria-hidden="true" />
+              </header>
+              <div className={styles.exportControls}>
+                <FieldDropdown
+                  ariaLabel="Exportzeitraum"
+                  value={period}
+                  onChange={setPeriod}
+                  options={[
+                    { value: "6-monate", label: "Letzte 6 Monate" },
+                    { value: "abi-jahr", label: "Abi-Jahr 2026" },
+                    { value: "gesamt", label: "Gesamter Zeitraum" },
+                  ]}
+                />
+                <FieldDropdown
+                  ariaLabel="Exportkonto"
+                  value={account}
+                  onChange={setAccount}
+                  options={[
+                    { value: "alle-konten", label: "Alle Konten" },
+                    { value: "klassenkonto", label: "Klassenkonto" },
+                    { value: "barkasse", label: "Barkasse" },
+                  ]}
+                />
+                <FieldDropdown
+                  ariaLabel="Exportkategorie"
+                  value={category}
+                  onChange={setCategory}
+                  options={[
+                    { value: "alle-kategorien", label: "Alle Kategorien" },
+                    { value: "veranstaltung", label: "Veranstaltung" },
+                    { value: "material", label: "Material" },
+                  ]}
+                />
+              </div>
+              <div className={styles.exportGrid}>
+                <ExportCard
+                  icon={<FileText />}
+                  title="PDF-Bericht"
+                  description="Kompakte Übersicht zum Teilen"
+                  onClick={() => prepareExport("PDF")}
+                />
+                <ExportCard
+                  icon={<FileSpreadsheet />}
+                  title="Excel-Datei"
+                  description="Alle Werte zur Weiterverarbeitung"
+                  onClick={() => prepareExport("Excel")}
+                />
+                <ExportCard
+                  icon={<ReceiptText />}
+                  title="Prüfprotokoll"
+                  description="Belege und offene Vorgänge"
+                  onClick={() => prepareExport("Prüfprotokoll")}
+                />
+              </div>
+              <p className={styles.exportMessage} aria-live="polite">
+                {exportMessage || "Wähle ein Format für den Export."}
+              </p>
             </section>
-            <p className={styles.exportMessage} aria-live="polite">{exportMessage || "Wähle ein Format für den Export."}</p>
+            <section className={styles.exportHistory}>
+              <header className={styles.exportSectionHeader}>
+                <div>
+                  <h3>Letzte Exporte</h3>
+                  <p>Bereits erstellte Berichte</p>
+                </div>
+              </header>
+              <div className={styles.exportHistoryList}>
+                <div>
+                  <FileText />
+                  <span>
+                    <strong>Klassenfinanzen_Mai_2026.pdf</strong>
+                    <small>Erstellt heute, 10:32 Uhr</small>
+                  </span>
+                  <b>PDF</b>
+                  <ArrowRight />
+                </div>
+                <div>
+                  <FileSpreadsheet />
+                  <span>
+                    <strong>Transaktionen_April_2026.xlsx</strong>
+                    <small>Erstellt am 30.04.2026</small>
+                  </span>
+                  <b>Excel</b>
+                  <ArrowRight />
+                </div>
+              </div>
+            </section>
           </TabsContent>
         </Tabs>
       </section>
@@ -253,17 +847,70 @@ export default function ReportsPage() {
   );
 }
 
-function SummaryCard({ label, value, meta, icon, tone }: { label: string; value: string; meta: string; icon: React.ReactNode; tone: "positive" | "neutral" | "warning" }) {
-  return <article className={styles.summaryCard}>
-    <span className={`${styles.summaryIcon} ${styles[tone]}`}>{icon}</span>
-    <div><span>{label}</span><strong>{value}</strong><small>{meta}</small></div>
-  </article>;
+function ExportCard({
+  icon,
+  title,
+  description,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  onClick: () => void;
+}) {
+  return (
+    <button type="button" className={styles.exportCard} onClick={onClick}>
+      <span>{icon}</span>
+      <span>
+        <strong>{title}</strong>
+        <small>{description}</small>
+      </span>
+      <Download aria-hidden="true" />
+    </button>
+  );
 }
 
-function ExportCard({ icon, title, description, onClick }: { icon: React.ReactNode; title: string; description: string; onClick: () => void }) {
-  return <button type="button" className={styles.exportCard} onClick={onClick}>
-    <span>{icon}</span>
-    <span><strong>{title}</strong><small>{description}</small></span>
-    <Download aria-hidden="true" />
-  </button>;
+function AnalysisKpi({
+  label,
+  value,
+  meta,
+  positive = false,
+}: {
+  label: string;
+  value: string;
+  meta: string;
+  positive?: boolean;
+}) {
+  return (
+    <article className={styles.analysisKpi}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+      <small className={positive ? styles.analysisPositive : ""}>{meta}</small>
+    </article>
+  );
+}
+
+function ChartPanel({
+  title,
+  subtitle,
+  className = "",
+  children,
+}: {
+  title: string;
+  subtitle: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <article className={`${styles.analysisPanel} ${className}`}>
+      <header className={styles.analysisPanelHeader}>
+        <div>
+          <h3>{title}</h3>
+          <p>{subtitle}</p>
+        </div>
+        <Info aria-hidden="true" />
+      </header>
+      {children}
+    </article>
+  );
 }

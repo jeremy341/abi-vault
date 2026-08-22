@@ -28,7 +28,8 @@ export function FieldDropdown({
   placement = "bottom",
 }: FieldDropdownProps) {
   const [open, setOpen] = useState(false);
-  const selectedOption = options.find((option) => option.value === value) ?? options[0];
+  const selectedOption =
+    options.find((option) => option.value === value) ?? options[0];
 
   return (
     <div className={`ui-dropdown ${className}`}>

@@ -1,0 +1,460 @@
+.page {
+  display: grid;
+  height: 100%;
+  min-height: 0;
+  width: 100%;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: clamp(0.75rem, 1.1vw, 1.1rem);
+  padding: clamp(0.75rem, 1.15vw, 1.25rem);
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-block: 1px solid var(--ui-border-subtle);
+}
+
+.metrics > div {
+  display: grid;
+  min-width: 0;
+  gap: 0.12rem;
+  border-right: 1px solid var(--ui-border-subtle);
+  padding: 0.65rem clamp(0.75rem, 1.2vw, 1.2rem);
+}
+
+.metrics > div:last-child {
+  border-right: 0;
+}
+.metrics span,
+.metrics small,
+.eyebrow,
+.panelHeader p,
+.goalRow small {
+  color: var(--ui-muted-ink);
+}
+.metrics span,
+.eyebrow {
+  font-size: 0.68rem;
+}
+.metrics strong {
+  font-size: clamp(1.05rem, 1.4vw, 1.4rem);
+  font-weight: 650;
+  letter-spacing: -0.035em;
+}
+.metrics small {
+  font-size: 0.62rem;
+}
+
+.workspace {
+  display: grid;
+  min-height: 0;
+  grid-template-columns: minmax(0, 1.72fr) minmax(19rem, 0.88fr);
+  gap: clamp(0.75rem, 1.1vw, 1.1rem);
+}
+
+.primaryColumn,
+.secondaryColumn {
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  gap: clamp(0.75rem, 1.1vw, 1.1rem);
+}
+.primaryColumn {
+  grid-template-rows: minmax(11.5rem, 0.68fr) minmax(20rem, 1.32fr);
+}
+.secondaryColumn {
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+}
+
+.accountPanel,
+.transactionsPanel,
+.goalsPanel,
+.spendingPanel,
+.reviewPanel {
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--ui-border-subtle);
+  border-radius: 0.8rem;
+  background: var(--ui-surface);
+}
+
+.accountPanel {
+  display: grid;
+  grid-template-columns: minmax(17rem, 0.95fr) minmax(15rem, 1.05fr);
+  align-items: center;
+}
+.accountCard {
+  width: min(100% - 2rem, 21rem);
+  justify-self: center;
+  border: 0;
+  border-radius: 1.25rem;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.accountCard:focus-visible {
+  outline: 2px solid var(--ui-border-focus);
+  outline-offset: 0.25rem;
+}
+.accountSummary {
+  display: flex;
+  min-height: 8.5rem;
+  flex-direction: column;
+  justify-content: space-between;
+  border-left: 1px solid var(--ui-border-subtle);
+  padding: 1rem 1.25rem;
+}
+.accountSummary strong {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: clamp(1.6rem, 2.4vw, 2.4rem);
+  font-weight: 650;
+  letter-spacing: -0.055em;
+}
+.accountSummary p {
+  margin: 0.25rem 0 0;
+  color: var(--ui-muted-ink);
+  font-size: 0.68rem;
+}
+.accountActions {
+  display: flex;
+  gap: 0.45rem;
+}
+.accountActions a {
+  display: inline-flex;
+  min-height: 2.4rem;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid var(--ui-border);
+  border-radius: 0.55rem;
+  padding: 0 0.7rem;
+  font-size: 0.68rem;
+  font-weight: 620;
+}
+.accountActions a:first-child {
+  border-color: var(--ui-ink);
+  background: var(--ui-ink);
+  color: var(--ui-surface);
+}
+.accountActions svg,
+.panelHeader svg {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.transactionsPanel {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+.panelHeader {
+  display: flex;
+  min-height: 3.75rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--ui-border-subtle);
+  padding: 0.65rem 0.9rem;
+}
+.panelHeader h2 {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 650;
+  letter-spacing: -0.025em;
+}
+.panelHeader p {
+  margin: 0.15rem 0 0;
+  font-size: 0.62rem;
+}
+.panelHeader a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.65rem;
+  font-weight: 620;
+}
+.panelValue {
+  font-size: 0.74rem;
+  font-weight: 650;
+}
+
+.transactionHeader,
+.transactionRow {
+  display: grid;
+  grid-template-columns: minmax(12rem, 1.8fr) minmax(6rem, 0.8fr) 6.4rem 7rem;
+  align-items: center;
+  gap: 0.75rem;
+  padding-inline: 0.9rem;
+}
+.transactionHeader {
+  min-height: 2rem;
+  border-bottom: 1px solid var(--ui-border-subtle);
+  color: var(--ui-muted-ink);
+  font-size: 0.6rem;
+}
+.transactionRows {
+  min-height: 0;
+}
+.transactionRow {
+  min-height: calc(100% / 7);
+  border-bottom: 1px solid var(--ui-border-subtle);
+  color: var(--ui-muted-ink);
+  font-size: 0.68rem;
+}
+.transactionRow:last-child {
+  border-bottom: 0;
+}
+.transactionName {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--ui-ink);
+}
+.transactionName svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  stroke-width: 1.7;
+}
+.transactionName strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.transactionRow b {
+  justify-self: end;
+  font-variant-numeric: tabular-nums;
+}
+.positive {
+  color: var(--ui-positive);
+}
+.negative {
+  color: var(--ui-negative);
+}
+
+.accountOverlay {
+  position: fixed;
+  z-index: 80;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgb(0 0 0 / 0.3);
+  padding: 1rem;
+  backdrop-filter: blur(3px);
+}
+
+.accountDialog {
+  width: min(29rem, calc(100vw - 2rem));
+  border: 1px solid var(--ui-border);
+  border-radius: 0.85rem;
+  background: var(--ui-surface);
+  padding: 1rem;
+  box-shadow: 0 24px 70px rgb(0 0 0 / 0.22);
+}
+
+.accountDialogHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.accountDialogHeader h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+.accountDialogHeader p {
+  margin: 0.15rem 0 0;
+  color: var(--ui-muted-ink);
+  font-size: 0.68rem;
+}
+
+.accountDialogHeader button {
+  display: inline-flex;
+  width: 2.5rem;
+  height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 0.55rem;
+  background: transparent;
+  color: var(--ui-muted-ink);
+}
+
+.accountDialogHeader button:hover {
+  background: color-mix(in srgb, var(--ui-ink) 5%, transparent);
+  color: var(--ui-ink);
+}
+
+.accountDialogHeader svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.accountDialogCard {
+  width: min(100%, 23rem);
+  margin: 1rem auto 0;
+}
+
+.goalRows,
+.spendingRows,
+.reviewRows {
+  display: grid;
+  padding: 0.35rem 0.9rem 0.55rem;
+}
+.goalRow {
+  display: grid;
+  min-height: 2.65rem;
+  grid-template-columns: minmax(6rem, 0.8fr) minmax(5rem, 1.2fr) 2.2rem;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: 0.66rem;
+}
+.goalRow > span {
+  display: grid;
+  gap: 0.08rem;
+}
+.goalRow small {
+  font-size: 0.58rem;
+}
+.goalRow > div,
+.spendingRow > div {
+  height: 0.32rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--ui-border-subtle);
+}
+.goalRow i,
+.spendingRow i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ui-ink);
+}
+.goalRow b,
+.spendingRow b {
+  justify-self: end;
+  color: var(--ui-muted-ink);
+  font-size: 0.62rem;
+}
+
+.spendingRow {
+  display: grid;
+  min-height: 2.45rem;
+  grid-template-columns: 6rem minmax(0, 1fr) 2.2rem;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: 0.66rem;
+}
+.reviewCount {
+  display: grid;
+  width: 1.7rem;
+  height: 1.7rem;
+  place-items: center;
+  border: 1px solid var(--ui-border);
+  border-radius: 50%;
+  font-size: 0.65rem;
+  font-weight: 650;
+}
+.reviewRows {
+  padding-block: 0.15rem 0.4rem;
+}
+.reviewRows a {
+  display: grid;
+  min-height: 2.75rem;
+  grid-template-columns: 1rem minmax(0, 1fr) 0.9rem;
+  align-items: center;
+  gap: 0.6rem;
+  border-bottom: 1px solid var(--ui-border-subtle);
+  font-size: 0.66rem;
+}
+.reviewRows a:last-child {
+  border-bottom: 0;
+}
+.reviewRows a > svg {
+  width: 0.9rem;
+  height: 0.9rem;
+  stroke-width: 1.7;
+}
+.reviewRows a > span {
+  display: grid;
+  gap: 0.08rem;
+}
+.reviewRows small {
+  color: var(--ui-muted-ink);
+  font-size: 0.58rem;
+}
+
+@media (max-width: 1500px) {
+  .page {
+    gap: 0.7rem;
+    padding: 0.7rem;
+  }
+  .workspace,
+  .primaryColumn,
+  .secondaryColumn {
+    gap: 0.7rem;
+  }
+  .workspace {
+    grid-template-columns: minmax(0, 1.6fr) minmax(18rem, 0.9fr);
+  }
+  .primaryColumn {
+    grid-template-rows: minmax(10rem, 0.62fr) minmax(18rem, 1.38fr);
+  }
+  .accountCard {
+    width: min(100% - 1rem, 18rem);
+  }
+  .accountSummary {
+    padding: 0.8rem 1rem;
+  }
+  .secondaryColumn {
+    grid-template-rows: minmax(0, 1.02fr) minmax(0, 0.9fr) minmax(0, 1.08fr);
+  }
+  .panelHeader {
+    min-height: 3rem;
+    padding-block: 0.45rem;
+  }
+  .goalRows,
+  .spendingRows,
+  .reviewRows {
+    padding-block: 0.15rem 0.3rem;
+  }
+  .goalRow,
+  .spendingRow {
+    min-height: 2.05rem;
+  }
+  .spendingRow {
+    min-height: 1.95rem;
+  }
+  .reviewRows a {
+    min-height: 2.2rem;
+  }
+  .transactionRow:nth-child(n + 8) {
+    display: none;
+  }
+  .transactionRow {
+    font-size: 0.64rem;
+  }
+}
+
+@media (min-width: 2200px) {
+  .page {
+    max-width: 150rem;
+    margin-inline: auto;
+  }
+  .workspace {
+    grid-template-columns: minmax(0, 1.9fr) minmax(25rem, 0.85fr);
+  }
+  .accountCard {
+    width: min(100% - 2rem, 27.5rem);
+  }
+  .transactionRow,
+  .goalRow,
+  .spendingRow,
+  .reviewRows a {
+    font-size: 0.76rem;
+  }
+}

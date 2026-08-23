@@ -740,7 +740,7 @@ export default function TransactionsPage() {
                     setQuery(event.target.value);
                     setPage(1);
                   }}
-              placeholder="Transaktionen durchsuchen …"
+                  placeholder="Transaktionen durchsuchen …"
                 />
               </label>
               <StyledDropdown

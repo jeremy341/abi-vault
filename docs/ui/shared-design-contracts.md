@@ -14,13 +14,13 @@
 
 The product uses Geist Sans from `next/font` through `--font-geist-sans`.
 
-| Role | Token | Value | Intended use |
-|---|---|---:|---|
-| Base UI font | `--ui-font` | `var(--font-geist-sans), sans-serif` | Body and controls |
-| Section title | `--ui-section-title-size` | `1.5rem` | “Alle Transaktionen”, “Belegübersicht”, and equivalent section headings |
-| Table header | `--ui-table-header-size` | `0.75rem` | Data-table column labels |
-| Table row | `--ui-table-row-size` | `0.875rem` | Full data-table rows |
-| Metadata | `--ui-meta-size` | `0.75rem` | Supporting labels, file metadata, and secondary values |
+| Role          | Token                     |                                Value | Intended use                                                            |
+| ------------- | ------------------------- | -----------------------------------: | ----------------------------------------------------------------------- |
+| Base UI font  | `--ui-font`               | `var(--font-geist-sans), sans-serif` | Body and controls                                                       |
+| Section title | `--ui-section-title-size` |                             `1.5rem` | “Alle Transaktionen”, “Belegübersicht”, and equivalent section headings |
+| Table header  | `--ui-table-header-size`  |                            `0.75rem` | Data-table column labels                                                |
+| Table row     | `--ui-table-row-size`     |                           `0.875rem` | Full data-table rows                                                    |
+| Metadata      | `--ui-meta-size`          |                            `0.75rem` | Supporting labels, file metadata, and secondary values                  |
 
 Typography decisions:
 
@@ -33,43 +33,43 @@ Typography decisions:
 
 ### Surfaces and ink
 
-| Token | Light value | Role |
-|---|---|---|
-| `--ui-canvas` | `#fafafa` | Application canvas |
-| `--ui-surface` | `#ffffff` | Cards, controls, menus, and dialogs |
-| `--ui-ink` | `#1d1d1f` | Primary text and dark actions |
-| `--ui-muted-ink` | `oklch(0.556 0 0)` | Secondary text, metadata, and disabled-adjacent content |
-| `--ui-border` | `rgb(0 0 0 / 0.10)` | Standard card/control boundary |
-| `--ui-border-subtle` | `rgb(0 0 0 / 0.08)` | Table rules and quiet separators |
-| `--ui-border-focus` | `rgb(29 29 31 / 0.85)` | Focus and active control boundary |
+| Token                | Light value            | Role                                                    |
+| -------------------- | ---------------------- | ------------------------------------------------------- |
+| `--ui-canvas`        | `#fafafa`              | Application canvas                                      |
+| `--ui-surface`       | `#ffffff`              | Cards, controls, menus, and dialogs                     |
+| `--ui-ink`           | `#1d1d1f`              | Primary text and dark actions                           |
+| `--ui-muted-ink`     | `oklch(0.556 0 0)`     | Secondary text, metadata, and disabled-adjacent content |
+| `--ui-border`        | `rgb(0 0 0 / 0.10)`    | Standard card/control boundary                          |
+| `--ui-border-subtle` | `rgb(0 0 0 / 0.08)`    | Table rules and quiet separators                        |
+| `--ui-border-focus`  | `rgb(29 29 31 / 0.85)` | Focus and active control boundary                       |
 
 Dark mode overrides these roles with the existing dark canvas, dark surface, light ink, and translucent white borders. Components should consume roles rather than inventing new neutral literals.
 
 ### Semantic accents
 
-| Token | Purpose |
-|---|---|
-| `--ui-positive` / `--ui-positive-soft` | Income, success, verified status |
-| `--ui-negative` / `--ui-negative-soft` | Expense and negative financial values |
-| `--ui-warning` / `--ui-warning-soft` | Review-needed and attention states |
-| `--ui-violet` / `--ui-violet-soft` | Category identity and selected/primary category accents |
-| `--ui-orange` / `--ui-orange-soft` | Secondary category identity and warm accent states |
+| Token                                  | Purpose                                                 |
+| -------------------------------------- | ------------------------------------------------------- |
+| `--ui-positive` / `--ui-positive-soft` | Income, success, verified status                        |
+| `--ui-negative` / `--ui-negative-soft` | Expense and negative financial values                   |
+| `--ui-warning` / `--ui-warning-soft`   | Review-needed and attention states                      |
+| `--ui-violet` / `--ui-violet-soft`     | Category identity and selected/primary category accents |
+| `--ui-orange` / `--ui-orange-soft`     | Secondary category identity and warm accent states      |
 
 Semantic colors are intentionally restrained. Green, red, amber, violet, and orange communicate state or category only; they are not decorative page themes.
 
 ## Radius and spacing contract
 
-| Token | Value | Role |
-|---|---:|---|
-| `--ui-card-radius` | `1rem` | Shared card and panel radius |
-| `--ui-control-radius` | `0.7rem` | Dropdowns, buttons, inputs, and compact controls |
-| `--ui-control-height` | `2.75rem` | Shared dropdown/control baseline |
-| `--ui-page-gap` | `1.5rem` base, `2rem` at `min-width: 2200px` | Vertical page stack rhythm |
-| `--ui-card-gap` | `1.5rem` base, `2rem` at `min-width: 2200px` | KPI/summary and sibling-card rhythm |
-| `--ui-page-max` | `2100px`, `1880px` from 1600px, `none` from 2200px | Shared content max-width |
-| `--ui-page-padding-inline` | `clamp(1rem, 2vw, 3rem)`, then explicit 1600px/2200px values | Shared desktop page inset |
-| `--ui-card-shadow` / `--ui-data-shadow` | Existing restrained 1px shadow | Card and data-surface elevation |
-| `--ui-modal-shadow` | Existing 1.5rem modal shadow | Dialog elevation |
+| Token                                   |                                                        Value | Role                                             |
+| --------------------------------------- | -----------------------------------------------------------: | ------------------------------------------------ |
+| `--ui-card-radius`                      |                                                       `1rem` | Shared card and panel radius                     |
+| `--ui-control-radius`                   |                                                     `0.7rem` | Dropdowns, buttons, inputs, and compact controls |
+| `--ui-control-height`                   |                                                    `2.75rem` | Shared dropdown/control baseline                 |
+| `--ui-page-gap`                         |                 `1.5rem` base, `2rem` at `min-width: 2200px` | Vertical page stack rhythm                       |
+| `--ui-card-gap`                         |                 `1.5rem` base, `2rem` at `min-width: 2200px` | KPI/summary and sibling-card rhythm              |
+| `--ui-page-max`                         |           `2100px`, `1880px` from 1600px, `none` from 2200px | Shared content max-width                         |
+| `--ui-page-padding-inline`              | `clamp(1rem, 2vw, 3rem)`, then explicit 1600px/2200px values | Shared desktop page inset                        |
+| `--ui-card-shadow` / `--ui-data-shadow` |                               Existing restrained 1px shadow | Card and data-surface elevation                  |
+| `--ui-modal-shadow`                     |                                 Existing 1.5rem modal shadow | Dialog elevation                                 |
 
 Spacing rules:
 

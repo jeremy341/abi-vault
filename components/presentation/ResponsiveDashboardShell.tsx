@@ -3,10 +3,12 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   BarChart3,
   Bell,
   CalendarDays,
+  ChevronDown,
   FileText,
   LayoutDashboard,
   MoreHorizontal,
@@ -16,11 +18,8 @@ import {
   Users,
   WalletCards,
 } from "lucide-react";
-import Sidebar from "@/components/sidebar";
-import DashboardHeader from "@/components/dashboard-header";
 import AbiLogo from "@/components/AbiLogo";
 import ThemeToggle from "@/components/ThemeToggle";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import {
   Sheet,
   SheetContent,
@@ -31,7 +30,6 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { usePresentationMode } from "@/hooks/use-presentation-mode";
-import dashboardStyles from "@/app/dashboard/dashboard.module.css";
 import styles from "./presentation.module.css";
 
 const ClerkUserButton = dynamic(
@@ -40,18 +38,54 @@ const ClerkUserButton = dynamic(
 );
 
 const navigationItems = [
-  { label: "Übersicht", href: "/dashboard", icon: LayoutDashboard },
+  {
+    label: "Übersicht",
+    shortLabel: "Übersicht",
+    href: "/dashboard",
+    icon: LayoutDashboard,
+  },
   {
     label: "Transaktionen",
+    shortLabel: "Transaktionen",
     href: "/dashboard/transactions",
     icon: ReceiptText,
   },
-  { label: "Belege", href: "/dashboard/receipts", icon: FileText },
-  { label: "Ziele", href: "/dashboard/goals", icon: Target },
-  { label: "Kasse", href: "/dashboard/funds", icon: WalletCards },
-  { label: "Berichte", href: "/dashboard/reports", icon: BarChart3 },
-  { label: "Personen", href: "/dashboard/people", icon: Users },
-  { label: "Einstellungen", href: "/dashboard/settings", icon: Settings },
+  {
+    label: "Belege",
+    shortLabel: "Belege",
+    href: "/dashboard/receipts",
+    icon: FileText,
+  },
+  {
+    label: "Ziele",
+    shortLabel: "Ziele",
+    href: "/dashboard/goals",
+    icon: Target,
+  },
+  {
+    label: "Kasse & Konten",
+    shortLabel: "Kasse",
+    href: "/dashboard/funds",
+    icon: WalletCards,
+  },
+  {
+    label: "Berichte",
+    shortLabel: "Berichte",
+    href: "/dashboard/reports",
+    icon: BarChart3,
+  },
+  {
+    label: "Personen",
+    shortLabel: "Personen",
+    href: "/dashboard/people",
+    icon: Users,
+  },
+  {
+    label: "Einstellungen",
+    shortLabel: "Einstellungen",
+    href: "/dashboard/settings",
+    icon: Settings,
+  },
 ];
 
 const pageInformation: Record<string, { title: string; description: string }> =
@@ -112,7 +146,7 @@ function TabletRail({ pathname }: { pathname: string }) {
               className={`${styles.tabletNavLink} ${active ? styles.tabletNavLinkActive : ""}`}
             >
               <Icon aria-hidden="true" />
-              <span>{item.label}</span>
+              <span>{item.shortLabel}</span>
             </Link>
           );
         })}
@@ -190,7 +224,7 @@ function PhoneNavigation({ pathname }: { pathname: string }) {
             className={`${styles.phoneNavLink} ${active ? styles.phoneNavLinkActive : ""}`}
           >
             <Icon aria-hidden="true" />
-            <span>{item.label}</span>
+            <span>{item.shortLabel}</span>
           </Link>
         );
       })}
@@ -235,29 +269,178 @@ function PhoneNavigation({ pathname }: { pathname: string }) {
   );
 }
 
-function DesktopShell({ children }: { children: React.ReactNode }) {
+function DesktopNavGroup({
+  label,
+  items,
+  pathname,
+}: {
+  label: string;
+  items: typeof navigationItems;
+  pathname: string;
+}) {
   return (
-    <div className={`${dashboardStyles.shell} bg-canvas dark:bg-background`}>
+    <section className={styles.desktopNavGroup}>
+      <h2>{label}</h2>
+      <div>
+        {items.map((item) => {
+          const Icon = item.icon;
+          const active = isCurrentRoute(pathname, item.href);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={active ? "page" : undefined}
+              className={`${styles.desktopNavLink} ${active ? styles.desktopNavLinkActive : ""}`}
+            >
+              <Icon aria-hidden="true" />
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function DesktopShell({
+  children,
+  pathname,
+}: {
+  children: React.ReactNode;
+  pathname: string;
+}) {
+  const page = pageInformation[pathname] ?? pageInformation["/dashboard"];
+  const [openMenu, setOpenMenu] = useState<"cohort" | "notifications" | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (!openMenu) return;
+
+    function closeMenu(event: KeyboardEvent | PointerEvent) {
+      if (event instanceof KeyboardEvent && event.key !== "Escape") return;
+      setOpenMenu(null);
+    }
+
+    document.addEventListener("keydown", closeMenu);
+    document.addEventListener("pointerdown", closeMenu);
+    return () => {
+      document.removeEventListener("keydown", closeMenu);
+      document.removeEventListener("pointerdown", closeMenu);
+    };
+  }, [openMenu]);
+
+  return (
+    <div className={styles.desktopShell} data-presentation="desktop">
       <a className={styles.skipLink} href="#dashboard-content">
         Zum Inhalt springen
       </a>
-      <SidebarProvider
-        className={`${dashboardStyles.frame} relative mx-auto w-full overflow-hidden rounded-3xl border border-black/[0.06] bg-white shadow-sm dark:border-white/10 dark:bg-card`}
-        style={
-          {
-            "--sidebar-width": "var(--dashboard-sidebar-width)",
-          } as React.CSSProperties
-        }
-      >
-        <Sidebar />
-        <SidebarInset
-          id="dashboard-content"
-          className={`${dashboardStyles.main} min-w-0 bg-white dark:bg-background`}
-        >
-          <DashboardHeader />
+      <aside className={styles.desktopSidebar} aria-label="Hauptnavigation">
+        <div className={styles.desktopBrand}>
+          <AbiLogo />
+        </div>
+        <nav className={styles.desktopNavigation}>
+          <DesktopNavGroup
+            label="Finanzen"
+            items={navigationItems.slice(0, 6)}
+            pathname={pathname}
+          />
+          <DesktopNavGroup
+            label="Verwaltung"
+            items={navigationItems.slice(6)}
+            pathname={pathname}
+          />
+        </nav>
+        <div className={styles.desktopSidebarFooter}>
+          <ThemeToggle />
+        </div>
+      </aside>
+
+      <section className={styles.desktopWorkspace}>
+        <header className={styles.desktopTopbar}>
+          <div className={styles.desktopTitle}>
+            <h1>{page.title}</h1>
+            <p>{page.description}</p>
+          </div>
+          <div className={styles.desktopActions}>
+            <div
+              className={styles.desktopActionControl}
+              onPointerDown={(event) => event.stopPropagation()}
+            >
+              <button
+                type="button"
+                className={styles.desktopCohort}
+                aria-haspopup="menu"
+                aria-expanded={openMenu === "cohort"}
+                onClick={() =>
+                  setOpenMenu((current) =>
+                    current === "cohort" ? null : "cohort",
+                  )
+                }
+              >
+                <CalendarDays aria-hidden="true" />
+                Abi 2026
+                <ChevronDown aria-hidden="true" />
+              </button>
+              {openMenu === "cohort" ? (
+                <div
+                  className={styles.desktopActionMenu}
+                  role="menu"
+                  aria-label="Jahrgang auswählen"
+                >
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => setOpenMenu(null)}
+                  >
+                    <CalendarDays aria-hidden="true" />
+                    <span>
+                      <strong>Abi 2026</strong>
+                      <small>Aktiver Jahrgang</small>
+                    </span>
+                  </button>
+                  <Link href="/dashboard/settings" role="menuitem">
+                    <Settings aria-hidden="true" /> Jahrgang verwalten
+                  </Link>
+                </div>
+              ) : null}
+            </div>
+            <div
+              className={styles.desktopActionControl}
+              onPointerDown={(event) => event.stopPropagation()}
+            >
+              <button
+                type="button"
+                className={styles.desktopIconButton}
+                aria-label="Benachrichtigungen"
+                aria-haspopup="dialog"
+                aria-expanded={openMenu === "notifications"}
+                onClick={() =>
+                  setOpenMenu((current) =>
+                    current === "notifications" ? null : "notifications",
+                  )
+                }
+              >
+                <Bell aria-hidden="true" />
+              </button>
+              {openMenu === "notifications" ? (
+                <div
+                  className={styles.desktopNotificationPanel}
+                  role="dialog"
+                  aria-label="Benachrichtigungen"
+                >
+                  <strong>Benachrichtigungen</strong>
+                  <p>Keine neuen Hinweise.</p>
+                </div>
+              ) : null}
+            </div>
+            <ClerkUserButton />
+          </div>
+        </header>
+        <main id="dashboard-content" className={styles.desktopContent}>
           {children}
-        </SidebarInset>
-      </SidebarProvider>
+        </main>
+      </section>
     </div>
   );
 }
@@ -270,7 +453,9 @@ export default function ResponsiveDashboardShell({
   const mode = usePresentationMode();
   const pathname = usePathname();
 
-  if (mode === "desktop") return <DesktopShell>{children}</DesktopShell>;
+  if (mode === "desktop") {
+    return <DesktopShell pathname={pathname}>{children}</DesktopShell>;
+  }
 
   if (mode === "tablet") {
     return (

@@ -1,78 +1,7 @@
 .root {
+  min-width: 0;
   min-height: 0;
   color: var(--ui-ink);
-}
-
-.tabletRoot {
-  display: grid;
-  height: 100%;
-  grid-template-rows: auto auto minmax(0, 1fr);
-  gap: 0.85rem;
-  padding: 0 1rem 1rem;
-}
-
-.tabs {
-  display: flex;
-  min-height: 2.75rem;
-  align-items: center;
-  gap: 0.25rem;
-  border-bottom: 1px solid var(--ui-border-subtle);
-}
-
-.tabs button {
-  min-height: 2.75rem;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  background: transparent;
-  padding: 0 0.8rem;
-  color: var(--ui-muted-ink);
-  cursor: pointer;
-  font: inherit;
-  font-size: 0.74rem;
-  font-weight: 600;
-}
-
-.tabs button:hover {
-  color: var(--ui-ink);
-}
-
-.tabs .activeTab {
-  border-bottom-color: var(--ui-ink);
-  color: var(--ui-ink);
-}
-
-.metricStrip {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  border-block: 1px solid var(--ui-border-subtle);
-}
-
-.metric {
-  display: grid;
-  min-width: 0;
-  gap: 0.15rem;
-  border-right: 1px solid var(--ui-border-subtle);
-  padding: 0.65rem 0.9rem;
-}
-
-.metric:last-child {
-  border-right: 0;
-}
-
-.metric span,
-.eyebrow,
-.muted {
-  color: var(--ui-muted-ink);
-  font-size: 0.68rem;
-}
-
-.metric strong {
-  overflow: hidden;
-  font-size: clamp(1rem, 2.1vw, 1.35rem);
-  font-weight: 650;
-  letter-spacing: -0.035em;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .positive {
@@ -83,180 +12,222 @@
   color: var(--ui-negative);
 }
 
-.overview {
-  display: grid;
-  min-height: 0;
-  grid-template-columns: minmax(21rem, 1.15fr) minmax(15rem, 0.85fr) minmax(
-      15rem,
-      0.85fr
-    );
-  grid-template-rows: minmax(16rem, 1.1fr) minmax(12rem, 0.9fr);
-  gap: 0.85rem;
+.desktopPageRoot {
+  height: 100%;
+  overflow: hidden;
 }
 
-.panel {
+.desktopRoot,
+.tabletRoot {
+  display: grid;
+  height: 100%;
+  min-height: 0;
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+
+.desktopRoot {
+  gap: 0.75rem;
+  padding: 0.75rem 1rem 1rem;
+}
+
+.tabletRoot {
+  gap: 0.5rem;
+  padding: 0 1rem 0.25rem;
+}
+
+.tabletRoot .iconAction,
+.tabletRoot .carouselButton {
+  width: 2.75rem;
+  height: 2.75rem;
+}
+
+.tabletRoot .primaryAction,
+.tabletRoot .secondaryAction {
+  min-height: 2.75rem;
+}
+
+.summaryRail {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-block: 1px solid var(--ui-border-subtle);
+}
+
+.summaryRail > div {
+  display: grid;
+  min-width: 0;
+  gap: 0.12rem;
+  border-right: 1px solid var(--ui-border-subtle);
+  padding: 0.65rem 0.9rem;
+}
+
+.summaryRail > div:last-child {
+  border-right: 0;
+}
+
+.summaryRail span,
+.summaryRail small {
+  overflow: hidden;
+  color: var(--ui-muted-ink);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.summaryRail span {
+  font-size: 0.67rem;
+}
+
+.summaryRail strong {
+  overflow: hidden;
+  font-size: clamp(1.05rem, 1.45vw, 1.38rem);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.035em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.summaryRail small {
+  font-size: 0.59rem;
+}
+
+.tabs {
+  display: flex;
+  min-height: 2.75rem;
+  align-items: flex-end;
+  gap: 0.2rem;
+  border-bottom: 1px solid var(--ui-border-subtle);
+}
+
+.tabs button {
+  min-width: 5.5rem;
+  min-height: 2.75rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  padding-inline: 0.75rem;
+  color: var(--ui-muted-ink);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 620;
+}
+
+.tabs button:hover {
+  color: var(--ui-ink);
+}
+
+.tabs button:focus-visible,
+.iconAction:focus-visible,
+.carouselButton:focus-visible,
+.primaryAction:focus-visible,
+.secondaryAction:focus-visible,
+.accountRow:focus-visible,
+.tabletAccountSelector button:focus-visible,
+.phoneAccountRows button:focus-visible,
+.phoneAuditRows button:focus-visible,
+.phoneStatusRow:focus-visible,
+.phoneSection header button:focus-visible {
+  outline: 2px solid var(--ui-border-focus);
+  outline-offset: 2px;
+}
+
+.tabs .activeTab {
+  border-bottom-color: var(--ui-ink);
+  color: var(--ui-ink);
+}
+
+.accountListPanel,
+.bankDetail,
+.cashDetail,
+.reconciliation,
+.activityPanel,
+.auditPanel,
+.accessPanel,
+.emptyAccount {
+  min-width: 0;
   min-height: 0;
   overflow: hidden;
   border: 1px solid var(--ui-border-subtle);
-  border-radius: 1rem;
+  border-radius: 0.75rem;
   background: var(--ui-surface);
-}
-
-.accountPanel {
-  display: grid;
-  align-content: center;
-  padding: 1rem;
-}
-
-.cardStage {
-  display: grid;
-  grid-template-columns: 2.75rem minmax(0, 1fr) 2.75rem;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.cardSlot {
-  width: min(100%, 20rem);
-  justify-self: center;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-}
-
-.carouselButton,
-.copyButton {
-  display: inline-flex;
-  min-width: 2.75rem;
-  min-height: 2.75rem;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--ui-border);
-  border-radius: 0.7rem;
-  background: var(--ui-surface);
-  color: var(--ui-ink);
-}
-
-.carouselButton:disabled {
-  visibility: hidden;
-}
-
-.carouselButton svg,
-.copyButton svg {
-  width: 1rem;
-  height: 1rem;
-}
-
-.cardMeta {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  margin-top: 0.65rem;
-  color: var(--ui-muted-ink);
-  font-size: 0.68rem;
-}
-
-.cardMeta button {
-  min-width: 2.75rem;
-  min-height: 2.75rem;
-  border: 0;
-  border-radius: 0.65rem;
-  background: transparent;
-  color: var(--ui-ink);
-}
-
-.cashPanel,
-.reconcilePanel,
-.detailsPanel {
-  display: flex;
-  flex-direction: column;
-  padding: 1rem;
 }
 
 .panelHeader {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
-.panelHeader h2 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 650;
-  letter-spacing: -0.025em;
-}
-
-.panelHeader svg {
-  width: 1.05rem;
-  height: 1.05rem;
-  color: var(--ui-muted-ink);
-}
-
-.cashAmount,
-.reconcileStatus {
-  margin-top: 1rem;
-  font-size: clamp(1.45rem, 3vw, 2rem);
-  font-weight: 650;
-  letter-spacing: -0.04em;
-}
-
-.cashRows,
-.reconcileRows,
-.detailsRows {
-  display: grid;
-  margin-top: 0.8rem;
-}
-
-.cashRows div,
-.reconcileRows div,
-.detailsRows div {
-  display: flex;
-  min-height: 2.7rem;
+  min-height: 3.6rem;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
   border-bottom: 1px solid var(--ui-border-subtle);
-  font-size: 0.7rem;
+  padding: 0.65rem 0.85rem;
 }
 
-.cashRows div:last-child,
-.reconcileRows div:last-child,
-.detailsRows div:last-child {
-  border-bottom: 0;
+.panelHeader > div {
+  min-width: 0;
 }
 
-.cashRows span,
-.reconcileRows span,
-.detailsRows span {
+.panelHeader h2 {
+  overflow: hidden;
+  margin: 0;
+  font-size: 0.86rem;
+  font-weight: 650;
+  letter-spacing: -0.025em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.panelHeader p {
+  overflow: hidden;
+  margin: 0.12rem 0 0;
+  color: var(--ui-muted-ink);
+  font-size: 0.61rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.panelHeader > svg {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
   color: var(--ui-muted-ink);
 }
 
-.cashRows strong,
-.reconcileRows strong,
-.detailsRows strong {
-  text-align: right;
+.iconAction,
+.carouselButton {
+  display: inline-flex;
+  width: 2.5rem;
+  height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--ui-border);
+  border-radius: 0.55rem;
+  background: var(--ui-surface);
+  color: var(--ui-ink);
 }
 
-.panelActions {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.5rem;
-  margin-top: auto;
-  padding-top: 0.75rem;
+.iconAction:hover,
+.carouselButton:hover {
+  background: color-mix(in srgb, var(--ui-ink) 4%, transparent);
+}
+
+.iconAction svg,
+.carouselButton svg {
+  width: 1rem;
+  height: 1rem;
 }
 
 .primaryAction,
 .secondaryAction {
   display: inline-flex;
-  min-height: 2.75rem;
+  min-height: 2.65rem;
   align-items: center;
   justify-content: center;
   gap: 0.45rem;
-  border-radius: 0.7rem;
+  border-radius: 0.58rem;
+  padding-inline: 0.75rem;
   font: inherit;
-  font-size: 0.7rem;
-  font-weight: 620;
+  font-size: 0.68rem;
+  font-weight: 650;
+  white-space: nowrap;
 }
 
 .primaryAction {
@@ -265,46 +236,441 @@
   color: var(--ui-surface);
 }
 
+.primaryAction:hover {
+  opacity: 0.84;
+}
+
 .secondaryAction {
   border: 1px solid var(--ui-border);
   background: var(--ui-surface);
   color: var(--ui-ink);
 }
 
+.secondaryAction:hover {
+  background: color-mix(in srgb, var(--ui-ink) 4%, transparent);
+}
+
+.primaryAction:active,
+.secondaryAction:active,
+.iconAction:active,
+.carouselButton:active,
+.accountRow:active,
+.tabletAccountSelector button:active,
+.phoneAccountRows button:active,
+.phoneAuditRows button:active,
+.phoneStatusRow:active {
+  transform: translateY(1px);
+}
+
 .primaryAction svg,
 .secondaryAction svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.desktopOverview {
+  display: grid;
+  min-height: 0;
+  grid-template-columns: minmax(15rem, 0.72fr) minmax(28rem, 1.45fr) minmax(
+      18rem,
+      0.88fr
+    );
+  grid-template-rows: minmax(16rem, 0.95fr) minmax(12.5rem, 1.05fr);
+  gap: 0.75rem;
+}
+
+.desktopOverview > .accountListPanel {
+  grid-row: 1 / 3;
+}
+
+.desktopPrimaryDetail {
+  min-width: 0;
+  min-height: 0;
+}
+
+.desktopPrimaryDetail > * {
+  height: 100%;
+}
+
+.desktopOverview > .activityPanel {
+  grid-row: 2;
+  grid-column: 2 / 4;
+}
+
+.desktopAccounts,
+.desktopAudit,
+.tabletAccounts,
+.tabletAudit {
+  display: grid;
+  min-height: 0;
+  gap: 0.75rem;
+}
+
+.desktopAccounts {
+  grid-template-columns: minmax(18rem, 0.72fr) minmax(32rem, 1.8fr);
+}
+
+.desktopAudit {
+  grid-template-columns: minmax(0, 1.55fr) minmax(18rem, 0.65fr);
+}
+
+.accountListPanel {
+  display: flex;
+  flex-direction: column;
+}
+
+.accountList {
+  display: grid;
+  min-height: 0;
+  flex: 1 1 auto;
+  align-content: start;
+  overflow-y: auto;
+  padding: 0.25rem 0.55rem;
+  overscroll-behavior: contain;
+}
+
+.accountRow {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  min-height: 4.35rem;
+  grid-template-columns: 2rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.65rem;
+  border: 0;
+  border-bottom: 1px solid var(--ui-border-subtle);
+  background: transparent;
+  padding: 0.55rem 0.45rem;
+  color: var(--ui-ink);
+  font: inherit;
+  text-align: left;
+}
+
+.accountRow:last-child {
+  border-bottom: 0;
+}
+
+.accountRow::before {
+  position: absolute;
+  top: 0.6rem;
+  bottom: 0.6rem;
+  left: -0.55rem;
+  width: 2px;
+  border-radius: 999px;
+  background: transparent;
+  content: "";
+}
+
+.accountRow:hover {
+  background: color-mix(in srgb, var(--ui-ink) 3.5%, transparent);
+}
+
+.accountRow[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--ui-ink) 5%, transparent);
+}
+
+.accountRow[aria-pressed="true"]::before {
+  background: var(--ui-ink);
+}
+
+.accountIcon {
+  display: inline-flex;
+  width: 2rem;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
+  color: var(--ui-muted-ink);
+}
+
+.accountIcon svg {
   width: 1rem;
   height: 1rem;
 }
 
-.activityPanel {
-  grid-column: 1 / 3;
+.accountIdentity,
+.accountAmount {
+  display: grid;
+  min-width: 0;
+  gap: 0.12rem;
+}
+
+.accountIdentity strong,
+.accountAmount strong {
+  overflow: hidden;
+  font-size: 0.7rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.accountIdentity small,
+.accountAmount small {
+  overflow: hidden;
+  color: var(--ui-muted-ink);
+  font-size: 0.59rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.accountAmount {
+  justify-items: end;
+  text-align: right;
+}
+
+.accountAmount strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.accountListFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: auto;
+  border-top: 1px solid var(--ui-border-subtle);
+  padding: 0.75rem 0.85rem;
+  color: var(--ui-muted-ink);
+  font-size: 0.62rem;
+}
+
+.accountListFooter strong {
+  color: var(--ui-ink);
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.bankDetail,
+.cashDetail,
+.reconciliation,
+.accessPanel {
+  display: flex;
+  flex-direction: column;
+}
+
+.bankDetailBody {
+  display: grid;
+  min-height: 0;
+  flex: 1 1 auto;
+  grid-template-columns: minmax(17rem, 1.2fr) minmax(13rem, 0.8fr);
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.75rem 0.9rem;
+}
+
+.bankDetailCompact .bankDetailBody {
+  height: calc(100% - 3.6rem);
+}
+
+.cardStage {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 2.5rem minmax(0, 1fr) 2.5rem;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.cardSlot {
+  display: block;
+  width: min(100%, 21.25rem);
+  justify-self: center;
+  border: 0;
+  border-radius: 1.25rem;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+}
+
+.cardSlot:focus-visible {
+  outline: 2px solid var(--ui-border-focus);
+  outline-offset: 3px;
+}
+
+.cardPosition {
+  display: flex;
+  min-height: 1.6rem;
+  grid-column: 2;
+  align-items: center;
+  justify-content: center;
+  color: var(--ui-muted-ink);
+  font-size: 0.58rem;
+}
+
+.balanceBlock {
+  display: grid;
+  min-width: 0;
+  align-content: center;
+  gap: 0.18rem;
+  border-left: 1px solid var(--ui-border-subtle);
+  padding-left: 1rem;
+}
+
+.balanceBlock > span,
+.cashHero span {
+  color: var(--ui-muted-ink);
+  font-size: 0.65rem;
+}
+
+.balanceBlock > strong,
+.cashHero strong {
+  font-size: clamp(1.65rem, 2.6vw, 2.4rem);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.045em;
+}
+
+.balanceBlock > small {
+  color: var(--ui-muted-ink);
+  font-size: 0.59rem;
+}
+
+.balanceActions,
+.panelActions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+  margin-top: 0.75rem;
+}
+
+.bankMetadata {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-top: 1px solid var(--ui-border-subtle);
+}
+
+.bankMetadata > div {
+  display: grid;
+  min-width: 0;
+  gap: 0.12rem;
+  border-right: 1px solid var(--ui-border-subtle);
+  border-bottom: 1px solid var(--ui-border-subtle);
+  padding: 0.65rem 0.85rem;
+}
+
+.bankMetadata > div:nth-child(2n) {
+  border-right: 0;
+}
+
+.bankMetadata > div:nth-last-child(-n + 2) {
+  border-bottom: 0;
+}
+
+.bankMetadata dt,
+.bankMetadata dd,
+.detailRows dt,
+.detailRows dd {
+  overflow: hidden;
+  margin: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bankMetadata dt,
+.detailRows dt {
+  color: var(--ui-muted-ink);
+  font-size: 0.59rem;
+}
+
+.bankMetadata dd,
+.detailRows dd {
+  font-size: 0.68rem;
+  font-weight: 620;
+}
+
+.cashHero {
+  display: grid;
+  gap: 0.15rem;
+  padding: 1rem 0.9rem 0.65rem;
+}
+
+.detailRows {
+  display: grid;
+  margin: 0;
+  padding: 0 0.9rem;
+}
+
+.detailRows > div {
+  display: flex;
+  min-height: 2.7rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  border-bottom: 1px solid var(--ui-border-subtle);
+}
+
+.detailRows > div:last-child {
+  border-bottom: 0;
+}
+
+.cashDetail .panelActions {
+  margin-top: auto;
+  padding: 0.75rem 0.9rem 0.9rem;
+}
+
+.reconciliationStatus {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.9rem 0.9rem 0.35rem;
+}
+
+.reconciliationStatus svg {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+.reconciliationStatus strong {
+  font-size: 1.35rem;
+  letter-spacing: -0.035em;
+}
+
+.reconciliation > .primaryAction,
+.accessPanel > .primaryAction {
+  margin: auto 0.9rem 0.9rem;
+}
+
+.activityPanel,
+.auditPanel {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
 }
 
 .activityHeader,
 .activityRow {
   display: grid;
-  grid-template-columns: 8.5rem 8rem minmax(0, 1fr) 6.5rem;
+  grid-template-columns: 8rem 7rem minmax(10rem, 1fr) 7rem 7rem;
   align-items: center;
   gap: 0.65rem;
-  padding-inline: 1rem;
+  padding-inline: 0.85rem;
 }
 
 .activityHeader {
-  min-height: 2.5rem;
+  min-height: 2rem;
+  border-bottom: 1px solid var(--ui-border-subtle);
+  color: var(--ui-muted-ink);
+  font-size: 0.58rem;
+}
+
+.activityRows {
+  display: grid;
+  min-height: 0;
+  grid-auto-rows: minmax(2.45rem, 1fr);
+}
+
+.activityRow {
+  min-height: 2.45rem;
   border-bottom: 1px solid var(--ui-border-subtle);
   color: var(--ui-muted-ink);
   font-size: 0.64rem;
 }
 
-.activityRow {
-  min-height: 2.55rem;
-  border-bottom: 1px solid var(--ui-border-subtle);
-  font-size: 0.68rem;
-}
-
 .activityRow:last-child {
   border-bottom: 0;
+}
+
+.activityRow strong {
+  overflow: hidden;
+  color: var(--ui-ink);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .activityRow b {
@@ -312,51 +678,190 @@
   font-variant-numeric: tabular-nums;
 }
 
-.accountsView,
-.auditView {
-  display: grid;
-  min-height: 0;
-  grid-template-columns: minmax(0, 1.35fr) minmax(18rem, 0.65fr);
-  gap: 0.85rem;
+.auditPanel {
+  grid-template-rows: auto minmax(0, 1fr);
 }
 
-.accountList,
-.auditList {
+.auditRows {
   display: grid;
   align-content: start;
 }
 
-.accountRow,
 .auditRow {
   display: grid;
-  min-height: 4rem;
-  grid-template-columns: minmax(0, 1fr) auto;
+  min-height: 4.35rem;
+  grid-template-columns: minmax(0, 1fr) 9rem 7rem;
   align-items: center;
   gap: 0.75rem;
   border-bottom: 1px solid var(--ui-border-subtle);
-  padding: 0.65rem 1rem;
+  padding: 0.65rem 0.85rem;
 }
 
-.accountRow:last-child,
 .auditRow:last-child {
   border-bottom: 0;
 }
 
-.accountRow > span,
 .auditRow > span {
   display: grid;
-  gap: 0.15rem;
+  min-width: 0;
+  gap: 0.12rem;
 }
 
-.accountRow strong,
-.auditRow strong {
-  font-size: 0.76rem;
+.auditRow strong,
+.auditRow b {
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
 }
 
-.accountRow small,
 .auditRow small {
   color: var(--ui-muted-ink);
-  font-size: 0.66rem;
+  font-size: 0.6rem;
+}
+
+.auditRow b {
+  justify-self: end;
+}
+
+.accessPanel .detailRows {
+  margin-top: 0.35rem;
+}
+
+.emptyAccount {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 0.55rem;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.emptyAccount > svg {
+  width: 2rem;
+  height: 2rem;
+  color: var(--ui-muted-ink);
+}
+
+.emptyAccount h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.emptyAccount p {
+  max-width: 26rem;
+  margin: 0;
+  color: var(--ui-muted-ink);
+  font-size: 0.72rem;
+}
+
+.tabletOverview {
+  display: grid;
+  min-height: 0;
+  grid-template-columns: minmax(0, 1.25fr) minmax(17rem, 0.75fr);
+  grid-template-rows: auto minmax(13rem, 1fr) minmax(8rem, 0.62fr);
+  gap: 0.5rem;
+}
+
+.tabletOverview > .activityPanel .panelHeader {
+  min-height: 3.2rem;
+  padding-block: 0.45rem;
+}
+
+.tabletOverview > .activityPanel .activityHeader {
+  display: none;
+}
+
+.tabletAccountSelector {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-auto-columns: minmax(11.5rem, 1fr);
+  grid-auto-flow: column;
+  gap: 0.5rem;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scroll-snap-type: inline proximity;
+  scrollbar-width: none;
+}
+
+.tabletAccountSelector::-webkit-scrollbar {
+  display: none;
+}
+
+.tabletAccountSelector button {
+  display: flex;
+  min-width: 0;
+  min-height: 3.65rem;
+  align-items: center;
+  gap: 0.55rem;
+  border: 1px solid var(--ui-border-subtle);
+  border-radius: 0.65rem;
+  background: var(--ui-surface);
+  padding: 0.55rem 0.7rem;
+  color: var(--ui-ink);
+  font: inherit;
+  text-align: left;
+  scroll-snap-align: start;
+}
+
+.tabletAccountSelector button[aria-pressed="true"] {
+  border-color: var(--ui-ink);
+  background: color-mix(in srgb, var(--ui-ink) 4%, var(--ui-surface));
+}
+
+.tabletAccountSelector button > svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex: none;
+}
+
+.tabletAccountSelector button > span {
+  display: grid;
+  min-width: 0;
+  gap: 0.1rem;
+}
+
+.tabletAccountSelector strong,
+.tabletAccountSelector small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tabletAccountSelector strong {
+  font-size: 0.7rem;
+}
+
+.tabletAccountSelector small {
+  color: var(--ui-muted-ink);
+  font-size: 0.61rem;
+}
+
+.tabletAccountSelector .addAccountButton {
+  justify-content: center;
+}
+
+.tabletAccountSelector .addAccountButton span {
+  display: inline;
+}
+
+.tabletPrimaryDetail {
+  min-width: 0;
+  min-height: 0;
+}
+
+.tabletPrimaryDetail > * {
+  height: 100%;
+}
+
+.tabletOverview > .activityPanel {
+  grid-column: 1 / -1;
+}
+
+.tabletAccounts {
+  grid-template-columns: minmax(16rem, 0.75fr) minmax(0, 1.25fr);
+}
+
+.tabletAudit {
+  grid-template-columns: minmax(0, 1.35fr) minmax(16rem, 0.65fr);
 }
 
 .phoneRoot {
@@ -364,102 +869,114 @@
   padding: 0 1rem 1rem;
 }
 
-.phoneBalance {
-  padding: 1.25rem 0 1rem;
+.phonePanel {
+  min-width: 0;
 }
 
-.phoneBalance strong {
+.phoneBalanceHero {
+  padding: 1.2rem 0 1rem;
+}
+
+.phoneBalanceHero > span {
+  color: var(--ui-muted-ink);
+  font-size: 0.7rem;
+}
+
+.phoneBalanceHero > strong {
   display: block;
-  margin-top: 0.25rem;
-  font-size: clamp(2.3rem, 12vw, 3.2rem);
+  margin-top: 0.22rem;
+  font-size: clamp(2.25rem, 12vw, 3rem);
   font-weight: 650;
+  font-variant-numeric: tabular-nums;
   letter-spacing: -0.06em;
   line-height: 1;
 }
 
-.phoneBalance p {
-  margin: 0.55rem 0 0;
+.phoneBalanceHero > div {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.6rem;
   color: var(--ui-muted-ink);
-  font-size: 0.72rem;
+  font-size: 0.66rem;
 }
 
-.phoneTabs {
+.phoneRoot .tabs {
   position: sticky;
   z-index: 5;
   top: 0;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  border-bottom: 1px solid var(--ui-border-subtle);
   background: var(--ui-canvas);
 }
 
-.phoneTabs button {
-  min-height: 2.9rem;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  background: transparent;
-  color: var(--ui-muted-ink);
-  font: inherit;
-  font-size: 0.7rem;
-  font-weight: 600;
+.phoneRoot .tabs button {
+  min-width: 0;
+  min-height: 3rem;
 }
 
-.phoneTabs .activeTab {
-  border-bottom-color: var(--ui-ink);
-  color: var(--ui-ink);
+.phoneAccountCard {
+  padding: 1rem 0 0.85rem;
 }
 
-.phoneCardSection {
-  padding: 1rem 0;
-}
-
-.phoneCardStage {
-  display: grid;
+.phoneAccountCard .cardStage {
   grid-template-columns: 2.75rem minmax(0, 1fr) 2.75rem;
-  align-items: center;
-  gap: 0.4rem;
 }
 
-.phoneCardSlot {
-  width: min(100%, 19rem);
-  justify-self: center;
-  border: 0;
-  background: transparent;
+.phoneAccountCard .cardSlot {
+  width: min(100%, 15.5rem);
 }
 
-.phoneAccountMeta {
+.phoneAccountCard .carouselButton {
+  width: 2.75rem;
+  height: 2.75rem;
+}
+
+.phoneAccountSummary {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0.2rem 0.75rem;
-  margin-top: 0.8rem;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.65rem;
 }
 
-.phoneAccountMeta strong {
-  font-size: 0.85rem;
+.phoneAccountSummary > span {
+  display: grid;
+  min-width: 0;
+  gap: 0.12rem;
 }
 
-.phoneAccountMeta b {
-  grid-row: 1 / span 2;
-  grid-column: 2;
-  align-self: center;
-  font-size: 1rem;
+.phoneAccountSummary strong,
+.phoneAccountSummary small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.phoneAccountSummary strong {
+  font-size: 0.8rem;
+}
+
+.phoneAccountSummary small {
+  color: var(--ui-muted-ink);
+  font-size: 0.65rem;
+}
+
+.phoneAccountSummary b {
+  font-size: 0.88rem;
   font-variant-numeric: tabular-nums;
 }
 
-.phoneAccountMeta span {
-  color: var(--ui-muted-ink);
-  font-size: 0.68rem;
-}
-
-.phoneActionRow {
+.phoneActions {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.5rem;
+  gap: 0.45rem;
   padding-bottom: 1rem;
 }
 
-.phoneActionRow button {
+.phoneActions button {
+  min-width: 0;
   min-height: 3.25rem;
+  padding-inline: 0.35rem;
 }
 
 .phoneSection {
@@ -467,47 +984,197 @@
   padding: 1rem 0;
 }
 
+.phoneSection > header {
+  display: flex;
+  min-height: 2.5rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
 .phoneSection h2 {
   margin: 0;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 650;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.02em;
 }
 
-.phoneRows {
-  display: grid;
-  margin-top: 0.55rem;
+.phoneSection header > b {
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
 }
 
-.phoneRow {
-  display: grid;
-  min-height: 3.5rem;
-  grid-template-columns: minmax(0, 1fr) auto;
+.phoneSection header > button {
+  display: inline-flex;
+  width: 2.75rem;
+  height: 2.75rem;
   align-items: center;
-  gap: 0.75rem;
+  justify-content: center;
+  border: 0;
+  border-radius: 0.55rem;
+  background: transparent;
+  color: var(--ui-ink);
+}
+
+.phoneSection header > button svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.phoneStatusRow,
+.phoneActivityRows > div,
+.phoneAccountRows button,
+.phoneAuditRows button {
+  display: grid;
+  min-height: 3.8rem;
+  align-items: center;
+  gap: 0.65rem;
+  border: 0;
+  border-bottom: 1px solid var(--ui-border-subtle);
+  background: transparent;
+  color: var(--ui-ink);
+  font: inherit;
+  text-align: left;
+}
+
+.phoneStatusRow,
+.phoneActivityRows > div {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.phoneStatusRow > span,
+.phoneActivityRows > div > span,
+.phoneAccountRows button > span,
+.phoneAuditRows button > span {
+  display: grid;
+  min-width: 0;
+  gap: 0.12rem;
+}
+
+.phoneStatusRow strong,
+.phoneActivityRows strong,
+.phoneAccountRows strong,
+.phoneAuditRows strong {
+  overflow: hidden;
+  font-size: 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.phoneStatusRow small,
+.phoneActivityRows small,
+.phoneAccountRows small,
+.phoneAuditRows small {
+  overflow: hidden;
+  color: var(--ui-muted-ink);
+  font-size: 0.63rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.phoneStatusRow b,
+.phoneActivityRows b,
+.phoneAccountRows b,
+.phoneAuditRows b {
+  justify-self: end;
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.phoneAccountRows,
+.phoneAuditRows {
+  display: grid;
+}
+
+.phoneAccountRows button {
+  grid-template-columns: 1.2rem minmax(0, 1fr) auto;
+  width: 100%;
+}
+
+.phoneAuditRows button {
+  grid-template-columns: 1.2rem minmax(0, 1fr) auto;
+  width: 100%;
+}
+
+.phoneAccountRows button > svg,
+.phoneAuditRows button > svg {
+  width: 1rem;
+  height: 1rem;
+  color: var(--ui-muted-ink);
+}
+
+.phoneAccountRows button[aria-pressed="true"]::before {
+  position: absolute;
+  left: 0;
+  width: 2px;
+  height: 2rem;
+  border-radius: 999px;
+  background: var(--ui-ink);
+  content: "";
+}
+
+.phoneAccountRows button {
+  position: relative;
+  padding-inline: 0.35rem;
+}
+
+.phoneBankDetails {
+  display: grid;
+  margin: 0.75rem 0 0;
+  border-top: 1px solid var(--ui-border-subtle);
+}
+
+.phoneBankDetails > div:not(.phoneDetailActions) {
+  display: grid;
+  min-height: 3.3rem;
+  align-content: center;
+  gap: 0.12rem;
   border-bottom: 1px solid var(--ui-border-subtle);
 }
 
-.phoneRow:last-child {
-  border-bottom: 0;
+.phoneBankDetails dt,
+.phoneBankDetails dd {
+  overflow: hidden;
+  margin: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.phoneRow > span {
-  display: grid;
-  gap: 0.15rem;
-}
-
-.phoneRow strong {
-  font-size: 0.76rem;
-}
-
-.phoneRow small {
+.phoneBankDetails dt {
   color: var(--ui-muted-ink);
-  font-size: 0.66rem;
+  font-size: 0.61rem;
 }
 
-.phoneRow b {
-  font-size: 0.74rem;
+.phoneBankDetails dd {
+  font-size: 0.7rem;
+  font-weight: 620;
+}
+
+.phoneDetailActions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+  padding-top: 0.75rem;
+}
+
+.phoneDetailActions button {
+  display: inline-flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border: 1px solid var(--ui-border);
+  border-radius: 0.6rem;
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 620;
+}
+
+.phoneDetailActions svg {
+  width: 0.95rem;
+  height: 0.95rem;
 }
 
 .adaptiveDialog {
@@ -527,6 +1194,172 @@
   grid-column: 1 !important;
 }
 
+@media (max-width: 1500px) and (min-width: 1280px) {
+  .desktopRoot {
+    gap: 0.6rem;
+    padding: 0.6rem 0.75rem 0.75rem;
+  }
+
+  .desktopOverview {
+    grid-template-columns: minmax(13rem, 0.55fr) minmax(39rem, 1.6fr) minmax(
+        15rem,
+        0.65fr
+      );
+    grid-template-rows: minmax(15rem, 0.98fr) minmax(11rem, 1.02fr);
+    gap: 0.6rem;
+  }
+
+  .desktopAccounts,
+  .desktopAudit {
+    gap: 0.6rem;
+  }
+
+  .desktopAccounts {
+    grid-template-columns: minmax(16rem, 0.7fr) minmax(28rem, 1.7fr);
+  }
+
+  .desktopAudit {
+    grid-template-columns: minmax(0, 1.5fr) minmax(16rem, 0.65fr);
+  }
+
+  .bankDetailBody {
+    grid-template-columns: minmax(20.5rem, 1.35fr) minmax(9rem, 0.65fr);
+  }
+
+  .cardSlot {
+    width: min(100%, 21.25rem);
+  }
+
+  .activityHeader,
+  .activityRow {
+    grid-template-columns: 7rem 6rem minmax(9rem, 1fr) 6rem 6.5rem;
+  }
+}
+
+@media (orientation: landscape) and (min-width: 768px) and (max-width: 1099px) {
+  .tabletOverview {
+    grid-template-rows: auto minmax(11.5rem, 1fr) minmax(6rem, 0.45fr);
+  }
+
+  .tabletPrimaryDetail .bankDetailBody {
+    grid-template-columns: minmax(20rem, 1.4fr) minmax(10rem, 0.6fr);
+  }
+
+  .tabletPrimaryDetail .cardSlot {
+    width: min(100%, 18.75rem);
+  }
+
+  .tabletOverview > .activityPanel .activityRow:nth-child(n + 2) {
+    display: none;
+  }
+}
+
+@media (min-width: 1280px) and (max-height: 800px) {
+  .summaryRail > div {
+    padding-block: 0.5rem;
+  }
+
+  .desktopRoot {
+    gap: 0.5rem;
+    padding-block: 0.5rem;
+  }
+
+  .desktopOverview {
+    grid-template-rows: minmax(14rem, 1.08fr) minmax(8.5rem, 0.72fr);
+    gap: 0.5rem;
+  }
+
+  .panelHeader {
+    min-height: 3.2rem;
+    padding-block: 0.45rem;
+  }
+
+  .activityRow:nth-child(n + 4) {
+    display: none;
+  }
+
+  .accountRow {
+    min-height: 3.7rem;
+  }
+
+  .cardSlot {
+    width: min(100%, 19rem);
+  }
+}
+
+@media (min-width: 2200px) {
+  .desktopRoot {
+    gap: 1rem;
+    padding: 1rem 1.25rem 1.25rem;
+  }
+
+  .desktopOverview {
+    grid-template-columns: minmax(19rem, 0.72fr) minmax(40rem, 1.6fr) minmax(
+        22rem,
+        0.85fr
+      );
+    grid-template-rows: minmax(21rem, 0.95fr) minmax(16rem, 1.05fr);
+    gap: 1rem;
+  }
+
+  .desktopAccounts {
+    grid-template-columns: minmax(22rem, 0.72fr) minmax(44rem, 1.8fr);
+    gap: 1rem;
+  }
+
+  .desktopAudit {
+    grid-template-columns: minmax(0, 1.65fr) minmax(22rem, 0.65fr);
+    gap: 1rem;
+  }
+
+  .cardSlot {
+    width: min(100%, 27.5rem);
+  }
+
+  .activityHeader,
+  .activityRow {
+    grid-template-columns: 10rem 9rem minmax(14rem, 1fr) 9rem 8rem;
+    font-size: 0.72rem;
+  }
+}
+
+@media (orientation: portrait) and (min-width: 768px) and (max-width: 1399px) {
+  .tabletRoot {
+    height: auto;
+  }
+
+  .summaryRail {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .summaryRail > div:nth-child(2) {
+    border-right: 0;
+  }
+
+  .summaryRail > div:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--ui-border-subtle);
+  }
+
+  .tabletOverview,
+  .tabletAccounts,
+  .tabletAudit {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+  }
+
+  .tabletAccountSelector,
+  .tabletOverview > .activityPanel {
+    grid-column: 1;
+  }
+
+  .tabletAccountSelector {
+    grid-auto-columns: auto;
+    grid-auto-flow: row;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow-x: visible;
+  }
+}
+
 @media (max-width: 767px) {
   .adaptiveDialog {
     position: fixed !important;
@@ -537,7 +1370,7 @@
     max-width: none !important;
     max-height: 94dvh !important;
     overflow-x: hidden !important;
-    border-radius: 1.25rem 1.25rem 0 0 !important;
+    border-radius: 1.1rem 1.1rem 0 0 !important;
     padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
   }
 
@@ -549,27 +1382,12 @@
     max-width: 100%;
   }
 
-  .adaptiveDialog :global([class*="modalBody"]) {
-    grid-template-columns: minmax(0, 1fr) !important;
-  }
-
-  .adaptiveDialog :global([class*="formGrid"]),
-  .adaptiveDialog :global([class*="formFieldFull"]),
-  .adaptiveDialog :global([class*="countPreview"]) {
-    grid-column: 1 !important;
-  }
-
-  .adaptiveDialog :global([class*="formGrid"]),
-  .adaptiveDialog :global([class*="denominationGrid"]) {
+  .adaptiveDialog :global([class*="formGrid"]) {
     grid-template-columns: 1fr;
   }
 
-  .adaptiveDialog :global([class*="smallSecondaryButton"]) {
-    min-width: 0;
-    flex: 1 1 0;
-    padding-inline: 0.55rem;
-    font-size: 0.68rem;
-    white-space: normal;
+  .adaptiveDialog :global([class*="denominationGrid"]) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .adaptiveDialog :global([class*="modalFooter"]) {
@@ -583,28 +1401,16 @@
   }
 }
 
-@media (orientation: portrait) and (min-width: 768px) {
-  .tabletRoot {
-    height: auto;
-  }
-
-  .overview,
-  .accountsView,
-  .auditView {
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto;
-  }
-
-  .accountPanel,
-  .activityPanel {
-    grid-column: 1 / -1;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .tabs button,
-  .phoneTabs button,
-  .carouselButton {
+  .primaryAction,
+  .secondaryAction,
+  .iconAction,
+  .carouselButton,
+  .accountRow,
+  .tabletAccountSelector button,
+  .phoneAccountRows button,
+  .phoneAuditRows button,
+  .phoneStatusRow {
     transition: none;
   }
 }

@@ -20,29 +20,29 @@ Reading this as: a trust-first internal finance dashboard for student committee 
 
 ### Design dials inferred from the current implementation
 
-| Dial | Current reading | Evidence |
-|---|---:|---|
-| Design variance | 4/10 | Repeated card/grid structures, mostly symmetrical columns, restrained decoration |
-| Motion intensity | 3/10 | Short hover transitions, modal pop/fade, account-card tilt and light sweep |
-| Visual density | 5/10 | Dense financial rows and dashboards, balanced by generous card padding and white space |
+| Dial             | Current reading | Evidence                                                                               |
+| ---------------- | --------------: | -------------------------------------------------------------------------------------- |
+| Design variance  |            4/10 | Repeated card/grid structures, mostly symmetrical columns, restrained decoration       |
+| Motion intensity |            3/10 | Short hover transitions, modal pop/fade, account-card tilt and light sweep             |
+| Visual density   |            5/10 | Dense financial rows and dashboards, balanced by generous card padding and white space |
 
 ## Source map
 
-| Area | Source |
-|---|---|
-| Global tokens, body, canvas, theme, selection, motion defaults | `app/globals.css` |
-| Global dashboard shell/grid breakpoints | `app/dashboard/dashboard.module.css` |
-| Shared dashboard header | `components/dashboard-header.tsx` |
-| Shared sidebar/navigation | `components/sidebar.tsx`, `components/ui/sidebar.tsx` |
-| Dashboard page composition | `app/dashboard/page.tsx` |
-| Dashboard panels and responsive density | `components/dashboard/DashboardPanels.tsx` |
-| Class account/card interaction | `components/dashboard/Klassenkasse.tsx`, `components/dashboard/AccountCard.tsx`, `components/dashboard/AccountCard.module.css` |
-| Transactions page behavior | `app/dashboard/transactions/page.tsx` |
-| Transactions page visual rules | `app/dashboard/transactions/transactions.module.css` |
-| Receipts page behavior | `app/dashboard/receipts/page.tsx` |
-| Receipts page visual rules | `app/dashboard/receipts/receipts.module.css` |
-| Shared primitive defaults | `components/ui/card.tsx`, `button.tsx`, `input.tsx`, `dropdown-menu.tsx`, `progress.tsx`, `table.tsx`, `separator.tsx` |
-| Public/auth surfaces | `app/welcome-page.tsx`, `app/sign-in/**`, `app/sign-up/**` |
+| Area                                                           | Source                                                                                                                         |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Global tokens, body, canvas, theme, selection, motion defaults | `app/globals.css`                                                                                                              |
+| Global dashboard shell/grid breakpoints                        | `app/dashboard/dashboard.module.css`                                                                                           |
+| Shared dashboard header                                        | `components/dashboard-header.tsx`                                                                                              |
+| Shared sidebar/navigation                                      | `components/sidebar.tsx`, `components/ui/sidebar.tsx`                                                                          |
+| Dashboard page composition                                     | `app/dashboard/page.tsx`                                                                                                       |
+| Dashboard panels and responsive density                        | `components/dashboard/DashboardPanels.tsx`                                                                                     |
+| Class account/card interaction                                 | `components/dashboard/Klassenkasse.tsx`, `components/dashboard/AccountCard.tsx`, `components/dashboard/AccountCard.module.css` |
+| Transactions page behavior                                     | `app/dashboard/transactions/page.tsx`                                                                                          |
+| Transactions page visual rules                                 | `app/dashboard/transactions/transactions.module.css`                                                                           |
+| Receipts page behavior                                         | `app/dashboard/receipts/page.tsx`                                                                                              |
+| Receipts page visual rules                                     | `app/dashboard/receipts/receipts.module.css`                                                                                   |
+| Shared primitive defaults                                      | `components/ui/card.tsx`, `button.tsx`, `input.tsx`, `dropdown-menu.tsx`, `progress.tsx`, `table.tsx`, `separator.tsx`         |
+| Public/auth surfaces                                           | `app/welcome-page.tsx`, `app/sign-in/**`, `app/sign-up/**`                                                                     |
 
 ## Foundations
 
@@ -68,41 +68,41 @@ Reading this as: a trust-first internal finance dashboard for student committee 
 
 #### Observed sizes
 
-| Role | Current implementation |
-|---|---|
+| Role                      | Current implementation                                                |
+| ------------------------- | --------------------------------------------------------------------- |
 | Shared desktop page title | `text-4xl`, reduced to `1.875rem` at desktop short-height media query |
-| Shared page description | `text-base`, reduced to `0.875rem` at short height |
-| Dashboard card title | `text-xl`, `lg:text-2xl`, `1.65rem` at 2200px for Klassenkasse |
-| Transactions KPI label | `0.875rem` |
-| Transactions KPI amount | `clamp(1.5rem, 1.8vw, 2rem)` |
-| Transactions list heading | `1.5rem` |
-| Receipts list heading | `1.3rem` |
-| Dashboard table metadata | `text-xs` headers, `text-sm` rows at larger widths |
-| Transactions table header | `0.75rem` |
-| Transactions table row | `0.85rem` |
-| Receipts table header | `0.72rem` |
-| Receipts table row | `0.82rem` |
-| Dashboard sidebar labels | `15px` at the custom button layer |
+| Shared page description   | `text-base`, reduced to `0.875rem` at short height                    |
+| Dashboard card title      | `text-xl`, `lg:text-2xl`, `1.65rem` at 2200px for Klassenkasse        |
+| Transactions KPI label    | `0.875rem`                                                            |
+| Transactions KPI amount   | `clamp(1.5rem, 1.8vw, 2rem)`                                          |
+| Transactions list heading | `1.5rem`                                                              |
+| Receipts list heading     | `1.3rem`                                                              |
+| Dashboard table metadata  | `text-xs` headers, `text-sm` rows at larger widths                    |
+| Transactions table header | `0.75rem`                                                             |
+| Transactions table row    | `0.85rem`                                                             |
+| Receipts table header     | `0.72rem`                                                             |
+| Receipts table row        | `0.82rem`                                                             |
+| Dashboard sidebar labels  | `15px` at the custom button layer                                     |
 
 ### Color system currently in use
 
 #### Global light tokens
 
-| Token | Value | Usage |
-|---|---|---|
-| `--canvas` | `#fafafa` | Outer application canvas |
-| `--surface` | `#ffffff` | White surface fallback |
-| `--ink` | `#1d1d1f` | Main text, dark controls, selection foreground contrast |
-| `--muted` | `oklch(0.97 0 0)` | Soft neutral |
-| `--line` | `#e6e6e6` | Named border token |
-| `--soft` | `#f1f1f1` | Soft surface token |
-| `--background` | `oklch(1 0 0)` | shadcn background |
-| `--foreground` | `oklch(0.145 0 0)` | shadcn foreground |
-| `--card` | `oklch(1 0 0)` | Card surface |
-| `--muted-foreground` | `oklch(0.556 0 0)` | Secondary text |
-| `--border` / `--input` | `oklch(0.922 0 0)` | Primitive border/input defaults |
-| `--primary` | `oklch(0.205 0 0)` | Primary black control |
-| `--destructive` | `oklch(0.577 0.245 27.325)` | Generic destructive token |
+| Token                  | Value                       | Usage                                                   |
+| ---------------------- | --------------------------- | ------------------------------------------------------- |
+| `--canvas`             | `#fafafa`                   | Outer application canvas                                |
+| `--surface`            | `#ffffff`                   | White surface fallback                                  |
+| `--ink`                | `#1d1d1f`                   | Main text, dark controls, selection foreground contrast |
+| `--muted`              | `oklch(0.97 0 0)`           | Soft neutral                                            |
+| `--line`               | `#e6e6e6`                   | Named border token                                      |
+| `--soft`               | `#f1f1f1`                   | Soft surface token                                      |
+| `--background`         | `oklch(1 0 0)`              | shadcn background                                       |
+| `--foreground`         | `oklch(0.145 0 0)`          | shadcn foreground                                       |
+| `--card`               | `oklch(1 0 0)`              | Card surface                                            |
+| `--muted-foreground`   | `oklch(0.556 0 0)`          | Secondary text                                          |
+| `--border` / `--input` | `oklch(0.922 0 0)`          | Primitive border/input defaults                         |
+| `--primary`            | `oklch(0.205 0 0)`          | Primary black control                                   |
+| `--destructive`        | `oklch(0.577 0.245 27.325)` | Generic destructive token                               |
 
 #### Global dark tokens
 
@@ -113,14 +113,14 @@ Reading this as: a trust-first internal finance dashboard for student committee 
 
 #### Semantic and page-local colors
 
-| Meaning | Current colors |
-|---|---|
-| Positive/income | `#16a34a`, `#159447`, `#15803d`, Tailwind `green-500/600/700`, `#eaf8ef`, `#edfaf0`, `#eaf8ee` |
-| Negative/expense | `#ef4444`, `#ef3038`, Tailwind `red-500`, `#fff0f1` |
-| Review/warning | `#e98b00`, `#d97706`, Tailwind `amber-400/500`, `#fff5e5`, `#fff7ea`, `#ffe3b5` |
-| Violet identity | `#7048e8`, `#f1edff`, Tailwind `violet-50/600` |
-| Orange identity | `#e98b00`, `#fff5e8`, Tailwind `orange-50/500` |
-| Neutral tags | `#f3f4f6`, `#52525b` |
+| Meaning          | Current colors                                                                                 |
+| ---------------- | ---------------------------------------------------------------------------------------------- |
+| Positive/income  | `#16a34a`, `#159447`, `#15803d`, Tailwind `green-500/600/700`, `#eaf8ef`, `#edfaf0`, `#eaf8ee` |
+| Negative/expense | `#ef4444`, `#ef3038`, Tailwind `red-500`, `#fff0f1`                                            |
+| Review/warning   | `#e98b00`, `#d97706`, Tailwind `amber-400/500`, `#fff5e5`, `#fff7ea`, `#ffe3b5`                |
+| Violet identity  | `#7048e8`, `#f1edff`, Tailwind `violet-50/600`                                                 |
+| Orange identity  | `#e98b00`, `#fff5e8`, Tailwind `orange-50/500`                                                 |
+| Neutral tags     | `#f3f4f6`, `#52525b`                                                                           |
 
 Important: the semantic palette is currently implemented through a mixture of CSS variables, Tailwind colors, hardcoded hex values, and translucent black/white values. This is a major future normalization target.
 
@@ -167,15 +167,15 @@ The code uses Tailwind spacing alongside CSS rem literals. The most repeated int
 
 Common layout values:
 
-| Surface | Base spacing | Large desktop |
-|---|---|---|
-| Dashboard page horizontal padding | `clamp(1rem, 2vw, 3rem)` | `2rem` at 2200px |
-| Dashboard grid gap | `clamp(1rem, 1.5vw, 1.5rem)` | `2rem` at 2200px |
-| Transactions page gap | `1.25rem` | `1.75rem` at 2200px |
-| Transactions card/filter horizontal padding | `1.5rem` | `2rem` at 2200px |
-| Receipts page gap | `1.5rem` | `1.75rem` at 2200px |
-| Receipts horizontal padding | `1.5rem` | `2rem` / `2.5rem` depending on surface |
-| Dashboard panel header | `px-5 pt-5`, larger `sm/lg` variants | `px-7/8`, `pt-6/7` |
+| Surface                                     | Base spacing                         | Large desktop                          |
+| ------------------------------------------- | ------------------------------------ | -------------------------------------- |
+| Dashboard page horizontal padding           | `clamp(1rem, 2vw, 3rem)`             | `2rem` at 2200px                       |
+| Dashboard grid gap                          | `clamp(1rem, 1.5vw, 1.5rem)`         | `2rem` at 2200px                       |
+| Transactions page gap                       | `1.25rem`                            | `1.75rem` at 2200px                    |
+| Transactions card/filter horizontal padding | `1.5rem`                             | `2rem` at 2200px                       |
+| Receipts page gap                           | `1.5rem`                             | `1.75rem` at 2200px                    |
+| Receipts horizontal padding                 | `1.5rem`                             | `2rem` / `2.5rem` depending on surface |
+| Dashboard panel header                      | `px-5 pt-5`, larger `sm/lg` variants | `px-7/8`, `pt-6/7`                     |
 
 ## Global shell
 
@@ -380,19 +380,19 @@ At widths below 1280px, columns collapse into ordered content sections. The desk
 
 ## Responsive rules
 
-| Breakpoint | Current behavior |
-|---|---|
-| `<600px` | Filter modal columns stack; segmented controls use slightly larger text |
-| `<760px` | Page padding becomes 1rem, KPI cards stack, list headers stack, filters stack, tables gain horizontal scrolling |
-| `<900px` | Receipt summaries stack; receipt filters stack; tables use a wide min-width |
-| `<1150px` | Transaction KPI trend moves below content; filter grid becomes two columns |
-| `768–1099px` | iPad portrait uses an icon rail, compact header, ordered dashboard flow, touch-sized controls, and card-style Transaction/Receipt rows |
-| `1100–1399px` | iPad landscape uses a scroll-free compact dashboard and six-row paginated Transaction/Receipt tables |
-| `<1280px` | Outside the explicit tablet landscape branch, Dashboard columns collapse into one ordered flow |
-| `1280–2199px` | Dashboard and transaction layouts use compact row/panel spacing; dashboard history hides trailing rows |
-| `>=1600px` | Page max-width/padding expands for wide desktop |
-| `>=2200px` | Dashboard sidebar, panels, labels, rows, spacing, and visible content enlarge; receipts and transactions use wider columns and taller surfaces |
-| `1280px + max-height 850px` | Shared header, page gaps, card heights, filters, and pagination compress to prevent viewport overflow |
+| Breakpoint                  | Current behavior                                                                                                                               |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `<600px`                    | Filter modal columns stack; segmented controls use slightly larger text                                                                        |
+| `<760px`                    | Page padding becomes 1rem, KPI cards stack, list headers stack, filters stack, tables gain horizontal scrolling                                |
+| `<900px`                    | Receipt summaries stack; receipt filters stack; tables use a wide min-width                                                                    |
+| `<1150px`                   | Transaction KPI trend moves below content; filter grid becomes two columns                                                                     |
+| `768–1099px`                | iPad portrait uses an icon rail, compact header, ordered dashboard flow, touch-sized controls, and card-style Transaction/Receipt rows         |
+| `1100–1399px`               | iPad landscape uses a scroll-free compact dashboard and six-row paginated Transaction/Receipt tables                                           |
+| `<1280px`                   | Outside the explicit tablet landscape branch, Dashboard columns collapse into one ordered flow                                                 |
+| `1280–2199px`               | Dashboard and transaction layouts use compact row/panel spacing; dashboard history hides trailing rows                                         |
+| `>=1600px`                  | Page max-width/padding expands for wide desktop                                                                                                |
+| `>=2200px`                  | Dashboard sidebar, panels, labels, rows, spacing, and visible content enlarge; receipts and transactions use wider columns and taller surfaces |
+| `1280px + max-height 850px` | Shared header, page gaps, card heights, filters, and pagination compress to prevent viewport overflow                                          |
 
 ## Accessibility and semantics observed
 

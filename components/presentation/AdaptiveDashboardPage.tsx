@@ -1,48 +1,244 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import {
   AlertTriangle,
   ArrowRight,
+  ArrowUpRight,
+  Banknote,
+  CheckCircle2,
   FileText,
   Plus,
   ReceiptText,
   Target,
   WalletCards,
+  X,
 } from "lucide-react";
 import AccountCard from "@/components/dashboard/AccountCard";
-import Klassenkasse from "@/components/dashboard/Klassenkasse";
+import { Dialog } from "@/components/ui/dialog";
 import {
   dashboardCategories,
   dashboardGoals,
   dashboardTransactions,
-  GoalsPanel,
-  ReviewPanel,
-  SpendingByCategory,
-  TransactionHistory,
 } from "@/components/dashboard/DashboardPanels";
 import { usePresentationMode } from "@/hooks/use-presentation-mode";
-import desktopStyles from "@/app/dashboard/dashboard.module.css";
 import styles from "@/app/dashboard/dashboard-adaptive.module.css";
+import desktopStyles from "@/app/dashboard/dashboard-desktop.module.css";
 
 function DesktopDashboard() {
+  const [cardPreviewOpen, setCardPreviewOpen] = useState(false);
+
   return (
-    <section className={desktopStyles.page}>
-      <div className={desktopStyles.mobileIntro}>
-        <h1>Finanzübersicht</h1>
-        <p>Klassenfinanzen auf einen Blick.</p>
-      </div>
-      <div className={desktopStyles.grid}>
-        <div className={`${desktopStyles.column} ${desktopStyles.leftColumn}`}>
-          <Klassenkasse />
-          <TransactionHistory />
+    <section className={desktopStyles.page} aria-label="Finanzübersicht">
+      <div className={desktopStyles.metrics} aria-label="Finanzkennzahlen">
+        <div>
+          <span>Gesamt verfügbar</span>
+          <strong>3.476,00 €</strong>
+          <small>Bank und Barkasse</small>
         </div>
-        <div className={`${desktopStyles.column} ${desktopStyles.rightColumn}`}>
-          <GoalsPanel />
-          <SpendingByCategory />
-          <ReviewPanel />
+        <div>
+          <span>Bankguthaben</span>
+          <strong>2.850,75 €</strong>
+          <small>Heute synchronisiert</small>
+        </div>
+        <div>
+          <span>Bargeldbestand</span>
+          <strong>625,25 €</strong>
+          <small>Zuletzt am 15.05. gezählt</small>
+        </div>
+        <div>
+          <span>Offene Prüfung</span>
+          <strong>4 Vorgänge</strong>
+          <small>3 Belege, 1 Zahlung</small>
         </div>
       </div>
+
+      <div className={desktopStyles.workspace}>
+        <div className={desktopStyles.primaryColumn}>
+          <article className={desktopStyles.accountPanel}>
+            <button
+              type="button"
+              className={desktopStyles.accountCard}
+              aria-label="Bankkonto anzeigen"
+              onClick={() => setCardPreviewOpen(true)}
+            >
+              <AccountCard />
+            </button>
+            <div className={desktopStyles.accountSummary}>
+              <div>
+                <span className={desktopStyles.eyebrow}>Klassenkonto</span>
+                <strong>2.850,75 €</strong>
+                <p>API verbunden · heute um 09:42 synchronisiert</p>
+              </div>
+              <div className={desktopStyles.accountActions}>
+                <Link href="/dashboard/transactions">
+                  <Plus aria-hidden="true" /> Transaktion
+                </Link>
+                <Link href="/dashboard/funds">
+                  Konto öffnen <ArrowUpRight aria-hidden="true" />
+                </Link>
+              </div>
+            </div>
+          </article>
+
+          <article className={desktopStyles.transactionsPanel}>
+            <header className={desktopStyles.panelHeader}>
+              <div>
+                <h2>Letzte Transaktionen</h2>
+                <p>Aktuelle Bewegungen aus allen Konten</p>
+              </div>
+              <Link href="/dashboard/transactions">
+                Alle anzeigen <ArrowRight aria-hidden="true" />
+              </Link>
+            </header>
+            <div className={desktopStyles.transactionHeader}>
+              <span>Transaktion</span>
+              <span>Kategorie</span>
+              <span>Datum</span>
+              <span>Betrag</span>
+            </div>
+            <div className={desktopStyles.transactionRows}>
+              {dashboardTransactions.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <div
+                    className={desktopStyles.transactionRow}
+                    key={item.title}
+                  >
+                    <span className={desktopStyles.transactionName}>
+                      <Icon aria-hidden="true" />
+                      <strong>{item.title}</strong>
+                    </span>
+                    <span>{item.category}</span>
+                    <span>{item.date}</span>
+                    <b
+                      className={
+                        item.amount.startsWith("+")
+                          ? desktopStyles.positive
+                          : desktopStyles.negative
+                      }
+                    >
+                      {item.amount}
+                    </b>
+                  </div>
+                );
+              })}
+            </div>
+          </article>
+        </div>
+
+        <aside className={desktopStyles.secondaryColumn}>
+          <article className={desktopStyles.goalsPanel}>
+            <header className={desktopStyles.panelHeader}>
+              <div>
+                <h2>Ziele</h2>
+                <p>Fortschritt der wichtigsten Vorhaben</p>
+              </div>
+              <Link href="/dashboard/goals">
+                Öffnen <ArrowRight aria-hidden="true" />
+              </Link>
+            </header>
+            <div className={desktopStyles.goalRows}>
+              {dashboardGoals.map((goal) => (
+                <div className={desktopStyles.goalRow} key={goal.title}>
+                  <span>
+                    <strong>{goal.title}</strong>
+                    <small>{goal.saved}</small>
+                  </span>
+                  <div>
+                    <i style={{ width: `${goal.progress}%` }} />
+                  </div>
+                  <b>{goal.progress}%</b>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className={desktopStyles.spendingPanel}>
+            <header className={desktopStyles.panelHeader}>
+              <div>
+                <h2>Ausgaben</h2>
+                <p>Nach Kategorie</p>
+              </div>
+              <span className={desktopStyles.panelValue}>2.503,10 €</span>
+            </header>
+            <div className={desktopStyles.spendingRows}>
+              {dashboardCategories.map((item) => (
+                <div className={desktopStyles.spendingRow} key={item.title}>
+                  <span>{item.title}</span>
+                  <div>
+                    <i style={{ width: `${item.progress}%` }} />
+                  </div>
+                  <b>{item.progress}%</b>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className={desktopStyles.reviewPanel}>
+            <header className={desktopStyles.panelHeader}>
+              <div>
+                <h2>Zu prüfen</h2>
+                <p>Aufgaben mit Handlungsbedarf</p>
+              </div>
+              <span className={desktopStyles.reviewCount}>4</span>
+            </header>
+            <div className={desktopStyles.reviewRows}>
+              <Link href="/dashboard/receipts">
+                <FileText aria-hidden="true" />
+                <span>
+                  <strong>3 Belege prüfen</strong>
+                  <small>Belegstatus offen</small>
+                </span>
+                <ArrowRight aria-hidden="true" />
+              </Link>
+              <Link href="/dashboard/transactions">
+                <Banknote aria-hidden="true" />
+                <span>
+                  <strong>1 Zahlung ohne Beleg</strong>
+                  <small>Bargeldzahlung zuordnen</small>
+                </span>
+                <ArrowRight aria-hidden="true" />
+              </Link>
+              <Link href="/dashboard/funds">
+                <CheckCircle2 aria-hidden="true" />
+                <span>
+                  <strong>Kassenabgleich stimmt</strong>
+                  <small>Zuletzt am 15.05. geprüft</small>
+                </span>
+                <ArrowRight aria-hidden="true" />
+              </Link>
+            </div>
+          </article>
+        </aside>
+      </div>
+
+      {cardPreviewOpen ? (
+        <Dialog
+          label="Bankkonto anzeigen"
+          onClose={() => setCardPreviewOpen(false)}
+          overlayClassName={desktopStyles.accountOverlay}
+          dialogClassName={desktopStyles.accountDialog}
+        >
+          <header className={desktopStyles.accountDialogHeader}>
+            <div>
+              <h2>Bankkonto</h2>
+              <p>Kartenvorschau</p>
+            </div>
+            <button
+              type="button"
+              aria-label="Dialog schließen"
+              onClick={() => setCardPreviewOpen(false)}
+            >
+              <X aria-hidden="true" />
+            </button>
+          </header>
+          <div className={desktopStyles.accountDialogCard}>
+            <AccountCard />
+          </div>
+        </Dialog>
+      ) : null}
     </section>
   );
 }

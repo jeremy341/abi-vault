@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { type KeyboardEvent, useState } from "react";
 import {
   Activity,
   ArrowRightLeft,
@@ -9,10 +9,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Copy,
-  Landmark,
+  CreditCard,
   Pencil,
   Plus,
   ShieldCheck,
+  WalletCards,
 } from "lucide-react";
 import AccountCard, {
   type AccountCardDetails,
@@ -61,13 +62,14 @@ type FundsActivity = {
 };
 
 type AdaptiveFundsViewProps = {
-  mode: Exclude<PresentationMode, "desktop">;
+  mode: PresentationMode;
   cards: FundsCard[];
   activeCard: FundsCard | undefined;
   activeCardIndex: number;
   cashBox: FundsCashBox;
   auditLogs: FundsAudit[];
   activities: FundsActivity[];
+  copiedField?: string | null;
   euro: (value: number) => string;
   onSwitchCard: (direction: -1 | 1) => void;
   onSelectCard: (index: number) => void;
@@ -80,335 +82,530 @@ type AdaptiveFundsViewProps = {
 
 type FundsSection = "overview" | "accounts" | "audit";
 
-function SectionTabs({
+function totalBankBalance(cards: FundsCard[]) {
+  return cards.reduce((total, card) => total + card.balance, 0);
+}
+
+function FundsTabs({
   active,
   onChange,
-  phone = false,
 }: {
   active: FundsSection;
   onChange: (section: FundsSection) => void;
-  phone?: boolean;
 }) {
+  const tabs: Array<{ value: FundsSection; label: string }> = [
+    { value: "overview", label: "Übersicht" },
+    { value: "accounts", label: "Konten" },
+    { value: "audit", label: "Prüfung" },
+  ];
+
+  function handleKeyDown(
+    event: KeyboardEvent<HTMLButtonElement>,
+    index: number,
+  ) {
+    let nextIndex = index;
+
+    if (event.key === "ArrowRight") nextIndex = (index + 1) % tabs.length;
+    else if (event.key === "ArrowLeft") {
+      nextIndex = (index - 1 + tabs.length) % tabs.length;
+    } else if (event.key === "Home") nextIndex = 0;
+    else if (event.key === "End") nextIndex = tabs.length - 1;
+    else return;
+
+    event.preventDefault();
+    onChange(tabs[nextIndex].value);
+    const tabButtons = event.currentTarget.parentElement?.querySelectorAll<HTMLElement>(
+      '[role="tab"]',
+    );
+    tabButtons?.[nextIndex]?.focus();
+  }
+
   return (
-    <div
-      className={phone ? styles.phoneTabs : styles.tabs}
-      role="tablist"
-      aria-label="Finanzbereiche"
-    >
-      {[
-        ["overview", "Übersicht"],
-        ["accounts", "Konten"],
-        ["audit", "Prüfung"],
-      ].map(([value, label]) => (
+    <div className={styles.tabs} role="tablist" aria-label="Finanzbereiche">
+      {tabs.map((tab, index) => (
         <button
-          key={value}
+          key={tab.value}
           type="button"
           role="tab"
-          aria-selected={active === value}
-          className={active === value ? styles.activeTab : ""}
-          onClick={() => onChange(value as FundsSection)}
+          aria-selected={active === tab.value}
+          tabIndex={active === tab.value ? 0 : -1}
+          className={active === tab.value ? styles.activeTab : ""}
+          onKeyDown={(event) => handleKeyDown(event, index)}
+          onClick={() => onChange(tab.value)}
         >
-          {label}
+          {tab.label}
         </button>
       ))}
     </div>
   );
 }
 
-function Metrics({
-  activeCard,
+function SummaryRail({
+  cards,
   cashBox,
   euro,
-}: Pick<AdaptiveFundsViewProps, "activeCard" | "cashBox" | "euro">) {
+}: Pick<AdaptiveFundsViewProps, "cards" | "cashBox" | "euro">) {
+  const bankBalance = totalBankBalance(cards);
+  const total = bankBalance + cashBox.balance;
+  const matched = cashBox.countStatus === "matched";
+
   return (
-    <div className={styles.metricStrip} aria-label="Finanzkennzahlen">
-      <div className={styles.metric}>
-        <span>Gesamt</span>
-        <strong>{euro((activeCard?.balance ?? 0) + cashBox.balance)}</strong>
+    <section className={styles.summaryRail} aria-label="Finanzübersicht">
+      <div>
+        <span>Gesamt verfügbar</span>
+        <strong>{euro(total)}</strong>
+        <small>{cards.length} Bankkonten und Barkasse</small>
       </div>
-      <div className={styles.metric}>
-        <span>Bank</span>
-        <strong>{euro(activeCard?.balance ?? 0)}</strong>
+      <div>
+        <span>Bankguthaben</span>
+        <strong>{euro(bankBalance)}</strong>
+        <small>{cards.length} verbundene Konten</small>
       </div>
-      <div className={styles.metric}>
+      <div>
         <span>Barkasse</span>
         <strong>{euro(cashBox.balance)}</strong>
+        <small>Gezählt am {cashBox.lastCountDate}</small>
       </div>
-      <div className={styles.metric}>
-        <span>Abgleich</span>
-        <strong
-          className={
-            cashBox.countStatus === "matched"
-              ? styles.positive
-              : styles.negative
-          }
-        >
-          {cashBox.countStatus === "matched" ? "Stimmt" : "Prüfen"}
+      <div>
+        <span>Kassenstatus</span>
+        <strong className={matched ? styles.positive : styles.negative}>
+          {matched ? "Stimmt" : "Prüfen"}
         </strong>
+        <small>
+          {matched
+            ? "Keine Differenz festgestellt"
+            : `${euro(cashBox.difference)} Differenz`}
+        </small>
+      </div>
+    </section>
+  );
+}
+
+function AccountList({
+  cards,
+  cashBox,
+  activeCardIndex,
+  cashSelected,
+  euro,
+  onSelectCard,
+  onSelectCash,
+  onAddCard,
+}: Pick<
+  AdaptiveFundsViewProps,
+  | "cards"
+  | "cashBox"
+  | "activeCardIndex"
+  | "euro"
+  | "onSelectCard"
+  | "onAddCard"
+> & {
+  cashSelected: boolean;
+  onSelectCash: () => void;
+}) {
+  return (
+    <section
+      className={styles.accountListPanel}
+      aria-labelledby="account-list-title"
+    >
+      <header className={styles.panelHeader}>
+        <div>
+          <h2 id="account-list-title">Konten</h2>
+          <p>{cards.length + 1} Geldbestände</p>
+        </div>
+        <button
+          type="button"
+          className={styles.iconAction}
+          aria-label="Karte hinzufügen"
+          onClick={onAddCard}
+        >
+          <Plus aria-hidden="true" />
+        </button>
+      </header>
+      <div className={styles.accountList}>
+        {cards.map((card, index) => (
+          <button
+            key={card.id}
+            type="button"
+            className={styles.accountRow}
+            aria-pressed={!cashSelected && index === activeCardIndex}
+            onClick={() => onSelectCard(index)}
+          >
+            <span className={styles.accountIcon}>
+              <CreditCard aria-hidden="true" />
+            </span>
+            <span className={styles.accountIdentity}>
+              <strong>{card.details.accountName}</strong>
+              <small>{card.bankName}</small>
+            </span>
+            <span className={styles.accountAmount}>
+              <strong>{euro(card.balance)}</strong>
+              <small>
+                {card.status.includes("verbunden")
+                  ? "Verbunden"
+                  : card.status}
+              </small>
+            </span>
+          </button>
+        ))}
+        <button
+          type="button"
+          className={styles.accountRow}
+          aria-pressed={cashSelected}
+          onClick={onSelectCash}
+        >
+          <span className={styles.accountIcon}>
+            <Banknote aria-hidden="true" />
+          </span>
+          <span className={styles.accountIdentity}>
+            <strong>Barkasse</strong>
+            <small>{cashBox.responsible}</small>
+          </span>
+          <span className={styles.accountAmount}>
+            <strong>{euro(cashBox.balance)}</strong>
+            <small>
+              {cashBox.countStatus === "matched" ? "Abgeglichen" : "Prüfen"}
+            </small>
+          </span>
+        </button>
+      </div>
+      <div className={styles.accountListFooter}>
+        <span>Bank und Bargeld</span>
+        <strong>{euro(totalBankBalance(cards) + cashBox.balance)}</strong>
+      </div>
+    </section>
+  );
+}
+
+function CardStage({
+  cards,
+  activeCard,
+  activeCardIndex,
+  onSwitchCard,
+  onEditCard,
+  onAddCard,
+}: Pick<
+  AdaptiveFundsViewProps,
+  | "cards"
+  | "activeCard"
+  | "activeCardIndex"
+  | "onSwitchCard"
+  | "onEditCard"
+  | "onAddCard"
+>) {
+  const hasMultiple = cards.length > 1;
+
+  return (
+    <div className={styles.cardStage}>
+      {hasMultiple ? (
+        <button
+          type="button"
+          className={styles.carouselButton}
+          aria-label="Vorherige Karte"
+          onClick={() => onSwitchCard(-1)}
+        >
+          <ChevronLeft aria-hidden="true" />
+        </button>
+      ) : (
+        <span aria-hidden="true" />
+      )}
+      {activeCard ? (
+        <button
+          type="button"
+          className={styles.cardSlot}
+          aria-label={`${activeCard.details.accountName} bearbeiten`}
+          onClick={onEditCard}
+        >
+          <AccountCard
+            details={activeCard.details}
+            cardColor={activeCard.details.color}
+          />
+        </button>
+      ) : (
+        <button
+          type="button"
+          className={styles.cardSlot}
+          aria-label="Karte hinzufügen"
+          onClick={onAddCard}
+        >
+          <AccountCard variant="add" />
+        </button>
+      )}
+      {hasMultiple ? (
+        <button
+          type="button"
+          className={styles.carouselButton}
+          aria-label="Nächste Karte"
+          onClick={() => onSwitchCard(1)}
+        >
+          <ChevronRight aria-hidden="true" />
+        </button>
+      ) : (
+        <span aria-hidden="true" />
+      )}
+      <div className={styles.cardPosition}>
+        <span>
+          {cards.length
+            ? `Karte ${activeCardIndex + 1} von ${cards.length}`
+            : "Keine Karte verbunden"}
+        </span>
       </div>
     </div>
   );
 }
 
-function AccountStage(props: AdaptiveFundsViewProps) {
-  const { cards, activeCard, activeCardIndex } = props;
-  return (
-    <article className={`${styles.panel} ${styles.accountPanel}`}>
-      <div className={styles.cardStage}>
+function BankDetail({
+  props,
+  compact = false,
+}: {
+  props: AdaptiveFundsViewProps;
+  compact?: boolean;
+}) {
+  const { activeCard, copiedField, euro } = props;
+
+  if (!activeCard) {
+    return (
+      <section className={styles.emptyAccount} role="status">
+        <WalletCards aria-hidden="true" />
+        <h2>Keine Karte verbunden</h2>
+        <p>
+          Füge eine Bankkarte hinzu, um Kontodaten und Guthaben zu verwalten.
+        </p>
         <button
           type="button"
-          className={styles.carouselButton}
-          aria-label="Vorherige Karte"
-          disabled={cards.length < 2}
-          onClick={() => props.onSwitchCard(-1)}
+          className={styles.primaryAction}
+          onClick={props.onAddCard}
         >
-          <ChevronLeft aria-hidden="true" />
+          <Plus aria-hidden="true" /> Karte hinzufügen
         </button>
+      </section>
+    );
+  }
+
+  return (
+    <section
+      className={`${styles.bankDetail} ${compact ? styles.bankDetailCompact : ""}`}
+    >
+      <header className={styles.panelHeader}>
+        <div>
+          <h2>{activeCard.details.accountName}</h2>
+          <p>{activeCard.status}</p>
+        </div>
         <button
           type="button"
-          className={styles.cardSlot}
-          aria-label={`${activeCard?.details.accountName ?? "Bankkonto"} bearbeiten`}
+          className={styles.iconAction}
+          aria-label="Kontodaten bearbeiten"
           onClick={props.onEditCard}
         >
-          <AccountCard
-            details={activeCard?.details}
-            cardColor={activeCard?.details.color}
-          />
+          <Pencil aria-hidden="true" />
         </button>
-        <button
-          type="button"
-          className={styles.carouselButton}
-          aria-label="Nächste Karte"
-          disabled={cards.length < 2}
-          onClick={() => props.onSwitchCard(1)}
-        >
-          <ChevronRight aria-hidden="true" />
-        </button>
+      </header>
+      <div className={styles.bankDetailBody}>
+        <CardStage {...props} />
+        <div className={styles.balanceBlock}>
+          <span>Verfügbares Guthaben</span>
+          <strong>{euro(activeCard.balance)}</strong>
+          <small>{activeCard.lastSync}</small>
+          <div className={styles.balanceActions}>
+            <button
+              type="button"
+              className={styles.primaryAction}
+              onClick={props.onTransfer}
+            >
+              <ArrowRightLeft aria-hidden="true" /> Umbuchen
+            </button>
+            <button
+              type="button"
+              className={styles.secondaryAction}
+              aria-label="IBAN kopieren"
+              onClick={() => props.onCopy(activeCard.iban, "iban")}
+            >
+              <Copy aria-hidden="true" />
+              {copiedField === "iban" ? "Kopiert" : "IBAN"}
+            </button>
+          </div>
+        </div>
       </div>
-      <div className={styles.cardMeta}>
-        <span>
-          Karte {activeCardIndex + 1} von {cards.length}
-        </span>
-        <button
-          type="button"
-          onClick={props.onAddCard}
-          aria-label="Karte hinzufügen"
-        >
-          <Plus aria-hidden="true" className="size-4" />
-        </button>
-      </div>
-    </article>
+      {!compact ? (
+        <dl className={styles.bankMetadata}>
+          <div>
+            <dt>Bank</dt>
+            <dd>{activeCard.bankName}</dd>
+          </div>
+          <div>
+            <dt>IBAN</dt>
+            <dd>{activeCard.iban}</dd>
+          </div>
+          <div>
+            <dt>BIC</dt>
+            <dd>{activeCard.bic}</dd>
+          </div>
+          <div>
+            <dt>Inhaber</dt>
+            <dd>{activeCard.details.holder}</dd>
+          </div>
+        </dl>
+      ) : null}
+    </section>
   );
 }
 
-function TabletOverview(props: AdaptiveFundsViewProps) {
-  const { activeCard, cashBox, euro, activities } = props;
+function CashDetail({ props }: { props: AdaptiveFundsViewProps }) {
+  const { cashBox, euro } = props;
   return (
-    <div className={styles.overview}>
-      <AccountStage {...props} />
-
-      <article className={`${styles.panel} ${styles.cashPanel}`}>
-        <header className={styles.panelHeader}>
+    <section className={styles.cashDetail}>
+      <header className={styles.panelHeader}>
+        <div>
           <h2>Barkasse</h2>
-          <Banknote aria-hidden="true" />
-        </header>
-        <strong className={styles.cashAmount}>{euro(cashBox.balance)}</strong>
-        <div className={styles.cashRows}>
-          <div>
-            <span>Verantwortlich</span>
-            <strong>{cashBox.responsible}</strong>
-          </div>
-          <div>
-            <span>Letzte Zählung</span>
-            <strong>{cashBox.lastCountDate}</strong>
-          </div>
+          <p>{cashBox.name}</p>
         </div>
-        <div className={styles.panelActions}>
-          <button
-            type="button"
-            className={styles.primaryAction}
-            onClick={props.onCountCash}
-          >
-            <Banknote aria-hidden="true" /> Kasse zählen
-          </button>
-          <button
-            type="button"
-            className={styles.secondaryAction}
-            onClick={props.onTransfer}
-          >
-            <ArrowRightLeft aria-hidden="true" /> Umbuchung
-          </button>
+        <Banknote aria-hidden="true" />
+      </header>
+      <div className={styles.cashHero}>
+        <span>Aktueller Bestand</span>
+        <strong>{euro(cashBox.balance)}</strong>
+      </div>
+      <dl className={styles.detailRows}>
+        <div>
+          <dt>Verantwortlich</dt>
+          <dd>{cashBox.responsible}</dd>
         </div>
-      </article>
-
-      <article className={`${styles.panel} ${styles.reconcilePanel}`}>
-        <header className={styles.panelHeader}>
-          <h2>Kassenabgleich</h2>
-          <ShieldCheck aria-hidden="true" />
-        </header>
-        <strong className={`${styles.reconcileStatus} ${styles.positive}`}>
-          <Check aria-hidden="true" className="inline size-5" /> Stimmt
-        </strong>
-        <div className={styles.reconcileRows}>
-          <div>
-            <span>Soll</span>
-            <strong>{euro(cashBox.balance)}</strong>
-          </div>
-          <div>
-            <span>Ist</span>
-            <strong>{euro(cashBox.balance + cashBox.difference)}</strong>
-          </div>
-          <div>
-            <span>Differenz</span>
-            <strong className={styles.positive}>
-              {euro(cashBox.difference)}
-            </strong>
-          </div>
+        <div>
+          <dt>Letzte Zählung</dt>
+          <dd>{cashBox.lastCountDate}</dd>
         </div>
+        <div>
+          <dt>Status</dt>
+          <dd>
+            {cashBox.countStatus === "matched" ? "Abgeglichen" : "Prüfen"}
+          </dd>
+        </div>
+      </dl>
+      <div className={styles.panelActions}>
         <button
           type="button"
           className={styles.primaryAction}
           onClick={props.onCountCash}
         >
-          Neuen Abgleich durchführen
+          <Banknote aria-hidden="true" /> Kasse zählen
         </button>
-      </article>
-
-      <article className={`${styles.panel} ${styles.activityPanel}`}>
-        <header
-          className={styles.panelHeader}
-          style={{ padding: "0.75rem 1rem" }}
+        <button
+          type="button"
+          className={styles.secondaryAction}
+          onClick={props.onTransfer}
         >
-          <h2>Letzte Aktivitäten</h2>
-          <Activity aria-hidden="true" />
-        </header>
-        <div className={styles.activityHeader}>
-          <span>Datum</span>
-          <span>Typ</span>
-          <span>Beschreibung</span>
-          <span>Betrag</span>
+          <ArrowRightLeft aria-hidden="true" /> Umbuchung
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function Reconciliation({ props }: { props: AdaptiveFundsViewProps }) {
+  const { cashBox, euro } = props;
+  const matched = cashBox.countStatus === "matched";
+  return (
+    <section className={styles.reconciliation}>
+      <header className={styles.panelHeader}>
+        <div>
+          <h2>Kassenabgleich</h2>
+          <p>Abgleich mit dem Buchbestand</p>
         </div>
-        {activities.slice(0, 4).map((item) => (
+        <ShieldCheck aria-hidden="true" />
+      </header>
+      <div
+        className={`${styles.reconciliationStatus} ${matched ? styles.positive : styles.negative}`}
+      >
+        {matched ? (
+          <Check aria-hidden="true" />
+        ) : (
+          <ShieldCheck aria-hidden="true" />
+        )}
+        <strong>{matched ? "Stimmt" : "Prüfen"}</strong>
+      </div>
+      <dl className={styles.detailRows}>
+        <div>
+          <dt>Soll</dt>
+          <dd>{euro(cashBox.balance)}</dd>
+        </div>
+        <div>
+          <dt>Ist</dt>
+          <dd>{euro(cashBox.balance + cashBox.difference)}</dd>
+        </div>
+        <div>
+          <dt>Differenz</dt>
+          <dd className={matched ? styles.positive : styles.negative}>
+            {euro(cashBox.difference)}
+          </dd>
+        </div>
+      </dl>
+      <button
+        type="button"
+        className={styles.primaryAction}
+        onClick={props.onCountCash}
+      >
+        Neuen Abgleich durchführen
+      </button>
+    </section>
+  );
+}
+
+function ActivityPanel({
+  props,
+  limit = 5,
+}: {
+  props: AdaptiveFundsViewProps;
+  limit?: number;
+}) {
+  return (
+    <section className={styles.activityPanel}>
+      <header className={styles.panelHeader}>
+        <div>
+          <h2>Letzte Aktivitäten</h2>
+          <p>Bankkonto und Barkasse</p>
+        </div>
+        <Activity aria-hidden="true" />
+      </header>
+      <div className={styles.activityHeader} aria-hidden="true">
+        <span>Datum</span>
+        <span>Typ</span>
+        <span>Beschreibung</span>
+        <span>Benutzer</span>
+        <span>Betrag</span>
+      </div>
+      <div className={styles.activityRows}>
+        {props.activities.slice(0, limit).map((item) => (
           <div
             className={styles.activityRow}
             key={`${item.date}-${item.description}`}
           >
             <span>{item.date}</span>
             <span>{item.type}</span>
-            <span>{item.description}</span>
-            <b className={item.amount >= 0 ? styles.positive : styles.negative}>
+            <strong>{item.description}</strong>
+            <span>{item.user}</span>
+            <b
+              className={item.amount >= 0 ? styles.positive : styles.negative}
+            >
               {item.amount >= 0 ? "+" : ""}
-              {euro(item.amount)}
+              {props.euro(item.amount)}
             </b>
           </div>
         ))}
-      </article>
-
-      <article className={`${styles.panel} ${styles.detailsPanel}`}>
-        <header className={styles.panelHeader}>
-          <h2>Bankdetails</h2>
-          <Landmark aria-hidden="true" />
-        </header>
-        <div className={styles.detailsRows}>
-          <div>
-            <span>IBAN</span>
-            <strong>{activeCard?.iban}</strong>
-          </div>
-          <div>
-            <span>BIC</span>
-            <strong>{activeCard?.bic}</strong>
-          </div>
-        </div>
-      </article>
-    </div>
+      </div>
+    </section>
   );
 }
 
-function AccountsView(props: AdaptiveFundsViewProps) {
+function AuditPanel({ props }: { props: AdaptiveFundsViewProps }) {
   return (
-    <div className={styles.accountsView}>
-      <article className={`${styles.panel} ${styles.accountList}`}>
-        <header
-          className={styles.panelHeader}
-          style={{ padding: "0.85rem 1rem" }}
-        >
-          <h2>Konten & Karten</h2>
-          <button
-            type="button"
-            className={styles.secondaryAction}
-            onClick={props.onAddCard}
-          >
-            <Plus aria-hidden="true" /> Karte hinzufügen
-          </button>
-        </header>
-        {props.cards.map((card, index) => (
-          <button
-            type="button"
-            className={styles.accountRow}
-            key={card.id}
-            onClick={() => props.onSelectCard(index)}
-          >
-            <span>
-              <strong>{card.details.accountName}</strong>
-              <small>
-                {card.bankName}, {card.lastSync}
-              </small>
-            </span>
-            <b>{props.euro(card.balance)}</b>
-          </button>
-        ))}
-      </article>
-      <article className={`${styles.panel} ${styles.detailsPanel}`}>
-        <header className={styles.panelHeader}>
-          <h2>Bankverbindung</h2>
-          <Landmark aria-hidden="true" />
-        </header>
-        <div className={styles.detailsRows}>
-          <div>
-            <span>IBAN</span>
-            <strong>{props.activeCard?.iban}</strong>
-          </div>
-          <div>
-            <span>BIC</span>
-            <strong>{props.activeCard?.bic}</strong>
-          </div>
-          <div>
-            <span>Inhaber</span>
-            <strong>{props.activeCard?.details.holder}</strong>
-          </div>
+    <section className={styles.auditPanel}>
+      <header className={styles.panelHeader}>
+        <div>
+          <h2>Prüfprotokoll</h2>
+          <p>Dokumentierte Kassenabschlüsse</p>
         </div>
-        <div className={styles.panelActions}>
-          <button
-            type="button"
-            className={styles.primaryAction}
-            onClick={props.onEditCard}
-          >
-            <Pencil aria-hidden="true" /> Bearbeiten
-          </button>
-          <button
-            type="button"
-            className={styles.secondaryAction}
-            onClick={() => props.onCopy(props.activeCard?.iban ?? "", "iban")}
-          >
-            <Copy aria-hidden="true" /> Kopieren
-          </button>
-        </div>
-      </article>
-    </div>
-  );
-}
-
-function AuditView(props: AdaptiveFundsViewProps) {
-  return (
-    <div className={styles.auditView}>
-      <article className={`${styles.panel} ${styles.auditList}`}>
-        <header
-          className={styles.panelHeader}
-          style={{ padding: "0.85rem 1rem" }}
-        >
-          <h2>Kassenbuch & Prüfprotokoll</h2>
-          <ShieldCheck aria-hidden="true" />
-        </header>
+        <ShieldCheck aria-hidden="true" />
+      </header>
+      <div className={styles.auditRows}>
         {props.auditLogs.map((entry) => (
           <div className={styles.auditRow} key={entry.id}>
             <span>
@@ -416,6 +613,10 @@ function AuditView(props: AdaptiveFundsViewProps) {
               <small>
                 {entry.date}, {entry.auditor}
               </small>
+            </span>
+            <span>
+              <small>Zählbetrag</small>
+              <strong>{props.euro(entry.countedAmount)}</strong>
             </span>
             <b
               className={
@@ -428,128 +629,312 @@ function AuditView(props: AdaptiveFundsViewProps) {
             </b>
           </div>
         ))}
-      </article>
-      <article className={`${styles.panel} ${styles.detailsPanel}`}>
-        <header className={styles.panelHeader}>
+      </div>
+    </section>
+  );
+}
+
+function AccessPanel({ props }: { props: AdaptiveFundsViewProps }) {
+  return (
+    <aside className={styles.accessPanel}>
+      <header className={styles.panelHeader}>
+        <div>
           <h2>Zugriff</h2>
-          <ShieldCheck aria-hidden="true" />
-        </header>
-        <div className={styles.detailsRows}>
-          <div>
-            <span>Kassenwart</span>
-            <strong>Max Müller</strong>
-          </div>
-          <div>
-            <span>Vertretung</span>
-            <strong>Lisa Schmidt</strong>
-          </div>
-          <div>
-            <span>Letzte Prüfung</span>
-            <strong>{props.cashBox.lastCountDate}</strong>
-          </div>
+          <p>Prüfberechtigte Personen</p>
         </div>
-        <button
-          type="button"
-          className={styles.primaryAction}
-          onClick={props.onCountCash}
+        <ShieldCheck aria-hidden="true" />
+      </header>
+      <dl className={styles.detailRows}>
+        <div>
+          <dt>Kassenwart</dt>
+          <dd>Max Müller</dd>
+        </div>
+        <div>
+          <dt>Vertretung</dt>
+          <dd>Lisa Schmidt</dd>
+        </div>
+        <div>
+          <dt>Letzte Prüfung</dt>
+          <dd>{props.cashBox.lastCountDate}</dd>
+        </div>
+      </dl>
+      <button
+        type="button"
+        className={styles.primaryAction}
+        onClick={props.onCountCash}
+      >
+        Prüfung starten
+      </button>
+    </aside>
+  );
+}
+
+function DesktopFunds(props: AdaptiveFundsViewProps) {
+  const [section, setSection] = useState<FundsSection>("overview");
+  const [cashSelected, setCashSelected] = useState(false);
+
+  function selectCard(index: number) {
+    setCashSelected(false);
+    props.onSelectCard(index);
+  }
+
+  return (
+    <div className={`${styles.root} ${styles.desktopRoot}`}>
+      <SummaryRail
+        cards={props.cards}
+        cashBox={props.cashBox}
+        euro={props.euro}
+      />
+      <FundsTabs active={section} onChange={setSection} />
+      {section === "overview" ? (
+        <div
+          className={styles.desktopOverview}
+          role="tabpanel"
+          aria-label="Übersicht"
         >
-          Prüfung starten
+          <AccountList
+            {...props}
+            cashSelected={cashSelected}
+            onSelectCard={selectCard}
+            onSelectCash={() => setCashSelected(true)}
+          />
+          <div className={styles.desktopPrimaryDetail}>
+            {cashSelected ? (
+              <CashDetail props={props} />
+            ) : (
+              <BankDetail props={props} compact />
+            )}
+          </div>
+          <Reconciliation props={props} />
+          <ActivityPanel props={props} />
+        </div>
+      ) : section === "accounts" ? (
+        <div
+          className={styles.desktopAccounts}
+          role="tabpanel"
+          aria-label="Konten"
+        >
+          <AccountList
+            {...props}
+            cashSelected={cashSelected}
+            onSelectCard={selectCard}
+            onSelectCash={() => setCashSelected(true)}
+          />
+          {cashSelected ? (
+            <CashDetail props={props} />
+          ) : (
+            <BankDetail props={props} />
+          )}
+        </div>
+      ) : (
+        <div
+          className={styles.desktopAudit}
+          role="tabpanel"
+          aria-label="Prüfung"
+        >
+          <AuditPanel props={props} />
+          <AccessPanel props={props} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TabletAccountSelector({
+  props,
+  cashSelected,
+  onSelectCard,
+  onSelectCash,
+}: {
+  props: AdaptiveFundsViewProps;
+  cashSelected: boolean;
+  onSelectCard: (index: number) => void;
+  onSelectCash: () => void;
+}) {
+  return (
+    <div
+      className={styles.tabletAccountSelector}
+      aria-label="Konten auswählen"
+    >
+      {props.cards.map((card, index) => (
+        <button
+          key={card.id}
+          type="button"
+          aria-pressed={!cashSelected && index === props.activeCardIndex}
+          onClick={() => onSelectCard(index)}
+        >
+          <CreditCard aria-hidden="true" />
+          <span>
+            <strong>{card.details.accountName}</strong>
+            <small>{props.euro(card.balance)}</small>
+          </span>
         </button>
-      </article>
+      ))}
+      <button
+        type="button"
+        aria-pressed={cashSelected}
+        onClick={onSelectCash}
+      >
+        <Banknote aria-hidden="true" />
+        <span>
+          <strong>Barkasse</strong>
+          <small>{props.euro(props.cashBox.balance)}</small>
+        </span>
+      </button>
+      <button
+        type="button"
+        className={styles.addAccountButton}
+        onClick={props.onAddCard}
+      >
+        <Plus aria-hidden="true" /> <span>Karte</span>
+      </button>
     </div>
   );
 }
 
 function TabletFunds(props: AdaptiveFundsViewProps) {
   const [section, setSection] = useState<FundsSection>("overview");
+  const [cashSelected, setCashSelected] = useState(false);
+
+  function selectCard(index: number) {
+    setCashSelected(false);
+    props.onSelectCard(index);
+  }
+
   return (
     <div className={`${styles.root} ${styles.tabletRoot}`}>
-      <SectionTabs active={section} onChange={setSection} />
-      <Metrics
-        activeCard={props.activeCard}
+      <SummaryRail
+        cards={props.cards}
         cashBox={props.cashBox}
         euro={props.euro}
       />
+      <FundsTabs active={section} onChange={setSection} />
       {section === "overview" ? (
-        <TabletOverview {...props} />
+        <div
+          className={styles.tabletOverview}
+          role="tabpanel"
+          aria-label="Übersicht"
+        >
+          <TabletAccountSelector
+            props={props}
+            cashSelected={cashSelected}
+            onSelectCard={selectCard}
+            onSelectCash={() => setCashSelected(true)}
+          />
+          <div className={styles.tabletPrimaryDetail}>
+            {cashSelected ? (
+              <CashDetail props={props} />
+            ) : (
+              <BankDetail props={props} compact />
+            )}
+          </div>
+          <Reconciliation props={props} />
+          <ActivityPanel props={props} limit={2} />
+        </div>
       ) : section === "accounts" ? (
-        <AccountsView {...props} />
+        <div
+          className={styles.tabletAccounts}
+          role="tabpanel"
+          aria-label="Konten"
+        >
+          <AccountList
+            {...props}
+            cashSelected={cashSelected}
+            onSelectCard={selectCard}
+            onSelectCash={() => setCashSelected(true)}
+          />
+          {cashSelected ? (
+            <CashDetail props={props} />
+          ) : (
+            <BankDetail props={props} />
+          )}
+        </div>
       ) : (
-        <AuditView {...props} />
+        <div
+          className={styles.tabletAudit}
+          role="tabpanel"
+          aria-label="Prüfung"
+        >
+          <AuditPanel props={props} />
+          <AccessPanel props={props} />
+        </div>
       )}
+    </div>
+  );
+}
+
+function PhoneAccountCard(props: AdaptiveFundsViewProps) {
+  return (
+    <section className={styles.phoneAccountCard}>
+      <CardStage {...props} />
+      {props.activeCard ? (
+        <div className={styles.phoneAccountSummary}>
+          <span>
+            <strong>{props.activeCard.details.accountName}</strong>
+            <small>{props.activeCard.status}</small>
+          </span>
+          <b>{props.euro(props.activeCard.balance)}</b>
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+function PhoneRows({ props }: { props: AdaptiveFundsViewProps }) {
+  return (
+    <div className={styles.phoneActivityRows}>
+      {props.activities.slice(0, 3).map((item) => (
+        <div key={`${item.date}-${item.description}`}>
+          <span>
+            <strong>{item.description}</strong>
+            <small>{item.date}</small>
+          </span>
+          <b className={item.amount >= 0 ? styles.positive : styles.negative}>
+            {item.amount >= 0 ? "+" : ""}
+            {props.euro(item.amount)}
+          </b>
+        </div>
+      ))}
     </div>
   );
 }
 
 function PhoneFunds(props: AdaptiveFundsViewProps) {
   const [section, setSection] = useState<FundsSection>("overview");
-  const { activeCard, cashBox, euro } = props;
+  const bankBalance = totalBankBalance(props.cards);
 
   return (
     <div className={`${styles.root} ${styles.phoneRoot}`}>
-      <div className={styles.phoneBalance}>
-        <span className={styles.eyebrow}>Gesamt verfügbar</span>
-        <strong>{euro((activeCard?.balance ?? 0) + cashBox.balance)}</strong>
-        <p>
-          {euro(activeCard?.balance ?? 0)} Bank, {euro(cashBox.balance)} Bargeld
-        </p>
-      </div>
-      <SectionTabs active={section} onChange={setSection} phone />
-
+      <section className={styles.phoneBalanceHero} aria-label="Gesamtguthaben">
+        <span>Gesamt verfügbar</span>
+        <strong>{props.euro(bankBalance + props.cashBox.balance)}</strong>
+        <div>
+          <span>{props.euro(bankBalance)} Bank</span>
+          <span>{props.euro(props.cashBox.balance)} Bargeld</span>
+        </div>
+      </section>
+      <FundsTabs active={section} onChange={setSection} />
       {section === "overview" ? (
-        <>
-          <section className={styles.phoneCardSection}>
-            <div className={styles.phoneCardStage}>
-              <button
-                type="button"
-                className={styles.carouselButton}
-                disabled={props.cards.length < 2}
-                aria-label="Vorherige Karte"
-                onClick={() => props.onSwitchCard(-1)}
-              >
-                <ChevronLeft aria-hidden="true" />
-              </button>
-              <button
-                type="button"
-                className={styles.phoneCardSlot}
-                onClick={props.onEditCard}
-                aria-label="Karte bearbeiten"
-              >
-                <AccountCard
-                  details={activeCard?.details}
-                  cardColor={activeCard?.details.color}
-                />
-              </button>
-              <button
-                type="button"
-                className={styles.carouselButton}
-                disabled={props.cards.length < 2}
-                aria-label="Nächste Karte"
-                onClick={() => props.onSwitchCard(1)}
-              >
-                <ChevronRight aria-hidden="true" />
-              </button>
-            </div>
-            <div className={styles.phoneAccountMeta}>
-              <strong>{activeCard?.details.accountName}</strong>
-              <span>{activeCard?.status}</span>
-              <b>{euro(activeCard?.balance ?? 0)}</b>
-            </div>
-          </section>
-          <div className={styles.phoneActionRow}>
+        <div
+          className={styles.phonePanel}
+          role="tabpanel"
+          aria-label="Übersicht"
+        >
+          <PhoneAccountCard {...props} />
+          <div className={styles.phoneActions}>
             <button
               type="button"
               className={styles.primaryAction}
-              onClick={props.onCountCash}
+              onClick={props.onTransfer}
             >
-              <Banknote aria-hidden="true" /> Zählen
+              <ArrowRightLeft aria-hidden="true" /> Umbuchen
             </button>
             <button
               type="button"
               className={styles.secondaryAction}
-              onClick={props.onTransfer}
+              onClick={props.onCountCash}
             >
-              <ArrowRightLeft aria-hidden="true" /> Umbuchen
+              <Banknote aria-hidden="true" /> Zählen
             </button>
             <button
               type="button"
@@ -560,77 +945,119 @@ function PhoneFunds(props: AdaptiveFundsViewProps) {
             </button>
           </div>
           <section className={styles.phoneSection}>
-            <h2>Barkasse</h2>
-            <div className={styles.phoneRows}>
-              <div className={styles.phoneRow}>
-                <span>
-                  <strong>Aktueller Bestand</strong>
-                  <small>Zuletzt gezählt {cashBox.lastCountDate}</small>
-                </span>
-                <b>{euro(cashBox.balance)}</b>
-              </div>
-              <div className={styles.phoneRow}>
-                <span>
-                  <strong>Kassenabgleich</strong>
-                  <small>Differenz {euro(cashBox.difference)}</small>
-                </span>
-                <b className={styles.positive}>Stimmt</b>
-              </div>
-            </div>
+            <header>
+              <h2>Barkasse</h2>
+              <b>{props.euro(props.cashBox.balance)}</b>
+            </header>
+            <button
+              type="button"
+              className={styles.phoneStatusRow}
+              onClick={props.onCountCash}
+            >
+              <span>
+                <strong>Kassenabgleich</strong>
+                <small>Gezählt am {props.cashBox.lastCountDate}</small>
+              </span>
+              <b
+                className={
+                  props.cashBox.countStatus === "matched"
+                    ? styles.positive
+                    : styles.negative
+                }
+              >
+                {props.cashBox.countStatus === "matched" ? "Stimmt" : "Prüfen"}
+              </b>
+            </button>
           </section>
           <section className={styles.phoneSection}>
-            <h2>Letzte Aktivitäten</h2>
-            <div className={styles.phoneRows}>
-              {props.activities.slice(0, 4).map((item) => (
-                <div
-                  className={styles.phoneRow}
-                  key={`${item.date}-${item.description}`}
-                >
-                  <span>
-                    <strong>{item.description}</strong>
-                    <small>
-                      {item.date}, {item.user}
-                    </small>
-                  </span>
-                  <b
-                    className={
-                      item.amount >= 0 ? styles.positive : styles.negative
-                    }
-                  >
-                    {item.amount >= 0 ? "+" : ""}
-                    {euro(item.amount)}
-                  </b>
-                </div>
-              ))}
-            </div>
+            <header>
+              <h2>Letzte Aktivitäten</h2>
+            </header>
+            <PhoneRows props={props} />
           </section>
-        </>
+        </div>
       ) : section === "accounts" ? (
-        <section className={styles.phoneSection}>
-          <h2>Konten & Karten</h2>
-          <div className={styles.phoneRows}>
+        <section
+          className={styles.phoneSection}
+          role="tabpanel"
+          aria-label="Konten"
+        >
+          <header>
+            <h2>Konten</h2>
+            <button
+              type="button"
+              aria-label="Karte hinzufügen"
+              onClick={props.onAddCard}
+            >
+              <Plus aria-hidden="true" />
+            </button>
+          </header>
+          <div className={styles.phoneAccountRows}>
             {props.cards.map((card, index) => (
               <button
-                type="button"
-                className={styles.phoneRow}
                 key={card.id}
+                type="button"
+                aria-pressed={index === props.activeCardIndex}
                 onClick={() => props.onSelectCard(index)}
               >
+                <CreditCard aria-hidden="true" />
                 <span>
                   <strong>{card.details.accountName}</strong>
                   <small>{card.bankName}</small>
                 </span>
-                <b>{euro(card.balance)}</b>
+                <b>{props.euro(card.balance)}</b>
               </button>
             ))}
           </div>
+          {props.activeCard ? (
+            <dl className={styles.phoneBankDetails}>
+              <div>
+                <dt>IBAN</dt>
+                <dd>{props.activeCard.iban}</dd>
+              </div>
+              <div>
+                <dt>BIC</dt>
+                <dd>{props.activeCard.bic}</dd>
+              </div>
+              <div>
+                <dt>Synchronisiert</dt>
+                <dd>{props.activeCard.lastSync}</dd>
+              </div>
+              <div className={styles.phoneDetailActions}>
+                <button type="button" onClick={props.onEditCard}>
+                  <Pencil aria-hidden="true" /> Bearbeiten
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    props.onCopy(props.activeCard?.iban ?? "", "iban")
+                  }
+                >
+                  <Copy aria-hidden="true" />
+                  {props.copiedField === "iban" ? "Kopiert" : "Kopieren"}
+                </button>
+              </div>
+            </dl>
+          ) : null}
         </section>
       ) : (
-        <section className={styles.phoneSection}>
-          <h2>Prüfprotokoll</h2>
-          <div className={styles.phoneRows}>
+        <section
+          className={styles.phoneSection}
+          role="tabpanel"
+          aria-label="Prüfung"
+        >
+          <header>
+            <h2>Prüfprotokoll</h2>
+            <b>{props.auditLogs.length}</b>
+          </header>
+          <div className={styles.phoneAuditRows}>
             {props.auditLogs.map((entry) => (
-              <div className={styles.phoneRow} key={entry.id}>
+              <button
+                type="button"
+                key={entry.id}
+                onClick={props.onCountCash}
+              >
+                <ShieldCheck aria-hidden="true" />
                 <span>
                   <strong>{entry.note ?? "Kassenprüfung"}</strong>
                   <small>
@@ -644,9 +1071,9 @@ function PhoneFunds(props: AdaptiveFundsViewProps) {
                       : styles.negative
                   }
                 >
-                  {euro(entry.difference)}
+                  {props.euro(entry.difference)}
                 </b>
-              </div>
+              </button>
             ))}
           </div>
         </section>
@@ -656,9 +1083,7 @@ function PhoneFunds(props: AdaptiveFundsViewProps) {
 }
 
 export default function AdaptiveFundsView(props: AdaptiveFundsViewProps) {
-  return props.mode === "tablet" ? (
-    <TabletFunds {...props} />
-  ) : (
-    <PhoneFunds {...props} />
-  );
+  if (props.mode === "desktop") return <DesktopFunds {...props} />;
+  if (props.mode === "tablet") return <TabletFunds {...props} />;
+  return <PhoneFunds {...props} />;
 }

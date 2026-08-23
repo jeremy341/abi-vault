@@ -56,7 +56,7 @@ export default function AccountCard({
   return (
     <div
       key={variant}
-      className="relative aspect-[340/196] w-full max-w-[340px] min-[2200px]:max-w-[440px]"
+      className={`${styles.cardFrame} relative aspect-[340/196] w-full max-w-[340px] min-[2200px]:max-w-[440px]`}
     >
       {variant === "add" ? (
         <Image
@@ -100,7 +100,7 @@ export default function AccountCard({
               {accountName}
             </span>
 
-            <strong className="whitespace-nowrap text-[clamp(0.9rem,4.5vw,1.25rem)] font-medium tracking-[0.1em] tabular-nums sm:text-xl min-[2200px]:text-2xl">
+            <strong className={`${styles.cardNumber} whitespace-nowrap font-medium tracking-[0.1em] tabular-nums`}>
               {cardNumber}
             </strong>
 

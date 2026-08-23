@@ -25,6 +25,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useResponsivePageSize } from "@/hooks/use-responsive-page-size";
+import { usePresentationMode } from "@/hooks/use-presentation-mode";
+import phoneStyles from "./receipts-phone.module.css";
 
 type ReceiptStatus = "Geprüft" | "Zu prüfen" | "Ohne Zuordnung";
 type Receipt = {
@@ -358,7 +360,7 @@ function TransactionCombobox({
               autoFocus
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Name, Datum oder Betrag suchen ..."
+              placeholder="Name, Datum oder Betrag suchen …"
             />
           </label>
           <div
@@ -423,7 +425,144 @@ function formatAmount(amount: number) {
   return `${amount < 0 ? "-" : "+"}${Math.abs(amount).toLocaleString("de-DE", { minimumFractionDigits: 2 })} €`;
 }
 
+function PhoneReceiptsView({
+  receipts,
+  query,
+  onQueryChange,
+  status,
+  onStatusChange,
+  period,
+  onPeriodChange,
+  page,
+  pageCount,
+  total,
+  rangeStart,
+  rangeEnd,
+  onPageChange,
+  onAdd,
+}: {
+  receipts: Receipt[];
+  query: string;
+  onQueryChange: (value: string) => void;
+  status: string;
+  onStatusChange: (value: string) => void;
+  period: string;
+  onPeriodChange: (value: string) => void;
+  page: number;
+  pageCount: number;
+  total: number;
+  rangeStart: number;
+  rangeEnd: number;
+  onPageChange: (page: number) => void;
+  onAdd: () => void;
+}) {
+  return (
+    <div className={phoneStyles.root}>
+      <section className={phoneStyles.summary} aria-label="Belegstatus">
+        <div className={phoneStyles.summaryItem}>
+          <span>Alle</span>
+          <strong>24</strong>
+        </div>
+        <div className={phoneStyles.summaryItem}>
+          <span>Zu prüfen</span>
+          <strong>3</strong>
+        </div>
+        <div className={phoneStyles.summaryItem}>
+          <span>Ohne Zuordnung</span>
+          <strong>1</strong>
+        </div>
+      </section>
+
+      <div className={phoneStyles.toolbar}>
+        <label className={phoneStyles.search}>
+          <Search aria-hidden="true" />
+          <span className="sr-only">Belege suchen</span>
+          <input
+            value={query}
+            onChange={(event) => onQueryChange(event.target.value)}
+            placeholder="Dateiname oder Transaktion …"
+          />
+        </label>
+        <button
+          type="button"
+          className={phoneStyles.uploadButton}
+          onClick={onAdd}
+          aria-label="Beleg hinzufügen"
+        >
+          <Upload aria-hidden="true" />
+        </button>
+        <div className={phoneStyles.filterRow}>
+          <Dropdown
+            ariaLabel="Status"
+            value={status}
+            options={statusOptions}
+            onChange={onStatusChange}
+          />
+          <Dropdown
+            ariaLabel="Zeitraum"
+            value={period}
+            options={periodOptions}
+            onChange={onPeriodChange}
+          />
+        </div>
+      </div>
+
+      <header className={phoneStyles.listHeader}>
+        <h2>Belege</h2>
+        <span>{total} Dateien</span>
+      </header>
+
+      <div className={phoneStyles.rows}>
+        {receipts.map((receipt) => (
+          <article className={phoneStyles.row} key={receipt.id}>
+            <FileText aria-hidden="true" />
+            <span className={phoneStyles.rowMain}>
+              <strong>{receipt.file}</strong>
+              <span>
+                {receipt.transaction === "—"
+                  ? "Nicht zugeordnet"
+                  : receipt.transaction}
+              </span>
+            </span>
+            <span className={phoneStyles.rowSide}>
+              <b
+                className={
+                  receipt.amount >= 0
+                    ? phoneStyles.positive
+                    : phoneStyles.negative
+                }
+              >
+                {formatAmount(receipt.amount)}
+              </b>
+              <small
+                className={
+                  receipt.status === "Geprüft" ? "" : phoneStyles.review
+                }
+              >
+                {receipt.status}
+              </small>
+            </span>
+          </article>
+        ))}
+      </div>
+
+      <footer className={phoneStyles.footer}>
+        <span>
+          {rangeStart}-{rangeEnd} von {total}
+        </span>
+        <Pagination
+          page={page}
+          pageCount={pageCount}
+          onPageChange={onPageChange}
+        />
+      </footer>
+
+    </div>
+  );
+}
+
 export default function ReceiptsPage() {
+  const mode = usePresentationMode();
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("Alle");
   const [period, setPeriod] = useState("Alle");
@@ -475,161 +614,199 @@ export default function ReceiptsPage() {
   }
 
   return (
-    <section className={styles.page}>
-      <div className={styles.summaryGrid}>
-        <article className={styles.summaryCard}>
-          <span className={styles.summaryIcon}>
-            <FileText />
-          </span>
-          <div>
-            <span>Alle Belege</span>
-            <strong>24</strong>
-          </div>
-        </article>
-        <article className={styles.summaryCard}>
-          <span className={`${styles.summaryIcon} ${styles.warningIcon}`}>
-            <Clock3 />
-          </span>
-          <div>
-            <span>Zu prüfen</span>
-            <strong>3</strong>
-          </div>
-        </article>
-        <article className={styles.summaryCard}>
-          <span className={styles.summaryIcon}>
-            <Link2 />
-          </span>
-          <div>
-            <span>Ohne Zuordnung</span>
-            <strong>1</strong>
-          </div>
-        </article>
-      </div>
-
-      <article className={styles.listCard}>
-        <header className={styles.listHeader}>
-          <h2>Belegübersicht</h2>
-          <button
-            type="button"
-            className={styles.primaryButton}
-            onClick={() => setModalOpen(true)}
-          >
-            <Upload />
-            Beleg hinzufügen
-          </button>
-        </header>
-        <div className={styles.filters}>
-          <label className={styles.searchField}>
-            <Search />
-            <span className="sr-only">Belege suchen</span>
-            <input
-              value={query}
-              onChange={(event) => {
-                setQuery(event.target.value);
-                setPage(1);
-              }}
-              placeholder="Suche nach Dateiname oder Transaktion ..."
-            />
-          </label>
-          <Dropdown
-            ariaLabel="Status"
-            value={status}
-            options={statusOptions}
-            onChange={(value) => {
-              setStatus(value);
-              setPage(1);
-            }}
-          />
-          <Dropdown
-            ariaLabel="Zeitraum"
-            value={period}
-            options={periodOptions}
-            onChange={setPeriod}
-          />
-        </div>
-        <div className={`${styles.tableWrap} ui-data-table`}>
-          <div className={styles.tableHeader}>
-            <span>Beleg</span>
-            <span>Zugeordnete Transaktion</span>
-            <span>Datum</span>
-            <span>Betrag</span>
-            <span>Status</span>
-            <span />
-          </div>
-          <div className={styles.rows}>
-            {visible.map((receipt) => (
-              <div className={styles.row} key={receipt.id}>
-                <span className={styles.fileCell}>
-                  <span className={styles.fileIcon}>
-                    <FileText />
-                  </span>
-                  <span>
-                    <strong>{receipt.file}</strong>
-                  </span>
-                </span>
-                <span
-                  data-label="Transaktion"
-                  className={styles.transactionCell}
-                >
-                  <strong>{receipt.transaction}</strong>
-                </span>
-                <span
-                  data-label="Datum"
-                  className={`ui-tabular ${styles.muted}`}
-                >
-                  {receipt.date}
-                </span>
-                <span
-                  data-label="Betrag"
-                  className={`ui-tabular ${receipt.amount < 0 ? styles.negative : styles.positive}`}
-                >
-                  {formatAmount(receipt.amount)}
-                </span>
-                <span
-                  data-label="Status"
-                  className={`ui-badge ${styles.statusTag} ${receipt.status === "Geprüft" ? styles.checked : receipt.status === "Zu prüfen" ? styles.review : styles.unassigned}`}
-                >
-                  {receipt.status === "Geprüft" ? (
-                    <Check />
-                  ) : receipt.status === "Zu prüfen" ? (
-                    <Clock3 />
-                  ) : (
-                    <Link2 />
-                  )}
-                  {receipt.status}
-                </span>
-                <button
-                  type="button"
-                  className={styles.moreButton}
-                  aria-label={`${receipt.file} Optionen`}
-                >
-                  <MoreVertical />
-                </button>
+    <section
+      className={
+        mode === "phone"
+          ? phoneStyles.root
+          : mode === "tablet"
+            ? `${styles.page} ${styles.tabletPage}`
+            : styles.page
+      }
+    >
+      {mode === "phone" ? (
+        <PhoneReceiptsView
+          receipts={visible}
+          query={query}
+          onQueryChange={(value) => {
+            setQuery(value);
+            setPage(1);
+          }}
+          status={status}
+          onStatusChange={(value) => {
+            setStatus(value);
+            setPage(1);
+          }}
+          period={period}
+          onPeriodChange={(value) => {
+            setPeriod(value);
+            setPage(1);
+          }}
+          page={currentPage}
+          pageCount={pageCount}
+          total={filtered.length}
+          rangeStart={filtered.length ? (currentPage - 1) * pageSize + 1 : 0}
+          rangeEnd={Math.min(currentPage * pageSize, filtered.length)}
+          onPageChange={setPage}
+          onAdd={() => setModalOpen(true)}
+        />
+      ) : (
+        <>
+          <div className={styles.summaryGrid}>
+            <article className={styles.summaryCard}>
+              <span className={styles.summaryIcon}>
+                <FileText />
+              </span>
+              <div>
+                <span>Alle Belege</span>
+                <strong>24</strong>
               </div>
-            ))}
+            </article>
+            <article className={styles.summaryCard}>
+              <span className={`${styles.summaryIcon} ${styles.warningIcon}`}>
+                <Clock3 />
+              </span>
+              <div>
+                <span>Zu prüfen</span>
+                <strong>3</strong>
+              </div>
+            </article>
+            <article className={styles.summaryCard}>
+              <span className={styles.summaryIcon}>
+                <Link2 />
+              </span>
+              <div>
+                <span>Ohne Zuordnung</span>
+                <strong>1</strong>
+              </div>
+            </article>
           </div>
-        </div>
-        <footer className={styles.pagination}>
-          <span>
-            {filtered.length
-              ? `${(currentPage - 1) * pageSize + 1}–${Math.min(currentPage * pageSize, filtered.length)} von ${filtered.length}`
-              : "0 von 0"}
-          </span>
-          <Pagination
-            page={currentPage}
-            pageCount={pageCount}
-            onPageChange={setPage}
-            className={styles.pageButtons}
-          />
-        </footer>
-      </article>
+
+          <article className={styles.listCard}>
+            <header className={styles.listHeader}>
+              <h2>Belegübersicht</h2>
+              <button
+                type="button"
+                className={styles.primaryButton}
+                onClick={() => setModalOpen(true)}
+              >
+                <Upload />
+                Beleg hinzufügen
+              </button>
+            </header>
+            <div className={styles.filters}>
+              <label className={styles.searchField}>
+                <Search />
+                <span className="sr-only">Belege suchen</span>
+                <input
+                  value={query}
+                  onChange={(event) => {
+                    setQuery(event.target.value);
+                    setPage(1);
+                  }}
+              placeholder="Suche nach Dateiname oder Transaktion …"
+                />
+              </label>
+              <Dropdown
+                ariaLabel="Status"
+                value={status}
+                options={statusOptions}
+                onChange={(value) => {
+                  setStatus(value);
+                  setPage(1);
+                }}
+              />
+              <Dropdown
+                ariaLabel="Zeitraum"
+                value={period}
+                options={periodOptions}
+                onChange={setPeriod}
+              />
+            </div>
+            <div className={`${styles.tableWrap} ui-data-table`}>
+              <div className={styles.tableHeader}>
+                <span>Beleg</span>
+                <span>Zugeordnete Transaktion</span>
+                <span>Datum</span>
+                <span>Betrag</span>
+                <span>Status</span>
+                <span />
+              </div>
+              <div className={styles.rows}>
+                {visible.map((receipt) => (
+                  <div className={styles.row} key={receipt.id}>
+                    <span className={styles.fileCell}>
+                      <span className={styles.fileIcon}>
+                        <FileText />
+                      </span>
+                      <span>
+                        <strong>{receipt.file}</strong>
+                      </span>
+                    </span>
+                    <span
+                      data-label="Transaktion"
+                      className={styles.transactionCell}
+                    >
+                      <strong>{receipt.transaction}</strong>
+                    </span>
+                    <span
+                      data-label="Datum"
+                      className={`ui-tabular ${styles.muted}`}
+                    >
+                      {receipt.date}
+                    </span>
+                    <span
+                      data-label="Betrag"
+                      className={`ui-tabular ${receipt.amount < 0 ? styles.negative : styles.positive}`}
+                    >
+                      {formatAmount(receipt.amount)}
+                    </span>
+                    <span
+                      data-label="Status"
+                      className={`ui-badge ${styles.statusTag} ${receipt.status === "Geprüft" ? styles.checked : receipt.status === "Zu prüfen" ? styles.review : styles.unassigned}`}
+                    >
+                      {receipt.status === "Geprüft" ? (
+                        <Check />
+                      ) : receipt.status === "Zu prüfen" ? (
+                        <Clock3 />
+                      ) : (
+                        <Link2 />
+                      )}
+                      {receipt.status}
+                    </span>
+                    <button
+                      type="button"
+                      className={styles.moreButton}
+                      aria-label={`${receipt.file} Optionen`}
+                    >
+                      <MoreVertical />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <footer className={styles.pagination}>
+              <span>
+                {filtered.length
+                  ? `${(currentPage - 1) * pageSize + 1}–${Math.min(currentPage * pageSize, filtered.length)} von ${filtered.length}`
+                  : "0 von 0"}
+              </span>
+              <Pagination
+                page={currentPage}
+                pageCount={pageCount}
+                onPageChange={setPage}
+                className={styles.pageButtons}
+              />
+            </footer>
+          </article>
+        </>
+      )}
 
       {modalOpen ? (
         <Dialog
           label="Beleg hinzufügen"
           onClose={closeModal}
           overlayClassName={styles.overlay}
-          dialogClassName={styles.modal}
+          dialogClassName={`${styles.modal} ${mode === "phone" ? phoneStyles.phoneDialog : ""}`}
         >
           <header className={styles.modalHeader}>
             <div>

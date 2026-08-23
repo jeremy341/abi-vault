@@ -1,0 +1,398 @@
+.adaptiveShell {
+  min-height: 100dvh;
+  background: var(--ui-canvas);
+  color: var(--ui-ink);
+}
+
+.skipLink {
+  position: fixed;
+  z-index: 100;
+  top: 0.5rem;
+  left: 0.5rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.65rem;
+  background: var(--ui-ink);
+  color: var(--ui-surface);
+  font-size: 0.78rem;
+  font-weight: 650;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-120%);
+}
+
+.skipLink:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.tabletShell {
+  display: grid;
+  height: 100dvh;
+  grid-template-columns: 5.5rem minmax(0, 1fr);
+  overflow: hidden;
+  background: var(--ui-canvas);
+  padding: 0.625rem;
+}
+
+.tabletRail,
+.tabletWorkspace {
+  min-height: 0;
+  border: 1px solid var(--ui-border-subtle);
+  background: var(--ui-surface);
+}
+
+.tabletRail {
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  border-radius: 1.25rem 0 0 1.25rem;
+  padding: max(0.75rem, env(safe-area-inset-top)) 0.55rem
+    max(0.75rem, env(safe-area-inset-bottom));
+}
+
+.tabletBrand {
+  display: flex;
+  min-height: 3.75rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.tabletNav {
+  display: grid;
+  gap: 0.25rem;
+  margin-top: 0.65rem;
+}
+
+.tabletNavLink {
+  position: relative;
+  display: grid;
+  min-height: 3.65rem;
+  place-items: center;
+  gap: 0.15rem;
+  border-radius: 0.8rem;
+  color: var(--ui-muted-ink);
+  font-size: 0.58rem;
+  font-weight: 550;
+  line-height: 0.75rem;
+  text-align: center;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.tabletNavLink svg {
+  width: 1.2rem;
+  height: 1.2rem;
+  stroke-width: 1.7;
+}
+
+.tabletNavLink:hover {
+  background: rgb(0 0 0 / 0.035);
+  color: var(--ui-ink);
+}
+
+.tabletNavLink:active {
+  transform: scale(0.97);
+}
+
+.tabletNavLinkActive {
+  background: var(--ui-ink);
+  color: var(--ui-surface);
+}
+
+.tabletNavLinkActive:hover {
+  background: var(--ui-ink);
+  color: var(--ui-surface);
+}
+
+.tabletRailFooter {
+  display: flex;
+  justify-content: center;
+  margin-top: auto;
+}
+
+.tabletRailFooter button {
+  width: 3.65rem;
+  min-height: 3.5rem;
+  justify-content: center;
+  padding: 0;
+}
+
+.tabletRailFooter button span {
+  display: none;
+}
+
+.tabletWorkspace {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border-left: 0;
+  border-radius: 0 1.25rem 1.25rem 0;
+}
+
+.tabletTopbar {
+  display: flex;
+  min-height: 5rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 1.25rem;
+}
+
+.tabletTitle {
+  min-width: 0;
+}
+
+.tabletTitle h1,
+.phoneTitle h1 {
+  margin: 0;
+  overflow: hidden;
+  color: var(--ui-ink);
+  font-weight: 650;
+  letter-spacing: -0.035em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tabletTitle h1 {
+  font-size: clamp(1.55rem, 2.7vw, 2rem);
+  line-height: 1.05;
+}
+
+.tabletTitle p,
+.phoneTitle p {
+  overflow: hidden;
+  margin: 0.28rem 0 0;
+  color: var(--ui-muted-ink);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tabletTitle p {
+  font-size: 0.76rem;
+}
+
+.tabletActions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.tabletCohort,
+.iconButton {
+  display: inline-flex;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--ui-border);
+  border-radius: 0.75rem;
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+}
+
+.tabletCohort {
+  gap: 0.5rem;
+  padding-inline: 0.8rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.tabletCohort svg,
+.iconButton svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.tabletContent {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.tabletContent :global(.ui-pagination-buttons button),
+.phoneContent :global(.ui-pagination-buttons button) {
+  width: 2.75rem;
+  height: 2.75rem;
+}
+
+.phoneShell {
+  display: flex;
+  height: 100dvh;
+  overflow: hidden;
+  flex-direction: column;
+  background: var(--ui-canvas);
+}
+
+.phoneTopbar {
+  z-index: 20;
+  display: grid;
+  min-height: calc(4.25rem + env(safe-area-inset-top));
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 0 0 auto;
+  border-bottom: 1px solid var(--ui-border-subtle);
+  background: color-mix(in srgb, var(--ui-surface) 94%, transparent);
+  padding: max(0.6rem, env(safe-area-inset-top)) 1rem 0.6rem;
+  backdrop-filter: blur(16px);
+}
+
+.phoneTitle h1 {
+  font-size: 1.05rem;
+  line-height: 1.25rem;
+}
+
+.phoneTitle p {
+  max-width: 16rem;
+  font-size: 0.68rem;
+  line-height: 0.95rem;
+}
+
+.phoneActions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.phoneActions .iconButton {
+  border: 0;
+  background: transparent;
+}
+
+.phoneContent {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-bottom: calc(5.2rem + env(safe-area-inset-bottom));
+}
+
+.phoneNav {
+  position: fixed;
+  z-index: 40;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: grid;
+  min-height: calc(4.5rem + env(safe-area-inset-bottom));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  border-top: 1px solid var(--ui-border-subtle);
+  background: color-mix(in srgb, var(--ui-surface) 96%, transparent);
+  padding: 0.35rem 0.35rem max(0.35rem, env(safe-area-inset-bottom));
+  backdrop-filter: blur(18px);
+}
+
+.phoneNavLink,
+.phoneMoreButton {
+  display: grid;
+  min-width: 0;
+  min-height: 3.75rem;
+  place-items: center;
+  gap: 0.12rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: transparent;
+  color: var(--ui-muted-ink);
+  font: inherit;
+  font-size: 0.62rem;
+  font-weight: 560;
+  line-height: 0.8rem;
+}
+
+.phoneNavLink svg,
+.phoneMoreButton svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  stroke-width: 1.8;
+}
+
+.phoneNavLinkActive {
+  background: rgb(0 0 0 / 0.055);
+  color: var(--ui-ink);
+}
+
+.phoneNavLink:active,
+.phoneMoreButton:active {
+  transform: scale(0.96);
+}
+
+.phoneSheet {
+  right: 0;
+  left: 0;
+  max-height: min(78dvh, 38rem);
+  overflow: auto;
+  border-radius: 1.25rem 1.25rem 0 0;
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  overscroll-behavior: contain;
+}
+
+.phoneSheetHandle {
+  width: 2.5rem;
+  height: 0.25rem;
+  margin: 0.55rem auto 0;
+  border-radius: 999px;
+  background: var(--ui-border);
+}
+
+.phoneSheetGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  padding: 0.25rem 1rem 1rem;
+}
+
+.phoneSheetLink {
+  display: flex;
+  min-height: 4.5rem;
+  align-items: center;
+  gap: 0.7rem;
+  border: 1px solid var(--ui-border-subtle);
+  border-radius: 0.85rem;
+  padding: 0.75rem;
+  color: var(--ui-ink);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.phoneSheetLink svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.phoneSheetLinkActive {
+  border-color: var(--ui-ink);
+  background: var(--ui-ink);
+  color: var(--ui-surface);
+}
+
+.phoneSheetFooter {
+  border-top: 1px solid var(--ui-border-subtle);
+}
+
+.phoneSheetFooter button {
+  min-height: 3rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tabletNavLink,
+  .phoneNavLink,
+  .phoneMoreButton {
+    transition: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .phoneTopbar,
+  .phoneNav {
+    background: var(--ui-surface);
+    backdrop-filter: none;
+  }
+}

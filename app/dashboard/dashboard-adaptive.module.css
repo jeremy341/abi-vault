@@ -1,0 +1,559 @@
+.tabletPage,
+.phonePage {
+  color: var(--ui-ink);
+}
+
+.tabletPage {
+  display: grid;
+  height: 100%;
+  min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 1rem;
+  padding: 0 1rem 1rem;
+}
+
+.tabletMetricStrip {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr 1fr 1fr;
+  border-block: 1px solid var(--ui-border-subtle);
+  background: var(--ui-surface);
+}
+
+.tabletMetric {
+  display: grid;
+  min-width: 0;
+  gap: 0.15rem;
+  border-right: 1px solid var(--ui-border-subtle);
+  padding: 0.75rem 1rem;
+}
+
+.tabletMetric:last-child {
+  border-right: 0;
+}
+
+.tabletMetric span,
+.phoneEyebrow,
+.phoneBalanceMeta,
+.sectionMeta {
+  color: var(--ui-muted-ink);
+  font-size: 0.7rem;
+}
+
+.tabletMetric strong {
+  overflow: hidden;
+  font-size: clamp(1.05rem, 2.2vw, 1.45rem);
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.positive {
+  color: var(--ui-positive);
+}
+
+.negative {
+  color: var(--ui-negative);
+}
+
+.tabletWorkspace {
+  display: grid;
+  min-height: 0;
+  grid-template-columns: minmax(0, 1.32fr) minmax(18rem, 0.82fr);
+  gap: 1rem;
+}
+
+.tabletPrimary,
+.tabletSecondary {
+  display: grid;
+  min-height: 0;
+  gap: 1rem;
+}
+
+.tabletPrimary {
+  grid-template-rows: minmax(0, 0.92fr) minmax(0, 1.08fr);
+}
+
+.tabletSecondary {
+  grid-template-rows: minmax(0, 0.85fr) minmax(0, 0.75fr) minmax(0, 0.7fr);
+}
+
+.tabletAccount,
+.tabletTransactions,
+.tabletGoals,
+.tabletSpending,
+.tabletAttention {
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--ui-border-subtle);
+  border-radius: 1rem;
+  background: var(--ui-surface);
+}
+
+.tabletAccount {
+  display: grid;
+  grid-template-columns: minmax(15rem, 1fr) minmax(12rem, 0.72fr);
+  align-items: center;
+  gap: 1rem;
+  padding: 1.1rem;
+}
+
+.tabletCardSlot {
+  width: min(100%, 18rem);
+  justify-self: center;
+}
+
+.tabletBalance {
+  display: grid;
+  align-content: center;
+  gap: 0.35rem;
+  border-left: 1px solid var(--ui-border-subtle);
+  padding-left: 1.1rem;
+}
+
+.tabletBalance span,
+.tabletBalance p {
+  color: var(--ui-muted-ink);
+  font-size: 0.72rem;
+}
+
+.tabletBalance strong {
+  font-size: clamp(1.8rem, 3.4vw, 2.5rem);
+  font-weight: 650;
+  letter-spacing: -0.045em;
+  line-height: 1;
+}
+
+.tabletBalance p {
+  margin: 0;
+}
+
+.tabletActions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.65rem;
+}
+
+.tabletAction,
+.phoneQuickAction {
+  display: flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border: 1px solid var(--ui-border);
+  border-radius: 0.7rem;
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  font-size: 0.72rem;
+  font-weight: 620;
+}
+
+.tabletAction:first-child,
+.phoneQuickAction:first-child {
+  border-color: var(--ui-ink);
+  background: var(--ui-ink);
+  color: var(--ui-surface);
+}
+
+.tabletAction svg,
+.phoneQuickAction svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.tabletPanelHeader,
+.tabletSectionHeader,
+.phoneSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.tabletPanelHeader {
+  min-height: 3.5rem;
+  border-bottom: 1px solid var(--ui-border-subtle);
+  padding: 0.75rem 1rem;
+}
+
+.tabletPanelHeader h2,
+.tabletSectionHeader h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 650;
+  letter-spacing: -0.025em;
+}
+
+.tabletPanelHeader a,
+.tabletSectionHeader a,
+.phoneSectionHeader a {
+  display: inline-flex;
+  min-height: 2.5rem;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--ui-muted-ink);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.tabletTransactionList {
+  display: grid;
+  padding: 0.2rem 1rem 0.5rem;
+}
+
+.tabletTransaction {
+  display: grid;
+  min-height: 3.25rem;
+  grid-template-columns: minmax(0, 1fr) 6.5rem 6rem;
+  align-items: center;
+  gap: 0.65rem;
+  border-bottom: 1px solid var(--ui-border-subtle);
+  font-size: 0.72rem;
+}
+
+.tabletTransaction:last-child {
+  border-bottom: 0;
+}
+
+.tabletTransaction > span:first-child {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tabletTransaction small {
+  color: var(--ui-muted-ink);
+}
+
+.tabletTransaction b {
+  justify-self: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.tabletGoals,
+.tabletSpending,
+.tabletAttention {
+  padding: 0.95rem 1rem;
+}
+
+.tabletGoalList,
+.tabletSpendingList,
+.tabletAttentionList {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.7rem;
+}
+
+.tabletGoal {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.35rem 0.6rem;
+  padding-block: 0.35rem;
+}
+
+.tabletGoal strong,
+.tabletSpendingRow strong,
+.tabletAttentionRow strong {
+  font-size: 0.72rem;
+}
+
+.tabletGoal span,
+.tabletSpendingRow span,
+.tabletAttentionRow span {
+  color: var(--ui-muted-ink);
+  font-size: 0.66rem;
+}
+
+.tabletGoalTrack,
+.tabletSpendingTrack {
+  height: 0.32rem;
+  grid-column: 1 / -1;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.07);
+}
+
+.tabletGoalTrack i,
+.tabletSpendingTrack i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ui-ink);
+}
+
+.tabletSpendingRow {
+  display: grid;
+  grid-template-columns: 6rem minmax(0, 1fr) 2rem;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tabletAttentionRow {
+  display: grid;
+  min-height: 2.75rem;
+  grid-template-columns: 1.5rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--ui-border-subtle);
+}
+
+.tabletAttentionRow:last-child {
+  border-bottom: 0;
+}
+
+.tabletAttentionRow svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.phonePage {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  overflow: hidden;
+  padding: 0 1rem 1rem;
+}
+
+.phoneBalanceHero {
+  padding: 1.35rem 0 1.15rem;
+}
+
+.phoneBalanceHero strong {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: clamp(2.35rem, 13vw, 3.35rem);
+  font-weight: 650;
+  letter-spacing: -0.065em;
+  line-height: 0.98;
+}
+
+.phoneBalanceMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.65rem;
+}
+
+.phoneBalanceMeta b {
+  color: var(--ui-positive);
+  font-weight: 600;
+}
+
+.phoneQuickActions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  padding-bottom: 1rem;
+}
+
+.phoneQuickAction {
+  min-width: 0;
+  min-height: 3.5rem;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.65rem;
+}
+
+.phoneAccountStrip {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  border-block: 1px solid var(--ui-border-subtle);
+  padding: 0.9rem 0;
+}
+
+.phoneAccountStrip > div {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.phoneAccountStrip strong {
+  font-size: 0.9rem;
+}
+
+.phoneAccountStrip span {
+  color: var(--ui-muted-ink);
+  font-size: 0.7rem;
+}
+
+.phoneAccountStrip b {
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.phoneSection {
+  border-bottom: 1px solid var(--ui-border-subtle);
+  padding: 1rem 0;
+}
+
+.phoneSection:last-child {
+  border-bottom: 0;
+}
+
+.phoneSectionHeader h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+}
+
+.phoneTransactionList,
+.phoneGoalScroller,
+.phoneAttentionList {
+  margin-top: 0.65rem;
+}
+
+.phoneTransaction {
+  display: grid;
+  min-height: 4rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  border-bottom: 1px solid var(--ui-border-subtle);
+}
+
+.phoneTransaction:last-child {
+  border-bottom: 0;
+}
+
+.phoneTransaction > span {
+  display: grid;
+  gap: 0.18rem;
+}
+
+.phoneTransaction strong {
+  font-size: 0.82rem;
+}
+
+.phoneTransaction small {
+  color: var(--ui-muted-ink);
+  font-size: 0.68rem;
+}
+
+.phoneTransaction b {
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.phoneGoalScroller {
+  display: grid;
+  grid-auto-columns: minmax(13rem, 82%);
+  grid-auto-flow: column;
+  gap: 0.65rem;
+  overflow-x: auto;
+  padding-bottom: 0.35rem;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.phoneGoalScroller::-webkit-scrollbar {
+  display: none;
+}
+
+.phoneGoal {
+  display: grid;
+  gap: 0.4rem;
+  scroll-snap-align: start;
+  border: 1px solid var(--ui-border-subtle);
+  border-radius: 0.85rem;
+  padding: 0.85rem;
+}
+
+.phoneGoal header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.phoneGoal header strong {
+  font-size: 0.78rem;
+}
+
+.phoneGoal > strong {
+  font-size: 1.3rem;
+  letter-spacing: -0.03em;
+}
+
+.phoneGoal p {
+  margin: 0;
+  color: var(--ui-muted-ink);
+  font-size: 0.68rem;
+}
+
+.phoneGoalTrack {
+  height: 0.35rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.07);
+}
+
+.phoneGoalTrack i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ui-ink);
+}
+
+.phoneAttentionRow {
+  display: grid;
+  min-height: 3.4rem;
+  grid-template-columns: 1.5rem minmax(0, 1fr) 1rem;
+  align-items: center;
+  gap: 0.55rem;
+  border-bottom: 1px solid var(--ui-border-subtle);
+  color: var(--ui-ink);
+  font-size: 0.76rem;
+}
+
+.phoneAttentionRow:last-child {
+  border-bottom: 0;
+}
+
+.phoneAttentionRow svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+@media (max-width: 1100px) and (min-width: 768px) {
+  .tabletWorkspace {
+    grid-template-columns: minmax(0, 1.18fr) minmax(16rem, 0.82fr);
+  }
+
+  .tabletAccount {
+    grid-template-columns: minmax(13rem, 1fr) minmax(10rem, 0.7fr);
+  }
+
+  .tabletTransaction {
+    grid-template-columns: minmax(0, 1fr) 5.25rem 5.5rem;
+  }
+}
+
+@media (orientation: portrait) and (min-width: 768px) {
+  .tabletPage {
+    height: auto;
+  }
+
+  .tabletWorkspace {
+    grid-template-columns: 1fr;
+  }
+
+  .tabletPrimary,
+  .tabletSecondary {
+    grid-template-rows: auto;
+  }
+
+  .tabletSecondary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tabletAttention {
+    grid-column: 1 / -1;
+  }
+}

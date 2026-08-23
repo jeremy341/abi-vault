@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type PointerEvent } from "react";
 import { createPortal } from "react-dom";
-import { ChevronLeft, ChevronRight, Check, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AccountCard, {
   type AccountCardDetails,
@@ -12,19 +12,7 @@ import dashboardStyles from "@/app/dashboard/dashboard.module.css";
 
 type DashboardCard = { id: string; details?: Partial<AccountCardDetails> };
 
-const initialCards: DashboardCard[] = [
-  { id: "default-bank" },
-  {
-    id: "reserve-bank",
-    details: {
-      accountName: "Reservekonto",
-      cardNumber: "4921 **** **** 6710",
-      holder: "Abi Komitee",
-      expiry: "08/28",
-      color: "#3b3b40",
-    },
-  },
-];
+const initialCards: DashboardCard[] = [{ id: "default-bank" }];
 
 export default function Klassenkasse() {
   const [cardIndex, setCardIndex] = useState(0);
@@ -170,18 +158,6 @@ export default function Klassenkasse() {
             )}
           </div>
         </div>
-
-        {hasCards ? (
-          <div className={dashboardStyles.cashStatus}>
-            <span className={dashboardStyles.cashStatusIcon}>
-              <Check className="size-5 lg:size-6" strokeWidth={2.5} />
-            </span>
-            <div className={dashboardStyles.cashStatusText}>
-              <strong>Kasse stimmt überein</strong>
-              <span>Übereinstimmung: 100 %</span>
-            </div>
-          </div>
-        ) : null}
       </CardContent>
       {currentCard ? (
         <CardPreviewDialog

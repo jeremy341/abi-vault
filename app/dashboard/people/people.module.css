@@ -172,6 +172,7 @@
   padding: 0 1.5rem 1.5rem;
 }
 .personRow {
+  position: relative;
   display: grid;
   min-height: 4.5rem;
   grid-template-columns: 2.75rem minmax(0, 1.4fr) minmax(8rem, 0.8fr) auto 2rem;
@@ -256,6 +257,45 @@
 .moreButton svg {
   width: 1.1rem;
   height: 1.1rem;
+}
+
+.personMenu {
+  position: absolute;
+  z-index: 20;
+  top: calc(50% + 1rem);
+  right: 0;
+  display: grid;
+  width: 10.5rem;
+  overflow: hidden;
+  border: 1px solid var(--ui-border);
+  border-radius: 0.55rem;
+  background: var(--ui-surface);
+  box-shadow: 0 12px 28px rgb(0 0 0 / 0.12);
+}
+
+.personMenu button {
+  min-height: 2.35rem;
+  border: 0;
+  border-bottom: 1px solid var(--ui-border-subtle);
+  background: transparent;
+  padding-inline: 0.75rem;
+  color: var(--ui-ink);
+  font: inherit;
+  font-size: 0.7rem;
+  text-align: left;
+}
+
+.personMenu button:last-child {
+  border-bottom: 0;
+}
+
+.personMenu button:hover,
+.personMenu button:focus-visible {
+  background: color-mix(in srgb, var(--ui-ink) 5%, transparent);
+}
+
+.personMenu .destructiveMenuItem {
+  color: var(--ui-negative);
 }
 .emptyState {
   padding: 2rem 1.5rem;

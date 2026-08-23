@@ -26,6 +26,307 @@
   transform: translateY(0);
 }
 
+.desktopShell {
+  display: grid;
+  height: 100dvh;
+  grid-template-columns: 15.5rem minmax(0, 1fr);
+  overflow: hidden;
+  background: var(--ui-canvas);
+  padding: 0.75rem;
+}
+
+.desktopSidebar,
+.desktopWorkspace {
+  min-height: 0;
+  border: 1px solid var(--ui-border-subtle);
+  background: var(--ui-surface);
+}
+
+.desktopSidebar {
+  display: flex;
+  flex-direction: column;
+  border-radius: 1rem 0 0 1rem;
+  background: color-mix(in srgb, var(--ui-surface) 96%, var(--ui-canvas));
+  padding: 1rem 0.8rem;
+}
+
+.desktopBrand {
+  display: flex;
+  min-height: 3.5rem;
+  align-items: center;
+  padding-inline: 0.55rem;
+}
+
+.desktopActionControl {
+  position: relative;
+}
+
+.desktopActionMenu,
+.desktopNotificationPanel {
+  position: absolute;
+  z-index: 40;
+  display: grid;
+  overflow: hidden;
+  border: 1px solid var(--ui-border);
+  border-radius: 0.65rem;
+  background: var(--ui-surface);
+  box-shadow: 0 14px 32px rgb(0 0 0 / 0.13);
+}
+
+.desktopActionMenu,
+.desktopNotificationPanel {
+  top: calc(100% + 0.45rem);
+  right: 0;
+  width: 14rem;
+}
+
+.desktopActionMenu > button,
+.desktopActionMenu > a {
+  display: flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: 0.6rem;
+  border: 0;
+  border-bottom: 1px solid var(--ui-border-subtle);
+  background: transparent;
+  padding: 0.55rem 0.65rem;
+  color: var(--ui-ink);
+  font: inherit;
+  font-size: 0.7rem;
+  text-align: left;
+}
+
+.desktopActionMenu > :last-child {
+  border-bottom: 0;
+}
+
+.desktopActionMenu > button:hover,
+.desktopActionMenu > a:hover {
+  background: color-mix(in srgb, var(--ui-ink) 5%, transparent);
+}
+
+.desktopActionMenu > button > span {
+  display: grid;
+  gap: 0.08rem;
+}
+
+.desktopActionMenu small {
+  color: var(--ui-muted-ink);
+  font-size: 0.6rem;
+}
+
+.desktopActionMenu svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.desktopNotificationPanel {
+  gap: 0.2rem;
+  padding: 0.9rem;
+}
+
+.desktopNotificationPanel strong {
+  font-size: 0.75rem;
+}
+
+.desktopNotificationPanel p {
+  margin: 0;
+  color: var(--ui-muted-ink);
+  font-size: 0.68rem;
+}
+
+.desktopNavigation {
+  display: grid;
+  gap: 1.1rem;
+  margin-top: 1.25rem;
+}
+
+.desktopNavGroup {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.desktopNavGroup h2 {
+  margin: 0;
+  padding-inline: 0.75rem;
+  color: var(--ui-muted-ink);
+  font-size: 0.63rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.desktopNavGroup > div {
+  display: grid;
+  gap: 0.16rem;
+}
+
+.desktopNavLink {
+  position: relative;
+  display: flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: 0.7rem;
+  border-radius: 0.6rem;
+  padding: 0 0.75rem;
+  color: var(--ui-muted-ink);
+  font-size: 0.78rem;
+  font-weight: 560;
+  transition:
+    background-color 140ms ease,
+    color 140ms ease,
+    transform 140ms ease;
+}
+
+.desktopNavLink::before {
+  position: absolute;
+  top: 0.7rem;
+  bottom: 0.7rem;
+  left: -0.8rem;
+  width: 2px;
+  border-radius: 999px;
+  background: transparent;
+  content: "";
+}
+
+.desktopNavLink svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  stroke-width: 1.75;
+}
+
+.desktopNavLink:hover {
+  background: rgb(0 0 0 / 0.035);
+  color: var(--ui-ink);
+  transform: translateX(1px);
+}
+
+.desktopNavLinkActive {
+  background: rgb(0 0 0 / 0.055);
+  color: var(--ui-ink);
+}
+
+.desktopNavLinkActive::before {
+  background: var(--ui-ink);
+}
+
+.desktopSidebarFooter {
+  margin-top: auto;
+  border-top: 1px solid var(--ui-border-subtle);
+  padding-top: 0.65rem;
+}
+
+.desktopSidebarFooter button {
+  min-height: 2.75rem;
+  padding-inline: 0.75rem;
+}
+
+.desktopWorkspace {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border-left: 0;
+  border-radius: 0 1rem 1rem 0;
+}
+
+.desktopTopbar {
+  display: flex;
+  min-height: 5rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  border-bottom: 1px solid var(--ui-border-subtle);
+  padding: 0.75rem 1.5rem;
+}
+
+.desktopTitle {
+  min-width: 0;
+}
+
+.desktopTitle h1 {
+  overflow: hidden;
+  margin: 0;
+  font-size: clamp(1.35rem, 1.8vw, 1.75rem);
+  font-weight: 650;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.desktopTitle p {
+  overflow: hidden;
+  margin: 0.28rem 0 0;
+  color: var(--ui-muted-ink);
+  font-size: 0.72rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.desktopActions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.desktopCohort,
+.desktopIconButton {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--ui-border);
+  border-radius: 0.7rem;
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+}
+
+.desktopCohort {
+  gap: 0.5rem;
+  padding-inline: 0.8rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.desktopIconButton {
+  min-width: 2.75rem;
+}
+
+.desktopCohort svg,
+.desktopIconButton svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.desktopContent {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+@media (max-width: 1500px) and (min-width: 1280px) {
+  .desktopShell {
+    grid-template-columns: 14rem minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 2200px) {
+  .desktopShell {
+    grid-template-columns: 17rem minmax(0, 1fr);
+  }
+
+  .desktopTopbar {
+    padding-inline: 2rem;
+  }
+}
+
 .tabletShell {
   display: grid;
   height: 100dvh;

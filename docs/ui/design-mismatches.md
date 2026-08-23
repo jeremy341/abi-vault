@@ -10,9 +10,9 @@
 
 ## Remaining intentional exception
 
-| Priority | Surface | Current state | Suggested future decision |
-|---|---|---|---|
-| P2 | Account card animation | The account-card sweep/tilt remains the strongest animation in the product | Keep only if it remains an intentional identity anchor |
+| Priority | Surface                | Current state                                                              | Suggested future decision                              |
+| -------- | ---------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------ |
+| P2       | Account card animation | The account-card sweep/tilt remains the strongest animation in the product | Keep only if it remains an intentional identity anchor |
 
 ## Resolved P0 contracts
 

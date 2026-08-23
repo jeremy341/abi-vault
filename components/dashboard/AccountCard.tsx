@@ -63,6 +63,7 @@ export default function AccountCard({
           src="/cards/add-card.svg"
           alt="Karte hinzufügen"
           fill
+          loading="eager"
           sizes="(min-width: 2200px) 440px, (min-width: 1024px) 340px, min(340px, 100vw)"
           className="absolute inset-0 h-full w-full object-fill dark:invert"
         />
@@ -82,6 +83,7 @@ export default function AccountCard({
             alt=""
             aria-hidden="true"
             fill
+            loading="eager"
             sizes="(min-width: 2200px) 440px, (min-width: 1024px) 340px, min(340px, 100vw)"
             className="absolute inset-0 h-full w-full object-fill"
           />
@@ -100,7 +102,9 @@ export default function AccountCard({
               {accountName}
             </span>
 
-            <strong className={`${styles.cardNumber} whitespace-nowrap font-medium tracking-[0.1em] tabular-nums`}>
+            <strong
+              className={`${styles.cardNumber} whitespace-nowrap font-medium tracking-[0.1em] tabular-nums`}
+            >
               {cardNumber}
             </strong>
 

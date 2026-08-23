@@ -1,0 +1,353 @@
+.overlay {
+  position: fixed;
+  z-index: 90;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 1rem;
+  background: rgb(0 0 0 / 0.3);
+  backdrop-filter: blur(3px);
+  overscroll-behavior: contain;
+}
+
+.modal {
+  width: min(36rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
+  border: 1px solid var(--ui-border);
+  border-radius: 0.85rem;
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  box-shadow: var(--ui-modal-shadow);
+  overscroll-behavior: contain;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--ui-border-subtle);
+  padding: 1.15rem 1.25rem;
+}
+
+.heading {
+  min-width: 0;
+}
+
+.heading h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 650;
+  letter-spacing: -0.025em;
+}
+
+.heading p {
+  margin: 0.2rem 0 0;
+  color: var(--ui-muted-ink);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.closeButton {
+  display: inline-flex;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--ui-ink);
+}
+
+.closeButton:hover {
+  background: color-mix(in srgb, var(--ui-ink) 5%, transparent);
+}
+
+.closeButton svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.body {
+  display: grid;
+  gap: 1.05rem;
+  padding: 1rem 1.25rem 1.15rem;
+}
+
+.preview {
+  display: flex;
+  justify-content: center;
+  border: 1px solid var(--ui-border-subtle);
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, var(--ui-ink) 2%, var(--ui-surface));
+  padding: 1.1rem;
+}
+
+.section {
+  display: grid;
+  gap: 0.65rem;
+  border-top: 1px solid var(--ui-border-subtle);
+  padding-top: 1rem;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.colorOptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.colorOption {
+  position: relative;
+  display: inline-flex;
+  width: 2.75rem;
+  height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 0.55rem;
+  background: transparent;
+}
+
+.colorOption::before {
+  width: 1.8rem;
+  height: 1.8rem;
+  border: 1px solid rgb(0 0 0 / 0.16);
+  border-radius: 50%;
+  background: var(--swatch);
+  content: "";
+}
+
+.colorOption:hover {
+  background: color-mix(in srgb, var(--ui-ink) 4%, transparent);
+}
+
+.colorOption[aria-pressed="true"] {
+  border-color: var(--ui-ink);
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.field {
+  display: grid;
+  min-width: 0;
+  gap: 0.38rem;
+  color: var(--ui-ink);
+  font-size: 0.74rem;
+  font-weight: 620;
+}
+
+.input {
+  height: var(--ui-control-height);
+  border-color: var(--ui-border);
+  border-radius: var(--ui-control-radius);
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  font-weight: 430;
+}
+
+.input:hover {
+  border-color: color-mix(in srgb, var(--ui-ink) 24%, var(--ui-border));
+}
+
+.inputInvalid {
+  border-color: var(--ui-negative);
+}
+
+.fieldError {
+  min-height: 1rem;
+  color: var(--ui-negative);
+  font-size: 0.67rem;
+  font-weight: 430;
+  line-height: 1.35;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  border-top: 1px solid var(--ui-border-subtle);
+  padding: 0.85rem 1.25rem 1rem;
+}
+
+.footerSplit {
+  justify-content: space-between;
+}
+
+.footerActions {
+  display: flex;
+  gap: 0.55rem;
+}
+
+.primaryButton,
+.secondaryButton,
+.destructiveButton {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.55rem;
+  padding-inline: 0.9rem;
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.primaryButton {
+  border: 1px solid var(--ui-ink);
+  background: var(--ui-ink);
+  color: var(--ui-surface);
+}
+
+.secondaryButton {
+  border: 1px solid var(--ui-border);
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+}
+
+.destructiveButton {
+  border: 1px solid color-mix(in srgb, var(--ui-negative) 45%, var(--ui-border));
+  background: transparent;
+  color: var(--ui-negative);
+}
+
+.primaryButton:hover {
+  opacity: 0.84;
+}
+
+.secondaryButton:hover,
+.destructiveButton:hover {
+  background: color-mix(in srgb, var(--ui-ink) 4%, transparent);
+}
+
+.closeButton:focus-visible,
+.colorOption:focus-visible,
+.input:focus-visible,
+.primaryButton:focus-visible,
+.secondaryButton:focus-visible,
+.destructiveButton:focus-visible {
+  outline: 2px solid var(--ui-border-focus);
+  outline-offset: 2px;
+}
+
+.primaryButton:active,
+.secondaryButton:active,
+.destructiveButton:active,
+.closeButton:active,
+.colorOption:active {
+  transform: translateY(1px);
+}
+
+@media (min-width: 2200px) {
+  .modal {
+    width: min(42rem, calc(100vw - 3rem));
+  }
+
+  .body {
+    gap: 1.25rem;
+  }
+}
+
+@media (min-width: 768px) and (max-height: 800px) {
+  .modal {
+    width: min(42rem, calc(100vw - 2rem));
+  }
+
+  .header {
+    padding-block: 0.85rem;
+  }
+
+  .body {
+    gap: 0.75rem;
+    padding-block: 0.75rem;
+  }
+
+  .preview {
+    padding: 0.7rem;
+  }
+
+  .preview > div {
+    width: 18rem;
+  }
+
+  .section {
+    gap: 0.45rem;
+    padding-top: 0.7rem;
+  }
+
+  .footer {
+    padding-block: 0.65rem 0.75rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .modal {
+    width: 100%;
+    height: calc(100dvh - 0.5rem);
+    max-height: none;
+    border-radius: 0.9rem 0.9rem 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .header,
+  .body,
+  .footer {
+    padding-inline: 1rem;
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .footer,
+  .footerSplit {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .footerActions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .footer button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 390px) {
+  .footerActions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .primaryButton,
+  .secondaryButton,
+  .destructiveButton,
+  .closeButton,
+  .colorOption {
+    transition: none;
+  }
+}

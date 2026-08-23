@@ -1,19 +1,18 @@
 "use client";
 
+import { X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import AccountCard, {
+  type AccountCardDetails,
+} from "@/components/dashboard/AccountCard";
+import { Input } from "@/components/ui/input";
 import {
   filterLetters,
   isValidFutureExpiry,
   previewCardNumber,
 } from "@/lib/card-format";
-import AccountCard, {
-  type AccountCardDetails,
-} from "@/components/dashboard/AccountCard";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { usePresentationMode } from "@/hooks/use-presentation-mode";
+import styles from "./AccountCardModal.module.css";
 
 const cardColors = [
   { name: "Schwarz", value: "#111114" },
@@ -42,12 +41,6 @@ function formatCardNumber(value: string) {
   return digits.match(/.{1,4}/g)?.join(" ") ?? "";
 }
 
-function invalidFieldClass(error?: string) {
-  return error
-    ? "field-shake border-red-500 text-red-600 focus-visible:border-red-500 focus-visible:ring-red-500/30 dark:text-red-300"
-    : "";
-}
-
 function formatExpiry(value: string) {
   const digits = value.replace(/\D/g, "").slice(0, 4);
   return digits.length > 2
@@ -62,7 +55,6 @@ export default function EditCardModal({
   onSave,
   onDelete,
 }: EditCardModalProps) {
-  const mode = usePresentationMode();
   const [selectedColor, setSelectedColor] = useState(
     card?.color ?? cardColors[0].value,
   );
@@ -73,28 +65,28 @@ export default function EditCardModal({
     expiry: card?.expiry ?? "",
   });
   const [errors, setErrors] = useState<FormErrors>({});
-  const errorTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
-
-  useEffect(
-    () => () => {
-      if (errorTimer.current) clearTimeout(errorTimer.current);
-    },
-    [],
-  );
 
   useEffect(() => {
     if (!open) return;
+
     const previouslyFocused = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
     const form = formRef.current;
     const focusable = form?.querySelectorAll<HTMLElement>(
       'button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
     );
     const first = focusable?.[0];
     const last = focusable?.[focusable.length - 1];
-    const handleKeyDown = (event: KeyboardEvent) => {
+    const firstInput = form?.querySelector<HTMLElement>("input");
+
+    document.body.style.overflow = "hidden";
+    window.requestAnimationFrame(() => (firstInput ?? first)?.focus());
+
+    function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") onClose();
       if (event.key !== "Tab" || !first || !last) return;
+
       if (event.shiftKey && document.activeElement === first) {
         event.preventDefault();
         last.focus();
@@ -102,25 +94,22 @@ export default function EditCardModal({
         event.preventDefault();
         first.focus();
       }
-    };
-    window.requestAnimationFrame(() => first?.focus());
+    }
+
     document.addEventListener("keydown", handleKeyDown);
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = previousOverflow;
       previouslyFocused?.focus();
     };
   }, [onClose, open]);
 
-  function scheduleErrorDismissal() {
-    if (errorTimer.current) clearTimeout(errorTimer.current);
-    errorTimer.current = setTimeout(() => {
-      setErrors({});
-      errorTimer.current = null;
-    }, 2200);
-  }
+  if (!open || !card || typeof document === "undefined") return null;
 
-  if (!open || !card) return null;
-  if (typeof document === "undefined") return null;
+  function updateValue(field: keyof FormValues, value: string) {
+    setValues((current) => ({ ...current, [field]: value }));
+    setErrors((current) => ({ ...current, [field]: undefined }));
+  }
 
   function handleExpiryChange(value: string) {
     const digits = value.replace(/\D/g, "").slice(0, 4);
@@ -128,201 +117,236 @@ export default function EditCardModal({
     const invalidMonth =
       (digits.length > 0 && !["0", "1"].includes(digits[0])) ||
       (month.length === 2 && (month === "00" || Number(month) > 12));
-
     const next = formatExpiry(value);
+
     updateValue("expiry", next);
     if (invalidMonth || (next.length === 5 && !isValidFutureExpiry(next))) {
       setErrors((current) => ({
         ...current,
         expiry: "Ungültiges Ablaufdatum.",
       }));
-      scheduleErrorDismissal();
     }
-  }
-
-  function updateValue(field: keyof FormValues, value: string) {
-    setValues((current) => ({ ...current, [field]: value }));
-    setErrors((current) => ({ ...current, [field]: undefined }));
   }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const nextErrors: FormErrors = {};
-    if (!values.accountName.trim())
+
+    if (!values.accountName.trim()) {
       nextErrors.accountName = "Bitte einen Kontonamen eingeben.";
-    if (values.cardNumber.replace(/\D/g, "").length !== 16)
+    }
+    if (values.cardNumber.replace(/\D/g, "").length !== 16) {
       nextErrors.cardNumber = "Die Kartennummer muss 16 Ziffern enthalten.";
-    if (!values.holder.trim())
+    }
+    if (!values.holder.trim()) {
       nextErrors.holder = "Bitte den Karteninhaber eingeben.";
-    if (!isValidFutureExpiry(values.expiry))
+    }
+    if (!isValidFutureExpiry(values.expiry)) {
       nextErrors.expiry = "Ungültiges Ablaufdatum.";
+    }
+
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) {
-      scheduleErrorDismissal();
+      window.requestAnimationFrame(() => {
+        formRef.current
+          ?.querySelector<HTMLElement>('[aria-invalid="true"]')
+          ?.focus();
+      });
       return;
     }
+
     onSave({ ...values, color: selectedColor });
   }
 
   return createPortal(
     <div
-      className={`fixed inset-0 z-50 flex bg-black/35 backdrop-blur-[2px] ${mode === "phone" ? "items-end justify-center p-0" : "items-center justify-center p-4"}`}
+      className={styles.overlay}
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
     >
       <form
         ref={formRef}
-        onSubmit={handleSubmit}
-        noValidate
+        className={styles.modal}
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-card-title"
-        className={`${mode === "phone" ? "h-[calc(100dvh-0.5rem)] max-h-none max-w-none rounded-b-none rounded-t-2xl p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]" : "max-h-[calc(100dvh-2rem)] max-w-xl rounded-2xl p-5 sm:p-7"} w-full overflow-y-auto border border-black/10 bg-white shadow-2xl overscroll-contain dark:border-white/10 dark:bg-card`}
+        onSubmit={handleSubmit}
+        noValidate
       >
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
-              Karte bearbeiten
-            </p>
-            <h2
-              id="edit-card-title"
-              className="mt-1 text-2xl font-semibold tracking-tight"
-            >
-              Karteneinstellungen
-            </h2>
+        <header className={styles.header}>
+          <div className={styles.heading}>
+            <h2 id="edit-card-title">Kartendaten bearbeiten</h2>
+            <p>Darstellung und Kartendaten dieses Kontos aktualisieren.</p>
           </div>
-          <Button
+          <button
             type="button"
-            variant="ghost"
-            size="icon"
+            className={styles.closeButton}
             aria-label="Dialog schließen"
             onClick={onClose}
           >
-            <X />
-          </Button>
-        </div>
+            <X aria-hidden="true" />
+          </button>
+        </header>
 
-        <div className="mt-6 flex justify-center rounded-xl bg-[#f7f7f5] px-4 py-6 dark:bg-black/20">
-          <AccountCard
-            cardColor={selectedColor}
-            details={{
-              ...values,
-              accountName: values.accountName || "Bankkonto",
-              cardNumber: values.cardNumber || previewCardNumber,
-              holder: values.holder || "Mike Smith",
-              expiry: values.expiry || "06/21",
-            }}
-          />
-        </div>
-
-        <div className="my-6 h-px bg-black/10 dark:bg-white/10" />
-        <section aria-labelledby="edit-card-colors-title">
-          <h3 id="edit-card-colors-title" className="text-sm font-semibold">
-            Farben
-          </h3>
-          <div className="mt-3 flex flex-wrap gap-3">
-            {cardColors.map((color) => (
-              <button
-                key={color.value}
-                type="button"
-                aria-label={`${color.name} auswählen`}
-                aria-pressed={selectedColor === color.value}
-                className={`size-9 rounded-full border border-black/15 transition-transform hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${selectedColor === color.value ? "ring-2 ring-black ring-offset-2 dark:ring-white" : ""}`}
-                style={{ backgroundColor: color.value }}
-                onClick={() => setSelectedColor(color.value)}
-              />
-            ))}
+        <div className={styles.body}>
+          <div className={styles.preview} aria-label="Kartenvorschau">
+            <AccountCard
+              cardColor={selectedColor}
+              details={{
+                ...values,
+                accountName: values.accountName || "Bankkonto",
+                cardNumber: values.cardNumber || previewCardNumber,
+                holder: values.holder || "Mike Smith",
+                expiry: values.expiry || "06/21",
+              }}
+            />
           </div>
-        </section>
 
-        <div className="my-6 h-px bg-black/10 dark:bg-white/10" />
-        <section aria-labelledby="edit-card-information-title">
-          <h3
-            id="edit-card-information-title"
-            className="text-sm font-semibold"
+          <section className={styles.section} aria-labelledby="edit-card-colors">
+            <h3 id="edit-card-colors" className={styles.sectionTitle}>
+              Kartenfarbe
+            </h3>
+            <div className={styles.colorOptions}>
+              {cardColors.map((color) => (
+                <button
+                  key={color.value}
+                  type="button"
+                  className={styles.colorOption}
+                  aria-label={`${color.name} auswählen`}
+                  aria-pressed={selectedColor === color.value}
+                  style={
+                    { "--swatch": color.value } as React.CSSProperties
+                  }
+                  onClick={() => setSelectedColor(color.value)}
+                />
+              ))}
+            </div>
+          </section>
+
+          <section
+            className={styles.section}
+            aria-labelledby="edit-card-information"
           >
-            Karteninformationen
-          </h3>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <Field label="Kontoname" error={errors.accountName}>
-              <Input
-                required
-                aria-invalid={Boolean(errors.accountName)}
-                className={invalidFieldClass(errors.accountName)}
-                maxLength={20}
-                placeholder="Klassenkasse"
-                value={values.accountName}
-                onChange={(event) =>
-                  updateValue(
-                    "accountName",
-                    filterLetters(event.target.value, 20),
-                  )
-                }
-              />
-            </Field>
-            <Field label="Kartennummer" error={errors.cardNumber}>
-              <Input
-                required
-                aria-invalid={Boolean(errors.cardNumber)}
-                className={invalidFieldClass(errors.cardNumber)}
-                inputMode="numeric"
-                placeholder="1234 5678 9012 3456"
-                maxLength={19}
-                value={values.cardNumber}
-                onChange={(event) =>
-                  updateValue(
-                    "cardNumber",
-                    formatCardNumber(event.target.value),
-                  )
-                }
-              />
-            </Field>
-            <Field label="Karteninhaber" error={errors.holder}>
-              <Input
-                required
-                aria-invalid={Boolean(errors.holder)}
-                className={invalidFieldClass(errors.holder)}
-                maxLength={20}
-                placeholder="Max Mustermann"
-                value={values.holder}
-                onChange={(event) =>
-                  updateValue("holder", filterLetters(event.target.value, 20))
-                }
-              />
-            </Field>
-            <Field label="Ablaufdatum">
-              <Input
-                required
-                inputMode="numeric"
-                placeholder="06/28"
-                maxLength={5}
-                value={values.expiry}
-                onChange={(event) => handleExpiryChange(event.target.value)}
-                aria-invalid={Boolean(errors.expiry)}
-                className={invalidFieldClass(errors.expiry)}
-              />
-            </Field>
-          </div>
-        </section>
+            <h3 id="edit-card-information" className={styles.sectionTitle}>
+              Karteninformationen
+            </h3>
+            <div className={styles.formGrid}>
+              <Field
+                label="Kontoname"
+                error={errors.accountName}
+                errorId="edit-account-name-error"
+              >
+                <Input
+                  className={`${styles.input} ${errors.accountName ? styles.inputInvalid : ""}`}
+                  name="accountName"
+                  autoComplete="off"
+                  required
+                  aria-invalid={Boolean(errors.accountName)}
+                  aria-describedby="edit-account-name-error"
+                  maxLength={20}
+                  value={values.accountName}
+                  onChange={(event) =>
+                    updateValue(
+                      "accountName",
+                      filterLetters(event.target.value, 20),
+                    )
+                  }
+                  placeholder="Zum Beispiel Klassenkonto"
+                />
+              </Field>
+              <Field
+                label="Kartennummer"
+                error={errors.cardNumber}
+                errorId="edit-card-number-error"
+              >
+                <Input
+                  className={`${styles.input} ${errors.cardNumber ? styles.inputInvalid : ""}`}
+                  name="cardNumber"
+                  autoComplete="off"
+                  inputMode="numeric"
+                  required
+                  aria-invalid={Boolean(errors.cardNumber)}
+                  aria-describedby="edit-card-number-error"
+                  maxLength={19}
+                  value={values.cardNumber}
+                  onChange={(event) =>
+                    updateValue(
+                      "cardNumber",
+                      formatCardNumber(event.target.value),
+                    )
+                  }
+                  placeholder="1234 5678 9012 3456"
+                />
+              </Field>
+              <Field
+                label="Karteninhaber"
+                error={errors.holder}
+                errorId="edit-holder-error"
+              >
+                <Input
+                  className={`${styles.input} ${errors.holder ? styles.inputInvalid : ""}`}
+                  name="holder"
+                  autoComplete="name"
+                  required
+                  aria-invalid={Boolean(errors.holder)}
+                  aria-describedby="edit-holder-error"
+                  maxLength={20}
+                  value={values.holder}
+                  onChange={(event) =>
+                    updateValue(
+                      "holder",
+                      filterLetters(event.target.value, 20),
+                    )
+                  }
+                  placeholder="Vor- und Nachname"
+                />
+              </Field>
+              <Field
+                label="Ablaufdatum"
+                error={errors.expiry}
+                errorId="edit-expiry-error"
+              >
+                <Input
+                  className={`${styles.input} ${errors.expiry ? styles.inputInvalid : ""}`}
+                  name="expiry"
+                  autoComplete="cc-exp"
+                  inputMode="numeric"
+                  required
+                  aria-invalid={Boolean(errors.expiry)}
+                  aria-describedby="edit-expiry-error"
+                  maxLength={5}
+                  value={values.expiry}
+                  onChange={(event) => handleExpiryChange(event.target.value)}
+                  placeholder="MM/YY"
+                />
+              </Field>
+            </div>
+          </section>
+        </div>
 
-        <div className="mt-7 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <Button
+        <footer className={`${styles.footer} ${styles.footerSplit}`}>
+          <button
             type="button"
-            className="bg-red-600 text-white hover:bg-red-700"
+            className={styles.destructiveButton}
             onClick={onDelete}
           >
             Karte löschen
-          </Button>
-          <div className="flex flex-col-reverse gap-2 sm:flex-row">
-            <Button type="button" variant="ghost" onClick={onClose}>
-              Abbrechen
-            </Button>
-            <Button
-              type="submit"
-              className="bg-primary text-primary-foreground hover:bg-primary/85"
+          </button>
+          <div className={styles.footerActions}>
+            <button
+              type="button"
+              className={styles.secondaryButton}
+              onClick={onClose}
             >
+              Abbrechen
+            </button>
+            <button type="submit" className={styles.primaryButton}>
               Änderungen speichern
-            </Button>
+            </button>
           </div>
-        </div>
+        </footer>
       </form>
     </div>,
     document.body,
@@ -332,20 +356,19 @@ export default function EditCardModal({
 function Field({
   label,
   error,
+  errorId,
   children,
 }: {
   label: string;
   error?: string;
+  errorId: string;
   children: React.ReactNode;
 }) {
   return (
-    <label className="grid gap-1.5 text-sm font-medium">
-      {label}
+    <label className={styles.field}>
+      <span>{label}</span>
       {children}
-      <span
-        aria-live="polite"
-        className={`min-h-4 overflow-hidden text-xs font-normal text-red-600 transition-[opacity,transform] duration-500 dark:text-red-300 ${error ? "translate-y-0 opacity-100" : "-translate-y-1 opacity-0"}`}
-      >
+      <span id={errorId} className={styles.fieldError} aria-live="polite">
         {error || "\u00a0"}
       </span>
     </label>

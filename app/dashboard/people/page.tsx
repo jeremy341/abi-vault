@@ -10,7 +10,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Dialog } from "@/components/ui/dialog";
 import styles from "./people.module.css";
 import phoneStyles from "./people-phone.module.css";
@@ -177,6 +177,7 @@ export default function PeoplePage() {
   const [newName, setNewName] = useState("");
   const [newRole, setNewRole] = useState("Mitglied");
   const [message, setMessage] = useState("");
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const filteredPeople = useMemo(
     () =>
       people.filter((person) =>
@@ -191,6 +192,47 @@ export default function PeoplePage() {
     setModalOpen(false);
     setNewName("");
     setNewRole("Mitglied");
+  }
+
+  useEffect(() => {
+    if (openMenuId === null) return;
+
+    function closeMenu(event: KeyboardEvent | PointerEvent) {
+      if (event instanceof KeyboardEvent && event.key !== "Escape") return;
+      setOpenMenuId(null);
+    }
+
+    document.addEventListener("keydown", closeMenu);
+    document.addEventListener("pointerdown", closeMenu);
+    return () => {
+      document.removeEventListener("keydown", closeMenu);
+      document.removeEventListener("pointerdown", closeMenu);
+    };
+  }, [openMenuId]);
+
+  function cycleRole(personId: number) {
+    setPeople((current) =>
+      current.map((person) => {
+        if (person.id !== personId) return person;
+        const role = person.role.includes("Kassenwart")
+          ? "Mitglied"
+          : person.role === "Mitglied"
+            ? "Administrator"
+            : "Kassenwart";
+        return {
+          ...person,
+          role,
+          access:
+            role === "Administrator"
+              ? "Vollzugriff"
+              : role === "Kassenwart"
+                ? "Finanzen verwalten"
+                : "Nur ansehen",
+        };
+      }),
+    );
+    setMessage("Rolle aktualisiert.");
+    setOpenMenuId(null);
   }
 
   function addPerson(event: React.FormEvent<HTMLFormElement>) {
@@ -324,9 +366,70 @@ export default function PeoplePage() {
                       type="button"
                       className={styles.moreButton}
                       aria-label={`${person.name} Optionen`}
+                      aria-haspopup="menu"
+                      aria-expanded={openMenuId === person.id}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setOpenMenuId((current) =>
+                          current === person.id ? null : person.id,
+                        );
+                      }}
                     >
                       <MoreHorizontal aria-hidden="true" />
                     </button>
+                    {openMenuId === person.id ? (
+                      <div
+                        className={styles.personMenu}
+                        role="menu"
+                        aria-label={`${person.name} verwalten`}
+                        onPointerDown={(event) => event.stopPropagation()}
+                      >
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={() => cycleRole(person.id)}
+                        >
+                          Rolle wechseln
+                        </button>
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={() => {
+                            setPeople((current) =>
+                              current.map((entry) =>
+                                entry.id === person.id
+                                  ? {
+                                      ...entry,
+                                      status:
+                                        entry.status === "Aktiv"
+                                          ? "Einladung offen"
+                                          : "Aktiv",
+                                    }
+                                  : entry,
+                              ),
+                            );
+                            setMessage("Status aktualisiert.");
+                            setOpenMenuId(null);
+                          }}
+                        >
+                          Status wechseln
+                        </button>
+                        <button
+                          type="button"
+                          role="menuitem"
+                          className={styles.destructiveMenuItem}
+                          onClick={() => {
+                            setPeople((current) =>
+                              current.filter((entry) => entry.id !== person.id),
+                            );
+                            setMessage("Person entfernt.");
+                            setOpenMenuId(null);
+                          }}
+                        >
+                          Person entfernen
+                        </button>
+                      </div>
+                    ) : null}
                   </div>
                 ))}
               </div>

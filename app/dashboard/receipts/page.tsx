@@ -556,7 +556,6 @@ function PhoneReceiptsView({
           onPageChange={onPageChange}
         />
       </footer>
-
     </div>
   );
 }
@@ -703,7 +702,7 @@ export default function ReceiptsPage() {
                     setQuery(event.target.value);
                     setPage(1);
                   }}
-              placeholder="Suche nach Dateiname oder Transaktion …"
+                  placeholder="Suche nach Dateiname oder Transaktion …"
                 />
               </label>
               <Dropdown
@@ -732,6 +731,23 @@ export default function ReceiptsPage() {
                 <span />
               </div>
               <div className={styles.rows}>
+                {!visible.length ? (
+                  <div className={styles.emptyState} role="status">
+                    <strong>Keine Belege gefunden</strong>
+                    <span>Ändere die Suche oder setze die Filter zurück.</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setQuery("");
+                        setStatus("Alle");
+                        setPeriod("Alle");
+                        setPage(1);
+                      }}
+                    >
+                      Filter zurücksetzen
+                    </button>
+                  </div>
+                ) : null}
                 {visible.map((receipt) => (
                   <div className={styles.row} key={receipt.id}>
                     <span className={styles.fileCell}>

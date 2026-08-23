@@ -3,11 +3,13 @@ import Link from "next/link";
 type AbiLogoProps = {
   className?: string;
   size?: "default" | "large";
+  compact?: boolean;
 };
 
 export default function AbiLogo({
   className = "",
   size = "default",
+  compact = false,
 }: AbiLogoProps) {
   const isLarge = size === "large";
 
@@ -23,11 +25,13 @@ export default function AbiLogo({
         A
       </span>
 
-      <span
-        className={`${isLarge ? "text-base" : "text-sm"} font-semibold tracking-tight`}
-      >
-        Abi Manager
-      </span>
+      {compact ? null : (
+        <span
+          className={`${isLarge ? "text-base" : "text-sm"} font-semibold tracking-tight`}
+        >
+          Abi Manager
+        </span>
+      )}
     </Link>
   );
 }

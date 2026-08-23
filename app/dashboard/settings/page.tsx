@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import styles from "./settings.module.css";
+import phoneStyles from "./settings-phone.module.css";
+import { usePresentationMode } from "@/hooks/use-presentation-mode";
 
 type Section = "general" | "notifications" | "permissions" | "data";
 
@@ -43,7 +45,250 @@ const sections = [
   },
 ];
 
+function PhoneSettingsView({
+  activeSection,
+  onSectionChange,
+  workspaceName,
+  onWorkspaceNameChange,
+  school,
+  onSchoolChange,
+  notifications,
+  onToggleNotification,
+  statusMessage,
+  onStatusMessage,
+  onSave,
+}: {
+  activeSection: Section;
+  onSectionChange: (section: Section) => void;
+  workspaceName: string;
+  onWorkspaceNameChange: (value: string) => void;
+  school: string;
+  onSchoolChange: (value: string) => void;
+  notifications: { receipts: boolean; payments: boolean; goals: boolean };
+  onToggleNotification: (key: "receipts" | "payments" | "goals") => void;
+  statusMessage: string;
+  onStatusMessage: (message: string) => void;
+  onSave: () => void;
+}) {
+  const active =
+    sections.find((section) => section.id === activeSection) ?? sections[0];
+  const ActiveIcon = active.icon;
+
+  return (
+    <section className={phoneStyles.root}>
+      <nav className={phoneStyles.nav} aria-label="Einstellungsbereiche">
+        {sections.map((section) => {
+          const Icon = section.icon;
+          return (
+            <button
+              type="button"
+              key={section.id}
+              className={activeSection === section.id ? phoneStyles.active : ""}
+              onClick={() => onSectionChange(section.id)}
+            >
+              <Icon aria-hidden="true" />
+              <span>
+                <strong>{section.label}</strong>
+                <small>{section.description}</small>
+              </span>
+            </button>
+          );
+        })}
+      </nav>
+
+      <header className={phoneStyles.header}>
+        <div>
+          <h2>{active.label}</h2>
+          <p>{active.description}</p>
+        </div>
+        <ActiveIcon aria-hidden="true" />
+      </header>
+
+      {activeSection === "general" ? (
+        <>
+          <section className={phoneStyles.section}>
+            <div className={phoneStyles.sectionTitle}>
+              <h3>Arbeitsbereich</h3>
+              <p>Grundlegende Angaben für euren Abi-Jahrgang.</p>
+            </div>
+            <div className={phoneStyles.fields}>
+              <label>
+                <span>Name des Arbeitsbereichs</span>
+                <input
+                  name="workspaceName"
+                  autoComplete="off"
+                  value={workspaceName}
+                  onChange={(event) =>
+                    onWorkspaceNameChange(event.target.value)
+                  }
+                />
+              </label>
+              <label>
+                <span>Schule</span>
+                <input
+                  name="school"
+                  autoComplete="organization"
+                  value={school}
+                  onChange={(event) => onSchoolChange(event.target.value)}
+                />
+              </label>
+              <label>
+                <span>Abiturjahr</span>
+                <input
+                  name="graduationYear"
+                  inputMode="numeric"
+                  value="2026"
+                  readOnly
+                />
+              </label>
+              <label>
+                <span>Währung</span>
+                <span className={phoneStyles.readonly}>Euro (EUR)</span>
+              </label>
+            </div>
+          </section>
+          <section className={phoneStyles.section}>
+            <div className={phoneStyles.sectionTitle}>
+              <h3>Verantwortliche Person</h3>
+              <p>Primärer Kontakt für Finanzfragen.</p>
+            </div>
+            <div className={phoneStyles.member}>
+              <span className={phoneStyles.avatar}>J</span>
+              <span>
+                <strong>Jeremy</strong>
+                <small>Administrator</small>
+              </span>
+              <b>Aktiv</b>
+            </div>
+          </section>
+        </>
+      ) : null}
+
+      {activeSection === "notifications" ? (
+        <section className={phoneStyles.section}>
+          <div className={phoneStyles.sectionTitle}>
+            <h3>Benachrichtigungen</h3>
+            <p>Wähle, welche Ereignisse euch informieren.</p>
+          </div>
+          <div className={phoneStyles.switches}>
+            {[
+              ["receipts", "Neue Belege", "Uploads und offene Prüfungen"],
+              [
+                "payments",
+                "Fehlende Zahlungen",
+                "Offene Bargeld- oder Kontozahlungen",
+              ],
+              ["goals", "Ziel-Fortschritt", "Wichtige Fortschrittsmarken"],
+            ].map(([key, label, description]) => {
+              const checked = notifications[key as keyof typeof notifications];
+              return (
+                <div className={phoneStyles.switchRow} key={key}>
+                  <span>
+                    <strong>{label}</strong>
+                    <small>{description}</small>
+                  </span>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={checked}
+                    aria-label={`${label} ${checked ? "deaktivieren" : "aktivieren"}`}
+                    className={`${phoneStyles.switch} ${checked ? phoneStyles.switchOn : ""}`}
+                    onClick={() =>
+                      onToggleNotification(
+                        key as "receipts" | "payments" | "goals",
+                      )
+                    }
+                  >
+                    <i />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
+
+      {activeSection === "permissions" ? (
+        <section className={phoneStyles.section}>
+          <div className={phoneStyles.sectionTitle}>
+            <h3>Rollen & Zugriffe</h3>
+            <p>Wer Daten bearbeiten oder ansehen darf.</p>
+          </div>
+          <div className={phoneStyles.permissionList}>
+            <div className={phoneStyles.permission}>
+              <span>
+                <strong>Administratoren</strong>
+                <small>Vollständiger Zugriff</small>
+              </span>
+              <b>2 Personen</b>
+            </div>
+            <div className={phoneStyles.permission}>
+              <span>
+                <strong>Kassenwarte</strong>
+                <small>Finanzen verwalten</small>
+              </span>
+              <b>3 Personen</b>
+            </div>
+            <div className={phoneStyles.permission}>
+              <span>
+                <strong>Mitglieder</strong>
+                <small>Nur ansehen</small>
+              </span>
+              <b>18 Personen</b>
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      {activeSection === "data" ? (
+        <section className={phoneStyles.section}>
+          <div className={phoneStyles.sectionTitle}>
+            <h3>Daten & Sicherung</h3>
+            <p>Exportiere eine Kopie eurer Finanzdaten.</p>
+          </div>
+          <div className={phoneStyles.dataList}>
+            <button
+              type="button"
+              className={phoneStyles.dataButton}
+              onClick={() => onStatusMessage("Datenexport vorbereitet.")}
+            >
+              <span>
+                <strong>Alle Daten exportieren</strong>
+                <small>Transaktionen, Belege und Ziele</small>
+              </span>
+              <Download aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              className={phoneStyles.dataButton}
+              onClick={() => onStatusMessage("Belegarchiv vorbereitet.")}
+            >
+              <span>
+                <strong>Belegarchiv exportieren</strong>
+                <small>Alle hochgeladenen Dateien</small>
+              </span>
+              <Download aria-hidden="true" />
+            </button>
+          </div>
+        </section>
+      ) : null}
+
+      <footer className={phoneStyles.footer}>
+        <p aria-live="polite">{statusMessage || "\u00a0"}</p>
+        <button
+          type="button"
+          className={phoneStyles.saveButton}
+          onClick={onSave}
+        >
+          <Save aria-hidden="true" /> Änderungen speichern
+        </button>
+      </footer>
+    </section>
+  );
+}
+
 export default function SettingsPage() {
+  const mode = usePresentationMode();
   const [activeSection, setActiveSection] = useState<Section>("general");
   const [workspaceName, setWorkspaceName] = useState("Abi 2026");
   const [school, setSchool] = useState("Musterschule Berlin");
@@ -66,6 +311,27 @@ export default function SettingsPage() {
   const active =
     sections.find((section) => section.id === activeSection) ?? sections[0];
   const ActiveIcon = active.icon;
+
+  if (mode === "phone") {
+    return (
+      <PhoneSettingsView
+        activeSection={activeSection}
+        onSectionChange={(section) => {
+          setActiveSection(section);
+          setStatusMessage("");
+        }}
+        workspaceName={workspaceName}
+        onWorkspaceNameChange={setWorkspaceName}
+        school={school}
+        onSchoolChange={setSchool}
+        notifications={notifications}
+        onToggleNotification={toggleNotification}
+        statusMessage={statusMessage}
+        onStatusMessage={setStatusMessage}
+        onSave={saveSettings}
+      />
+    );
+  }
 
   return (
     <section className={styles.page}>

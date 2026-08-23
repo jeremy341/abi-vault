@@ -27,6 +27,9 @@ import AddCardModal from "@/components/dashboard/AddCardModal";
 import EditCardModal from "@/components/dashboard/EditCardModal";
 import { Dialog } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import AdaptiveFundsView from "@/components/presentation/AdaptiveFundsView";
+import { usePresentationMode } from "@/hooks/use-presentation-mode";
+import adaptiveStyles from "./funds-adaptive.module.css";
 
 type DashboardCard = {
   id: string;
@@ -189,6 +192,7 @@ const euro = (val: number) =>
   }) + " €";
 
 export default function FundsPage() {
+  const mode = usePresentationMode();
   const [cards, setCards] = useState<DashboardCard[]>(initialCards);
   const [activeCardIndex, setActiveCardIndex] = useState(0);
   const [cashBox, setCashBox] = useState<CashBox>(initialCashBox);
@@ -382,870 +386,911 @@ export default function FundsPage() {
   }
 
   return (
-    <section className={styles.page}>
-      <div className={styles.summaryGrid}>
-        <article className={styles.summaryCard}>
-          <span className={styles.summaryIcon}>
-            <CreditCard aria-hidden="true" />
-          </span>
-          <div>
-            <span>Gesamt verfügbar</span>
-            <strong className={styles.summaryAmount}>
-              {euro((activeCard?.balance ?? 0) + cashBox.balance)}
-            </strong>
-            <small>Bank und Barkasse</small>
-          </div>
-        </article>
-        <article className={styles.summaryCard}>
-          <span className={styles.summaryIcon}>
-            <Landmark aria-hidden="true" />
-          </span>
-          <div>
-            <span>Bankguthaben</span>
-            <strong className={styles.summaryAmount}>
-              {euro(activeCard?.balance ?? 0)}
-            </strong>
-            <small>API synchronisiert</small>
-          </div>
-        </article>
-        <article className={styles.summaryCard}>
-          <span className={styles.summaryIcon}>
-            <Banknote aria-hidden="true" />
-          </span>
-          <div>
-            <span>Bargeldbestand</span>
-            <strong className={styles.summaryAmount}>
-              {euro(cashBox.balance)}
-            </strong>
-            <small>Zuletzt geprüft: {cashBox.lastCountDate}</small>
-          </div>
-        </article>
-        <article className={styles.summaryCard}>
-          <span className={styles.summaryIcon}>
-            <Check aria-hidden="true" />
-          </span>
-          <div>
-            <span>Abgleich</span>
-            <strong className={styles.summaryStatus}>Stimmt</strong>
-            <small>Keine Differenz festgestellt</small>
-          </div>
-        </article>
-      </div>
-
-      <Tabs defaultValue="overview" className={styles.financeWorkspace}>
-        <header className={styles.workspaceHeader}>
-          <div>
-            <h2>Finanzverwaltung</h2>
-            <p>Konten, Barkasse und Prüfungen an einem Ort.</p>
-          </div>
-          <TabsList variant="line" className={styles.workspaceTabs}>
-            <TabsTrigger value="overview">Übersicht</TabsTrigger>
-            <TabsTrigger value="accounts">Konten & Daten</TabsTrigger>
-            <TabsTrigger value="audit">Prüfung & Zugriff</TabsTrigger>
-          </TabsList>
-        </header>
-
-        <TabsContent value="overview" className={styles.tabContent}>
-          <div className={styles.referenceOverviewGrid}>
-            <section className={styles.cardShowcasePanel}>
-              <div className={styles.cardShowcaseBody}>
-                <button
-                  type="button"
-                  className={styles.carouselNav}
-                  onClick={() => switchCard(-1)}
-                  disabled={cards.length <= 1}
-                  aria-label="Vorherige Karte"
-                >
-                  <ChevronLeft aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
-                  className={styles.cardShowcaseSlot}
-                  onClick={() => setIsEditCardOpen(true)}
-                  aria-label="Karte bearbeiten"
-                >
-                  <span
-                    key={activeCard?.id ?? "add-card"}
-                    className={cardStyles.switchIn}
-                  >
-                    {activeCard ? (
-                      <AccountCard
-                        variant="bank"
-                        details={activeCard.details}
-                        cardColor={activeCard.details.color}
-                      />
-                    ) : (
-                      <AccountCard variant="add" />
-                    )}
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  className={styles.carouselNav}
-                  onClick={() => switchCard(1)}
-                  disabled={cards.length <= 1}
-                  aria-label="Nächste Karte"
-                >
-                  <ChevronRight aria-hidden="true" />
-                </button>
+    <section className={mode === "desktop" ? styles.page : adaptiveStyles.root}>
+      {mode === "desktop" ? (
+        <>
+          <div className={styles.summaryGrid}>
+            <article className={styles.summaryCard}>
+              <span className={styles.summaryIcon}>
+                <CreditCard aria-hidden="true" />
+              </span>
+              <div>
+                <span>Gesamt verfügbar</span>
+                <strong className={styles.summaryAmount}>
+                  {euro((activeCard?.balance ?? 0) + cashBox.balance)}
+                </strong>
+                <small>Bank und Barkasse</small>
               </div>
-              <div className={styles.cardPosition}>
-                <i aria-hidden="true" />
-                <span>
-                  Karte {safeIndex + 1} von {cards.length}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setIsAddCardOpen(true)}
-                  aria-label="Karte hinzufügen"
-                >
-                  <Plus aria-hidden="true" />
-                </button>
-              </div>
-            </section>
-
-            <section className={styles.cashOverviewPanel}>
-              <div className={styles.cashOverviewBody}>
-                <h2>Barkasse</h2>
-                <div className={styles.cashOverviewRows}>
-                  <div>
-                    <span>Aktueller Bestand</span>
-                    <strong className={styles.activityPositive}>
-                      {euro(cashBox.balance)}
-                    </strong>
-                  </div>
-                  <div>
-                    <span>Verantwortlich</span>
-                    <strong>{cashBox.responsible}</strong>
-                  </div>
-                  <div>
-                    <span>Letzte Zählung</span>
-                    <strong>{cashBox.lastCountDate}, 18:32 Uhr</strong>
-                  </div>
-                  <div>
-                    <span>Gezählt von</span>
-                    <strong>{cashBox.responsible}</strong>
-                  </div>
-                </div>
-                <div className={styles.cashOverviewActions}>
-                  <button
-                    type="button"
-                    className={styles.primaryButton}
-                    onClick={() => setIsCountOpen(true)}
-                  >
-                    <Banknote aria-hidden="true" />
-                    Kasse zählen
-                  </button>
-                  <button
-                    type="button"
-                    className={styles.secondaryButton}
-                    onClick={() => {
-                      setTransferDirection("cash-to-bank");
-                      setIsTransferOpen(true);
-                    }}
-                  >
-                    <ArrowRightLeft aria-hidden="true" />
-                    Umbuchung
-                  </button>
-                </div>
-              </div>
-            </section>
-
-            <section className={styles.reconciliationCard}>
-              <h2>Kassenabgleich</h2>
-              <div className={styles.reconciliationStatus}>
-                <span>
-                  <Check aria-hidden="true" />
-                </span>
-                <strong>Stimmt</strong>
-              </div>
-              <div className={styles.reconciliationRows}>
-                <div>
-                  <span>Letzte Zählung</span>
-                  <strong>{cashBox.lastCountDate}, 18:32 Uhr</strong>
-                </div>
-                <div>
-                  <span>Soll (laut Buchhaltung)</span>
-                  <strong>{euro(cashBox.balance)}</strong>
-                </div>
-                <div>
-                  <span>Ist (gezählt)</span>
-                  <strong>{euro(cashBox.balance)}</strong>
-                </div>
-                <div>
-                  <span>Differenz</span>
-                  <strong>0,00 €</strong>
-                </div>
-              </div>
-              <div className={styles.reconciliationActions}>
-                <button
-                  type="button"
-                  className={styles.primaryButton}
-                  onClick={() => setIsCountOpen(true)}
-                >
-                  <Check aria-hidden="true" />
-                  Neuen Abgleich durchführen
-                </button>
-              </div>
-            </section>
-          </div>
-
-          <div className={styles.referenceLowerGrid}>
-            <section className={styles.referenceActivityCard}>
-              <header className={styles.referencePanelHeader}>
-                <div>
-                  <h2>Letzte Aktivitäten</h2>
-                  <p>Aktuelle Bewegungen aus allen Konten</p>
-                </div>
-                <Activity aria-hidden="true" />
-              </header>
-              <div className={styles.referenceActivityRows}>
-                <div className={styles.referenceActivityHeader}>
-                  <span>Datum</span>
-                  <span>Typ</span>
-                  <span>Beschreibung</span>
-                  <span>Betrag</span>
-                  <span>Benutzer</span>
-                </div>
-                {recentAccountActivity.map((entry) => (
-                  <button
-                    type="button"
-                    className={styles.referenceActivityRow}
-                    key={`${entry.label}-${entry.date}`}
-                  >
-                    <time>{entry.date}</time>
-                    <span className={styles.activityType}>{entry.type}</span>
-                    <span>{entry.description}</span>
-                    <b
-                      className={
-                        entry.amount > 0
-                          ? styles.activityPositive
-                          : styles.activityNegative
-                      }
-                    >
-                      {entry.amount > 0 ? "+" : "−"}
-                      {euro(Math.abs(entry.amount))}
-                    </b>
-                    <span>{entry.user}</span>
-                  </button>
-                ))}
-              </div>
-              <button type="button" className={styles.referenceLink}>
-                Alle Aktivitäten anzeigen <ChevronRight aria-hidden="true" />
-              </button>
-            </section>
-
-            <section className={styles.referenceBankDetailsCard}>
-              <header className={styles.referencePanelHeader}>
-                <div>
-                  <h2>Bankdetails</h2>
-                  <p>Verbundene Kontodaten</p>
-                </div>
+            </article>
+            <article className={styles.summaryCard}>
+              <span className={styles.summaryIcon}>
                 <Landmark aria-hidden="true" />
-              </header>
-              <div className={styles.referenceBankDetailRow}>
-                <div>
-                  <span>IBAN</span>
-                  <strong>
-                    {activeCard?.iban ?? "DE89 3704 0044 0532 0143 21"}
-                  </strong>
-                </div>
-                <button
-                  type="button"
-                  onClick={() =>
-                    copyToClipboard(activeCard?.iban ?? "", "iban")
-                  }
-                  aria-label="IBAN kopieren"
-                >
-                  {copiedField === "iban" ? (
-                    <Check aria-hidden="true" />
-                  ) : (
-                    <Copy aria-hidden="true" />
-                  )}
-                </button>
+              </span>
+              <div>
+                <span>Bankguthaben</span>
+                <strong className={styles.summaryAmount}>
+                  {euro(activeCard?.balance ?? 0)}
+                </strong>
+                <small>API synchronisiert</small>
               </div>
-              <div className={styles.referenceBankDetailRow}>
-                <div>
-                  <span>BIC</span>
-                  <strong>{activeCard?.bic ?? "COBADEFFXXX"}</strong>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => copyToClipboard(activeCard?.bic ?? "", "bic")}
-                  aria-label="BIC kopieren"
-                >
-                  {copiedField === "bic" ? (
-                    <Check aria-hidden="true" />
-                  ) : (
-                    <Copy aria-hidden="true" />
-                  )}
-                </button>
+            </article>
+            <article className={styles.summaryCard}>
+              <span className={styles.summaryIcon}>
+                <Banknote aria-hidden="true" />
+              </span>
+              <div>
+                <span>Bargeldbestand</span>
+                <strong className={styles.summaryAmount}>
+                  {euro(cashBox.balance)}
+                </strong>
+                <small>Zuletzt geprüft: {cashBox.lastCountDate}</small>
               </div>
-            </section>
+            </article>
+            <article className={styles.summaryCard}>
+              <span className={styles.summaryIcon}>
+                <Check aria-hidden="true" />
+              </span>
+              <div>
+                <span>Abgleich</span>
+                <strong className={styles.summaryStatus}>Stimmt</strong>
+                <small>Keine Differenz festgestellt</small>
+              </div>
+            </article>
           </div>
 
-          {/* 1. TOP TWO-COLUMN HUB: BANK CARD HUB & CASH BOX HUB */}
-          <div className={styles.topHubGrid}>
-            {/* LEFT HUB: Bank Card Showcase */}
-            <div className={styles.hubCard}>
-              <div className={styles.hubHeader}>
-                <div className={styles.hubTitleGroup}>
-                  <span className={styles.hubIconBubble}>
-                    <CreditCard aria-hidden="true" />
-                  </span>
-                  <h2>{activeCard?.details.accountName ?? "Bankkonto"}</h2>
-                </div>
-                <span
-                  style={{
-                    fontSize: "0.75rem",
-                    color: "var(--ui-positive)",
-                    background: "var(--ui-positive-soft)",
-                    padding: "0.25rem 0.65rem",
-                    borderRadius: "999px",
-                    fontWeight: 500,
-                  }}
-                >
-                  ✓ Sparkasse · API synchron
-                </span>
+          <Tabs defaultValue="overview" className={styles.financeWorkspace}>
+            <header className={styles.workspaceHeader}>
+              <div>
+                <h2>Finanzverwaltung</h2>
+                <p>Konten, Barkasse und Prüfungen an einem Ort.</p>
               </div>
+              <TabsList variant="line" className={styles.workspaceTabs}>
+                <TabsTrigger value="overview">Übersicht</TabsTrigger>
+                <TabsTrigger value="accounts">Konten & Daten</TabsTrigger>
+                <TabsTrigger value="audit">Prüfung & Zugriff</TabsTrigger>
+              </TabsList>
+            </header>
 
-              <div className={styles.cardDisplayArea}>
-                <div className={styles.cardStage}>
-                  {cards.length > 1 && (
+            <TabsContent value="overview" className={styles.tabContent}>
+              <div className={styles.referenceOverviewGrid}>
+                <section className={styles.cardShowcasePanel}>
+                  <div className={styles.cardShowcaseBody}>
                     <button
                       type="button"
                       className={styles.carouselNav}
                       onClick={() => switchCard(-1)}
+                      disabled={cards.length <= 1}
                       aria-label="Vorherige Karte"
                     >
                       <ChevronLeft aria-hidden="true" />
                     </button>
-                  )}
-
-                  <div
-                    className={styles.cardSlot}
-                    onClick={() => setIsEditCardOpen(true)}
-                    title="Klicken zum Bearbeiten"
-                  >
-                    {activeCard ? (
-                      <AccountCard
-                        variant="bank"
-                        details={activeCard.details}
-                        cardColor={activeCard.details.color}
-                      />
-                    ) : (
-                      <AccountCard variant="add" />
-                    )}
-                  </div>
-
-                  {cards.length > 1 && (
+                    <button
+                      type="button"
+                      className={styles.cardShowcaseSlot}
+                      onClick={() => setIsEditCardOpen(true)}
+                      aria-label="Karte bearbeiten"
+                    >
+                      <span
+                        key={activeCard?.id ?? "add-card"}
+                        className={cardStyles.switchIn}
+                      >
+                        {activeCard ? (
+                          <AccountCard
+                            variant="bank"
+                            details={activeCard.details}
+                            cardColor={activeCard.details.color}
+                          />
+                        ) : (
+                          <AccountCard variant="add" />
+                        )}
+                      </span>
+                    </button>
                     <button
                       type="button"
                       className={styles.carouselNav}
                       onClick={() => switchCard(1)}
+                      disabled={cards.length <= 1}
                       aria-label="Nächste Karte"
                     >
                       <ChevronRight aria-hidden="true" />
                     </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Balance & Actions Row */}
-              <div className={styles.cardSummaryRow}>
-                <div className={styles.cardBalanceInfo}>
-                  <span>Verfügbares Bankguthaben</span>
-                  <strong>{euro(activeCard?.balance ?? 0)}</strong>
-                </div>
-
-                <div className={styles.cardActionButtons}>
-                  <button
-                    type="button"
-                    className={styles.smallSecondaryButton}
-                    onClick={() => setIsEditCardOpen(true)}
-                  >
-                    <Pencil aria-hidden="true" />
-                    <span>Bearbeiten</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={styles.smallPrimaryButton}
-                    onClick={() => {
-                      setTransferDirection("bank-to-cash");
-                      setTransferError("");
-                      setIsTransferOpen(true);
-                    }}
-                  >
-                    <ArrowRightLeft aria-hidden="true" />
-                    <span>Bargeld abheben</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* RIGHT HUB: Cash Box & Cash Verification */}
-            <div className={styles.hubCard}>
-              <div className={styles.hubHeader}>
-                <div className={styles.hubTitleGroup}>
-                  <span
-                    className={`${styles.hubIconBubble} ${styles.hubIconBubbleCash}`}
-                  >
-                    <Banknote aria-hidden="true" />
-                  </span>
-                  <h2>{cashBox.name}</h2>
-                </div>
-                <span
-                  style={{
-                    fontSize: "0.75rem",
-                    color: "var(--ui-muted-ink)",
-                    background: "rgb(0 0 0 / 0.04)",
-                    padding: "0.25rem 0.65rem",
-                    borderRadius: "999px",
-                    fontWeight: 500,
-                  }}
-                >
-                  Physische Kasse
-                </span>
-              </div>
-
-              <div className={styles.cashHubBody}>
-                <div className={styles.cashBalanceHighlight}>
-                  <div>
-                    <span>Bargeldbestand (Handkasse)</span>
-                    <strong>{euro(cashBox.balance)}</strong>
                   </div>
-                  <span
-                    style={{
-                      fontSize: "0.75rem",
-                      color: "var(--ui-positive)",
-                      fontWeight: 600,
-                    }}
-                  >
-                    100 % abgeglichen
-                  </span>
-                </div>
-
-                <div className={styles.reconcileStatusBox}>
-                  <span className={styles.reconcileIcon}>
-                    <Check aria-hidden="true" />
-                  </span>
-                  <div>
-                    <strong>Kassenprüfung stimmt überein</strong>
-                    <span>Letzter Kassensturz: {cashBox.lastCountDate}</span>
-                  </div>
-                </div>
-
-                <div className={styles.reconcileInfoList}>
-                  <div className={styles.reconcileInfoRow}>
-                    <span>Verantwortlicher Kassenwart</span>
-                    <strong>{cashBox.responsible}</strong>
-                  </div>
-                  <div className={styles.reconcileInfoRow}>
-                    <span>Zuletzt gezählter Betrag</span>
-                    <strong>{euro(cashBox.balance)}</strong>
-                  </div>
-                  <div className={styles.reconcileInfoRow}>
-                    <span>Festgestellte Differenz</span>
-                    <strong style={{ color: "var(--ui-positive)" }}>
-                      0,00 €
-                    </strong>
-                  </div>
-                </div>
-
-                <div className={styles.cashHubActions}>
-                  <button
-                    type="button"
-                    className={styles.secondaryButton}
-                    onClick={() => {
-                      setCountMode("direct");
-                      setCountedAmountInput(
-                        cashBox.balance.toString().replace(".", ","),
-                      );
-                      setCountPerson(cashBox.responsible);
-                      setCountNote("");
-                      setCountError("");
-                      setIsCountOpen(true);
-                    }}
-                    style={{ flex: 1 }}
-                  >
-                    <Banknote aria-hidden="true" />
-                    <span>Kasse zählen</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    className={styles.primaryButton}
-                    onClick={() => {
-                      setTransferDirection("cash-to-bank");
-                      setTransferError("");
-                      setIsTransferOpen(true);
-                    }}
-                    style={{ flex: 1 }}
-                  >
-                    <ArrowRightLeft aria-hidden="true" />
-                    <span>Auf Bank einzahlen</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <article className={styles.activityCard}>
-            <div className={styles.panelHeader}>
-              <div>
-                <h2>Letzte Kontobewegungen</h2>
-                <p>Aktuelle Buchungen aus Bankkonto und Barkasse</p>
-              </div>
-              <Activity aria-hidden="true" />
-            </div>
-            <div className={styles.activityList}>
-              {recentAccountActivity.map((entry) => (
-                <div
-                  className={styles.activityRow}
-                  key={`${entry.label}-${entry.date}`}
-                >
-                  <span className={styles.activityIcon} aria-hidden="true">
-                    {entry.amount > 0 ? "+" : "−"}
-                  </span>
-                  <span className={styles.activityIdentity}>
-                    <strong>{entry.label}</strong>
-                    <small>{entry.meta}</small>
-                  </span>
-                  <time>{entry.date}</time>
-                  <strong
-                    className={
-                      entry.amount > 0
-                        ? styles.activityPositive
-                        : styles.activityNegative
-                    }
-                  >
-                    {entry.amount > 0 ? "+" : "−"}
-                    {euro(Math.abs(entry.amount))}
-                  </strong>
-                </div>
-              ))}
-            </div>
-          </article>
-        </TabsContent>
-
-        <TabsContent value="accounts" className={styles.tabContent}>
-          <section className={styles.accountManager}>
-            <div>
-              <h3>Konten & Karten</h3>
-              <p>Bankkarten verwalten und Kontodaten bereitstellen.</p>
-            </div>
-            <div className={styles.accountManagerActions}>
-              <button
-                type="button"
-                className={styles.secondaryButton}
-                onClick={() => setIsEditCardOpen(true)}
-              >
-                <Pencil aria-hidden="true" />
-                Karte bearbeiten
-              </button>
-              <button
-                type="button"
-                className={styles.primaryButton}
-                onClick={() => setIsAddCardOpen(true)}
-              >
-                <Plus aria-hidden="true" />
-                Konto hinzufügen
-              </button>
-            </div>
-          </section>
-
-          {/* 2. MIDDLE SECTION: BANKING TRANSFER DETAILS & IBAN COPY HELPER */}
-          <section className={styles.bankDetailsCard}>
-            <div className={styles.bankDetailsHeader}>
-              <div className={styles.bankDetailsHeaderLeft}>
-                <span className={styles.hubIconBubble}>
-                  <Landmark aria-hidden="true" />
-                </span>
-                <div>
-                  <h3>Bankverbindung für Überweisungen</h3>
-                  <p>
-                    Offizielle Kontodaten für Schüler, Eltern, Sponsoren und
-                    Fördervereine
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className={styles.bankDetailsGrid}>
-              <div className={styles.bankDetailBox}>
-                <div>
-                  <span>IBAN</span>
-                  <strong>{activeCard?.iban}</strong>
-                </div>
-                <button
-                  type="button"
-                  className={styles.copyButton}
-                  onClick={() =>
-                    copyToClipboard(activeCard?.iban ?? "", "iban")
-                  }
-                  title="IBAN kopieren"
-                  aria-label="IBAN in Zwischenablage kopieren"
-                >
-                  {copiedField === "iban" ? (
-                    <Check className="size-4 text-[var(--ui-positive)]" />
-                  ) : (
-                    <Copy className="size-4" />
-                  )}
-                </button>
-              </div>
-
-              <div className={styles.bankDetailBox}>
-                <div>
-                  <span>BIC / SWIFT</span>
-                  <strong>{activeCard?.bic}</strong>
-                </div>
-                <button
-                  type="button"
-                  className={styles.copyButton}
-                  onClick={() => copyToClipboard(activeCard?.bic ?? "", "bic")}
-                  title="BIC kopieren"
-                  aria-label="BIC in Zwischenablage kopieren"
-                >
-                  {copiedField === "bic" ? (
-                    <Check className="size-4 text-[var(--ui-positive)]" />
-                  ) : (
-                    <Copy className="size-4" />
-                  )}
-                </button>
-              </div>
-
-              <div className={styles.bankDetailBox}>
-                <div>
-                  <span>Kontoinhaber</span>
-                  <strong>
-                    {activeCard?.details.holder || "Abi-Komitee 2026"}
-                  </strong>
-                </div>
-                <button
-                  type="button"
-                  className={styles.copyButton}
-                  onClick={() =>
-                    copyToClipboard(
-                      activeCard?.details.holder || "Abi-Komitee 2026",
-                      "holder",
-                    )
-                  }
-                  title="Inhaber kopieren"
-                  aria-label="Inhaber in Zwischenablage kopieren"
-                >
-                  {copiedField === "holder" ? (
-                    <Check className="size-4 text-[var(--ui-positive)]" />
-                  ) : (
-                    <Copy className="size-4" />
-                  )}
-                </button>
-              </div>
-
-              <div className={styles.bankDetailBox}>
-                <div>
-                  <span>Muster-Verwendungszweck</span>
-                  <strong>[Vorname Nachname] - Abi 2026</strong>
-                </div>
-                <button
-                  type="button"
-                  className={styles.copyButton}
-                  onClick={() =>
-                    copyToClipboard("[Vorname Nachname] - Abi 2026", "purpose")
-                  }
-                  title="Verwendungszweck kopieren"
-                  aria-label="Verwendungszweck in Zwischenablage kopieren"
-                >
-                  {copiedField === "purpose" ? (
-                    <Check className="size-4 text-[var(--ui-positive)]" />
-                  ) : (
-                    <Copy className="size-4" />
-                  )}
-                </button>
-              </div>
-            </div>
-          </section>
-
-          <div className={styles.cardPills}>
-            {cards.map((card, idx) => (
-              <button
-                key={card.id}
-                type="button"
-                className={`${styles.cardPill} ${idx === safeIndex ? styles.cardPillActive : ""}`}
-                onClick={() => setActiveCardIndex(idx)}
-              >
-                <span
-                  className={styles.cardPillDot}
-                  style={{ backgroundColor: card.details.color || "#111114" }}
-                />
-                <span>{card.details.accountName}</span>
-              </button>
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="audit" className={styles.tabContent}>
-          {/* 3. BOTTOM SECTION: CASH AUDIT PROTOCOL & SECURITY / SIGNATORIES */}
-          <div className={styles.bottomGrid}>
-            {/* Left: Kassenbuch & Prüfprotokoll */}
-            <article className={styles.auditCard}>
-              <div className={styles.panelHeader}>
-                <div>
-                  <h2>Kassenbuch & Prüfprotokoll (Audit)</h2>
-                  <p>Vollständiger Nachweis aller Kassenstürze der Barkasse</p>
-                </div>
-                <button
-                  type="button"
-                  className={styles.smallPrimaryButton}
-                  onClick={() => {
-                    setCountMode("direct");
-                    setCountedAmountInput(
-                      cashBox.balance.toString().replace(".", ","),
-                    );
-                    setCountPerson(cashBox.responsible);
-                    setCountNote("");
-                    setCountError("");
-                    setIsCountOpen(true);
-                  }}
-                >
-                  <Plus aria-hidden="true" />
-                  <span>Kassensturz erfassen</span>
-                </button>
-              </div>
-
-              <div className={styles.auditTableWrap}>
-                <div className={styles.auditTableHeader}>
-                  <span>Datum</span>
-                  <span>Kassenprüfer</span>
-                  <span>Zählbetrag</span>
-                  <span>Buchbestand</span>
-                  <span>Status</span>
-                </div>
-
-                {auditLogs.map((log) => (
-                  <div key={log.id} className={styles.auditTableRow}>
-                    <span style={{ color: "var(--ui-muted-ink)" }}>
-                      {log.date}
-                    </span>
-                    <strong>{log.auditor}</strong>
-                    <span style={{ fontVariantNumeric: "tabular-nums" }}>
-                      {euro(log.countedAmount)}
-                    </span>
-                    <span
-                      style={{
-                        fontVariantNumeric: "tabular-nums",
-                        color: "var(--ui-muted-ink)",
-                      }}
-                    >
-                      {euro(log.bookBalance)}
-                    </span>
-                    <div>
-                      <span className={styles.auditBadge}>✓ Stimmt</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </article>
-
-            {/* Right: Kontosicherheit & Zeichnungsberechtigte */}
-            <article className={styles.securityCard}>
-              <div className={styles.panelHeader}>
-                <div>
-                  <h2>Kassensicherheit & Zugriff</h2>
-                  <p>Verwaltung und Freigaberechte</p>
-                </div>
-                <ShieldCheck
-                  className="size-5 text-[var(--ui-positive)]"
-                  aria-hidden="true"
-                />
-              </div>
-
-              <div className={styles.securityBody}>
-                <div className={styles.fourEyesBox}>
-                  <span className={styles.fourEyesIcon}>
-                    <Users aria-hidden="true" />
-                  </span>
-                  <div>
-                    <strong>Vier-Augen-Prinzip aktiv</strong>
+                  <div className={styles.cardPosition}>
+                    <i aria-hidden="true" />
                     <span>
-                      Überweisungen & Kassenabschlüsse erfordern Gegenzeichnung
+                      Karte {safeIndex + 1} von {cards.length}
                     </span>
+                    <button
+                      type="button"
+                      onClick={() => setIsAddCardOpen(true)}
+                      aria-label="Karte hinzufügen"
+                    >
+                      <Plus aria-hidden="true" />
+                    </button>
                   </div>
-                </div>
+                </section>
 
-                <div className={styles.signatoriesList}>
-                  <div className={styles.signatoryItem}>
-                    <div className={styles.signatoryItemLeft}>
-                      <User
-                        className="size-4 text-[var(--ui-muted-ink)]"
-                        aria-hidden="true"
-                      />
+                <section className={styles.cashOverviewPanel}>
+                  <div className={styles.cashOverviewBody}>
+                    <h2>Barkasse</h2>
+                    <div className={styles.cashOverviewRows}>
                       <div>
-                        <strong>Max Müller</strong>
-                        <span>Kassenwart · Vollzugriff & Kassenführung</span>
+                        <span>Aktueller Bestand</span>
+                        <strong className={styles.activityPositive}>
+                          {euro(cashBox.balance)}
+                        </strong>
+                      </div>
+                      <div>
+                        <span>Verantwortlich</span>
+                        <strong>{cashBox.responsible}</strong>
+                      </div>
+                      <div>
+                        <span>Letzte Zählung</span>
+                        <strong>{cashBox.lastCountDate}, 18:32 Uhr</strong>
+                      </div>
+                      <div>
+                        <span>Gezählt von</span>
+                        <strong>{cashBox.responsible}</strong>
                       </div>
                     </div>
+                    <div className={styles.cashOverviewActions}>
+                      <button
+                        type="button"
+                        className={styles.primaryButton}
+                        onClick={() => setIsCountOpen(true)}
+                      >
+                        <Banknote aria-hidden="true" />
+                        Kasse zählen
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.secondaryButton}
+                        onClick={() => {
+                          setTransferDirection("cash-to-bank");
+                          setIsTransferOpen(true);
+                        }}
+                      >
+                        <ArrowRightLeft aria-hidden="true" />
+                        Umbuchung
+                      </button>
+                    </div>
+                  </div>
+                </section>
+
+                <section className={styles.reconciliationCard}>
+                  <h2>Kassenabgleich</h2>
+                  <div className={styles.reconciliationStatus}>
+                    <span>
+                      <Check aria-hidden="true" />
+                    </span>
+                    <strong>Stimmt</strong>
+                  </div>
+                  <div className={styles.reconciliationRows}>
+                    <div>
+                      <span>Letzte Zählung</span>
+                      <strong>{cashBox.lastCountDate}, 18:32 Uhr</strong>
+                    </div>
+                    <div>
+                      <span>Soll (laut Buchhaltung)</span>
+                      <strong>{euro(cashBox.balance)}</strong>
+                    </div>
+                    <div>
+                      <span>Ist (gezählt)</span>
+                      <strong>{euro(cashBox.balance)}</strong>
+                    </div>
+                    <div>
+                      <span>Differenz</span>
+                      <strong>0,00 €</strong>
+                    </div>
+                  </div>
+                  <div className={styles.reconciliationActions}>
+                    <button
+                      type="button"
+                      className={styles.primaryButton}
+                      onClick={() => setIsCountOpen(true)}
+                    >
+                      <Check aria-hidden="true" />
+                      Neuen Abgleich durchführen
+                    </button>
+                  </div>
+                </section>
+              </div>
+
+              <div className={styles.referenceLowerGrid}>
+                <section className={styles.referenceActivityCard}>
+                  <header className={styles.referencePanelHeader}>
+                    <div>
+                      <h2>Letzte Aktivitäten</h2>
+                      <p>Aktuelle Bewegungen aus allen Konten</p>
+                    </div>
+                    <Activity aria-hidden="true" />
+                  </header>
+                  <div className={styles.referenceActivityRows}>
+                    <div className={styles.referenceActivityHeader}>
+                      <span>Datum</span>
+                      <span>Typ</span>
+                      <span>Beschreibung</span>
+                      <span>Betrag</span>
+                      <span>Benutzer</span>
+                    </div>
+                    {recentAccountActivity.map((entry) => (
+                      <button
+                        type="button"
+                        className={styles.referenceActivityRow}
+                        key={`${entry.label}-${entry.date}`}
+                      >
+                        <time>{entry.date}</time>
+                        <span className={styles.activityType}>
+                          {entry.type}
+                        </span>
+                        <span>{entry.description}</span>
+                        <b
+                          className={
+                            entry.amount > 0
+                              ? styles.activityPositive
+                              : styles.activityNegative
+                          }
+                        >
+                          {entry.amount > 0 ? "+" : "−"}
+                          {euro(Math.abs(entry.amount))}
+                        </b>
+                        <span>{entry.user}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <button type="button" className={styles.referenceLink}>
+                    Alle Aktivitäten anzeigen{" "}
+                    <ChevronRight aria-hidden="true" />
+                  </button>
+                </section>
+
+                <section className={styles.referenceBankDetailsCard}>
+                  <header className={styles.referencePanelHeader}>
+                    <div>
+                      <h2>Bankdetails</h2>
+                      <p>Verbundene Kontodaten</p>
+                    </div>
+                    <Landmark aria-hidden="true" />
+                  </header>
+                  <div className={styles.referenceBankDetailRow}>
+                    <div>
+                      <span>IBAN</span>
+                      <strong>
+                        {activeCard?.iban ?? "DE89 3704 0044 0532 0143 21"}
+                      </strong>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        copyToClipboard(activeCard?.iban ?? "", "iban")
+                      }
+                      aria-label="IBAN kopieren"
+                    >
+                      {copiedField === "iban" ? (
+                        <Check aria-hidden="true" />
+                      ) : (
+                        <Copy aria-hidden="true" />
+                      )}
+                    </button>
+                  </div>
+                  <div className={styles.referenceBankDetailRow}>
+                    <div>
+                      <span>BIC</span>
+                      <strong>{activeCard?.bic ?? "COBADEFFXXX"}</strong>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        copyToClipboard(activeCard?.bic ?? "", "bic")
+                      }
+                      aria-label="BIC kopieren"
+                    >
+                      {copiedField === "bic" ? (
+                        <Check aria-hidden="true" />
+                      ) : (
+                        <Copy aria-hidden="true" />
+                      )}
+                    </button>
+                  </div>
+                </section>
+              </div>
+
+              {/* 1. TOP TWO-COLUMN HUB: BANK CARD HUB & CASH BOX HUB */}
+              <div className={styles.topHubGrid}>
+                {/* LEFT HUB: Bank Card Showcase */}
+                <div className={styles.hubCard}>
+                  <div className={styles.hubHeader}>
+                    <div className={styles.hubTitleGroup}>
+                      <span className={styles.hubIconBubble}>
+                        <CreditCard aria-hidden="true" />
+                      </span>
+                      <h2>{activeCard?.details.accountName ?? "Bankkonto"}</h2>
+                    </div>
                     <span
                       style={{
-                        fontSize: "0.72rem",
-                        fontWeight: 600,
+                        fontSize: "0.75rem",
                         color: "var(--ui-positive)",
+                        background: "var(--ui-positive-soft)",
+                        padding: "0.25rem 0.65rem",
+                        borderRadius: "999px",
+                        fontWeight: 500,
                       }}
                     >
-                      Primär
+                      ✓ Sparkasse · API synchron
                     </span>
                   </div>
 
-                  <div className={styles.signatoryItem}>
-                    <div className={styles.signatoryItemLeft}>
-                      <User
-                        className="size-4 text-[var(--ui-muted-ink)]"
-                        aria-hidden="true"
-                      />
+                  <div className={styles.cardDisplayArea}>
+                    <div className={styles.cardStage}>
+                      {cards.length > 1 && (
+                        <button
+                          type="button"
+                          className={styles.carouselNav}
+                          onClick={() => switchCard(-1)}
+                          aria-label="Vorherige Karte"
+                        >
+                          <ChevronLeft aria-hidden="true" />
+                        </button>
+                      )}
+
+                      <div
+                        className={styles.cardSlot}
+                        onClick={() => setIsEditCardOpen(true)}
+                        title="Klicken zum Bearbeiten"
+                      >
+                        {activeCard ? (
+                          <AccountCard
+                            variant="bank"
+                            details={activeCard.details}
+                            cardColor={activeCard.details.color}
+                          />
+                        ) : (
+                          <AccountCard variant="add" />
+                        )}
+                      </div>
+
+                      {cards.length > 1 && (
+                        <button
+                          type="button"
+                          className={styles.carouselNav}
+                          onClick={() => switchCard(1)}
+                          aria-label="Nächste Karte"
+                        >
+                          <ChevronRight aria-hidden="true" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Balance & Actions Row */}
+                  <div className={styles.cardSummaryRow}>
+                    <div className={styles.cardBalanceInfo}>
+                      <span>Verfügbares Bankguthaben</span>
+                      <strong>{euro(activeCard?.balance ?? 0)}</strong>
+                    </div>
+
+                    <div className={styles.cardActionButtons}>
+                      <button
+                        type="button"
+                        className={styles.smallSecondaryButton}
+                        onClick={() => setIsEditCardOpen(true)}
+                      >
+                        <Pencil aria-hidden="true" />
+                        <span>Bearbeiten</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.smallPrimaryButton}
+                        onClick={() => {
+                          setTransferDirection("bank-to-cash");
+                          setTransferError("");
+                          setIsTransferOpen(true);
+                        }}
+                      >
+                        <ArrowRightLeft aria-hidden="true" />
+                        <span>Bargeld abheben</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* RIGHT HUB: Cash Box & Cash Verification */}
+                <div className={styles.hubCard}>
+                  <div className={styles.hubHeader}>
+                    <div className={styles.hubTitleGroup}>
+                      <span
+                        className={`${styles.hubIconBubble} ${styles.hubIconBubbleCash}`}
+                      >
+                        <Banknote aria-hidden="true" />
+                      </span>
+                      <h2>{cashBox.name}</h2>
+                    </div>
+                    <span
+                      style={{
+                        fontSize: "0.75rem",
+                        color: "var(--ui-muted-ink)",
+                        background: "rgb(0 0 0 / 0.04)",
+                        padding: "0.25rem 0.65rem",
+                        borderRadius: "999px",
+                        fontWeight: 500,
+                      }}
+                    >
+                      Physische Kasse
+                    </span>
+                  </div>
+
+                  <div className={styles.cashHubBody}>
+                    <div className={styles.cashBalanceHighlight}>
                       <div>
-                        <strong>Frau Schmidt</strong>
+                        <span>Bargeldbestand (Handkasse)</span>
+                        <strong>{euro(cashBox.balance)}</strong>
+                      </div>
+                      <span
+                        style={{
+                          fontSize: "0.75rem",
+                          color: "var(--ui-positive)",
+                          fontWeight: 600,
+                        }}
+                      >
+                        100 % abgeglichen
+                      </span>
+                    </div>
+
+                    <div className={styles.reconcileStatusBox}>
+                      <span className={styles.reconcileIcon}>
+                        <Check aria-hidden="true" />
+                      </span>
+                      <div>
+                        <strong>Kassenprüfung stimmt überein</strong>
                         <span>
-                          Beratungslehrerin · Zeichnungsberechtigt Bank
+                          Letzter Kassensturz: {cashBox.lastCountDate}
                         </span>
                       </div>
                     </div>
-                    <span
-                      style={{
-                        fontSize: "0.72rem",
-                        fontWeight: 500,
-                        color: "var(--ui-muted-ink)",
-                      }}
-                    >
-                      Lehrkraft
-                    </span>
-                  </div>
 
-                  <div className={styles.signatoryItem}>
-                    <div className={styles.signatoryItemLeft}>
-                      <User
-                        className="size-4 text-[var(--ui-muted-ink)]"
-                        aria-hidden="true"
-                      />
-                      <div>
-                        <strong>Lisa Schmidt</strong>
-                        <span>Stellv. Kassenwartin · Zählberechtigt</span>
+                    <div className={styles.reconcileInfoList}>
+                      <div className={styles.reconcileInfoRow}>
+                        <span>Verantwortlicher Kassenwart</span>
+                        <strong>{cashBox.responsible}</strong>
+                      </div>
+                      <div className={styles.reconcileInfoRow}>
+                        <span>Zuletzt gezählter Betrag</span>
+                        <strong>{euro(cashBox.balance)}</strong>
+                      </div>
+                      <div className={styles.reconcileInfoRow}>
+                        <span>Festgestellte Differenz</span>
+                        <strong style={{ color: "var(--ui-positive)" }}>
+                          0,00 €
+                        </strong>
                       </div>
                     </div>
-                    <span
-                      style={{
-                        fontSize: "0.72rem",
-                        fontWeight: 500,
-                        color: "var(--ui-muted-ink)",
-                      }}
-                    >
-                      Vertretung
-                    </span>
+
+                    <div className={styles.cashHubActions}>
+                      <button
+                        type="button"
+                        className={styles.secondaryButton}
+                        onClick={() => {
+                          setCountMode("direct");
+                          setCountedAmountInput(
+                            cashBox.balance.toString().replace(".", ","),
+                          );
+                          setCountPerson(cashBox.responsible);
+                          setCountNote("");
+                          setCountError("");
+                          setIsCountOpen(true);
+                        }}
+                        style={{ flex: 1 }}
+                      >
+                        <Banknote aria-hidden="true" />
+                        <span>Kasse zählen</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        className={styles.primaryButton}
+                        onClick={() => {
+                          setTransferDirection("cash-to-bank");
+                          setTransferError("");
+                          setIsTransferOpen(true);
+                        }}
+                        style={{ flex: 1 }}
+                      >
+                        <ArrowRightLeft aria-hidden="true" />
+                        <span>Auf Bank einzahlen</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </article>
-          </div>
-        </TabsContent>
-      </Tabs>
+
+              <article className={styles.activityCard}>
+                <div className={styles.panelHeader}>
+                  <div>
+                    <h2>Letzte Kontobewegungen</h2>
+                    <p>Aktuelle Buchungen aus Bankkonto und Barkasse</p>
+                  </div>
+                  <Activity aria-hidden="true" />
+                </div>
+                <div className={styles.activityList}>
+                  {recentAccountActivity.map((entry) => (
+                    <div
+                      className={styles.activityRow}
+                      key={`${entry.label}-${entry.date}`}
+                    >
+                      <span className={styles.activityIcon} aria-hidden="true">
+                        {entry.amount > 0 ? "+" : "−"}
+                      </span>
+                      <span className={styles.activityIdentity}>
+                        <strong>{entry.label}</strong>
+                        <small>{entry.meta}</small>
+                      </span>
+                      <time>{entry.date}</time>
+                      <strong
+                        className={
+                          entry.amount > 0
+                            ? styles.activityPositive
+                            : styles.activityNegative
+                        }
+                      >
+                        {entry.amount > 0 ? "+" : "−"}
+                        {euro(Math.abs(entry.amount))}
+                      </strong>
+                    </div>
+                  ))}
+                </div>
+              </article>
+            </TabsContent>
+
+            <TabsContent value="accounts" className={styles.tabContent}>
+              <section className={styles.accountManager}>
+                <div>
+                  <h3>Konten & Karten</h3>
+                  <p>Bankkarten verwalten und Kontodaten bereitstellen.</p>
+                </div>
+                <div className={styles.accountManagerActions}>
+                  <button
+                    type="button"
+                    className={styles.secondaryButton}
+                    onClick={() => setIsEditCardOpen(true)}
+                  >
+                    <Pencil aria-hidden="true" />
+                    Karte bearbeiten
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.primaryButton}
+                    onClick={() => setIsAddCardOpen(true)}
+                  >
+                    <Plus aria-hidden="true" />
+                    Konto hinzufügen
+                  </button>
+                </div>
+              </section>
+
+              {/* 2. MIDDLE SECTION: BANKING TRANSFER DETAILS & IBAN COPY HELPER */}
+              <section className={styles.bankDetailsCard}>
+                <div className={styles.bankDetailsHeader}>
+                  <div className={styles.bankDetailsHeaderLeft}>
+                    <span className={styles.hubIconBubble}>
+                      <Landmark aria-hidden="true" />
+                    </span>
+                    <div>
+                      <h3>Bankverbindung für Überweisungen</h3>
+                      <p>
+                        Offizielle Kontodaten für Schüler, Eltern, Sponsoren und
+                        Fördervereine
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.bankDetailsGrid}>
+                  <div className={styles.bankDetailBox}>
+                    <div>
+                      <span>IBAN</span>
+                      <strong>{activeCard?.iban}</strong>
+                    </div>
+                    <button
+                      type="button"
+                      className={styles.copyButton}
+                      onClick={() =>
+                        copyToClipboard(activeCard?.iban ?? "", "iban")
+                      }
+                      title="IBAN kopieren"
+                      aria-label="IBAN in Zwischenablage kopieren"
+                    >
+                      {copiedField === "iban" ? (
+                        <Check className="size-4 text-[var(--ui-positive)]" />
+                      ) : (
+                        <Copy className="size-4" />
+                      )}
+                    </button>
+                  </div>
+
+                  <div className={styles.bankDetailBox}>
+                    <div>
+                      <span>BIC / SWIFT</span>
+                      <strong>{activeCard?.bic}</strong>
+                    </div>
+                    <button
+                      type="button"
+                      className={styles.copyButton}
+                      onClick={() =>
+                        copyToClipboard(activeCard?.bic ?? "", "bic")
+                      }
+                      title="BIC kopieren"
+                      aria-label="BIC in Zwischenablage kopieren"
+                    >
+                      {copiedField === "bic" ? (
+                        <Check className="size-4 text-[var(--ui-positive)]" />
+                      ) : (
+                        <Copy className="size-4" />
+                      )}
+                    </button>
+                  </div>
+
+                  <div className={styles.bankDetailBox}>
+                    <div>
+                      <span>Kontoinhaber</span>
+                      <strong>
+                        {activeCard?.details.holder || "Abi-Komitee 2026"}
+                      </strong>
+                    </div>
+                    <button
+                      type="button"
+                      className={styles.copyButton}
+                      onClick={() =>
+                        copyToClipboard(
+                          activeCard?.details.holder || "Abi-Komitee 2026",
+                          "holder",
+                        )
+                      }
+                      title="Inhaber kopieren"
+                      aria-label="Inhaber in Zwischenablage kopieren"
+                    >
+                      {copiedField === "holder" ? (
+                        <Check className="size-4 text-[var(--ui-positive)]" />
+                      ) : (
+                        <Copy className="size-4" />
+                      )}
+                    </button>
+                  </div>
+
+                  <div className={styles.bankDetailBox}>
+                    <div>
+                      <span>Muster-Verwendungszweck</span>
+                      <strong>[Vorname Nachname] - Abi 2026</strong>
+                    </div>
+                    <button
+                      type="button"
+                      className={styles.copyButton}
+                      onClick={() =>
+                        copyToClipboard(
+                          "[Vorname Nachname] - Abi 2026",
+                          "purpose",
+                        )
+                      }
+                      title="Verwendungszweck kopieren"
+                      aria-label="Verwendungszweck in Zwischenablage kopieren"
+                    >
+                      {copiedField === "purpose" ? (
+                        <Check className="size-4 text-[var(--ui-positive)]" />
+                      ) : (
+                        <Copy className="size-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </section>
+
+              <div className={styles.cardPills}>
+                {cards.map((card, idx) => (
+                  <button
+                    key={card.id}
+                    type="button"
+                    className={`${styles.cardPill} ${idx === safeIndex ? styles.cardPillActive : ""}`}
+                    onClick={() => setActiveCardIndex(idx)}
+                  >
+                    <span
+                      className={styles.cardPillDot}
+                      style={{
+                        backgroundColor: card.details.color || "#111114",
+                      }}
+                    />
+                    <span>{card.details.accountName}</span>
+                  </button>
+                ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="audit" className={styles.tabContent}>
+              {/* 3. BOTTOM SECTION: CASH AUDIT PROTOCOL & SECURITY / SIGNATORIES */}
+              <div className={styles.bottomGrid}>
+                {/* Left: Kassenbuch & Prüfprotokoll */}
+                <article className={styles.auditCard}>
+                  <div className={styles.panelHeader}>
+                    <div>
+                      <h2>Kassenbuch & Prüfprotokoll (Audit)</h2>
+                      <p>
+                        Vollständiger Nachweis aller Kassenstürze der Barkasse
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      className={styles.smallPrimaryButton}
+                      onClick={() => {
+                        setCountMode("direct");
+                        setCountedAmountInput(
+                          cashBox.balance.toString().replace(".", ","),
+                        );
+                        setCountPerson(cashBox.responsible);
+                        setCountNote("");
+                        setCountError("");
+                        setIsCountOpen(true);
+                      }}
+                    >
+                      <Plus aria-hidden="true" />
+                      <span>Kassensturz erfassen</span>
+                    </button>
+                  </div>
+
+                  <div className={styles.auditTableWrap}>
+                    <div className={styles.auditTableHeader}>
+                      <span>Datum</span>
+                      <span>Kassenprüfer</span>
+                      <span>Zählbetrag</span>
+                      <span>Buchbestand</span>
+                      <span>Status</span>
+                    </div>
+
+                    {auditLogs.map((log) => (
+                      <div key={log.id} className={styles.auditTableRow}>
+                        <span style={{ color: "var(--ui-muted-ink)" }}>
+                          {log.date}
+                        </span>
+                        <strong>{log.auditor}</strong>
+                        <span style={{ fontVariantNumeric: "tabular-nums" }}>
+                          {euro(log.countedAmount)}
+                        </span>
+                        <span
+                          style={{
+                            fontVariantNumeric: "tabular-nums",
+                            color: "var(--ui-muted-ink)",
+                          }}
+                        >
+                          {euro(log.bookBalance)}
+                        </span>
+                        <div>
+                          <span className={styles.auditBadge}>✓ Stimmt</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </article>
+
+                {/* Right: Kontosicherheit & Zeichnungsberechtigte */}
+                <article className={styles.securityCard}>
+                  <div className={styles.panelHeader}>
+                    <div>
+                      <h2>Kassensicherheit & Zugriff</h2>
+                      <p>Verwaltung und Freigaberechte</p>
+                    </div>
+                    <ShieldCheck
+                      className="size-5 text-[var(--ui-positive)]"
+                      aria-hidden="true"
+                    />
+                  </div>
+
+                  <div className={styles.securityBody}>
+                    <div className={styles.fourEyesBox}>
+                      <span className={styles.fourEyesIcon}>
+                        <Users aria-hidden="true" />
+                      </span>
+                      <div>
+                        <strong>Vier-Augen-Prinzip aktiv</strong>
+                        <span>
+                          Überweisungen & Kassenabschlüsse erfordern
+                          Gegenzeichnung
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className={styles.signatoriesList}>
+                      <div className={styles.signatoryItem}>
+                        <div className={styles.signatoryItemLeft}>
+                          <User
+                            className="size-4 text-[var(--ui-muted-ink)]"
+                            aria-hidden="true"
+                          />
+                          <div>
+                            <strong>Max Müller</strong>
+                            <span>
+                              Kassenwart · Vollzugriff & Kassenführung
+                            </span>
+                          </div>
+                        </div>
+                        <span
+                          style={{
+                            fontSize: "0.72rem",
+                            fontWeight: 600,
+                            color: "var(--ui-positive)",
+                          }}
+                        >
+                          Primär
+                        </span>
+                      </div>
+
+                      <div className={styles.signatoryItem}>
+                        <div className={styles.signatoryItemLeft}>
+                          <User
+                            className="size-4 text-[var(--ui-muted-ink)]"
+                            aria-hidden="true"
+                          />
+                          <div>
+                            <strong>Frau Schmidt</strong>
+                            <span>
+                              Beratungslehrerin · Zeichnungsberechtigt Bank
+                            </span>
+                          </div>
+                        </div>
+                        <span
+                          style={{
+                            fontSize: "0.72rem",
+                            fontWeight: 500,
+                            color: "var(--ui-muted-ink)",
+                          }}
+                        >
+                          Lehrkraft
+                        </span>
+                      </div>
+
+                      <div className={styles.signatoryItem}>
+                        <div className={styles.signatoryItemLeft}>
+                          <User
+                            className="size-4 text-[var(--ui-muted-ink)]"
+                            aria-hidden="true"
+                          />
+                          <div>
+                            <strong>Lisa Schmidt</strong>
+                            <span>Stellv. Kassenwartin · Zählberechtigt</span>
+                          </div>
+                        </div>
+                        <span
+                          style={{
+                            fontSize: "0.72rem",
+                            fontWeight: 500,
+                            color: "var(--ui-muted-ink)",
+                          }}
+                        >
+                          Vertretung
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </>
+      ) : (
+        <AdaptiveFundsView
+          mode={mode}
+          cards={cards}
+          activeCard={activeCard}
+          activeCardIndex={safeIndex}
+          cashBox={cashBox}
+          auditLogs={auditLogs}
+          activities={recentAccountActivity}
+          euro={euro}
+          onSwitchCard={switchCard}
+          onSelectCard={setActiveCardIndex}
+          onAddCard={() => setIsAddCardOpen(true)}
+          onEditCard={() => setIsEditCardOpen(true)}
+          onCountCash={() => setIsCountOpen(true)}
+          onTransfer={() => setIsTransferOpen(true)}
+          onCopy={copyToClipboard}
+        />
+      )}
 
       {/* 4. MODALS */}
 
@@ -1258,6 +1303,7 @@ export default function FundsPage() {
 
       {/* EDIT CARD MODAL */}
       <EditCardModal
+        key={activeCard?.id ?? "no-card"}
         open={isEditCardOpen}
         card={activeCard ? activeCard.details : null}
         onClose={() => setIsEditCardOpen(false)}
@@ -1271,7 +1317,7 @@ export default function FundsPage() {
           label="Kassenzählung durchführen"
           onClose={() => setIsCountOpen(false)}
           overlayClassName={styles.overlay}
-          dialogClassName={styles.modal}
+          dialogClassName={`${styles.modal} ${mode !== "desktop" ? adaptiveStyles.adaptiveDialog : ""}`}
         >
           <form onSubmit={handleSaveCount}>
             <div className={styles.modalHeader}>
@@ -1485,7 +1531,7 @@ export default function FundsPage() {
           label="Geld umbuchen"
           onClose={() => setIsTransferOpen(false)}
           overlayClassName={styles.overlay}
-          dialogClassName={styles.modal}
+          dialogClassName={`${styles.modal} ${mode !== "desktop" ? adaptiveStyles.adaptiveDialog : ""}`}
         >
           <form onSubmit={handleExecuteTransfer}>
             <div className={styles.modalHeader}>

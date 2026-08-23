@@ -1,0 +1,160 @@
+.root {
+  display: grid;
+  color: var(--ui-ink);
+  padding: 0 1rem 1rem;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.35rem 1rem;
+  padding: 1.2rem 0 1rem;
+}
+
+.hero span,
+.hero p {
+  color: var(--ui-muted-ink);
+  font-size: 0.7rem;
+}
+
+.hero strong {
+  grid-column: 1;
+  font-size: clamp(2.25rem, 12vw, 3.15rem);
+  font-weight: 650;
+  letter-spacing: -0.06em;
+  line-height: 1;
+}
+
+.heroProgress {
+  display: grid;
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  place-items: center;
+  min-width: 4.5rem;
+  border-left: 1px solid var(--ui-border-subtle);
+  padding-left: 1rem;
+}
+
+.heroProgress b {
+  font-size: 1.45rem;
+}
+
+.hero p {
+  margin: 0.15rem 0 0;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-block: 1px solid var(--ui-border-subtle);
+  padding: 0.75rem 0;
+}
+
+.sectionHeader h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+}
+
+.sectionHeader span {
+  color: var(--ui-muted-ink);
+  font-size: 0.68rem;
+}
+
+.goals {
+  display: grid;
+}
+
+.goal {
+  display: grid;
+  min-height: 6.25rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.4rem 0.75rem;
+  border: 0;
+  border-bottom: 1px solid var(--ui-border-subtle);
+  background: transparent;
+  padding: 0.8rem 0;
+  color: var(--ui-ink);
+  text-align: left;
+}
+
+.goal strong {
+  font-size: 0.84rem;
+}
+
+.goal > b {
+  justify-self: end;
+  font-size: 0.84rem;
+}
+
+.goalMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--ui-muted-ink);
+  font-size: 0.66rem;
+}
+
+.goalTrack {
+  height: 0.38rem;
+  grid-column: 1 / -1;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.07);
+}
+
+.goalTrack i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ui-ink);
+}
+
+.goalFooter {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: var(--ui-muted-ink);
+  font-size: 0.64rem;
+}
+
+.addButton {
+  display: flex;
+  width: 100%;
+  min-height: 3.25rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+  border: 0;
+  border-radius: 0.8rem;
+  background: var(--ui-ink);
+  color: var(--ui-surface);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.addButton svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.phoneDialog {
+  position: fixed !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  max-width: none !important;
+  max-height: 94dvh !important;
+  overflow: auto !important;
+  border-radius: 1.25rem 1.25rem 0 0 !important;
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  overscroll-behavior: contain;
+}

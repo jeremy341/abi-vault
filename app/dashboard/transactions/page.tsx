@@ -7,8 +7,6 @@ import {
   BusFront,
   CakeSlice,
   CalendarDays,
-  Check,
-  ChevronDown,
   HandCoins,
   Equal,
   FileText,
@@ -28,6 +26,8 @@ import {
 } from "@/components/ui/field-dropdown";
 import { Pagination } from "@/components/ui/pagination";
 import { useResponsivePageSize } from "@/hooks/use-responsive-page-size";
+import { usePresentationMode } from "@/hooks/use-presentation-mode";
+import phoneStyles from "./transactions-phone.module.css";
 
 type Category = "Material" | "Sonstiges" | "Veranstaltung";
 type FilterType = "Einnahmen" | "Ausgaben";
@@ -269,7 +269,146 @@ function StyledDropdown({
   );
 }
 
+function PhoneTransactionsView({
+  transactions,
+  query,
+  onQueryChange,
+  activeFilterCount,
+  totalIncome,
+  totalExpense,
+  netBalance,
+  page,
+  pageCount,
+  rangeStart,
+  rangeEnd,
+  totalResults,
+  onPageChange,
+  onOpenFilters,
+  onOpenAdd,
+  onSelect,
+}: {
+  transactions: Transaction[];
+  query: string;
+  onQueryChange: (value: string) => void;
+  activeFilterCount: number;
+  totalIncome: number;
+  totalExpense: number;
+  netBalance: number;
+  page: number;
+  pageCount: number;
+  rangeStart: number;
+  rangeEnd: number;
+  totalResults: number;
+  onPageChange: (page: number) => void;
+  onOpenFilters: () => void;
+  onOpenAdd: () => void;
+  onSelect: (transaction: Transaction) => void;
+}) {
+  return (
+    <div className={phoneStyles.root}>
+      <section
+        className={phoneStyles.summary}
+        aria-label="Transaktionsübersicht"
+      >
+        <span>Netto</span>
+        <strong>{displayAmount(netBalance)}</strong>
+        <div className={phoneStyles.summaryBreakdown}>
+          <b>+{displayAmount(totalIncome).replace("+", "")}</b>
+          <b>
+            -{displayAmount(totalExpense).replace("+", "").replace("-", "")}
+          </b>
+        </div>
+      </section>
+
+      <div className={phoneStyles.toolbar}>
+        <label className={phoneStyles.search}>
+          <Search aria-hidden="true" />
+          <span className="sr-only">Transaktionen durchsuchen</span>
+          <input
+            value={query}
+            onChange={(event) => onQueryChange(event.target.value)}
+            placeholder="Transaktionen durchsuchen …"
+          />
+        </label>
+        <button
+          type="button"
+          className={phoneStyles.filterButton}
+          onClick={onOpenFilters}
+          aria-label="Transaktionen filtern"
+        >
+          <Filter aria-hidden="true" />
+          {activeFilterCount ? (
+            <span className={phoneStyles.filterCount}>{activeFilterCount}</span>
+          ) : null}
+        </button>
+      </div>
+
+      <header className={phoneStyles.listHeader}>
+        <h2>Transaktionen</h2>
+        <span>{totalResults} Einträge</span>
+      </header>
+
+      {transactions.length ? (
+        <div className={phoneStyles.rows}>
+          {transactions.map((transaction) => (
+            <button
+              type="button"
+              className={phoneStyles.row}
+              key={transaction.id}
+              onClick={() => onSelect(transaction)}
+            >
+              <span className={phoneStyles.rowMain}>
+                <strong>{transaction.title}</strong>
+                <span className={phoneStyles.rowMeta}>
+                  <span>{transaction.category}</span>
+                  <span>
+                    {transaction.receipt ? "Beleg vorhanden" : "Ohne Beleg"}
+                  </span>
+                </span>
+              </span>
+              <span className={phoneStyles.rowSide}>
+                <b
+                  className={
+                    transaction.amount >= 0
+                      ? phoneStyles.positive
+                      : phoneStyles.negative
+                  }
+                >
+                  {displayAmount(transaction.amount)}
+                </b>
+                <small>{transaction.date}</small>
+              </span>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className={phoneStyles.empty}>Keine Transaktionen gefunden.</div>
+      )}
+
+      <footer className={phoneStyles.footer}>
+        <span>
+          {rangeStart}-{rangeEnd} von {totalResults}
+        </span>
+        <Pagination
+          page={page}
+          pageCount={pageCount}
+          onPageChange={onPageChange}
+        />
+      </footer>
+
+      <button
+        type="button"
+        className={phoneStyles.addButton}
+        onClick={onOpenAdd}
+      >
+        <Plus aria-hidden="true" /> Transaktion hinzufügen
+      </button>
+    </div>
+  );
+}
+
 export default function TransactionsPage() {
+  const mode = usePresentationMode();
   const [items, setItems] = useState(initialTransactions);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<"Alle" | Category>("Alle");
@@ -301,7 +440,6 @@ export default function TransactionsPage() {
   const [draftAccountFilter, setDraftAccountFilter] =
     useState<AccountFilter>("Alle Konten");
   const [filterOpen, setFilterOpen] = useState(false);
-  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [selected, setSelected] = useState<Transaction | null>(null);
@@ -438,7 +576,6 @@ export default function TransactionsPage() {
     setDraftReceiptFilter(receiptFilter);
     setDraftReviewFilter(reviewFilter);
     setDraftAccountFilter(accountFilter);
-    setAccountMenuOpen(false);
     setFilterOpen(true);
   }
   function applyFilters() {
@@ -501,217 +638,255 @@ export default function TransactionsPage() {
       : "Zeitraum auswählen";
 
   return (
-    <section className={styles.page}>
-      <div className={styles.kpiGrid}>
-        <article className={styles.kpiCard}>
-          <span className={`${styles.kpiIcon} ${styles.incomeIcon}`}>
-            <ArrowDown />
-          </span>
-          <div>
-            <span className={styles.kpiLabel}>Einnahmen</span>
-            <strong className={styles.incomeValue}>
-              {displayAmount(totalIncome).replace("+", "")}
-            </strong>
+    <section
+      className={
+        mode === "phone"
+          ? phoneStyles.root
+          : mode === "tablet"
+            ? `${styles.page} ${styles.tabletPage}`
+            : styles.page
+      }
+    >
+      {mode === "phone" ? (
+        <PhoneTransactionsView
+          transactions={visible}
+          query={query}
+          onQueryChange={(value) => {
+            setQuery(value);
+            setPage(1);
+          }}
+          activeFilterCount={activeFilterCount}
+          totalIncome={totalIncome}
+          totalExpense={totalExpense}
+          netBalance={netBalance}
+          page={currentPage}
+          pageCount={pages}
+          rangeStart={rangeStart}
+          rangeEnd={rangeEnd}
+          totalResults={results.length}
+          onPageChange={setPage}
+          onOpenFilters={openFilters}
+          onOpenAdd={() => setAddOpen(true)}
+          onSelect={setSelected}
+        />
+      ) : (
+        <>
+          <div className={styles.kpiGrid}>
+            <article className={styles.kpiCard}>
+              <span className={`${styles.kpiIcon} ${styles.incomeIcon}`}>
+                <ArrowDown />
+              </span>
+              <div>
+                <span className={styles.kpiLabel}>Einnahmen</span>
+                <strong className={styles.incomeValue}>
+                  {displayAmount(totalIncome).replace("+", "")}
+                </strong>
+              </div>
+              <span className={`${styles.trend} ${styles.positive}`}>
+                <TrendingUp /> +18,6 %
+              </span>
+            </article>
+            <article className={styles.kpiCard}>
+              <span className={`${styles.kpiIcon} ${styles.expenseIcon}`}>
+                <ArrowUp />
+              </span>
+              <div>
+                <span className={styles.kpiLabel}>Ausgaben</span>
+                <strong className={styles.expenseValue}>
+                  {displayAmount(totalExpense).replace("+", "")}
+                </strong>
+              </div>
+              <span className={`${styles.trend} ${styles.negative}`}>
+                <TrendingUp /> +9,3 %
+              </span>
+            </article>
+            <article className={styles.kpiCard}>
+              <span className={`${styles.kpiIcon} ${styles.netIcon}`}>
+                <Equal />
+              </span>
+              <div>
+                <span className={styles.kpiLabel}>Netto</span>
+                <strong>{displayAmount(netBalance)}</strong>
+              </div>
+              <span className={`${styles.trend} ${styles.positive}`}>
+                <TrendingUp /> +31,4 %
+              </span>
+            </article>
           </div>
-          <span className={`${styles.trend} ${styles.positive}`}>
-            <TrendingUp /> +18,6 %
-          </span>
-        </article>
-        <article className={styles.kpiCard}>
-          <span className={`${styles.kpiIcon} ${styles.expenseIcon}`}>
-            <ArrowUp />
-          </span>
-          <div>
-            <span className={styles.kpiLabel}>Ausgaben</span>
-            <strong className={styles.expenseValue}>
-              {displayAmount(totalExpense).replace("+", "")}
-            </strong>
-          </div>
-          <span className={`${styles.trend} ${styles.negative}`}>
-            <TrendingUp /> +9,3 %
-          </span>
-        </article>
-        <article className={styles.kpiCard}>
-          <span className={`${styles.kpiIcon} ${styles.netIcon}`}>
-            <Equal />
-          </span>
-          <div>
-            <span className={styles.kpiLabel}>Netto</span>
-            <strong>{displayAmount(netBalance)}</strong>
-          </div>
-          <span className={`${styles.trend} ${styles.positive}`}>
-            <TrendingUp /> +31,4 %
-          </span>
-        </article>
-      </div>
 
-      <article className={styles.listCard}>
-        <header className={styles.listHeader}>
-          <div className={styles.headingGroup}>
-            <h2>Alle Transaktionen</h2>
-            <span>{activeFilterCount} aktive Filter</span>
-          </div>
-          <button
-            type="button"
-            className={styles.primaryButton}
-            onClick={() => setAddOpen(true)}
-          >
-            <Plus />
-            Transaktion hinzufügen
-          </button>
-        </header>
+          <article className={styles.listCard}>
+            <header className={styles.listHeader}>
+              <div className={styles.headingGroup}>
+                <h2>Alle Transaktionen</h2>
+                <span>{activeFilterCount} aktive Filter</span>
+              </div>
+              <button
+                type="button"
+                className={styles.primaryButton}
+                onClick={() => setAddOpen(true)}
+              >
+                <Plus />
+                Transaktion hinzufügen
+              </button>
+            </header>
 
-        <div className={styles.filters}>
-          <label className={styles.searchField}>
-            <Search />
-            <span className="sr-only">Transaktionen durchsuchen</span>
-            <input
-              value={query}
-              onChange={(event) => {
-                setQuery(event.target.value);
-                setPage(1);
-              }}
-              placeholder="Transaktionen durchsuchen..."
-            />
-          </label>
-          <StyledDropdown
-            ariaLabel="Kategorie auswählen"
-            value={category}
-            onChange={(value) => {
-              setCategory(value as typeof category);
-              setPage(1);
-            }}
-            className={styles.filterDropdown}
-            options={[
-              { value: "Alle", label: "Alle Kategorien" },
-              { value: "Material", label: "Material" },
-              { value: "Sonstiges", label: "Sonstiges" },
-              { value: "Veranstaltung", label: "Veranstaltung" },
-            ]}
-          />
-          <StyledDropdown
-            ariaLabel="Typ auswählen"
-            value={type}
-            onChange={(value) => {
-              setType(value as typeof type);
-              setPage(1);
-            }}
-            className={styles.filterDropdown}
-            options={[
-              { value: "Alle", label: "Alle Typen" },
-              { value: "Einnahmen", label: "Einnahmen" },
-              { value: "Ausgaben", label: "Ausgaben" },
-            ]}
-          />
-          <button
-            type="button"
-            className={styles.controlButton}
-            onClick={() => {
-              setDraftStart(start);
-              setDraftEnd(end);
-              setDateOpen(true);
-            }}
-          >
-            <span>{dateLabel}</span>
-            <CalendarDays />
-          </button>
-          <button
-            type="button"
-            className={styles.filterButton}
-            onClick={openFilters}
-          >
-            <Filter />
-            Filter
-          </button>
-        </div>
+            <div className={styles.filters}>
+              <label className={styles.searchField}>
+                <Search />
+                <span className="sr-only">Transaktionen durchsuchen</span>
+                <input
+                  value={query}
+                  onChange={(event) => {
+                    setQuery(event.target.value);
+                    setPage(1);
+                  }}
+              placeholder="Transaktionen durchsuchen …"
+                />
+              </label>
+              <StyledDropdown
+                ariaLabel="Kategorie auswählen"
+                value={category}
+                onChange={(value) => {
+                  setCategory(value as typeof category);
+                  setPage(1);
+                }}
+                className={styles.filterDropdown}
+                options={[
+                  { value: "Alle", label: "Alle Kategorien" },
+                  { value: "Material", label: "Material" },
+                  { value: "Sonstiges", label: "Sonstiges" },
+                  { value: "Veranstaltung", label: "Veranstaltung" },
+                ]}
+              />
+              <StyledDropdown
+                ariaLabel="Typ auswählen"
+                value={type}
+                onChange={(value) => {
+                  setType(value as typeof type);
+                  setPage(1);
+                }}
+                className={styles.filterDropdown}
+                options={[
+                  { value: "Alle", label: "Alle Typen" },
+                  { value: "Einnahmen", label: "Einnahmen" },
+                  { value: "Ausgaben", label: "Ausgaben" },
+                ]}
+              />
+              <button
+                type="button"
+                className={styles.controlButton}
+                onClick={() => {
+                  setDraftStart(start);
+                  setDraftEnd(end);
+                  setDateOpen(true);
+                }}
+              >
+                <span>{dateLabel}</span>
+                <CalendarDays />
+              </button>
+              <button
+                type="button"
+                className={styles.filterButton}
+                onClick={openFilters}
+              >
+                <Filter />
+                Filter
+              </button>
+            </div>
 
-        <div className={`${styles.tableWrap} ui-data-table`}>
-          <div className={styles.tableHeader}>
-            <span>Transaktion</span>
-            <span>Kategorie</span>
-            <span>Datum</span>
-            <span>Betrag</span>
-            <span>Beleg</span>
-          </div>
-          <div className={styles.rows}>
-            {visible.map((transaction) => {
-              const Icon = transaction.icon;
-              return (
-                <button
-                  type="button"
-                  className={styles.row}
-                  key={transaction.id}
-                  onClick={() => setSelected(transaction)}
-                >
-                  <span className={styles.transactionName}>
-                    <span
-                      className={`${styles.iconBubble} ${toneClasses[transaction.tone]}`}
+            <div className={`${styles.tableWrap} ui-data-table`}>
+              <div className={styles.tableHeader}>
+                <span>Transaktion</span>
+                <span>Kategorie</span>
+                <span>Datum</span>
+                <span>Betrag</span>
+                <span>Beleg</span>
+              </div>
+              <div className={styles.rows}>
+                {visible.map((transaction) => {
+                  const Icon = transaction.icon;
+                  return (
+                    <button
+                      type="button"
+                      className={styles.row}
+                      key={transaction.id}
+                      onClick={() => setSelected(transaction)}
                     >
-                      <Icon />
-                    </span>
-                    <span>{transaction.title}</span>
-                  </span>
-                  <span data-label="Kategorie">
-                    <span
-                      className={`ui-badge ${styles.categoryTag} ${toneClasses[transaction.tone]}`}
-                    >
-                      {transaction.category}
-                    </span>
-                  </span>
-                  <span
-                    data-label="Datum"
-                    className={`ui-tabular ${styles.muted}`}
-                  >
-                    {transaction.date}
-                  </span>
-                  <span
-                    data-label="Betrag"
-                    className={`ui-tabular ${transaction.amount >= 0 ? styles.positive : styles.negative}`}
-                  >
-                    {displayAmount(transaction.amount)}
-                  </span>
-                  <span data-label="Beleg" className={styles.receipt}>
-                    {transaction.receipt ? (
-                      <>
-                        <Paperclip />
-                        <span>{transaction.receipt}</span>
-                      </>
-                    ) : (
-                      <span>—</span>
-                    )}
-                  </span>
+                      <span className={styles.transactionName}>
+                        <span
+                          className={`${styles.iconBubble} ${toneClasses[transaction.tone]}`}
+                        >
+                          <Icon />
+                        </span>
+                        <span>{transaction.title}</span>
+                      </span>
+                      <span data-label="Kategorie">
+                        <span
+                          className={`ui-badge ${styles.categoryTag} ${toneClasses[transaction.tone]}`}
+                        >
+                          {transaction.category}
+                        </span>
+                      </span>
+                      <span
+                        data-label="Datum"
+                        className={`ui-tabular ${styles.muted}`}
+                      >
+                        {transaction.date}
+                      </span>
+                      <span
+                        data-label="Betrag"
+                        className={`ui-tabular ${transaction.amount >= 0 ? styles.positive : styles.negative}`}
+                      >
+                        {displayAmount(transaction.amount)}
+                      </span>
+                      <span data-label="Beleg" className={styles.receipt}>
+                        {transaction.receipt ? (
+                          <>
+                            <Paperclip />
+                            <span>{transaction.receipt}</span>
+                          </>
+                        ) : (
+                          <span>—</span>
+                        )}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {!visible.length ? (
+              <div className={styles.emptyState}>
+                <Search />
+                <strong>Keine Transaktionen gefunden</strong>
+                <span>Ändere die Suche oder setze die Filter zurück.</span>
+                <button type="button" onClick={resetFilters}>
+                  Filter zurücksetzen
                 </button>
-              );
-            })}
-          </div>
-        </div>
+              </div>
+            ) : null}
 
-        {!visible.length ? (
-          <div className={styles.emptyState}>
-            <Search />
-            <strong>Keine Transaktionen gefunden</strong>
-            <span>Ändere die Suche oder setze die Filter zurück.</span>
-            <button type="button" onClick={resetFilters}>
-              Filter zurücksetzen
-            </button>
-          </div>
-        ) : null}
-
-        <footer className={styles.pagination}>
-          <span>
-            {rangeStart}–{rangeEnd} von {results.length}
-          </span>
-          <Pagination
-            page={currentPage}
-            pageCount={pages}
-            onPageChange={setPage}
-            className={styles.pageButtons}
-          />
-        </footer>
-      </article>
+            <footer className={styles.pagination}>
+              <span>
+                {rangeStart}–{rangeEnd} von {results.length}
+              </span>
+              <Pagination
+                page={currentPage}
+                pageCount={pages}
+                onPageChange={setPage}
+                className={styles.pageButtons}
+              />
+            </footer>
+          </article>
+        </>
+      )}
 
       {dateOpen ? (
-        <Overlay label="Zeitraum auswählen" onClose={() => setDateOpen(false)}>
+        <Overlay
+          label="Zeitraum auswählen"
+          onClose={() => setDateOpen(false)}
+          className={mode === "phone" ? phoneStyles.phoneDialog : undefined}
+        >
           <div className={styles.modalHeader}>
             <div>
               <h2>Zeitraum auswählen</h2>
@@ -780,7 +955,7 @@ export default function TransactionsPage() {
 
       {filterOpen ? (
         <Overlay
-          className={styles.filterModal}
+          className={`${styles.filterModal} ${mode === "phone" ? phoneStyles.phoneDialog : ""}`}
           label="Transaktionen filtern"
           onClose={() => setFilterOpen(false)}
         >
@@ -953,6 +1128,7 @@ export default function TransactionsPage() {
         <Overlay
           label="Transaktion hinzufügen"
           onClose={() => setAddOpen(false)}
+          className={mode === "phone" ? phoneStyles.phoneDialog : undefined}
         >
           <div className={styles.modalHeader}>
             <div>
@@ -972,7 +1148,7 @@ export default function TransactionsPage() {
             <label className={styles.formField}>
               <span>Bezeichnung</span>
               <input
-                autoFocus
+                autoFocus={mode !== "phone"}
                 value={newTitle}
                 onChange={(event) => setNewTitle(event.target.value)}
                 placeholder="z. B. Sponsoring Schule"
@@ -1049,7 +1225,11 @@ export default function TransactionsPage() {
       ) : null}
 
       {selected ? (
-        <Overlay label="Transaktionsdetails" onClose={() => setSelected(null)}>
+        <Overlay
+          label="Transaktionsdetails"
+          onClose={() => setSelected(null)}
+          className={mode === "phone" ? phoneStyles.phoneDialog : undefined}
+        >
           <div className={styles.modalHeader}>
             <div>
               <h2>{selected.title}</h2>

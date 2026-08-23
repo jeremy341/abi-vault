@@ -14,6 +14,8 @@ import {
 import { useMemo, useState } from "react";
 import { Dialog } from "@/components/ui/dialog";
 import styles from "./goals.module.css";
+import phoneStyles from "./goals-phone.module.css";
+import { usePresentationMode } from "@/hooks/use-presentation-mode";
 
 type Goal = {
   title: string;
@@ -58,7 +60,70 @@ const euroPrecise = new Intl.NumberFormat("de-DE", {
   minimumFractionDigits: 2,
 });
 
+function PhoneGoalsView({
+  goals,
+  totalSaved,
+  totalTarget,
+  progress,
+  onAdd,
+  onEdit,
+}: {
+  goals: Goal[];
+  totalSaved: number;
+  totalTarget: number;
+  progress: number;
+  onAdd: () => void;
+  onEdit: (goal: Goal, index: number) => void;
+}) {
+  return (
+    <div className={phoneStyles.root}>
+      <section className={phoneStyles.hero} aria-label="Gesamtfortschritt">
+        <span>Gesamt gespart</span>
+        <strong>{euro.format(totalSaved)}</strong>
+        <p>von {euro.format(totalTarget)}</p>
+        <div className={phoneStyles.heroProgress}>
+          <b>{progress}%</b>
+          <span>erreicht</span>
+        </div>
+      </section>
+
+      <header className={phoneStyles.sectionHeader}>
+        <h2>Sparziele</h2>
+        <span>{goals.length} aktiv</span>
+      </header>
+      <div className={phoneStyles.goals}>
+        {goals.map((goal, index) => (
+          <button
+            type="button"
+            className={phoneStyles.goal}
+            key={`${goal.title}-${index}`}
+            onClick={() => onEdit(goal, index)}
+          >
+            <strong>{goal.title}</strong>
+            <b>{euro.format(goal.target)}</b>
+            <span className={phoneStyles.goalMeta}>
+              {euroPrecise.format(goal.saved)} gespart
+            </span>
+            <span className={phoneStyles.goalMeta}>{goal.progress}%</span>
+            <div className={phoneStyles.goalTrack} aria-hidden="true">
+              <i style={{ width: `${goal.progress}%` }} />
+            </div>
+            <span className={phoneStyles.goalFooter}>
+              <span>Ziel: {goal.date}</span>
+              <span>{euroPrecise.format(goal.target - goal.saved)} offen</span>
+            </span>
+          </button>
+        ))}
+      </div>
+      <button type="button" className={phoneStyles.addButton} onClick={onAdd}>
+        <Plus aria-hidden="true" /> Ziel hinzufügen
+      </button>
+    </div>
+  );
+}
+
 export default function GoalsPage() {
+  const mode = usePresentationMode();
   const [goals, setGoals] = useState<Goal[]>(initialGoals);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingGoalIndex, setEditingGoalIndex] = useState<number | null>(null);
@@ -184,166 +249,183 @@ export default function GoalsPage() {
   }
 
   return (
-    <section className={styles.page}>
-      <div className={styles.summaryGrid}>
-        <div className={styles.summaryLeft}>
-          <article className={styles.summaryCard}>
-            <span className={styles.summaryIcon}>
-              <Target aria-hidden="true" />
-            </span>
-            <div>
-              <span>Aktive Ziele</span>
-              <strong>{goals.length}</strong>
-            </div>
-          </article>
-          <article className={styles.summaryCard}>
-            <span className={`${styles.summaryIcon} ${styles.savedIcon}`}>
-              <CircleDollarSign aria-hidden="true" />
-            </span>
-            <div>
-              <span>Gesamt gespart</span>
-              <strong>{euro.format(totalSaved)}</strong>
-            </div>
-          </article>
-        </div>
-        <article className={styles.summaryCard}>
-          <span className={`${styles.summaryIcon} ${styles.progressIcon}`}>
-            <CheckCircle2 aria-hidden="true" />
-          </span>
-          <div>
-            <span>Gesamtfortschritt</span>
-            <strong>{overallProgress}%</strong>
-          </div>
-        </article>
-      </div>
-
-      <div className={styles.contentGrid}>
-        <article className={styles.goalsPanel}>
-          <header className={styles.panelHeader}>
-            <div>
-              <h2>Meine Ziele</h2>
-              <p>Klicke auf ein Ziel, um Beträge oder Fristen anzupassen.</p>
-            </div>
-            <button
-              type="button"
-              className={styles.primaryButton}
-              onClick={openAddModal}
-            >
-              <Plus aria-hidden="true" />
-              Ziel hinzufügen
-            </button>
-          </header>
-          <div className={styles.goalGrid}>
-            {goals.map((goal, idx) => (
-              <article
-                className={styles.goalCard}
-                key={`${goal.title}-${idx}`}
-                role="button"
-                tabIndex={0}
-                onClick={() => openEditModal(goal, idx)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    openEditModal(goal, idx);
-                  }
-                }}
-                title="Klicken zum Anpassen"
-              >
-                <div className={styles.goalCardHeader}>
-                  <h3>{goal.title}</h3>
+    <section className={mode === "phone" ? phoneStyles.root : styles.page}>
+      {mode === "phone" ? (
+        <PhoneGoalsView
+          goals={goals}
+          totalSaved={totalSaved}
+          totalTarget={totalTarget}
+          progress={overallProgress}
+          onAdd={openAddModal}
+          onEdit={openEditModal}
+        />
+      ) : (
+        <>
+          <div className={styles.summaryGrid}>
+            <div className={styles.summaryLeft}>
+              <article className={styles.summaryCard}>
+                <span className={styles.summaryIcon}>
                   <Target aria-hidden="true" />
-                </div>
-                <strong className={styles.goalTarget}>
-                  {euro.format(goal.target)}
-                </strong>
-                <p className={styles.goalSaved}>
-                  {euroPrecise.format(goal.saved)} gesammelt
-                </p>
-                <div className={styles.progressLine}>
-                  <div className={styles.progressTrack}>
-                    <span style={{ width: `${goal.progress}%` }} />
-                  </div>
-                  <strong>{goal.progress}%</strong>
-                </div>
-                <div className={styles.goalFooter}>
-                  <span>
-                    <CalendarDays aria-hidden="true" />
-                    Ziel: {goal.date}
-                  </span>
-                  <span>
-                    {euroPrecise.format(goal.target - goal.saved)} offen
-                  </span>
+                </span>
+                <div>
+                  <span>Aktive Ziele</span>
+                  <strong>{goals.length}</strong>
                 </div>
               </article>
-            ))}
+              <article className={styles.summaryCard}>
+                <span className={`${styles.summaryIcon} ${styles.savedIcon}`}>
+                  <CircleDollarSign aria-hidden="true" />
+                </span>
+                <div>
+                  <span>Gesamt gespart</span>
+                  <strong>{euro.format(totalSaved)}</strong>
+                </div>
+              </article>
+            </div>
+            <article className={styles.summaryCard}>
+              <span className={`${styles.summaryIcon} ${styles.progressIcon}`}>
+                <CheckCircle2 aria-hidden="true" />
+              </span>
+              <div>
+                <span>Gesamtfortschritt</span>
+                <strong>{overallProgress}%</strong>
+              </div>
+            </article>
           </div>
-        </article>
 
-        <aside className={styles.sideColumn}>
-          <article className={styles.progressPanel}>
-            <header className={styles.panelHeader}>
-              <div>
-                <h2>Gesamtfortschritt</h2>
-                <p>Über alle aktiven Ziele</p>
-              </div>
-              <span className={styles.progressPercent}>{overallProgress}%</span>
-            </header>
-            <div className={styles.largeProgress}>
-              <span style={{ width: `${overallProgress}%` }} />
-            </div>
-            <div className={styles.progressStats}>
-              <span>{euroPrecise.format(totalSaved)} gespart</span>
-              <span>von {euro.format(totalTarget)}</span>
-            </div>
-          </article>
-
-          <article className={styles.upcomingPanel}>
-            <header className={styles.panelHeader}>
-              <div>
-                <h2>Nächste Ziele</h2>
-                <p>Bevorstehende Fristen</p>
-              </div>
-              <CalendarDays aria-hidden="true" />
-            </header>
-            <div className={styles.upcomingList}>
-              {goals
-                .slice()
-                .sort((a, b) =>
-                  a.date
-                    .split(".")
-                    .reverse()
-                    .join("")
-                    .localeCompare(b.date.split(".").reverse().join("")),
-                )
-                .slice(0, 3)
-                .map((goal) => {
-                  const originalIndex = goals.findIndex(
-                    (g) => g.title === goal.title,
-                  );
-                  return (
-                    <button
-                      type="button"
-                      className={styles.upcomingItem}
-                      key={`upcoming-${goal.title}`}
-                      onClick={() =>
-                        openEditModal(
-                          goal,
-                          originalIndex >= 0 ? originalIndex : 0,
-                        )
+          <div className={styles.contentGrid}>
+            <article className={styles.goalsPanel}>
+              <header className={styles.panelHeader}>
+                <div>
+                  <h2>Meine Ziele</h2>
+                  <p>
+                    Klicke auf ein Ziel, um Beträge oder Fristen anzupassen.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className={styles.primaryButton}
+                  onClick={openAddModal}
+                >
+                  <Plus aria-hidden="true" />
+                  Ziel hinzufügen
+                </button>
+              </header>
+              <div className={styles.goalGrid}>
+                {goals.map((goal, idx) => (
+                  <article
+                    className={styles.goalCard}
+                    key={`${goal.title}-${idx}`}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => openEditModal(goal, idx)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        openEditModal(goal, idx);
                       }
-                    >
-                      <div>
-                        <strong>{goal.title}</strong>
-                        <span>{goal.date}</span>
+                    }}
+                    title="Klicken zum Anpassen"
+                  >
+                    <div className={styles.goalCardHeader}>
+                      <h3>{goal.title}</h3>
+                      <Target aria-hidden="true" />
+                    </div>
+                    <strong className={styles.goalTarget}>
+                      {euro.format(goal.target)}
+                    </strong>
+                    <p className={styles.goalSaved}>
+                      {euroPrecise.format(goal.saved)} gesammelt
+                    </p>
+                    <div className={styles.progressLine}>
+                      <div className={styles.progressTrack}>
+                        <span style={{ width: `${goal.progress}%` }} />
                       </div>
-                      <ArrowRight aria-hidden="true" />
-                    </button>
-                  );
-                })}
-            </div>
-          </article>
-        </aside>
-      </div>
+                      <strong>{goal.progress}%</strong>
+                    </div>
+                    <div className={styles.goalFooter}>
+                      <span>
+                        <CalendarDays aria-hidden="true" />
+                        Ziel: {goal.date}
+                      </span>
+                      <span>
+                        {euroPrecise.format(goal.target - goal.saved)} offen
+                      </span>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </article>
+
+            <aside className={styles.sideColumn}>
+              <article className={styles.progressPanel}>
+                <header className={styles.panelHeader}>
+                  <div>
+                    <h2>Gesamtfortschritt</h2>
+                    <p>Über alle aktiven Ziele</p>
+                  </div>
+                  <span className={styles.progressPercent}>
+                    {overallProgress}%
+                  </span>
+                </header>
+                <div className={styles.largeProgress}>
+                  <span style={{ width: `${overallProgress}%` }} />
+                </div>
+                <div className={styles.progressStats}>
+                  <span>{euroPrecise.format(totalSaved)} gespart</span>
+                  <span>von {euro.format(totalTarget)}</span>
+                </div>
+              </article>
+
+              <article className={styles.upcomingPanel}>
+                <header className={styles.panelHeader}>
+                  <div>
+                    <h2>Nächste Ziele</h2>
+                    <p>Bevorstehende Fristen</p>
+                  </div>
+                  <CalendarDays aria-hidden="true" />
+                </header>
+                <div className={styles.upcomingList}>
+                  {goals
+                    .slice()
+                    .sort((a, b) =>
+                      a.date
+                        .split(".")
+                        .reverse()
+                        .join("")
+                        .localeCompare(b.date.split(".").reverse().join("")),
+                    )
+                    .slice(0, 3)
+                    .map((goal) => {
+                      const originalIndex = goals.findIndex(
+                        (g) => g.title === goal.title,
+                      );
+                      return (
+                        <button
+                          type="button"
+                          className={styles.upcomingItem}
+                          key={`upcoming-${goal.title}`}
+                          onClick={() =>
+                            openEditModal(
+                              goal,
+                              originalIndex >= 0 ? originalIndex : 0,
+                            )
+                          }
+                        >
+                          <div>
+                            <strong>{goal.title}</strong>
+                            <span>{goal.date}</span>
+                          </div>
+                          <ArrowRight aria-hidden="true" />
+                        </button>
+                      );
+                    })}
+                </div>
+              </article>
+            </aside>
+          </div>
+        </>
+      )}
 
       {modalOpen && (
         <Dialog
@@ -352,7 +434,7 @@ export default function GoalsPage() {
           }
           onClose={closeModal}
           overlayClassName={styles.overlay}
-          dialogClassName={styles.modal}
+          dialogClassName={`${styles.modal} ${mode === "phone" ? phoneStyles.phoneDialog : ""}`}
         >
           <form onSubmit={handleSaveGoal} noValidate>
             <header className={styles.modalHeader}>

@@ -120,3 +120,16 @@
     transform: none;
   }
 }
+.cardFrame {
+  container-type: inline-size;
+}
+
+.cardNumber {
+  font-size: clamp(0.78rem, 6cqw, 1.25rem);
+}
+
+@media (min-width: 2200px) {
+  .cardNumber {
+    font-size: 1.5rem;
+  }
+}

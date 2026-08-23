@@ -13,6 +13,7 @@ import AccountCard, {
 } from "@/components/dashboard/AccountCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { usePresentationMode } from "@/hooks/use-presentation-mode";
 
 const cardColors = [
   { name: "Schwarz", value: "#111114" },
@@ -61,17 +62,19 @@ export default function EditCardModal({
   onSave,
   onDelete,
 }: EditCardModalProps) {
+  const mode = usePresentationMode();
   const [selectedColor, setSelectedColor] = useState(
     card?.color ?? cardColors[0].value,
   );
   const [values, setValues] = useState<FormValues>({
-    accountName: "",
-    cardNumber: "",
-    holder: "",
-    expiry: "",
+    accountName: card?.accountName ?? "",
+    cardNumber: card?.cardNumber ?? "",
+    holder: card?.holder ?? "",
+    expiry: card?.expiry ?? "",
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const errorTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(
     () => () => {
@@ -79,6 +82,34 @@ export default function EditCardModal({
     },
     [],
   );
+
+  useEffect(() => {
+    if (!open) return;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const form = formRef.current;
+    const focusable = form?.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    );
+    const first = focusable?.[0];
+    const last = focusable?.[focusable.length - 1];
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+      if (event.key !== "Tab" || !first || !last) return;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    window.requestAnimationFrame(() => first?.focus());
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      previouslyFocused?.focus();
+    };
+  }, [onClose, open]);
 
   function scheduleErrorDismissal() {
     if (errorTimer.current) clearTimeout(errorTimer.current);
@@ -134,14 +165,17 @@ export default function EditCardModal({
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4 backdrop-blur-[2px]">
+    <div
+      className={`fixed inset-0 z-50 flex bg-black/35 backdrop-blur-[2px] ${mode === "phone" ? "items-end justify-center p-0" : "items-center justify-center p-4"}`}
+    >
       <form
+        ref={formRef}
         onSubmit={handleSubmit}
         noValidate
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-card-title"
-        className="max-h-[calc(100dvh-2rem)] w-full max-w-xl overflow-y-auto rounded-2xl border border-black/10 bg-white p-5 shadow-2xl sm:p-7 dark:border-white/10 dark:bg-card"
+        className={`${mode === "phone" ? "h-[calc(100dvh-0.5rem)] max-h-none max-w-none rounded-b-none rounded-t-2xl p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]" : "max-h-[calc(100dvh-2rem)] max-w-xl rounded-2xl p-5 sm:p-7"} w-full overflow-y-auto border border-black/10 bg-white shadow-2xl overscroll-contain dark:border-white/10 dark:bg-card`}
       >
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -310,7 +344,7 @@ function Field({
       {children}
       <span
         aria-live="polite"
-        className={`min-h-4 overflow-hidden text-xs font-normal text-red-600 transition-all duration-500 dark:text-red-300 ${error ? "translate-y-0 opacity-100" : "-translate-y-1 opacity-0"}`}
+        className={`min-h-4 overflow-hidden text-xs font-normal text-red-600 transition-[opacity,transform] duration-500 dark:text-red-300 ${error ? "translate-y-0 opacity-100" : "-translate-y-1 opacity-0"}`}
       >
         {error || "\u00a0"}
       </span>

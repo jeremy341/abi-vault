@@ -561,3 +561,78 @@
     grid-row: 1 / span 2;
   }
 }
+
+@media (max-width: 760px) {
+  .page {
+    flex: 0 0 auto;
+    gap: 0.75rem;
+    padding: 0 0.75rem 1rem;
+  }
+
+  .summaryGrid {
+    gap: 0.65rem;
+  }
+
+  .summaryCard {
+    height: auto;
+    min-height: 4.75rem;
+    gap: 0.65rem;
+    padding: 0.75rem 0.85rem;
+  }
+
+  .summaryCard strong {
+    font-size: 1.35rem;
+  }
+
+  .contentGrid,
+  .sideColumn {
+    gap: 0.75rem;
+  }
+
+  .peoplePanel,
+  .rolePanel,
+  .activityPanel {
+    overflow: visible;
+  }
+
+  .peoplePanel .panelHeader {
+    min-height: 0;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.9rem 0.85rem 0.8rem;
+  }
+
+  .peoplePanel .panelHeader p {
+    max-width: 15rem;
+  }
+
+  .peoplePanel .primaryButton {
+    align-self: flex-start;
+    min-height: 2.5rem;
+    font-size: 0.78rem;
+  }
+
+  .searchBar {
+    margin: 0.7rem 0.85rem;
+  }
+
+  .peopleList {
+    overflow: visible;
+    padding: 0 0.85rem 0.85rem;
+  }
+
+  .personRow {
+    min-height: 4rem;
+  }
+
+  .rolePanel .panelHeader,
+  .activityPanel .panelHeader {
+    padding: 0.9rem 0.85rem 0.75rem;
+  }
+
+  .roleList,
+  .activityBody {
+    padding: 0.75rem 0.85rem 0.85rem;
+  }
+}

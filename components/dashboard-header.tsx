@@ -59,7 +59,7 @@ export default function DashboardHeader() {
     >
       <div className="flex items-center gap-3">
         <SidebarTrigger className="md:hidden" />
-        <div className="hidden md:block">
+        <div className={`${styles.pageHeading} md:block`}>
           <h1
             className={`${styles.headerTitle} text-4xl font-semibold tracking-tight text-ink`}
           >

@@ -18,7 +18,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import dashboardStyles from "@/app/dashboard/dashboard.module.css";
 
-const transactions = [
+export const dashboardTransactions = [
   {
     title: "Druck Abizeitung",
     category: "Material",
@@ -93,7 +93,7 @@ const transactions = [
   },
 ];
 
-const goals = [
+export const dashboardGoals = [
   {
     title: "Abiball",
     target: "3.000 €",
@@ -117,7 +117,7 @@ const goals = [
   },
 ];
 
-const categories = [
+export const dashboardCategories = [
   {
     title: "Veranstaltung",
     amount: "1.740,00 € von 3.000,00 €",
@@ -183,14 +183,14 @@ export function TransactionHistory() {
           <span>Beleg</span>
         </div>
         <div className="divide-y divide-black/10 dark:divide-white/10">
-          {transactions.map((transaction, index) => {
+          {dashboardTransactions.map((transaction, index) => {
             const Icon = transaction.icon;
             const tone =
               "bg-black/[0.035] text-ink dark:bg-white/[0.08] dark:text-white/80";
             return (
               <div
                 key={transaction.title}
-                className={`${index >= 6 ? dashboardStyles.landscapeSummaryHidden : ""} grid gap-2 px-2 py-3.5 text-sm sm:grid-cols-[minmax(0,1.5fr)_minmax(90px,0.9fr)_100px_110px_24px] sm:items-center sm:gap-3 min-[1280px]:max-[2199px]:py-3 min-[2200px]:min-h-10 min-[2200px]:py-3 ${index >= 7 ? "hidden min-[2200px]:grid" : ""} ${index >= transactions.length - 3 ? "min-[1280px]:max-[2199px]:hidden" : ""}`}
+                className={`${index >= 6 ? dashboardStyles.landscapeSummaryHidden : ""} grid gap-2 px-2 py-3.5 text-sm sm:grid-cols-[minmax(0,1.5fr)_minmax(90px,0.9fr)_100px_110px_24px] sm:items-center sm:gap-3 min-[1280px]:max-[2199px]:py-3 min-[2200px]:min-h-10 min-[2200px]:py-3 ${index >= 7 ? "hidden min-[2200px]:grid" : ""} ${index >= dashboardTransactions.length - 3 ? "min-[1280px]:max-[2199px]:hidden" : ""}`}
               >
                 <div className="flex min-w-0 items-center gap-2.5 font-medium text-ink">
                   <IconBubble tone={tone}>
@@ -245,7 +245,7 @@ export function GoalsPanel() {
         <div
           className={`${dashboardStyles.goalGrid} grid min-w-0 grid-cols-3 gap-3`}
         >
-          {goals.slice(0, 3).map((goal) => (
+          {dashboardGoals.slice(0, 3).map((goal) => (
             <div
               key={goal.title}
               className={`${dashboardStyles.goalItem} rounded-xl border border-black/10 p-4 dark:border-white/15`}
@@ -294,7 +294,7 @@ export function SpendingByCategory() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4 px-5 pb-5 pt-4 sm:px-6 lg:px-7 min-[1280px]:max-[2199px]:space-y-2 min-[1280px]:max-[2199px]:pt-2 min-[2200px]:space-y-1 min-[2200px]:pb-6 min-[2200px]:pt-1">
-        {categories.map((category) => {
+        {dashboardCategories.map((category) => {
           const Icon = category.icon;
           return (
             <div

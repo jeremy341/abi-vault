@@ -1,0 +1,249 @@
+.root {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  overflow: hidden;
+  color: var(--ui-ink);
+  padding: 0 1rem 1rem;
+}
+
+.tabs {
+  position: sticky;
+  z-index: 6;
+  top: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-bottom: 1px solid var(--ui-border-subtle);
+  background: var(--ui-canvas);
+}
+
+.tabs button {
+  min-height: 3rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--ui-muted-ink);
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.tabs .activeTab {
+  border-bottom-color: var(--ui-ink);
+  color: var(--ui-ink);
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.25rem 0.75rem;
+  padding: 1.2rem 0 1rem;
+}
+
+.hero span,
+.hero p {
+  color: var(--ui-muted-ink);
+  font-size: 0.7rem;
+}
+
+.hero strong {
+  grid-column: 1;
+  font-size: clamp(2.2rem, 11vw, 3rem);
+  font-weight: 650;
+  letter-spacing: -0.06em;
+  line-height: 1;
+}
+
+.hero p {
+  margin: 0.15rem 0 0;
+}
+
+.heroSide {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-row: auto;
+  grid-column: 1;
+  align-content: center;
+  gap: 0.2rem;
+  border-top: 1px solid var(--ui-border-subtle);
+  margin-top: 0.6rem;
+  padding-top: 0.65rem;
+}
+
+.heroSide b {
+  font-size: 0.78rem;
+}
+
+.positive {
+  color: var(--ui-positive);
+}
+
+.negative {
+  color: var(--ui-negative);
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  padding-bottom: 0.85rem;
+}
+
+.filters > div {
+  min-width: 0;
+}
+
+.section {
+  border-top: 1px solid var(--ui-border-subtle);
+  padding: 1rem 0;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.sectionHeader h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+}
+
+.sectionHeader span {
+  color: var(--ui-muted-ink);
+  font-size: 0.68rem;
+}
+
+.chart {
+  height: 15rem;
+  margin-top: 0.7rem;
+}
+
+.rows {
+  display: grid;
+  margin-top: 0.55rem;
+}
+
+.row {
+  display: grid;
+  min-height: 3.75rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  border-bottom: 1px solid var(--ui-border-subtle);
+}
+
+.row:last-child {
+  border-bottom: 0;
+}
+
+.row > span {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.row strong {
+  font-size: 0.78rem;
+}
+
+.row small {
+  color: var(--ui-muted-ink);
+  font-size: 0.65rem;
+}
+
+.row b {
+  font-size: 0.76rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.progress {
+  height: 0.35rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.07);
+}
+
+.progress i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ui-ink);
+}
+
+.reviewRow {
+  display: grid;
+  min-height: 4.25rem;
+  grid-template-columns: 1.5rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.65rem;
+  border-bottom: 1px solid var(--ui-border-subtle);
+}
+
+.reviewRow svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.reviewRow > span {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.reviewRow strong {
+  font-size: 0.76rem;
+}
+
+.reviewRow small,
+.reviewRow b {
+  color: var(--ui-muted-ink);
+  font-size: 0.64rem;
+}
+
+.exportGrid {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 0.75rem;
+}
+
+.exportButton {
+  display: grid;
+  min-height: 4.5rem;
+  grid-template-columns: 2rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.65rem;
+  border: 1px solid var(--ui-border-subtle);
+  border-radius: 0.8rem;
+  background: var(--ui-surface);
+  padding: 0.75rem;
+  color: var(--ui-ink);
+  text-align: left;
+}
+
+.exportButton svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.exportButton span {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.exportButton strong {
+  font-size: 0.78rem;
+}
+
+.exportButton small {
+  color: var(--ui-muted-ink);
+  font-size: 0.65rem;
+}
+
+.message {
+  min-height: 1.25rem;
+  margin: 0.75rem 0 0;
+  color: var(--ui-positive);
+  font-size: 0.7rem;
+}

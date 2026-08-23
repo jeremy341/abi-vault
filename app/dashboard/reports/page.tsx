@@ -9,6 +9,7 @@ import {
   FileText,
   Info,
   ReceiptText,
+  ShieldCheck,
 } from "lucide-react";
 import { useState } from "react";
 import {
@@ -47,6 +48,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import styles from "./reports.module.css";
+import phoneStyles from "./reports-phone.module.css";
+import { usePresentationMode } from "@/hooks/use-presentation-mode";
 
 const cashflowData = [
   { month: "Jan", income: 860, expenses: 520 },
@@ -149,7 +152,271 @@ const money = new Intl.NumberFormat("de-DE", {
   minimumFractionDigits: 2,
 });
 
+type PhoneReportTab = "overview" | "analysis" | "review" | "export";
+
+function PhoneReportsView({
+  period,
+  onPeriodChange,
+  account,
+  onAccountChange,
+  exportMessage,
+  onExport,
+}: {
+  period: string;
+  onPeriodChange: (value: string) => void;
+  account: string;
+  onAccountChange: (value: string) => void;
+  exportMessage: string;
+  onExport: (format: string) => void;
+}) {
+  const [tab, setTab] = useState<PhoneReportTab>("overview");
+
+  return (
+    <section className={phoneStyles.root}>
+      <div
+        className={phoneStyles.tabs}
+        role="tablist"
+        aria-label="Berichtsbereiche"
+      >
+        {[
+          ["overview", "Übersicht"],
+          ["analysis", "Analyse"],
+          ["review", "Prüfung"],
+          ["export", "Export"],
+        ].map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            role="tab"
+            aria-selected={tab === value}
+            className={tab === value ? phoneStyles.activeTab : ""}
+            onClick={() => setTab(value as PhoneReportTab)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "overview" ? (
+        <>
+          <section className={phoneStyles.hero}>
+            <span>Netto</span>
+            <strong>1.107,60 €</strong>
+            <p className={phoneStyles.positive}>+342,55 € zum Vormonat</p>
+            <div className={phoneStyles.heroSide}>
+              <span>Liquidität</span>
+              <b>3.476,00 €</b>
+              <span>Prüfbedarf</span>
+              <b>4 Vorgänge</b>
+            </div>
+          </section>
+          <div className={phoneStyles.filters}>
+            <FieldDropdown
+              ariaLabel="Zeitraum"
+              value={period}
+              onChange={onPeriodChange}
+              options={[
+                { value: "3-monate", label: "Letzte 3 Monate" },
+                { value: "6-monate", label: "Letzte 6 Monate" },
+                { value: "jahr", label: "Dieses Jahr" },
+              ]}
+            />
+            <FieldDropdown
+              ariaLabel="Konto"
+              value={account}
+              onChange={onAccountChange}
+              options={[
+                { value: "alle-konten", label: "Alle Konten" },
+                { value: "bankkonto", label: "Bankkonto" },
+                { value: "barkasse", label: "Barkasse" },
+              ]}
+            />
+          </div>
+          <section className={phoneStyles.section}>
+            <header className={phoneStyles.sectionHeader}>
+              <h2>Cashflow</h2>
+              <span>6 Monate</span>
+            </header>
+            <ChartContainer config={chartConfig} className={phoneStyles.chart}>
+              <LineChart data={cashflowData} accessibilityLayer>
+                <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                <XAxis dataKey="month" tickLine={false} axisLine={false} />
+                <YAxis hide />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Line
+                  dataKey="income"
+                  type="monotone"
+                  stroke="var(--color-income)"
+                  strokeWidth={2}
+                  dot={false}
+                />
+                <Line
+                  dataKey="expenses"
+                  type="monotone"
+                  stroke="var(--color-expenses)"
+                  strokeWidth={2}
+                  strokeDasharray="5 4"
+                  dot={false}
+                />
+              </LineChart>
+            </ChartContainer>
+          </section>
+          <section className={phoneStyles.section}>
+            <header className={phoneStyles.sectionHeader}>
+              <h2>Ausgaben</h2>
+              <span>2.503,10 €</span>
+            </header>
+            <div className={phoneStyles.rows}>
+              {categories.map((item) => (
+                <div className={phoneStyles.row} key={item.name}>
+                  <span>
+                    <strong>{item.name}</strong>
+                    <div className={phoneStyles.progress}>
+                      <i style={{ width: `${item.share}%` }} />
+                    </div>
+                  </span>
+                  <b>{item.share}%</b>
+                </div>
+              ))}
+            </div>
+          </section>
+        </>
+      ) : tab === "analysis" ? (
+        <>
+          <section className={phoneStyles.hero}>
+            <span>Kontostand</span>
+            <strong>3.476,00 €</strong>
+            <p>Entwicklung im gewählten Zeitraum</p>
+          </section>
+          <section className={phoneStyles.section}>
+            <header className={phoneStyles.sectionHeader}>
+              <h2>Kontostand-Verlauf</h2>
+              <span>Monatlich</span>
+            </header>
+            <ChartContainer
+              config={analysisChartConfig}
+              className={phoneStyles.chart}
+            >
+              <AreaChart data={analysisBalance} accessibilityLayer>
+                <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                <XAxis
+                  dataKey="month"
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(value) => value.slice(0, 3)}
+                />
+                <YAxis hide />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Area
+                  dataKey="balance"
+                  type="monotone"
+                  fill="var(--color-balance)"
+                  fillOpacity={0.12}
+                  stroke="var(--color-balance)"
+                />
+              </AreaChart>
+            </ChartContainer>
+          </section>
+          <section className={phoneStyles.section}>
+            <header className={phoneStyles.sectionHeader}>
+              <h2>Finanzprofil</h2>
+              <span>Aktuell</span>
+            </header>
+            <div className={phoneStyles.rows}>
+              {analysisProfile.map((item) => (
+                <div className={phoneStyles.row} key={item.name}>
+                  <span>
+                    <strong>{item.name}</strong>
+                    <small>Ziel {item.target}%</small>
+                  </span>
+                  <b>{item.current}%</b>
+                </div>
+              ))}
+            </div>
+          </section>
+        </>
+      ) : tab === "review" ? (
+        <section className={phoneStyles.section}>
+          <header className={phoneStyles.sectionHeader}>
+            <h2>Offene Vorgänge</h2>
+            <span>4 insgesamt</span>
+          </header>
+          <div className={phoneStyles.rows}>
+            {reviewItems.map((item) => (
+              <div className={phoneStyles.reviewRow} key={item.title}>
+                {item.tone === "warning" ? (
+                  <AlertTriangle
+                    aria-hidden="true"
+                    className={phoneStyles.negative}
+                  />
+                ) : item.tone === "positive" ? (
+                  <CheckCircle2
+                    aria-hidden="true"
+                    className={phoneStyles.positive}
+                  />
+                ) : (
+                  <ReceiptText aria-hidden="true" />
+                )}
+                <span>
+                  <strong>{item.title}</strong>
+                  <small>{item.detail}</small>
+                </span>
+                <b>{item.tone === "positive" ? "Erledigt" : "Offen"}</b>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : (
+        <section className={phoneStyles.section}>
+          <header className={phoneStyles.sectionHeader}>
+            <h2>Bericht exportieren</h2>
+            <span>Abi 2026</span>
+          </header>
+          <div className={phoneStyles.exportGrid}>
+            {[
+              ["PDF", "PDF-Bericht", "Für Ablage und Freigabe", FileText],
+              [
+                "Excel",
+                "Excel-Datei",
+                "Für weitere Auswertungen",
+                FileSpreadsheet,
+              ],
+              [
+                "Prüfprotokoll",
+                "Prüfprotokoll",
+                "Offene und erledigte Vorgänge",
+                ShieldCheck,
+              ],
+            ].map(([format, title, description, Icon]) => {
+              const ExportIcon = Icon as typeof FileText;
+              return (
+                <button
+                  type="button"
+                  className={phoneStyles.exportButton}
+                  key={String(format)}
+                  onClick={() => onExport(String(format))}
+                >
+                  <ExportIcon aria-hidden="true" />
+                  <span>
+                    <strong>{String(title)}</strong>
+                    <small>{String(description)}</small>
+                  </span>
+                  <Download aria-hidden="true" className="size-4" />
+                </button>
+              );
+            })}
+          </div>
+          <p className={phoneStyles.message} aria-live="polite">
+            {exportMessage || "\u00a0"}
+          </p>
+        </section>
+      )}
+    </section>
+  );
+}
+
 export default function ReportsPage() {
+  const mode = usePresentationMode();
   const [period, setPeriod] = useState("6-monate");
   const [account, setAccount] = useState("alle-konten");
   const [category, setCategory] = useState("alle-kategorien");
@@ -157,6 +424,21 @@ export default function ReportsPage() {
 
   function prepareExport(format: string) {
     setExportMessage(`${format}-Bericht wurde vorbereitet.`);
+  }
+
+  if (mode === "phone") {
+    return (
+      <TooltipProvider>
+        <PhoneReportsView
+          period={period}
+          onPeriodChange={setPeriod}
+          account={account}
+          onAccountChange={setAccount}
+          exportMessage={exportMessage}
+          onExport={prepareExport}
+        />
+      </TooltipProvider>
+    );
   }
 
   return (

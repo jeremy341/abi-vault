@@ -39,7 +39,7 @@ export async function createManualTransaction(
 
   const command = parsed.data;
   if (command.type === "transfer") {
-    return actionFailure("INVALID_PAYLOAD", "Transfers are not supported. Use Barkasse transactions only.");
+    return actionFailure("INVALID_PAYLOAD", "Transfers are not supported in this workflow.");
   }
   const supabase = await createSupabaseServerClient();
   const walletId = command.type === "income" ? command.toWalletId : command.fromWalletId;
@@ -48,12 +48,11 @@ export async function createManualTransaction(
     .select("id")
     .eq("id", walletId)
     .eq("organization_id", context.organizationId)
-    .eq("name", "Barkasse")
     .eq("type", "cash")
     .eq("status", "active")
     .maybeSingle();
   if (!wallet) {
-    return actionFailure("INVALID_PAYLOAD", "Only the active Barkasse wallet can receive transactions.");
+    return actionFailure("INVALID_PAYLOAD", "Only an active cash register can receive transactions.");
   }
   const { data, error } = await supabase.rpc("create_manual_transaction", {
     p_organization_id: context.organizationId,

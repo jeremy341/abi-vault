@@ -1,13 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowRightLeft, Banknote, Trash2, X } from "lucide-react";
+import { Banknote, Trash2, X } from "lucide-react";
 import AddCardModal from "@/components/dashboard/AddCardModal";
 import EditCardModal from "@/components/dashboard/EditCardModal";
 import type { AccountCardDetails } from "@/components/dashboard/AccountCard";
 import AdaptiveFundsView from "@/components/presentation/AdaptiveFundsView";
 import { Dialog } from "@/components/ui/dialog";
-import { InlineLoading, LoadingStatus } from "@/components/ui/loading-state";
+import { LoadingStatus } from "@/components/ui/loading-state";
 import { usePresentationMode } from "@/hooks/use-presentation-mode";
 import adaptiveStyles from "./funds-adaptive.module.css";
 import styles from "./funds.module.css";
@@ -16,17 +16,11 @@ import { cachedFinanceQuery } from "@/lib/finance/client-cache";
 import { invalidateFinanceQuery } from "@/lib/finance/client-cache";
 import { archiveWallet, createWallet, updateWallet } from "@/features/finance/actions/wallets";
 import { recordCashCount } from "@/features/finance/actions/cash-counts";
-import { createTransfer } from "@/features/finance/actions/transfers";
 
 type DashboardCard = {
   id: string;
-  details: AccountCardDetails;
+  details: Pick<AccountCardDetails, "accountName"> & Partial<Omit<AccountCardDetails, "accountName">>;
   balance: number;
-  iban: string;
-  bic: string;
-  bankName: string;
-  status: string;
-  lastSync: string;
 };
 
 type CashBox = {
@@ -49,129 +43,6 @@ type CashAuditEntry = {
   note?: string;
 };
 
-const initialCards: DashboardCard[] = [
-  {
-    id: "bank-1",
-    details: {
-      accountName: "Kasse",
-      cardNumber: "5789 1234 5678 2847",
-      holder: "Mike Smith",
-      expiry: "06/21",
-      color: "#111114",
-    },
-    balance: 2850.75,
-    iban: "DE89 3704 0044 0532 0143 21",
-    bic: "COBADEFFXXX",
-    bankName: "Sparkasse KölnBonn",
-    status: "Kasse · Kartendarstellung",
-    lastSync: "Heute, 14:32 Uhr",
-  },
-  {
-    id: "bank-2",
-    details: {
-      accountName: "Reservekonto",
-      cardNumber: "4921 3456 7890 6710",
-      holder: "Abi Komitee",
-      expiry: "08/28",
-      color: "#3b3b40",
-    },
-    balance: 705.55,
-    iban: "DE21 3704 0044 0532 0143 89",
-    bic: "COBADEFFXXX",
-    bankName: "Sparkasse KölnBonn",
-    status: "Kasse · Kartendarstellung",
-    lastSync: "Heute, 09:40 Uhr",
-  },
-];
-
-const initialCashBox: CashBox = {
-  id: "cash-1",
-  name: "Barkasse Hauptkasse",
-  balance: 625.25,
-  responsible: "Max Müller",
-  lastCountDate: "15.05.2024",
-  countStatus: "matched",
-  difference: 0,
-};
-
-const initialAuditLogs: CashAuditEntry[] = [
-  {
-    id: "audit-1",
-    date: "15.05.2024",
-    auditor: "Max Müller",
-    countedAmount: 625.25,
-    bookBalance: 625.25,
-    difference: 0,
-    note: "Regulärer Kassenabgleich",
-  },
-  {
-    id: "audit-2",
-    date: "30.04.2024",
-    auditor: "Lisa Schmidt",
-    countedAmount: 510,
-    bookBalance: 510,
-    difference: 0,
-    note: "Nach Kuchenverkauf",
-  },
-  {
-    id: "audit-3",
-    date: "15.04.2024",
-    auditor: "Max Müller",
-    countedAmount: 340.5,
-    bookBalance: 340.5,
-    difference: 0,
-    note: "Monatsabschluss",
-  },
-];
-
-const recentAccountActivity = [
-  {
-    label: "Kassenprüfung",
-    meta: "Barkasse",
-    date: "15.05.2024, 18:32",
-    type: "Kassenzählung",
-    description: "Barkasse gezählt",
-    user: "Max Müller",
-    amount: 625.25,
-  },
-  {
-    label: "Umbuchung",
-    meta: "Klassenkonto",
-    date: "15.05.2024, 16:05",
-    type: "Umbuchung",
-    description: "Umbuchung an Barkasse",
-    user: "Max Müller",
-    amount: -500,
-  },
-  {
-    label: "Mitgliedsbeitrag",
-    meta: "Klassenkonto",
-    date: "15.05.2024, 09:12",
-    type: "Geldeingang",
-    description: "Überweisung Mitgliedsbeitrag",
-    user: "System",
-    amount: 150,
-  },
-  {
-    label: "Kassenprüfung",
-    meta: "Barkasse",
-    date: "14.05.2024, 14:48",
-    type: "Kassenzählung",
-    description: "Barkasse gezählt",
-    user: "Max Müller",
-    amount: 600,
-  },
-  {
-    label: "Umbuchung",
-    meta: "Klassenkonto",
-    date: "13.05.2024, 11:23",
-    type: "Umbuchung",
-    description: "Umbuchung von Barkasse",
-    user: "Max Müller",
-    amount: -300,
-  },
-];
-
 const money = new Intl.NumberFormat("de-DE", {
   style: "currency",
   currency: "EUR",
@@ -185,35 +56,26 @@ export default function FundsPage() {
   const mode = usePresentationMode();
   const [cards, setCards] = useState<DashboardCard[]>([]);
   const [activeCardIndex, setActiveCardIndex] = useState(0);
-  const [cashBox, setCashBox] = useState<CashBox>({
-    id: "",
-    name: "Barkasse",
-    balance: 0,
-    responsible: "",
-    lastCountDate: "",
-    countStatus: "matched",
-    difference: 0,
-  });
+  const [cashBoxes, setCashBoxes] = useState<Record<string, CashBox>>({});
   const [auditLogs, setAuditLogs] =
     useState<CashAuditEntry[]>([]);
   const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
   const [isAddCardOpen, setIsAddCardOpen] = useState(false);
   const [isEditCardOpen, setIsEditCardOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isCountOpen, setIsCountOpen] = useState(false);
-  const [isTransferOpen, setIsTransferOpen] = useState(false);
-
+  const [deleteSaving, setDeleteSaving] = useState(false);
   const [countMode, setCountMode] = useState<"direct" | "calculator">(
     "direct",
   );
-  const [countedAmountInput, setCountedAmountInput] = useState(
-    cashBox.balance.toString().replace(".", ","),
-  );
-  const [countPerson, setCountPerson] = useState(cashBox.responsible);
+  const [countedAmountInput, setCountedAmountInput] = useState("0,00");
+  const [countPerson, setCountPerson] = useState("");
   const [countNote, setCountNote] = useState("");
   const [countError, setCountError] = useState("");
+  const [countSaving, setCountSaving] = useState(false);
   const [denomCounts, setDenomCounts] = useState<Record<string, number>>({
     "50": 0,
     "20": 0,
@@ -226,69 +88,93 @@ export default function FundsPage() {
     "0.1": 0,
   });
 
-  const [transferDirection, setTransferDirection] = useState<
-    "bank-to-cash" | "cash-to-bank"
-  >("bank-to-cash");
-  const [transferAmount, setTransferAmount] = useState("");
-  const [transferNote, setTransferNote] = useState("");
-  const [transferError, setTransferError] = useState("");
+  const loadWallets = useCallback(async () => {
+    try {
+      const result = await cachedFinanceQuery("wallets", listWalletsForCurrentOrganization);
+      if (!result.ok) {
+        setLoadError("Die Kassen konnten nicht geladen werden.");
+        return;
+      }
+
+      setLoadError("");
+      const cashWallets = result.items.filter((item) => item.type === "cash");
+      setCards(cashWallets.map((wallet) => ({
+        id: wallet.id,
+        details: {
+          accountName: wallet.name,
+          cardNumber: wallet.cardNumberVisual ?? undefined,
+          holder: wallet.cardHolderVisual ?? undefined,
+          expiry: wallet.cardExpiryVisual ?? undefined,
+          color: wallet.cardColorVisual ?? "#111114",
+        },
+        balance: Number(wallet.balanceMinor) / 100,
+      })));
+      setCashBoxes(Object.fromEntries(cashWallets.map((wallet) => [wallet.id, {
+        id: wallet.id,
+        name: wallet.name,
+        balance: Number(wallet.balanceMinor) / 100,
+        responsible: "",
+        lastCountDate: "",
+        countStatus: "matched",
+        difference: 0,
+      }])));
+      setActiveCardIndex((current) => Math.min(current, Math.max(0, cashWallets.length - 1)));
+    } catch {
+      setLoadError("Die Kassen konnten nicht geladen werden.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    let active = true;
-    cachedFinanceQuery("wallets", listWalletsForCurrentOrganization)
-      .then((result) => {
-        if (!active || !result.ok) return;
-        const cashWallets = result.items.filter((item) => item.type === "cash");
-        setCards(cashWallets.map((wallet, index) => ({
-          id: wallet.id,
-          details: {
-            accountName: wallet.name,
-            cardNumber: `4000 0000 0000 ${String(index + 1).padStart(4, "0")}`,
-            holder: "Abi Komitee",
-            expiry: "12/30",
-            color: index % 2 ? "#3b3b40" : "#111114",
-          },
-          balance: Number(wallet.balanceMinor) / 100,
-          iban: "",
-          bic: "",
-          bankName: "Kasse",
-          status: "Kasse · Kartendarstellung",
-          lastSync: "Ledger-basiert",
-        })));
-        const cash = cashWallets[0];
-        if (cash) {
-          setCashBox((current) => ({ ...current, id: cash.id, name: cash.name, balance: Number(cash.balanceMinor) / 100 }));
-        } else {
-          setCashBox((current) => ({ ...current, id: "", name: "", balance: 0, responsible: "", lastCountDate: "" }));
-        }
-      })
-      .catch(() => undefined)
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
+    const timer = window.setTimeout(() => {
+      void loadWallets();
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [loadWallets]);
+
+  const retryWallets = useCallback(() => {
+    invalidateFinanceQuery("wallets");
+    setLoadError("");
+    setLoading(true);
+    void loadWallets();
+  }, [loadWallets]);
 
   const closeAddCardDialog = useCallback(() => setIsAddCardOpen(false), []);
   const closeEditCardDialog = useCallback(() => setIsEditCardOpen(false), []);
   const closeDeleteDialog = useCallback(() => setIsDeleteOpen(false), []);
   const closeCountDialog = useCallback(() => setIsCountOpen(false), []);
-  const closeTransferDialog = useCallback(() => setIsTransferOpen(false), []);
-
   useEffect(() => {
-    if (!isDeleteOpen && !isCountOpen && !isTransferOpen) return;
+    if (!isDeleteOpen && !isCountOpen) return;
 
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = previousOverflow;
     };
-  }, [isCountOpen, isDeleteOpen, isTransferOpen]);
+  }, [isCountOpen, isDeleteOpen]);
 
   const safeIndex = Math.min(activeCardIndex, Math.max(0, cards.length - 1));
   const activeCard = cards[safeIndex] ?? cards[0];
+  const cashBox: CashBox = activeCard
+    ? cashBoxes[activeCard.id] ?? {
+      id: activeCard.id,
+      name: activeCard.details.accountName,
+      balance: activeCard.balance,
+      responsible: "",
+      lastCountDate: "",
+      countStatus: "matched",
+      difference: 0,
+    }
+    : {
+      id: "",
+      name: "",
+      balance: 0,
+      responsible: "",
+      lastCountDate: "",
+      countStatus: "matched",
+      difference: 0,
+    };
 
   const calculatedDenomSum = useMemo(
     () =>
@@ -318,54 +204,75 @@ export default function FundsPage() {
     setActiveCardIndex(index);
   }
 
-  async function handleSaveNewCard(details: AccountCardDetails) {
+  async function handleSaveNewCard(details: AccountCardDetails, idempotencyKey: string) {
     const persisted = await createWallet({
       name: details.accountName,
       type: "cash",
       responsibleClerkUserId: null,
       bankConnectionId: null,
-      idempotencyKey: `wallet-${crypto.randomUUID()}`,
+      idempotencyKey,
+      cardNumberVisual: details.cardNumber,
+      cardHolderVisual: details.holder,
+      cardExpiryVisual: details.expiry,
+      cardColorVisual: details.color,
     });
     if (!persisted.success) {
       setNotice(persisted.error.message);
-      return;
+      return false;
     }
     const newCard: DashboardCard = {
       id: persisted.data.id,
       details,
       balance: 0,
-      iban: "DE89 3704 0044 **** 0000",
-      bic: "COBADEFFXXX",
-      bankName: "Klassenkonto",
-      status: "Verbunden",
-      lastSync: "Heute",
     };
     setCards((current) => [...current, newCard]);
+    setCashBoxes((current) => ({
+      ...current,
+      [newCard.id]: {
+        id: newCard.id,
+        name: details.accountName,
+        balance: 0,
+        responsible: "",
+        lastCountDate: "",
+        countStatus: "matched",
+        difference: 0,
+      },
+    }));
     setActiveCardIndex(cards.length);
     setIsAddCardOpen(false);
-    invalidateFinanceQuery("wallets");
+    invalidateFinanceQuery("wallets", "dashboard-snapshot", "report-snapshot");
     setNotice("Kasse hinzugefügt.");
+    return true;
   }
 
-  async function handleUpdateCard(details: AccountCardDetails) {
-    if (!activeCard) return;
+  async function handleUpdateCard(details: AccountCardDetails): Promise<boolean> {
+    if (!activeCard) return false;
     const result = await updateWallet({
       walletId: activeCard.id,
       name: details.accountName,
-      reason: "Konto über die Kartenverwaltung aktualisiert",
+      reason: "Kasse über die Kassenverwaltung aktualisiert",
+      cardNumberVisual: details.cardNumber,
+      cardHolderVisual: details.holder,
+      cardExpiryVisual: details.expiry,
+      cardColorVisual: details.color,
     });
     if (!result.success) {
       setNotice("Kartendaten konnten nicht gespeichert werden.");
-      return;
+      return false;
     }
     setCards((current) =>
       current.map((card, index) =>
         index === safeIndex ? { ...card, details } : card,
       ),
     );
+    setCashBoxes((current) => ({
+      ...current,
+      [activeCard.id]: { ...cashBox, name: details.accountName },
+    }));
     setIsEditCardOpen(false);
-    invalidateFinanceQuery("wallets");
+    invalidateFinanceQuery("wallets", "dashboard-snapshot", "report-snapshot");
     setNotice("Kartendaten gespeichert.");
+    return true;
   }
 
   function requestDeleteCard() {
@@ -393,14 +300,6 @@ export default function FundsPage() {
     setIsCountOpen(true);
   }
 
-  function openTransferDialog() {
-    setTransferDirection("bank-to-cash");
-    setTransferAmount("");
-    setTransferNote("");
-    setTransferError("");
-    setIsTransferOpen(true);
-  }
-
   function handleCountModeKeyDown(
     event: React.KeyboardEvent<HTMLButtonElement>,
     modeToSelect: "direct" | "calculator",
@@ -423,29 +322,41 @@ export default function FundsPage() {
   }
 
   async function confirmDeleteCard() {
-    if (!activeCard) return;
-    const result = await archiveWallet({
-      walletId: activeCard.id,
-      reason: "Konto über die Kartenverwaltung archiviert",
-    });
-    if (!result.success) {
-      setNotice("Karte konnte nicht entfernt werden.");
-      return;
+    if (!activeCard || deleteSaving) return;
+    setDeleteSaving(true);
+    try {
+      const result = await archiveWallet({
+        walletId: activeCard.id,
+        reason: "Kasse über die Kassenverwaltung archiviert",
+      });
+      if (!result.success) {
+        setNotice("Kasse konnte nicht archiviert werden.");
+        return;
+      }
+      setCards((current) =>
+        current.filter((_, index) => index !== safeIndex),
+      );
+      setCashBoxes((current) => {
+        const next = { ...current };
+        delete next[activeCard.id];
+        return next;
+      });
+      setActiveCardIndex((current) => Math.max(0, current - 1));
+      setIsDeleteOpen(false);
+      invalidateFinanceQuery("wallets", "dashboard-snapshot", "report-snapshot", "report-kpis");
+      setNotice("Kasse archiviert.");
+    } catch {
+      setNotice("Kasse konnte nicht archiviert werden.");
+    } finally {
+      setDeleteSaving(false);
     }
-    setCards((current) =>
-      current.filter((_, index) => index !== safeIndex),
-    );
-    setCashBox((current) => current.id === activeCard.id
-      ? { ...current, id: "", name: "", balance: 0, responsible: "", lastCountDate: "" }
-      : current);
-    setActiveCardIndex((current) => Math.max(0, current - 1));
-    setIsDeleteOpen(false);
-    invalidateFinanceQuery("wallets");
-    setNotice("Karte entfernt.");
   }
 
   async function handleSaveCount(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (countSaving) return;
+    setCountSaving(true);
+    try {
     const form = event.currentTarget;
     if (activeCountedAmount < 0) {
       setCountError("Bitte einen gültigen Zählbetrag eingeben.");
@@ -475,12 +386,15 @@ export default function FundsPage() {
       }
     }
 
-    setCashBox((current) => ({
+    setCashBoxes((current) => ({
       ...current,
-      lastCountDate: "Heute",
-      countStatus: status,
-      difference,
-      responsible: auditor,
+      [cashBox.id]: {
+        ...cashBox,
+        lastCountDate: "Heute",
+        countStatus: status,
+        difference,
+        responsible: auditor,
+      },
     }));
     setAuditLogs((current) => [
       {
@@ -497,110 +411,27 @@ export default function FundsPage() {
     setCountError("");
     setIsCountOpen(false);
     setNotice("Kassensturz gespeichert.");
-  }
-
-  async function handleExecuteTransfer(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const amount = Number.parseFloat(transferAmount.replace(",", "."));
-
-    if (Number.isNaN(amount) || amount <= 0) {
-      setTransferError("Bitte einen gültigen Betrag eingeben.");
-      window.requestAnimationFrame(() => {
-        (
-          form.elements.namedItem(
-            "transferAmount",
-          ) as HTMLInputElement | null
-        )?.focus();
-      });
-      return;
+    } catch {
+      setCountError("Der Kassensturz konnte nicht gespeichert werden.");
+    } finally {
+      setCountSaving(false);
     }
-
-    const fromWalletId = transferDirection === "bank-to-cash" ? activeCard?.id : cashBox.id;
-    const toWalletId = transferDirection === "bank-to-cash" ? cashBox.id : activeCard?.id;
-    if (fromWalletId && toWalletId && /^[0-9a-f-]{36}$/i.test(fromWalletId) && /^[0-9a-f-]{36}$/i.test(toWalletId)) {
-      const persisted = await createTransfer({
-        fromWalletId,
-        toWalletId,
-        amount: transferAmount,
-        note: transferNote,
-      });
-      if (!persisted.ok) {
-        setTransferError("Die Umbuchung konnte nicht gespeichert werden.");
-        return;
-      }
-    }
-
-    if (transferDirection === "bank-to-cash") {
-      if (amount > (activeCard?.balance ?? 0)) {
-        setTransferError(
-          "Nicht genügend Guthaben in der ausgewählten Kasse verfügbar.",
-        );
-        window.requestAnimationFrame(() => {
-          (
-            form.elements.namedItem(
-              "transferAmount",
-            ) as HTMLInputElement | null
-          )?.focus();
-        });
-        return;
-      }
-      setCards((current) =>
-        current.map((card, index) =>
-          index === safeIndex
-            ? { ...card, balance: card.balance - amount }
-            : card,
-        ),
-      );
-      setCashBox((current) => ({
-        ...current,
-        balance: current.balance + amount,
-      }));
-    } else {
-      if (amount > cashBox.balance) {
-        setTransferError("Nicht genügend Bargeld in der Barkasse vorhanden.");
-        window.requestAnimationFrame(() => {
-          (
-            form.elements.namedItem(
-              "transferAmount",
-            ) as HTMLInputElement | null
-          )?.focus();
-        });
-        return;
-      }
-      setCashBox((current) => ({
-        ...current,
-        balance: current.balance - amount,
-      }));
-      setCards((current) =>
-        current.map((card, index) =>
-          index === safeIndex
-            ? { ...card, balance: card.balance + amount }
-            : card,
-        ),
-      );
-    }
-
-    setTransferAmount("");
-    setTransferNote("");
-    setTransferError("");
-    setIsTransferOpen(false);
-    setNotice("Umbuchung durchgeführt.");
   }
 
   return (
     <section
       className={`${adaptiveStyles.root} ${mode === "desktop" ? adaptiveStyles.desktopPageRoot : ""}`}
-      aria-busy={loading}
     >
       <LoadingStatus loading={loading} label="Kasse wird geladen…" />
-      {loading ? <div className={adaptiveStyles.loadingOverlay}><InlineLoading label="Kasse wird geladen…" /></div> : null}
       <p className={styles.liveNotice} aria-live="polite">
         {notice}
       </p>
 
       <AdaptiveFundsView
         mode={mode}
+        loading={loading}
+        error={loadError || null}
+        onRetry={retryWallets}
         cards={cards}
         activeCard={activeCard}
         activeCardIndex={safeIndex}
@@ -613,10 +444,10 @@ export default function FundsPage() {
         onAddCard={() => setIsAddCardOpen(true)}
         onEditCard={() => setIsEditCardOpen(true)}
         onCountCash={openCountDialog}
-        onTransfer={openTransferDialog}
       />
 
       <AddCardModal
+        key={isAddCardOpen ? "add-card-open" : "add-card-closed"}
         open={isAddCardOpen}
         onClose={closeAddCardDialog}
         onSave={handleSaveNewCard}
@@ -632,7 +463,7 @@ export default function FundsPage() {
 
       {isDeleteOpen ? (
         <Dialog
-          label="Karte löschen"
+          label="Kasse archivieren"
           onClose={closeDeleteDialog}
           overlayClassName={styles.overlay}
           dialogClassName={`${styles.modal} ${styles.confirmationModal}`}
@@ -643,14 +474,15 @@ export default function FundsPage() {
                 <Trash2 aria-hidden="true" />
               </span>
               <div>
-                <h2>Karte löschen?</h2>
-                <p>Die Kontodaten werden aus dieser Ansicht entfernt.</p>
+                <h2>Kasse archivieren?</h2>
+                <p>Die Kasse wird aus den aktiven Ansichten entfernt. Historische Buchungen bleiben erhalten.</p>
               </div>
             </div>
             <button
               type="button"
               className={styles.closeButton}
               onClick={closeDeleteDialog}
+              disabled={deleteSaving}
               aria-label="Schließen"
             >
               <X aria-hidden="true" />
@@ -658,13 +490,14 @@ export default function FundsPage() {
           </header>
           <div className={styles.confirmationBody}>
             <strong>{activeCard?.details.accountName}</strong>
-            <span>{activeCard?.bankName}</span>
+            <span>Ledger-basiert · Kartendarstellung</span>
           </div>
           <footer className={styles.modalFooter}>
             <button
               type="button"
               className={styles.secondaryButton}
               onClick={closeDeleteDialog}
+              disabled={deleteSaving}
             >
               Abbrechen
             </button>
@@ -672,8 +505,10 @@ export default function FundsPage() {
               type="button"
               className={styles.destructiveButton}
               onClick={confirmDeleteCard}
+              disabled={deleteSaving}
+              aria-busy={deleteSaving}
             >
-              Karte löschen
+              {deleteSaving ? "Wird archiviert …" : "Kasse archivieren"}
             </button>
           </footer>
         </Dialog>
@@ -701,6 +536,7 @@ export default function FundsPage() {
                 type="button"
                 className={styles.closeButton}
                 onClick={closeCountDialog}
+                disabled={countSaving}
                 aria-label="Schließen"
               >
                 <X aria-hidden="true" />
@@ -861,123 +697,18 @@ export default function FundsPage() {
                 type="button"
                 className={styles.secondaryButton}
                 onClick={closeCountDialog}
+                disabled={countSaving}
               >
                 Abbrechen
               </button>
-              <button type="submit" className={styles.primaryButton}>
-                Kassensturz speichern
+              <button type="submit" className={styles.primaryButton} disabled={countSaving} aria-busy={countSaving}>
+                {countSaving ? "Wird gespeichert …" : "Kassensturz speichern"}
               </button>
             </footer>
           </form>
         </Dialog>
       ) : null}
 
-      {isTransferOpen ? (
-        <Dialog
-          label="Geld umbuchen"
-          onClose={closeTransferDialog}
-          overlayClassName={styles.overlay}
-          dialogClassName={`${styles.modal} ${mode !== "desktop" ? adaptiveStyles.adaptiveDialog : ""}`}
-        >
-          <form onSubmit={handleExecuteTransfer} noValidate>
-            <header className={styles.modalHeader}>
-              <div className={styles.modalTitle}>
-                <span>
-                  <ArrowRightLeft aria-hidden="true" />
-                </span>
-                <div>
-                  <h2>Umbuchung</h2>
-                  <p>Geld zwischen Kassen verschieben.</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                className={styles.closeButton}
-                onClick={closeTransferDialog}
-                aria-label="Schließen"
-              >
-                <X aria-hidden="true" />
-              </button>
-            </header>
-
-            <div className={styles.modalBody}>
-              <div className={styles.formGrid}>
-                <label className={`${styles.formField} ${styles.formFieldFull}`}>
-                  <span>Richtung</span>
-                  <select
-                    name="transferDirection"
-                    value={transferDirection}
-                    onChange={(event) =>
-                      setTransferDirection(
-                        event.target.value as
-                        | "bank-to-cash"
-                        | "cash-to-bank",
-                      )
-                    }
-                  >
-                    <option value="bank-to-cash">
-                      Kasse ({euro(activeCard?.balance ?? 0)}) zu Barkasse
-                    </option>
-                    <option value="cash-to-bank">
-                      Barkasse ({euro(cashBox.balance)}) zu Kasse
-                    </option>
-                  </select>
-                </label>
-                <label className={`${styles.formField} ${styles.formFieldFull}`}>
-                  <span>Betrag</span>
-                  <div className={styles.amountField}>
-                    <input
-                      name="transferAmount"
-                      type="text"
-                      inputMode="decimal"
-                      autoComplete="off"
-                      required
-                      aria-invalid={Boolean(transferError)}
-                      aria-describedby="transfer-form-error"
-                      value={transferAmount}
-                      onChange={(event) => setTransferAmount(event.target.value)}
-                      placeholder="0,00"
-                    />
-                    <span>€</span>
-                  </div>
-                </label>
-                <label className={`${styles.formField} ${styles.formFieldFull}`}>
-                  <span>Verwendungszweck oder Notiz</span>
-                  <input
-                    name="transferNote"
-                    type="text"
-                    autoComplete="off"
-                    value={transferNote}
-                    onChange={(event) => setTransferNote(event.target.value)}
-                    placeholder="Zum Beispiel Wechselgeld"
-                  />
-                </label>
-              </div>
-              {transferError ? (
-                <p
-                  id="transfer-form-error"
-                  className={styles.formError}
-                  role="alert"
-                >
-                  {transferError}
-                </p>
-              ) : null}
-            </div>
-            <footer className={styles.modalFooter}>
-              <button
-                type="button"
-                className={styles.secondaryButton}
-                onClick={closeTransferDialog}
-              >
-                Abbrechen
-              </button>
-              <button type="submit" className={styles.primaryButton}>
-                Umbuchung bestätigen
-              </button>
-            </footer>
-          </form>
-        </Dialog>
-      ) : null}
     </section>
   );
 }

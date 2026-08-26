@@ -11,7 +11,6 @@ import {
   type WalletCreateInput,
 } from "@/features/finance/schemas/wallets";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 function mapWalletError(code?: string) {
   if (code === "42501") return actionFailure("FORBIDDEN", "You are not allowed to perform this action.");
@@ -26,34 +25,35 @@ export async function createWallet(
   const parsed = walletCreateSchema.safeParse(input);
   if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "The wallet data is invalid.");
   if (parsed.data.type !== "cash") {
-    return actionFailure("INVALID_PAYLOAD", "Only the canonical cash wallet is supported.");
+    return actionFailure("INVALID_PAYLOAD", "Only cash registers are supported.");
   }
 
   const context = await requirePermission("manageWallets");
-  const admin = createSupabaseAdminClient();
-  const { data: wallet, error: insertError } = await admin
-    .from("wallets")
-    .upsert({
-      organization_id: context.organizationId,
-      name: parsed.data.name,
-      type: "cash",
-      status: "active",
-      responsible_clerk_user_id: parsed.data.responsibleClerkUserId ?? null,
-      created_by: context.clerkUserId,
-      idempotency_key: parsed.data.idempotencyKey,
-    }, { onConflict: "organization_id,idempotency_key" })
-    .select("id")
-    .single();
-  if (insertError) return mapWalletError(insertError.code);
+  const supabase = await createSupabaseServerClient();
+  const { data: walletId, error: insertError } = await supabase.rpc("create_wallet", {
+    p_organization_id: context.organizationId,
+    p_name: parsed.data.name,
+    p_type: "cash",
+    p_responsible_clerk_user_id: parsed.data.responsibleClerkUserId ?? null,
+    p_bank_connection_id: null,
+    p_idempotency_key: parsed.data.idempotencyKey,
+  });
+  if (insertError || !walletId) return mapWalletError(insertError?.code);
 
-  const { error: ledgerError } = await admin.from("ledger_accounts").upsert({
-    organization_id: context.organizationId,
-    type: "wallet",
-    name: parsed.data.name,
-    wallet_id: wallet.id,
-  }, { onConflict: "wallet_id" });
-  if (ledgerError) return mapWalletError(ledgerError.code);
-  return actionSuccess({ id: String(wallet.id) });
+  const { error: visualError } = await supabase
+    .from("wallets")
+    .update({
+      card_number_visual: parsed.data.cardNumberVisual ?? null,
+      card_holder_visual: parsed.data.cardHolderVisual ?? null,
+      card_expiry_visual: parsed.data.cardExpiryVisual ?? null,
+      card_color_visual: parsed.data.cardColorVisual ?? null,
+    })
+    .eq("id", String(walletId))
+    .eq("organization_id", context.organizationId)
+    .eq("type", "cash")
+    .eq("status", "active");
+  if (visualError) return mapWalletError(visualError.code);
+  return actionSuccess({ id: String(walletId) });
 }
 
 export async function updateWallet(input: unknown) {
@@ -61,14 +61,23 @@ export async function updateWallet(input: unknown) {
   if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "The wallet data is invalid.");
   const context = await requirePermission("manageWallets");
   const supabase = await createSupabaseServerClient();
-  const { error } = await supabase
+  const { data: wallet, error } = await supabase
     .from("wallets")
-    .update({ name: parsed.data.name })
+    .update({
+      name: parsed.data.name,
+      card_number_visual: parsed.data.cardNumberVisual ?? null,
+      card_holder_visual: parsed.data.cardHolderVisual ?? null,
+      card_expiry_visual: parsed.data.cardExpiryVisual ?? null,
+      card_color_visual: parsed.data.cardColorVisual ?? null,
+    })
     .eq("id", parsed.data.walletId)
     .eq("organization_id", context.organizationId)
     .eq("type", "cash")
-    .eq("status", "active");
+    .eq("status", "active")
+    .select("id")
+    .maybeSingle();
   if (error) return mapWalletError(error.code);
+  if (!wallet) return actionFailure("NOT_FOUND", "Die Kasse ist nicht mehr aktiv.");
   return actionSuccess(null);
 }
 
@@ -77,14 +86,17 @@ export async function archiveWallet(input: unknown) {
   if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "The wallet data is invalid.");
   const context = await requirePermission("manageWallets");
   const supabase = await createSupabaseServerClient();
-  const { error } = await supabase
+  const { data: wallet, error } = await supabase
     .from("wallets")
     .update({ status: "archived" })
     .eq("id", parsed.data.walletId)
     .eq("organization_id", context.organizationId)
     .eq("type", "cash")
-    .eq("status", "active");
+    .eq("status", "active")
+    .select("id")
+    .maybeSingle();
   if (error) return mapWalletError(error.code);
+  if (!wallet) return actionFailure("NOT_FOUND", "Die Kasse ist nicht mehr aktiv.");
   return actionSuccess(null);
 }
 

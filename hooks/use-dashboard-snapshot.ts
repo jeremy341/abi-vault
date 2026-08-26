@@ -9,14 +9,22 @@ export type DashboardSnapshot = Awaited<ReturnType<typeof getDashboardSnapshot>>
 export function useDashboardSnapshot() {
   const [snapshot, setSnapshot] = useState<DashboardSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     let active = true;
     cachedFinanceQuery("dashboard-snapshot", getDashboardSnapshot).then((result) => {
-      if (active && result.ok) setSnapshot(result);
-    }).catch(() => undefined).finally(() => {
+      if (!active) return;
+      if (result.ok) {
+        setSnapshot(result);
+      } else {
+        setError("Die Finanzübersicht konnte nicht geladen werden.");
+      }
+    }).catch(() => {
+      if (active) setError("Die Finanzübersicht konnte nicht geladen werden.");
+    }).finally(() => {
       if (active) setLoading(false);
     });
     return () => { active = false; };
   }, []);
-  return { snapshot, loading };
+  return { snapshot, loading, error };
 }

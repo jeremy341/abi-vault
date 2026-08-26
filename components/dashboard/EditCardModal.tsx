@@ -27,9 +27,9 @@ const cardColors = [
 
 type EditCardModalProps = {
   open: boolean;
-  card: AccountCardDetails | null;
+  card: Partial<AccountCardDetails> | null;
   onClose: () => void;
-  onSave: (details: AccountCardDetails) => void;
+  onSave: (details: AccountCardDetails) => Promise<boolean>;
   onDelete: () => void;
 };
 
@@ -65,6 +65,8 @@ export default function EditCardModal({
     expiry: card?.expiry ?? "",
   });
   const [errors, setErrors] = useState<FormErrors>({});
+  const [saving, setSaving] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
@@ -128,8 +130,9 @@ export default function EditCardModal({
     }
   }
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (saving) return;
     const nextErrors: FormErrors = {};
 
     if (!values.accountName.trim()) {
@@ -155,7 +158,16 @@ export default function EditCardModal({
       return;
     }
 
-    onSave({ ...values, color: selectedColor });
+    setSaving(true);
+    setSubmitError("");
+    try {
+      const saved = await onSave({ ...values, color: selectedColor });
+      if (!saved) setSubmitError("Die Kasse konnte nicht gespeichert werden.");
+    } catch {
+      setSubmitError("Die Kasse konnte nicht gespeichert werden.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return createPortal(
@@ -185,6 +197,7 @@ export default function EditCardModal({
             className={styles.closeButton}
             aria-label="Dialog schließen"
             onClick={onClose}
+            disabled={saving}
           >
             <X aria-hidden="true" />
           </button>
@@ -326,24 +339,28 @@ export default function EditCardModal({
           </section>
         </div>
 
+        {submitError ? <p className="mt-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{submitError}</p> : null}
+
         <footer className={`${styles.footer} ${styles.footerSplit}`}>
           <button
             type="button"
             className={styles.destructiveButton}
             onClick={onDelete}
+            disabled={saving}
           >
-            Karte löschen
+            Kasse archivieren
           </button>
           <div className={styles.footerActions}>
             <button
               type="button"
               className={styles.secondaryButton}
               onClick={onClose}
+              disabled={saving}
             >
               Abbrechen
             </button>
-            <button type="submit" className={styles.primaryButton}>
-              Änderungen speichern
+            <button type="submit" className={styles.primaryButton} disabled={saving} aria-busy={saving}>
+              {saving ? "Wird gespeichert …" : "Änderungen speichern"}
             </button>
           </div>
         </footer>

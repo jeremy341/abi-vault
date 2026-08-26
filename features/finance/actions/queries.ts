@@ -47,7 +47,7 @@ export async function listTransactionsForCurrentOrganization() {
         type: item.public_type,
         receipt: false,
         reviewStatus: "Geprüft",
-        account: item.wallet_label ?? "Barkasse",
+        account: item.wallet_label ?? "Nicht zugeordnet",
         walletId: null,
         fromWalletId: null,
         toWalletId: null,
@@ -55,12 +55,12 @@ export async function listTransactionsForCurrentOrganization() {
     };
   }
 
-  const { data: cashWallets } = await supabase
+  const { data: cashWallets, error: cashWalletError } = await supabase
     .from("wallets")
     .select("id")
     .eq("organization_id", context.organizationId)
-    .eq("type", "cash")
-    .eq("status", "active");
+    .eq("type", "cash");
+  if (cashWalletError) return { ok: false as const, error: "DATABASE_ERROR" as const };
   const cashWalletIds = new Set((cashWallets ?? []).map((wallet) => wallet.id));
   if (!cashWalletIds.size) return { ok: true as const, items: [] };
 
@@ -76,11 +76,16 @@ export async function listTransactionsForCurrentOrganization() {
   const cashTransactions = (data ?? []).filter((item) => cashWalletIds.has(item.from_wallet_id ?? item.to_wallet_id ?? ""));
   const categoryIds = [...new Set(cashTransactions.map((item) => item.category_id).filter(Boolean))];
   const walletIds = [...new Set(cashTransactions.flatMap((item) => [item.from_wallet_id, item.to_wallet_id]).filter(Boolean))];
-  const [{ data: categories }, { data: wallets }, { data: receipts }] = await Promise.all([
-    categoryIds.length ? supabase.from("categories").select("id, name").in("id", categoryIds) : Promise.resolve({ data: [] as { id: string; name: string }[] }),
-    walletIds.length ? supabase.from("wallets").select("id, name").in("id", walletIds) : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+  const [
+    { data: categories, error: categoryError },
+    { data: wallets, error: walletError },
+    { data: receipts, error: receiptError },
+  ] = await Promise.all([
+    categoryIds.length ? supabase.from("categories").select("id, name").in("id", categoryIds) : Promise.resolve({ data: [] as { id: string; name: string }[], error: null }),
+    walletIds.length ? supabase.from("wallets").select("id, name").in("id", walletIds) : Promise.resolve({ data: [] as { id: string; name: string }[], error: null }),
     supabase.from("receipts").select("transaction_id, review_status").eq("organization_id", context.organizationId),
   ]);
+  if (categoryError || walletError || receiptError) return { ok: false as const, error: "DATABASE_ERROR" as const };
   const categoryMap = new Map((categories ?? []).map((item) => [item.id, item.name]));
   const walletMap = new Map((wallets ?? []).map((item) => [item.id, item.name]));
   const receiptMap = new Map(
@@ -100,7 +105,7 @@ export async function listTransactionsForCurrentOrganization() {
       type: item.type,
       receipt: receiptMap.has(item.id),
       reviewStatus: receiptMap.get(item.id) === "approved" ? "Geprüft" : "Zu prüfen",
-      account: walletMap.get(item.type === "income" ? item.to_wallet_id : item.from_wallet_id) ?? "Barkasse",
+      account: walletMap.get(item.type === "income" ? item.to_wallet_id : item.from_wallet_id) ?? "Nicht zugeordnet",
       walletId: item.type === "income" ? item.to_wallet_id : item.from_wallet_id,
       fromWalletId: item.from_wallet_id,
       toWalletId: item.to_wallet_id,
@@ -133,6 +138,7 @@ export async function listReceiptsForCurrentOrganization() {
         type: item.mime_type === "application/pdf" ? "PDF" : item.mime_type === "image/png" ? "PNG" : "JPG",
         sizeBytes: item.file_size_bytes,
         transaction: transaction?.title ?? "Nicht zugeordnet",
+        assigned: Boolean(item.transaction_id),
         date: transaction?.booked_at ?? item.created_at.slice(0, 10),
         amountMinor: transaction ? String(transaction.type === "expense" ? -transaction.amount_minor : transaction.amount_minor) : "0",
         status: item.review_status,
@@ -146,7 +152,7 @@ export async function listWalletsForCurrentOrganization(options?: { includeBalan
   const supabase = await createSupabaseServerClient();
   const { data: wallets, error } = await supabase
     .from("wallets")
-    .select("id, name, type, status, responsible_clerk_user_id, opening_balance_minor")
+    .select("id, name, type, status, responsible_clerk_user_id, opening_balance_minor, card_number_visual, card_holder_visual, card_expiry_visual, card_color_visual")
     .eq("organization_id", context.organizationId)
     .eq("type", "cash")
     .eq("status", "active")
@@ -154,13 +160,14 @@ export async function listWalletsForCurrentOrganization(options?: { includeBalan
   if (error) return { ok: false as const, error: "DATABASE_ERROR" as const };
 
   const transactions = options?.includeBalances === false
-    ? { data: [] as Array<{ amount_minor: number; type: string; from_wallet_id: string | null; to_wallet_id: string | null }> }
+    ? { data: [] as Array<{ amount_minor: number; type: string; from_wallet_id: string | null; to_wallet_id: string | null }>, error: null }
     : await supabase
       .from("transactions")
       .select("amount_minor, type, from_wallet_id, to_wallet_id")
       .eq("organization_id", context.organizationId)
       .eq("status", "posted")
       .is("deleted_at", null);
+  if (transactions.error) return { ok: false as const, error: "DATABASE_ERROR" as const };
   const transactionRows = transactions.data ?? [];
   const balances = new Map((wallets ?? []).map((wallet) => [wallet.id, BigInt(String(wallet.opening_balance_minor ?? 0))]));
   for (const transaction of transactionRows) {
@@ -181,6 +188,10 @@ export async function listWalletsForCurrentOrganization(options?: { includeBalan
       type: wallet.type,
       balanceMinor: (balances.get(wallet.id) ?? BigInt(0)).toString(),
       openingBalanceMinor: String(wallet.opening_balance_minor ?? 0),
+      cardNumberVisual: wallet.card_number_visual,
+      cardHolderVisual: wallet.card_holder_visual,
+      cardExpiryVisual: wallet.card_expiry_visual,
+      cardColorVisual: wallet.card_color_visual,
       connected: {
         display_name: null,
         iban_last4: null,
@@ -271,13 +282,22 @@ export async function listMembersForCurrentOrganization() {
 export async function getReportKpisForCurrentOrganization() {
   const context = await requireClerkContext();
   const supabase = await createSupabaseServerClient();
-  const [{ data: transactions, error: transactionError }, { data: wallets }, { data: receipts }, { data: ledgerEntries }] = await Promise.all([
+  const [
+    { data: transactions, error: transactionError },
+    { data: wallets, error: walletError },
+    { data: receipts, error: receiptError },
+    { data: ledgerEntries, error: ledgerError },
+    { data: cashCounts, error: cashCountError },
+  ] = await Promise.all([
     supabase.from("transactions").select("amount_minor, type").eq("organization_id", context.organizationId).eq("status", "posted").is("deleted_at", null),
-    supabase.from("wallets").select("id").eq("organization_id", context.organizationId).eq("status", "active"),
-    supabase.from("receipts").select("review_status").eq("organization_id", context.organizationId),
+    supabase.from("wallets").select("id").eq("organization_id", context.organizationId).eq("type", "cash").eq("status", "active"),
+    supabase.from("receipts").select("review_status, transaction_id").eq("organization_id", context.organizationId),
     supabase.from("ledger_entries").select("debit_minor, credit_minor, ledger_accounts(wallet_id)").eq("organization_id", context.organizationId),
+    supabase.from("cash_counts").select("wallet_id, difference_minor, created_at").eq("organization_id", context.organizationId).order("created_at", { ascending: false }),
   ]);
-  if (transactionError) return { ok: false as const, error: "DATABASE_ERROR" as const };
+  if (transactionError || walletError || receiptError || ledgerError || cashCountError) {
+    return { ok: false as const, error: "DATABASE_ERROR" as const };
+  }
   let income = BigInt(0);
   let expenses = BigInt(0);
   for (const transaction of transactions ?? []) {
@@ -286,11 +306,23 @@ export async function getReportKpisForCurrentOrganization() {
     if (transaction.type === "expense") expenses += amount;
   }
   const pendingReceipts = (receipts ?? []).filter((receipt) => receipt.review_status === "pending").length;
+  const reviewedReceiptCount = (receipts ?? []).filter((receipt) => receipt.review_status === "approved").length;
+  const unassignedReceiptCount = (receipts ?? []).filter((receipt) => !receipt.transaction_id).length;
   let liquid = BigInt(0);
   for (const entry of ledgerEntries ?? []) {
     const account = Array.isArray(entry.ledger_accounts) ? entry.ledger_accounts[0] : entry.ledger_accounts;
     if (account?.wallet_id) liquid += BigInt(String(entry.debit_minor ?? 0)) - BigInt(String(entry.credit_minor ?? 0));
   }
+  const activeWalletIds = new Set((wallets ?? []).map((wallet) => wallet.id));
+  const latestCounts = new Map<string, { difference_minor: number }>();
+  for (const count of cashCounts ?? []) {
+    if (activeWalletIds.has(count.wallet_id) && !latestCounts.has(count.wallet_id)) {
+      latestCounts.set(count.wallet_id, { difference_minor: count.difference_minor });
+    }
+  }
+  const reconciliationPercent = activeWalletIds.size > 0 && latestCounts.size === activeWalletIds.size
+    ? Math.round((([...latestCounts.values()].filter((count) => Number(count.difference_minor) === 0).length / activeWalletIds.size) * 100))
+    : null;
   return {
     ok: true as const,
     incomeMinor: income.toString(),
@@ -299,6 +331,9 @@ export async function getReportKpisForCurrentOrganization() {
     liquidMinor: liquid.toString(),
     walletCount: wallets?.length ?? 0,
     reviewCount: pendingReceipts,
+    reviewedReceiptCount,
+    unassignedReceiptCount,
+    reconciliationPercent,
   };
 }
 
@@ -352,21 +387,26 @@ export async function getReportSnapshot() {
   ]);
   if (!transactions.ok || !goals.ok) return { ok: false as const };
 
-  const months = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun"];
-  const monthly = new Map(months.map((month) => [month, { income: 0, expenses: 0 }]));
+  const now = new Date();
+  const months = Array.from({ length: 6 }, (_, index) => {
+    const date = new Date(now.getFullYear(), now.getMonth() - 5 + index, 1);
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+    const label = date.toLocaleDateString("de-DE", { month: "short" }).replace(".", "");
+    return { key, label, year: date.getFullYear() };
+  });
+  const monthly = new Map(months.map((month) => [month.key, { income: 0, expenses: 0 }]));
   const categoryTotals = new Map<string, number>();
   for (const transaction of transactions.items) {
-    const monthIndex = transaction.date ? Number(transaction.date.slice(5, 7)) - 1 : -1;
-    const month = months[monthIndex];
+    const month = transaction.date ? months.find((item) => item.key === transaction.date.slice(0, 7)) : undefined;
     const amount = Math.abs(Number(transaction.amountMinor)) / 100;
-    if (month && monthly.has(month)) {
-      const row = monthly.get(month)!;
+    if (month && monthly.has(month.key)) {
+      const row = monthly.get(month.key)!;
       if (transaction.type === "income") row.income += amount;
       if (transaction.type === "expense") row.expenses += amount;
     }
     if (transaction.type === "expense") categoryTotals.set(transaction.category, (categoryTotals.get(transaction.category) ?? 0) + amount);
   }
-  const cashflow = months.map((month) => ({ month, ...(monthly.get(month) ?? { income: 0, expenses: 0 }) }));
+  const cashflow = months.map((month) => ({ month: month.label, ...(monthly.get(month.key) ?? { income: 0, expenses: 0 }) }));
   if (!transactions.items.length) {
     return {
       ok: true as const,
@@ -389,9 +429,9 @@ export async function getReportSnapshot() {
     share: totalExpenses ? Math.round((amount / totalExpenses) * 100) : 0,
   }));
   let balance = 0;
-  const analysisBalance = cashflow.map((month) => {
+  const analysisBalance = cashflow.map((month, index) => {
     balance += month.income - month.expenses;
-    return { month: `${month.month} 2026`, balance };
+    return { month: `${month.month} ${months[index]?.year ?? now.getFullYear()}`, balance };
   });
   return {
     ok: true as const,

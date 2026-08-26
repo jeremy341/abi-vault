@@ -25,7 +25,7 @@ type Person = {
   name: string;
   role: string;
   access: string;
-  status: "Aktiv" | "Einladung offen";
+  status: "Aktiv" | "Einladung offen" | "Nicht aktiv";
   initials: string;
 };
 
@@ -144,22 +144,31 @@ export default function PeoplePage() {
   const [newRole, setNewRole] = useState("Supervisor");
   const [inviteLink, setInviteLink] = useState("");
   const [message, setMessage] = useState("");
+  const [loadError, setLoadError] = useState("");
   const [openMenuId, setOpenMenuId] = useState<number | string | null>(null);
+  const [busyPersonId, setBusyPersonId] = useState<number | string | null>(null);
+  const [inviteSaving, setInviteSaving] = useState(false);
   useEffect(() => {
     let active = true;
     listMembersForCurrentOrganization()
       .then((result) => {
-        if (!active || !result.ok) return;
+        if (!active) return;
+        if (!result.ok) {
+          setLoadError("Die Mitglieder konnten nicht geladen werden.");
+          return;
+        }
         setPeople(result.items.map((member) => ({
           id: member.id,
           name: member.name,
           role: member.role === "admin" ? "Administrator" : "Supervisor",
           access: member.role === "admin" ? "Vollzugriff" : "Finanzen verwalten",
-          status: member.status === "active" ? "Aktiv" : "Einladung offen",
+          status: member.status === "active" ? "Aktiv" : member.status === "invited" ? "Einladung offen" : "Nicht aktiv",
           initials: member.name.split(/\s+/).map((part: string) => part[0]).join("").slice(0, 2).toUpperCase(),
         })));
       })
-      .catch(() => undefined)
+      .catch(() => {
+        if (active) setLoadError("Die Mitglieder konnten nicht geladen werden.");
+      })
       .finally(() => {
         if (active) setLoading(false);
       });
@@ -200,10 +209,13 @@ export default function PeoplePage() {
   }, [openMenuId]);
 
   async function cycleRole(personId: number | string) {
+    if (busyPersonId !== null || typeof personId !== "string") return;
     const selected = people.find((person) => person.id === personId);
     if (!selected) return;
     const nextRole = selected.role === "Administrator" ? "supervisor" : "admin";
-    if (typeof personId === "string" && /^[^\s]+$/.test(personId)) {
+    if (/^[^\s]+$/.test(personId)) {
+      setBusyPersonId(personId);
+      try {
       const result = await updateMemberRole({
         clerkUserId: personId,
         role: nextRole,
@@ -213,6 +225,12 @@ export default function PeoplePage() {
         setMessage("Die Rolle konnte nicht aktualisiert werden.");
         setOpenMenuId(null);
         return;
+      }
+      } catch {
+        setMessage("Die Rolle konnte nicht aktualisiert werden.");
+        setOpenMenuId(null);
+      } finally {
+        setBusyPersonId(null);
       }
     }
     setPeople((current) =>
@@ -235,27 +253,63 @@ export default function PeoplePage() {
 
   async function addPerson(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (inviteSaving) return;
+    setInviteSaving(true);
     const role =
       newRole === "Administrator"
         ? "admin"
         : newRole === "Supervisor"
           ? "supervisor"
         : "supervisor";
-    const invitation = await createRoleInviteLink({ role });
-    if (!invitation.ok) {
+    try {
+      const invitation = await createRoleInviteLink({ role });
+      if (!invitation.ok) {
+        setMessage(
+          invitation.error === "INVALID_INPUT"
+            ? "Bitte eine gültige Rolle auswählen."
+            : "Der Einladungslink konnte nicht erstellt werden.",
+        );
+        return;
+      }
+      setInviteLink(invitation.url);
       setMessage(
-        invitation.error === "INVALID_INPUT"
-          ? "Bitte eine gültige Rolle auswählen."
-          : "Der Einladungslink konnte nicht erstellt werden.",
+        newRole === "Supervisor"
+          ? "Supervisor-Link erstellt: 30 Verwendungen, 30 Tage gültig."
+          : "Administrator-Link erstellt: einmalig, 7 Tage gültig.",
       );
-      return;
+    } catch {
+      setMessage("Der Einladungslink konnte nicht erstellt werden.");
+    } finally {
+      setInviteSaving(false);
     }
-    setInviteLink(invitation.url);
-    setMessage(
-      newRole === "Supervisor"
-        ? "Supervisor-Link erstellt: 30 Verwendungen, 30 Tage gültig."
-        : "Administrator-Link erstellt: einmalig, 7 Tage gültig.",
-    );
+  }
+
+  async function handleRemovePerson(personId: number | string) {
+    if (busyPersonId !== null || typeof personId !== "string") return;
+    setBusyPersonId(personId);
+    try {
+      const result = await removeMember({
+        clerkUserId: personId,
+        reason: "Mitglied über die Mitgliederverwaltung entfernt",
+      });
+      if (!result.ok) {
+        setMessage(
+          result.error === "LAST_ADMIN_REQUIRED"
+            ? "Der letzte Administrator kann nicht entfernt werden."
+            : "Die Person konnte nicht entfernt werden.",
+        );
+        setOpenMenuId(null);
+        return;
+      }
+      setPeople((current) => current.filter((entry) => entry.id !== personId));
+      setMessage("Person entfernt.");
+      setOpenMenuId(null);
+    } catch {
+      setMessage("Die Person konnte nicht entfernt werden.");
+      setOpenMenuId(null);
+    } finally {
+      setBusyPersonId(null);
+    }
   }
 
   async function copyInviteLink() {
@@ -267,6 +321,7 @@ export default function PeoplePage() {
   return (
     <section className={mode === "phone" ? phoneStyles.root : styles.page} aria-busy={loading}>
       <LoadingStatus loading={loading} label="Mitglieder werden geladen…" />
+      {loadError ? <p className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{loadError}</p> : null}
       {mode === "phone" ? (
         <PhonePeopleView
           loading={loading}
@@ -389,61 +444,20 @@ export default function PeoplePage() {
                           aria-label={`${person.name} verwalten`}
                           onPointerDown={(event) => event.stopPropagation()}
                         >
-                          <button
-                            type="button"
-                            role="menuitem"
-                            onClick={() => cycleRole(person.id)}
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={() => cycleRole(person.id)}
+                          disabled={busyPersonId === person.id}
                           >
                             Rolle wechseln
                           </button>
                           <button
                             type="button"
                             role="menuitem"
-                            onClick={() => {
-                              setPeople((current) =>
-                                current.map((entry) =>
-                                  entry.id === person.id
-                                    ? {
-                                      ...entry,
-                                      status:
-                                        entry.status === "Aktiv"
-                                          ? "Einladung offen"
-                                          : "Aktiv",
-                                    }
-                                    : entry,
-                                ),
-                              );
-                              setMessage("Status aktualisiert.");
-                              setOpenMenuId(null);
-                            }}
-                          >
-                            Status wechseln
-                          </button>
-                          <button
-                            type="button"
-                            role="menuitem"
                             className={styles.destructiveMenuItem}
-                            onClick={async () => {
-                              if (typeof person.id !== "string") return;
-                              const result = await removeMember({
-                                clerkUserId: person.id,
-                                reason: "Mitglied über die Mitgliederverwaltung entfernt",
-                              });
-                              if (!result.ok) {
-                                setMessage(
-                                  result.error === "LAST_ADMIN_REQUIRED"
-                                    ? "Der letzte Administrator kann nicht entfernt werden."
-                                    : "Die Person konnte nicht entfernt werden.",
-                                );
-                                setOpenMenuId(null);
-                                return;
-                              }
-                              setPeople((current) =>
-                                current.filter((entry) => entry.id !== person.id),
-                              );
-                              setMessage("Person entfernt.");
-                              setOpenMenuId(null);
-                            }}
+                            onClick={() => void handleRemovePerson(person.id)}
+                            disabled={busyPersonId === person.id}
                           >
                             Person entfernen
                           </button>
@@ -519,7 +533,7 @@ export default function PeoplePage() {
                   </div>
                   <div className={styles.activityStat}>
                     <span>Letzte Aktivität</span>
-                    <strong>Heute, 14:32 Uhr</strong>
+                    <strong>Keine Aktivität verfügbar</strong>
                   </div>
                   <p aria-live="polite">{message || "\u00a0"}</p>
                 </div>
@@ -546,6 +560,7 @@ export default function PeoplePage() {
                 type="button"
                 className={styles.closeButton}
                 onClick={closeModal}
+                disabled={inviteSaving}
                 aria-label="Dialog schließen"
               >
                 <X aria-hidden="true" />
@@ -578,11 +593,12 @@ export default function PeoplePage() {
                 type="button"
                 className={styles.secondaryButton}
                 onClick={closeModal}
+                disabled={inviteSaving}
               >
                 Abbrechen
               </button>
-              <button type="submit" className={styles.primaryButton}>
-                {inviteLink ? "Neuen Link erstellen" : "Link erstellen"}
+              <button type="submit" className={styles.primaryButton} disabled={inviteSaving} aria-busy={inviteSaving}>
+                {inviteSaving ? "Wird erstellt …" : inviteLink ? "Neuen Link erstellen" : "Link erstellen"}
               </button>
             </footer>
           </form>

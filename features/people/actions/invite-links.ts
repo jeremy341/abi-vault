@@ -80,17 +80,6 @@ export async function acceptRoleInviteLink(token: string) {
     return { ok: false as const, error: "LINK_EXPIRED" };
   }
 
-  const { data: consumed, error: consumeError } = await admin
-    .from("organization_invite_links")
-    .update({ uses: invite.uses + 1 })
-    .eq("id", invite.id)
-    .eq("uses", invite.uses)
-    .is("revoked_at", null)
-    .select("id")
-    .maybeSingle();
-
-  if (consumeError || !consumed) return { ok: false as const, error: "LINK_ALREADY_USED" };
-
   const clerkRole = invite.role === "admin" ? "org:admin" : "org:member";
 
   const { data: existingMembership } = await admin
@@ -113,6 +102,17 @@ export async function acceptRoleInviteLink(token: string) {
   } catch {
     return { ok: false as const, error: "MEMBERSHIP_CREATE_FAILED" };
   }
+
+  const { data: consumed, error: consumeError } = await admin
+    .from("organization_invite_links")
+    .update({ uses: invite.uses + 1 })
+    .eq("id", invite.id)
+    .eq("uses", invite.uses)
+    .is("revoked_at", null)
+    .select("id")
+    .maybeSingle();
+
+  if (consumeError || !consumed) return { ok: false as const, error: "LINK_ALREADY_USED" };
 
   const { error: membershipError } = await admin
     .from("committee_memberships")

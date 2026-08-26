@@ -11,7 +11,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Dialog } from "@/components/ui/dialog";
 import { LoadingCollection, LoadingStatus, LoadingText } from "@/components/ui/loading-state";
 import styles from "./goals.module.css";
@@ -20,6 +20,7 @@ import { usePresentationMode } from "@/hooks/use-presentation-mode";
 import { listGoalsForCurrentOrganization } from "@/features/finance/actions/queries";
 import { createGoal } from "@/features/goals/actions/goals";
 import { archiveGoal, updateGoal } from "@/features/goals/actions/goal-mutations";
+import { cachedFinanceQuery, invalidateFinanceQuery } from "@/lib/finance/client-cache";
 
 type Goal = {
   id: string;
@@ -29,33 +30,6 @@ type Goal = {
   progress: number;
   date: string;
 };
-
-const initialGoals: Goal[] = [
-  {
-    id: "demo-goal-1",
-    title: "Abiball",
-    target: 3000,
-    saved: 2100,
-    progress: 70,
-    date: "15.05.2026",
-  },
-  {
-    id: "demo-goal-2",
-    title: "Abizeitung",
-    target: 1200,
-    saved: 540,
-    progress: 45,
-    date: "30.04.2026",
-  },
-  {
-    id: "demo-goal-3",
-    title: "Reserve",
-    target: 1000,
-    saved: 800,
-    progress: 80,
-    date: "01.07.2026",
-  },
-];
 
 const euro = new Intl.NumberFormat("de-DE", {
   style: "currency",
@@ -146,11 +120,18 @@ export default function GoalsPage() {
   const [savedAmount, setSavedAmount] = useState("");
   const [deadline, setDeadline] = useState("");
   const [formError, setFormError] = useState("");
+  const [loadError, setLoadError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const idempotencyKey = useRef<string | null>(null);
   useEffect(() => {
     let active = true;
-    listGoalsForCurrentOrganization()
+    cachedFinanceQuery("goals", listGoalsForCurrentOrganization)
       .then((result) => {
-        if (!active || !result.ok) return;
+        if (!active) return;
+        if (!result.ok) {
+          setLoadError("Die Ziele konnten nicht geladen werden.");
+          return;
+        }
         setGoals(result.items.map((goal) => {
           const target = Number(goal.target_amount_minor) / 100;
           const saved = Number(goal.saved_amount_minor) / 100;
@@ -164,7 +145,9 @@ export default function GoalsPage() {
           };
         }));
       })
-      .catch(() => undefined)
+      .catch(() => {
+        if (active) setLoadError("Die Ziele konnten nicht geladen werden.");
+      })
       .finally(() => {
         if (active) setLoading(false);
       });
@@ -230,6 +213,11 @@ export default function GoalsPage() {
 
   async function handleSaveGoal(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (saving) return;
+    setSaving(true);
+    setFormError("");
+    idempotencyKey.current ??= `goal-${crypto.randomUUID()}`;
+    try {
     const formData = new FormData(event.currentTarget);
     const submittedName = String(formData.get("goalName") ?? "").trim();
     const submittedDeadline = String(formData.get("deadline") ?? "");
@@ -293,7 +281,7 @@ export default function GoalsPage() {
         targetAmount: submittedTargetAmount,
         deadline: submittedDeadline,
         visibility: "private",
-        idempotencyKey: `goal-${crypto.randomUUID()}`,
+        idempotencyKey: idempotencyKey.current,
       });
       if (!result.success) {
         setFormError("Das Ziel konnte nicht gespeichert werden.");
@@ -312,29 +300,43 @@ export default function GoalsPage() {
         },
       ]);
     }
+    invalidateFinanceQuery("goals", "dashboard-snapshot", "report-snapshot");
+    idempotencyKey.current = null;
     closeModal();
+    } catch {
+      setFormError("Das Ziel konnte nicht gespeichert werden.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function handleDeleteGoal() {
-    if (editingGoalIndex === null) return;
-    const currentGoal = goals[editingGoalIndex];
-    if (/^[0-9a-f-]{36}$/i.test(currentGoal.id)) {
-      const result = await archiveGoal({
-        goalId: currentGoal.id,
-        reason: "Ziel im Ziel-Dialog archiviert",
-      });
-      if (!result.ok) {
-        setFormError("Das Ziel konnte nicht archiviert werden.");
-        return;
+    if (editingGoalIndex === null || saving) return;
+    setSaving(true);
+    try {
+      const currentGoal = goals[editingGoalIndex];
+      if (/^[0-9a-f-]{36}$/i.test(currentGoal.id)) {
+        const result = await archiveGoal({
+          goalId: currentGoal.id,
+          reason: "Ziel im Ziel-Dialog archiviert",
+        });
+        if (!result.ok) {
+          setFormError("Das Ziel konnte nicht archiviert werden.");
+          return;
+        }
       }
+      setGoals((current) => current.filter((_, idx) => idx !== editingGoalIndex));
+      invalidateFinanceQuery("goals", "dashboard-snapshot", "report-snapshot");
+      closeModal();
+    } finally {
+      setSaving(false);
     }
-    setGoals((current) => current.filter((_, idx) => idx !== editingGoalIndex));
-    closeModal();
   }
 
   return (
     <section className={mode === "phone" ? phoneStyles.root : styles.page} aria-busy={loading}>
       <LoadingStatus loading={loading} label="Ziele werden geladen…" />
+      {loadError ? <p className={styles.formError} role="alert">{loadError}</p> : null}
       {mode === "phone" ? (
         <PhoneGoalsView
           loading={loading}
@@ -662,6 +664,7 @@ export default function GoalsPage() {
                   type="button"
                   className={styles.deleteButton}
                   onClick={handleDeleteGoal}
+                  disabled={saving}
                 >
                   <Trash2 className="inline-block size-4 mr-1.5" />
                   Ziel löschen
@@ -675,11 +678,12 @@ export default function GoalsPage() {
                   type="button"
                   className={styles.secondaryButton}
                   onClick={closeModal}
+                  disabled={saving}
                 >
                   Abbrechen
                 </button>
-                <button type="submit" className={styles.primaryButton}>
-                  {editingGoalIndex !== null
+                <button type="submit" className={styles.primaryButton} disabled={saving} aria-busy={saving}>
+                  {saving ? "Wird gespeichert …" : editingGoalIndex !== null
                     ? "Änderungen speichern"
                     : "Ziel hinzufügen"}
                 </button>

@@ -697,3 +697,14 @@
     backdrop-filter: none;
   }
 }
+
+/* The responsive hook intentionally uses a desktop server snapshot for
+   hydration safety. Hide that provisional shell before the client media query
+   selects the phone or tablet shell, preventing a PC-sidebar flash on reload. */
+@media (max-width: 767px),
+  (min-width: 768px) and (max-width: 1279px),
+  (min-width: 1280px) and (max-width: 1399px) and (min-height: 800px) {
+  .desktopShell {
+    display: none;
+  }
+}

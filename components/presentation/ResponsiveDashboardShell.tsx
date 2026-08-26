@@ -108,7 +108,7 @@ const pageInformation: Record<string, { title: string; description: string }> =
     },
     "/dashboard/funds": {
       title: "Kasse & Konten",
-      description: "Bankkonto und Bargeldbestand verwalten.",
+      description: "Barkasse und Kassenbestand verwalten.",
     },
     "/dashboard/reports": {
       title: "Berichte",

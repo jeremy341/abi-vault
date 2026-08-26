@@ -7,9 +7,14 @@ import EditCardModal from "@/components/dashboard/EditCardModal";
 import type { AccountCardDetails } from "@/components/dashboard/AccountCard";
 import AdaptiveFundsView from "@/components/presentation/AdaptiveFundsView";
 import { Dialog } from "@/components/ui/dialog";
+import { InlineLoading, LoadingStatus } from "@/components/ui/loading-state";
 import { usePresentationMode } from "@/hooks/use-presentation-mode";
 import adaptiveStyles from "./funds-adaptive.module.css";
 import styles from "./funds.module.css";
+import { listWalletsForCurrentOrganization } from "@/features/finance/actions/queries";
+import { archiveWallet, createWallet, updateWallet } from "@/features/finance/actions/wallets";
+import { recordCashCount } from "@/features/finance/actions/cash-counts";
+import { createTransfer } from "@/features/finance/actions/transfers";
 
 type DashboardCard = {
   id: string;
@@ -176,13 +181,22 @@ const euro = (value: number) => money.format(value);
 
 export default function FundsPage() {
   const mode = usePresentationMode();
-  const [cards, setCards] = useState<DashboardCard[]>(initialCards);
+  const [cards, setCards] = useState<DashboardCard[]>([]);
   const [activeCardIndex, setActiveCardIndex] = useState(0);
-  const [cashBox, setCashBox] = useState<CashBox>(initialCashBox);
+  const [cashBox, setCashBox] = useState<CashBox>({
+    id: "",
+    name: "Barkasse",
+    balance: 0,
+    responsible: "",
+    lastCountDate: "",
+    countStatus: "matched",
+    difference: 0,
+  });
   const [auditLogs, setAuditLogs] =
-    useState<CashAuditEntry[]>(initialAuditLogs);
+    useState<CashAuditEntry[]>([]);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const [isAddCardOpen, setIsAddCardOpen] = useState(false);
   const [isEditCardOpen, setIsEditCardOpen] = useState(false);
@@ -217,6 +231,44 @@ export default function FundsPage() {
   const [transferAmount, setTransferAmount] = useState("");
   const [transferNote, setTransferNote] = useState("");
   const [transferError, setTransferError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    listWalletsForCurrentOrganization()
+      .then((result) => {
+        if (!active || !result.ok) return;
+        const bankWallets = result.items.filter((item) => item.type !== "cash");
+        setCards(bankWallets.map((wallet, index) => ({
+          id: wallet.id,
+          details: {
+            accountName: wallet.name,
+            cardNumber: `•••• •••• •••• ${wallet.connected?.iban_last4 ?? "0000"}`,
+            holder: wallet.connected?.account_holder ?? "Abi Komitee",
+            expiry: "—",
+            color: index % 2 ? "#3b3b40" : "#111114",
+          },
+          balance: Number(wallet.balanceMinor) / 100,
+          iban: wallet.connected?.iban_last4 ? `•••• ${wallet.connected.iban_last4}` : "",
+          bic: wallet.connected?.bic ?? "",
+          bankName: wallet.connected?.display_name ?? "Manuelles Konto",
+          status: wallet.connected ? "Bankkonto · API verbunden" : "Bankkonto · manuell",
+          lastSync: wallet.connected ? "Synchronisierung aktiv" : "Noch nicht synchronisiert",
+        })));
+        const cash = result.items.find((item) => item.type === "cash");
+        if (cash) {
+          setCashBox((current) => ({ ...current, id: cash.id, name: cash.name, balance: Number(cash.balanceMinor) / 100 }));
+        } else {
+          setCashBox((current) => ({ ...current, balance: 0 }));
+        }
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const closeAddCardDialog = useCallback(() => setIsAddCardOpen(false), []);
   const closeEditCardDialog = useCallback(() => setIsEditCardOpen(false), []);
@@ -276,9 +328,20 @@ export default function FundsPage() {
     }
   }
 
-  function handleSaveNewCard(details: AccountCardDetails) {
+  async function handleSaveNewCard(details: AccountCardDetails) {
+    const persisted = await createWallet({
+      name: details.accountName,
+      type: "manual_bank",
+      responsibleClerkUserId: null,
+      bankConnectionId: null,
+      idempotencyKey: `wallet-${crypto.randomUUID()}`,
+    });
+    if (!persisted.success) {
+      setNotice("Konto konnte nicht gespeichert werden.");
+      return;
+    }
     const newCard: DashboardCard = {
-      id: `bank-${Date.now()}`,
+      id: persisted.data.id,
       details,
       balance: 0,
       iban: "DE89 3704 0044 **** 0000",
@@ -293,8 +356,17 @@ export default function FundsPage() {
     setNotice("Karte hinzugefügt.");
   }
 
-  function handleUpdateCard(details: AccountCardDetails) {
+  async function handleUpdateCard(details: AccountCardDetails) {
     if (!activeCard) return;
+    const result = await updateWallet({
+      walletId: activeCard.id,
+      name: details.accountName,
+      reason: "Konto über die Kartenverwaltung aktualisiert",
+    });
+    if (!result.success) {
+      setNotice("Kartendaten konnten nicht gespeichert werden.");
+      return;
+    }
     setCards((current) =>
       current.map((card, index) =>
         index === safeIndex ? { ...card, details } : card,
@@ -363,7 +435,16 @@ export default function FundsPage() {
       [nextMode === "direct" ? 0 : 1]?.focus();
   }
 
-  function confirmDeleteCard() {
+  async function confirmDeleteCard() {
+    if (!activeCard) return;
+    const result = await archiveWallet({
+      walletId: activeCard.id,
+      reason: "Konto über die Kartenverwaltung archiviert",
+    });
+    if (!result.success) {
+      setNotice("Karte konnte nicht entfernt werden.");
+      return;
+    }
     setCards((current) =>
       current.filter((_, index) => index !== safeIndex),
     );
@@ -372,7 +453,7 @@ export default function FundsPage() {
     setNotice("Karte entfernt.");
   }
 
-  function handleSaveCount(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSaveCount(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
     if (activeCountedAmount < 0) {
@@ -391,6 +472,17 @@ export default function FundsPage() {
     const status =
       Math.abs(difference) < 0.01 ? "matched" : "discrepancy";
     const auditor = countPerson.trim() || cashBox.responsible;
+    if (/^[0-9a-f-]{36}$/i.test(cashBox.id)) {
+      const persisted = await recordCashCount({
+        walletId: cashBox.id,
+        countedAmount: String(activeCountedAmount).replace(".", ","),
+        note: countNote.trim(),
+      });
+      if (!persisted.ok) {
+        setCountError("Der Kassensturz konnte nicht gespeichert werden.");
+        return;
+      }
+    }
 
     setCashBox((current) => ({
       ...current,
@@ -416,7 +508,7 @@ export default function FundsPage() {
     setNotice("Kassensturz gespeichert.");
   }
 
-  function handleExecuteTransfer(event: React.FormEvent<HTMLFormElement>) {
+  async function handleExecuteTransfer(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
     const amount = Number.parseFloat(transferAmount.replace(",", "."));
@@ -431,6 +523,21 @@ export default function FundsPage() {
         )?.focus();
       });
       return;
+    }
+
+    const fromWalletId = transferDirection === "bank-to-cash" ? activeCard?.id : cashBox.id;
+    const toWalletId = transferDirection === "bank-to-cash" ? cashBox.id : activeCard?.id;
+    if (fromWalletId && toWalletId && /^[0-9a-f-]{36}$/i.test(fromWalletId) && /^[0-9a-f-]{36}$/i.test(toWalletId)) {
+      const persisted = await createTransfer({
+        fromWalletId,
+        toWalletId,
+        amount: transferAmount,
+        note: transferNote,
+      });
+      if (!persisted.ok) {
+        setTransferError("Die Umbuchung konnte nicht gespeichert werden.");
+        return;
+      }
     }
 
     if (transferDirection === "bank-to-cash") {
@@ -493,7 +600,10 @@ export default function FundsPage() {
   return (
     <section
       className={`${adaptiveStyles.root} ${mode === "desktop" ? adaptiveStyles.desktopPageRoot : ""}`}
+      aria-busy={loading}
     >
+      <LoadingStatus loading={loading} label="Kasse wird geladen…" />
+      {loading ? <div className={adaptiveStyles.loadingOverlay}><InlineLoading label="Kasse wird geladen…" /></div> : null}
       <p className={styles.liveNotice} aria-live="polite">
         {notice}
       </p>
@@ -505,7 +615,7 @@ export default function FundsPage() {
         activeCardIndex={safeIndex}
         cashBox={cashBox}
         auditLogs={auditLogs}
-        activities={recentAccountActivity}
+        activities={[]}
         copiedField={copiedField}
         euro={euro}
         onSwitchCard={switchCard}

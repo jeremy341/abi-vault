@@ -1,11 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowDown,
   ArrowUp,
-  BusFront,
-  CakeSlice,
   CalendarDays,
   HandCoins,
   Equal,
@@ -14,7 +12,7 @@ import {
   Paperclip,
   Plus,
   Search,
-  PartyPopper,
+  TrendingDown,
   TrendingUp,
   X,
 } from "lucide-react";
@@ -25,178 +23,36 @@ import {
   type FieldDropdownOption,
 } from "@/components/ui/field-dropdown";
 import { Pagination } from "@/components/ui/pagination";
+import {
+  LoadingCollection,
+  LoadingStatus,
+  LoadingText,
+} from "@/components/ui/loading-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useResponsivePageSize } from "@/hooks/use-responsive-page-size";
 import { usePresentationMode } from "@/hooks/use-presentation-mode";
 import phoneStyles from "./transactions-phone.module.css";
+import { listTransactionsForCurrentOrganization } from "@/features/finance/actions/queries";
+import { createManualTransactionFromUi } from "@/features/finance/actions/manual-ui";
 
 type Category = "Material" | "Sonstiges" | "Veranstaltung";
 type FilterType = "Einnahmen" | "Ausgaben";
 type ReceiptFilter = "Alle" | "Vorhanden" | "Fehlt";
 type ReviewFilter = "Alle" | "Geprüft" | "Zu prüfen";
-type AccountFilter = "Alle Konten" | "Bankkonto" | "Barkasse";
+type AccountFilter = "Barkasse";
 type Transaction = {
-  id: number;
+  id: number | string;
   title: string;
   category: Category;
   date: string;
   amount: number;
   receipt?: string;
   reviewStatus: "Geprüft" | "Zu prüfen";
-  account: Exclude<AccountFilter, "Alle Konten">;
+  account: AccountFilter;
   tone: "violet" | "green" | "orange";
   icon: typeof FileText;
 };
 
-const initialTransactions: Transaction[] = [
-  {
-    id: 1,
-    title: "Druck Abizeitung",
-    category: "Material",
-    date: "12.05.2024",
-    amount: -320,
-    receipt: "Rechnung_Abizeitung.pdf",
-    reviewStatus: "Geprüft",
-    account: "Bankkonto",
-    tone: "violet",
-    icon: FileText,
-  },
-  {
-    id: 2,
-    title: "Kuchenverkauf",
-    category: "Sonstiges",
-    date: "11.05.2024",
-    amount: 185.5,
-    reviewStatus: "Geprüft",
-    account: "Barkasse",
-    tone: "green",
-    icon: CakeSlice,
-  },
-  {
-    id: 3,
-    title: "Dekoration Abiball",
-    category: "Veranstaltung",
-    date: "08.05.2024",
-    amount: -184.9,
-    receipt: "Bon_Abiball.jpg",
-    reviewStatus: "Zu prüfen",
-    account: "Bankkonto",
-    tone: "orange",
-    icon: PartyPopper,
-  },
-  {
-    id: 4,
-    title: "Spende Eltern",
-    category: "Sonstiges",
-    date: "07.05.2024",
-    amount: 250,
-    reviewStatus: "Geprüft",
-    account: "Barkasse",
-    tone: "green",
-    icon: HandCoins,
-  },
-  {
-    id: 5,
-    title: "Busfahrt Abifahrt",
-    category: "Veranstaltung",
-    date: "05.05.2024",
-    amount: -1200,
-    receipt: "Rechnung_Busfahrt.pdf",
-    reviewStatus: "Geprüft",
-    account: "Bankkonto",
-    tone: "violet",
-    icon: BusFront,
-  },
-  {
-    id: 6,
-    title: "Mitgliedsbeitrag",
-    category: "Sonstiges",
-    date: "03.05.2024",
-    amount: 120,
-    reviewStatus: "Geprüft",
-    account: "Bankkonto",
-    tone: "green",
-    icon: HandCoins,
-  },
-  {
-    id: 7,
-    title: "Druck Nachzahlung",
-    category: "Material",
-    date: "02.05.2024",
-    amount: -75,
-    receipt: "Rechnung_Nachdruck.pdf",
-    reviewStatus: "Geprüft",
-    account: "Bankkonto",
-    tone: "violet",
-    icon: FileText,
-  },
-  {
-    id: 8,
-    title: "Dekoration Klassenraum",
-    category: "Material",
-    date: "30.04.2024",
-    amount: -96.4,
-    reviewStatus: "Zu prüfen",
-    account: "Barkasse",
-    tone: "orange",
-    icon: PartyPopper,
-  },
-  {
-    id: 9,
-    title: "Spende Förderverein",
-    category: "Sonstiges",
-    date: "28.04.2024",
-    amount: 300,
-    reviewStatus: "Geprüft",
-    account: "Bankkonto",
-    tone: "green",
-    icon: HandCoins,
-  },
-  {
-    id: 10,
-    title: "Busreservierung Abifahrt",
-    category: "Veranstaltung",
-    date: "26.04.2024",
-    amount: -420,
-    receipt: "Reservierung_Abifahrt.pdf",
-    reviewStatus: "Geprüft",
-    account: "Bankkonto",
-    tone: "violet",
-    icon: BusFront,
-  },
-  {
-    id: 11,
-    title: "Kuchenzutaten Einkauf",
-    category: "Material",
-    date: "24.04.2024",
-    amount: -64.8,
-    reviewStatus: "Zu prüfen",
-    account: "Barkasse",
-    tone: "orange",
-    icon: CakeSlice,
-  },
-  {
-    id: 12,
-    title: "Tombola Preise",
-    category: "Veranstaltung",
-    date: "22.04.2024",
-    amount: -142,
-    reviewStatus: "Geprüft",
-    account: "Barkasse",
-    tone: "violet",
-    icon: PartyPopper,
-  },
-  {
-    id: 13,
-    title: "Abiball Ticketverkauf",
-    category: "Sonstiges",
-    date: "20.04.2024",
-    amount: 540,
-    reviewStatus: "Geprüft",
-    account: "Barkasse",
-    tone: "green",
-    icon: HandCoins,
-  },
-];
 
 const toneClasses = {
   violet: styles.violet,
@@ -215,6 +71,72 @@ const displayDate = (date: Date) =>
   `${String(date.getDate()).padStart(2, "0")}.${String(date.getMonth() + 1).padStart(2, "0")}.${date.getFullYear()}`;
 const displayAmount = (amount: number) =>
   `${amount >= 0 ? "+" : "-"}${Math.abs(amount).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
+
+type TrendDirection = "positive" | "negative" | "neutral";
+type Trend = { label: string; direction: TrendDirection };
+
+function trendFor(current: number, previous: number, increaseIsPositive = true): Trend {
+  if (current === 0 && previous === 0) return { label: "—", direction: "neutral" };
+  if (previous === 0) return { label: "Neu", direction: current > 0 === increaseIsPositive ? "positive" : "negative" };
+
+  const change = ((current - previous) / Math.abs(previous)) * 100;
+  const direction = change === 0
+    ? "neutral"
+    : change > 0 === increaseIsPositive
+      ? "positive"
+      : "negative";
+  return {
+    label: `${change >= 0 ? "+" : "−"}${Math.abs(change).toLocaleString("de-DE", { maximumFractionDigits: 1 })} %`,
+    direction,
+  };
+}
+
+function calculateTrends(items: Transaction[]): { income: Trend; expense: Trend; net: Trend } {
+  if (!items.length) {
+    const empty = trendFor(0, 0);
+    return { income: empty, expense: empty, net: empty };
+  }
+
+  const latest = items.reduce((latestDate, item) => {
+    const date = parseDate(item.date);
+    return date > latestDate ? date : latestDate;
+  }, parseDate(items[0].date));
+  const currentMonth = latest.getMonth();
+  const currentYear = latest.getFullYear();
+  const previousMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+  const previousYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+  const inPeriod = (item: Transaction, month: number, year: number) => {
+    const date = parseDate(item.date);
+    return date.getMonth() === month && date.getFullYear() === year;
+  };
+  const totalsFor = (month: number, year: number) => {
+    const periodItems = items.filter((item) => inPeriod(item, month, year));
+    const income = periodItems.filter((item) => item.amount >= 0).reduce((sum, item) => sum + item.amount, 0);
+    const expense = periodItems.filter((item) => item.amount < 0).reduce((sum, item) => sum + Math.abs(item.amount), 0);
+    return { income, expense, net: income - expense };
+  };
+  const current = totalsFor(currentMonth, currentYear);
+  const previous = totalsFor(previousMonth, previousYear);
+  return {
+    income: trendFor(current.income, previous.income),
+    expense: trendFor(current.expense, previous.expense, false),
+    net: trendFor(current.net, previous.net),
+  };
+}
+
+function TrendIndicator({ trend, loading }: { trend: Trend; loading: boolean }) {
+  const Icon = trend.direction === "negative"
+    ? TrendingDown
+    : trend.direction === "neutral"
+      ? Equal
+      : TrendingUp;
+  return (
+    <span className={`${styles.trend} ${styles[trend.direction]}`}>
+      <Icon aria-hidden="true" />
+      <LoadingText loading={loading}>{trend.label}</LoadingText>
+    </span>
+  );
+}
 
 function Overlay({
   children,
@@ -270,6 +192,7 @@ function StyledDropdown({
 }
 
 function PhoneTransactionsView({
+  loading,
   transactions,
   query,
   onQueryChange,
@@ -287,6 +210,7 @@ function PhoneTransactionsView({
   onOpenAdd,
   onSelect,
 }: {
+  loading: boolean;
   transactions: Transaction[];
   query: string;
   onQueryChange: (value: string) => void;
@@ -305,27 +229,29 @@ function PhoneTransactionsView({
   onSelect: (transaction: Transaction) => void;
 }) {
   return (
-    <div className={phoneStyles.root}>
+    <div className={phoneStyles.root} aria-busy={loading}>
       <section
         className={phoneStyles.summary}
         aria-label="Transaktionsübersicht"
+        data-ui-slot="summary"
       >
         <span>Netto</span>
-        <strong>{displayAmount(netBalance)}</strong>
+        <strong><LoadingText loading={loading}>{displayAmount(netBalance)}</LoadingText></strong>
         <div className={phoneStyles.summaryBreakdown}>
-          <b>+{displayAmount(totalIncome).replace("+", "")}</b>
+          <b><LoadingText loading={loading}>+{displayAmount(totalIncome).replace("+", "")}</LoadingText></b>
           <b>
-            -{displayAmount(totalExpense).replace("+", "").replace("-", "")}
+            <LoadingText loading={loading}>-{displayAmount(totalExpense).replace("+", "").replace("-", "")}</LoadingText>
           </b>
         </div>
       </section>
 
-      <div className={phoneStyles.toolbar}>
+      <div className={phoneStyles.toolbar} data-ui-slot="toolbar">
         <label className={phoneStyles.search}>
           <Search aria-hidden="true" />
           <span className="sr-only">Transaktionen durchsuchen</span>
           <input
             value={query}
+            disabled={loading}
             onChange={(event) => onQueryChange(event.target.value)}
             placeholder="Transaktionen durchsuchen …"
           />
@@ -334,6 +260,7 @@ function PhoneTransactionsView({
           type="button"
           className={phoneStyles.filterButton}
           onClick={onOpenFilters}
+          disabled={loading}
           aria-label="Transaktionen filtern"
         >
           <Filter aria-hidden="true" />
@@ -343,13 +270,18 @@ function PhoneTransactionsView({
         </button>
       </div>
 
-      <header className={phoneStyles.listHeader}>
+      <header className={phoneStyles.listHeader} data-ui-slot="list-header">
         <h2>Transaktionen</h2>
-        <span>{totalResults} Einträge</span>
+        <span><LoadingText loading={loading}>{totalResults} Einträge</LoadingText></span>
       </header>
 
-      {transactions.length ? (
-        <div className={phoneStyles.rows}>
+      <div data-ui-slot="list-body">
+        {loading ? (
+          <LoadingCollection loading knownItemCount={transactions.length} emptyHeight="12rem" label="Transaktionen werden geladen…">
+            <div className={phoneStyles.rows} />
+          </LoadingCollection>
+        ) : transactions.length ? (
+          <div className={phoneStyles.rows}>
           {transactions.map((transaction) => (
             <button
               type="button"
@@ -380,19 +312,20 @@ function PhoneTransactionsView({
               </span>
             </button>
           ))}
-        </div>
-      ) : (
-        <div className={phoneStyles.empty}>Keine Transaktionen gefunden.</div>
-      )}
+          </div>
+        ) : (
+          <div className={phoneStyles.empty}>Keine Transaktionen gefunden.</div>
+        )}
+      </div>
 
-      <footer className={phoneStyles.footer}>
+      <footer className={phoneStyles.footer} data-ui-slot="footer">
         <span>
-          {rangeStart}-{rangeEnd} von {totalResults}
+          <LoadingText loading={loading}>{rangeStart}-{rangeEnd} von {totalResults}</LoadingText>
         </span>
         <Pagination
           page={page}
           pageCount={pageCount}
-          onPageChange={onPageChange}
+          onPageChange={loading ? () => undefined : onPageChange}
         />
       </footer>
 
@@ -400,6 +333,8 @@ function PhoneTransactionsView({
         type="button"
         className={phoneStyles.addButton}
         onClick={onOpenAdd}
+        disabled={loading}
+        data-ui-slot="primary-action"
       >
         <Plus aria-hidden="true" /> Transaktion hinzufügen
       </button>
@@ -409,7 +344,34 @@ function PhoneTransactionsView({
 
 export default function TransactionsPage() {
   const mode = usePresentationMode();
-  const [items, setItems] = useState(initialTransactions);
+  const [items, setItems] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    let active = true;
+    listTransactionsForCurrentOrganization()
+      .then((result) => {
+        if (!active || !result.ok) return;
+        setItems(result.items.map((item) => ({
+          id: item.id,
+          title: item.title,
+          category: item.category as Category,
+          date: item.date ? displayDate(fromIso(item.date)) : displayDate(new Date()),
+          amount: Number(item.amountMinor) / 100,
+          receipt: item.receipt ? "receipt" : undefined,
+          reviewStatus: item.reviewStatus as Transaction["reviewStatus"],
+          account: "Barkasse",
+          tone: item.type === "income" ? "green" : item.type === "expense" ? "violet" : "orange",
+          icon: item.type === "income" ? HandCoins : item.type === "expense" ? FileText : Equal,
+        })));
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<"Alle" | Category>("Alle");
   const [type, setType] = useState<"Alle" | "Einnahmen" | "Ausgaben">("Alle");
@@ -427,8 +389,6 @@ export default function TransactionsPage() {
   const [maxAmount, setMaxAmount] = useState("");
   const [receiptFilter, setReceiptFilter] = useState<ReceiptFilter>("Alle");
   const [reviewFilter, setReviewFilter] = useState<ReviewFilter>("Alle");
-  const [accountFilter, setAccountFilter] =
-    useState<AccountFilter>("Alle Konten");
   const [draftCategories, setDraftCategories] = useState<Category[]>([]);
   const [draftTypes, setDraftTypes] = useState<FilterType[]>([]);
   const [draftMinAmount, setDraftMinAmount] = useState("");
@@ -437,8 +397,6 @@ export default function TransactionsPage() {
     useState<ReceiptFilter>("Alle");
   const [draftReviewFilter, setDraftReviewFilter] =
     useState<ReviewFilter>("Alle");
-  const [draftAccountFilter, setDraftAccountFilter] =
-    useState<AccountFilter>("Alle Konten");
   const [filterOpen, setFilterOpen] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
@@ -453,8 +411,6 @@ export default function TransactionsPage() {
   const [newAmount, setNewAmount] = useState("");
   const [newCategory, setNewCategory] = useState<Category>("Sonstiges");
   const [newType, setNewType] = useState<"Einnahme" | "Ausgabe">("Einnahme");
-  const [newAccount, setNewAccount] =
-    useState<Exclude<AccountFilter, "Alle Konten">>("Barkasse");
 
   const results = useMemo(
     () =>
@@ -486,15 +442,13 @@ export default function TransactionsPage() {
               (receiptFilter === "Vorhanden"
                 ? Boolean(item.receipt)
                 : !item.receipt)) &&
-            (reviewFilter === "Alle" || item.reviewStatus === reviewFilter) &&
-            (accountFilter === "Alle Konten" || item.account === accountFilter)
+            (reviewFilter === "Alle" || item.reviewStatus === reviewFilter)
           );
         })
         .sort(
           (a, b) => parseDate(b.date).getTime() - parseDate(a.date).getTime(),
         ),
     [
-      accountFilter,
       category,
       end,
       items,
@@ -525,6 +479,7 @@ export default function TransactionsPage() {
     .filter((item) => item.amount < 0)
     .reduce((sum, item) => sum + Math.abs(item.amount), 0);
   const netBalance = totalIncome - totalExpense;
+  const trends = useMemo(() => calculateTrends(items), [items]);
   const activeFilterCount = [
     query.trim() ? 1 : 0,
     category !== "Alle" ? 1 : 0,
@@ -535,7 +490,6 @@ export default function TransactionsPage() {
     minAmount || maxAmount ? 1 : 0,
     receiptFilter !== "Alle" ? 1 : 0,
     reviewFilter !== "Alle" ? 1 : 0,
-    accountFilter !== "Alle Konten" ? 1 : 0,
   ].reduce((sum, value) => sum + value, 0);
 
   function resetFilters() {
@@ -554,14 +508,12 @@ export default function TransactionsPage() {
     setMaxAmount("");
     setReceiptFilter("Alle");
     setReviewFilter("Alle");
-    setAccountFilter("Alle Konten");
     setDraftCategories([]);
     setDraftTypes([]);
     setDraftMinAmount("");
     setDraftMaxAmount("");
     setDraftReceiptFilter("Alle");
     setDraftReviewFilter("Alle");
-    setDraftAccountFilter("Alle Konten");
     setPage(1);
   }
   function openFilters() {
@@ -575,7 +527,6 @@ export default function TransactionsPage() {
     setDraftMaxAmount(maxAmount);
     setDraftReceiptFilter(receiptFilter);
     setDraftReviewFilter(reviewFilter);
-    setDraftAccountFilter(accountFilter);
     setFilterOpen(true);
   }
   function applyFilters() {
@@ -589,7 +540,6 @@ export default function TransactionsPage() {
     setMaxAmount(draftMaxAmount);
     setReceiptFilter(draftReceiptFilter);
     setReviewFilter(draftReviewFilter);
-    setAccountFilter(draftAccountFilter);
     setPage(1);
     setFilterOpen(false);
     setDateOpen(false);
@@ -608,18 +558,26 @@ export default function TransactionsPage() {
         : [...current, value],
     );
   }
-  function addTransaction() {
+  async function addTransaction() {
     const amount = Number(newAmount.replace(",", "."));
     if (!newTitle.trim() || !Number.isFinite(amount)) return;
+    const persisted = await createManualTransactionFromUi({
+      title: newTitle.trim(),
+      amount: newAmount,
+      direction: newType === "Einnahme" ? "income" : "expense",
+      categoryName: newType === "Einnahme" ? "Verkäufe" : newCategory,
+      walletName: "Barkasse",
+    });
+    if (!persisted.ok) return;
     setItems((current) => [
       {
-        id: Date.now(),
+        id: persisted.id,
         title: newTitle.trim(),
         category: newCategory,
         date: displayDate(new Date()),
         amount: newType === "Ausgabe" ? -Math.abs(amount) : Math.abs(amount),
         reviewStatus: "Zu prüfen",
-        account: newAccount,
+        account: "Barkasse",
         tone: newType === "Einnahme" ? "green" : "violet",
         icon: newType === "Einnahme" ? HandCoins : FileText,
       },
@@ -627,7 +585,6 @@ export default function TransactionsPage() {
     ]);
     setNewTitle("");
     setNewAmount("");
-    setNewAccount("Barkasse");
     setAddOpen(false);
     setPage(1);
   }
@@ -646,9 +603,12 @@ export default function TransactionsPage() {
             ? `${styles.page} ${styles.tabletPage}`
             : styles.page
       }
+      aria-busy={loading}
     >
+      <LoadingStatus loading={loading} label="Transaktionen werden geladen…" />
       {mode === "phone" ? (
         <PhoneTransactionsView
+          loading={loading}
           transactions={visible}
           query={query}
           onQueryChange={(value) => {
@@ -671,7 +631,7 @@ export default function TransactionsPage() {
         />
       ) : (
         <>
-          <div className={styles.kpiGrid}>
+          <div className={styles.kpiGrid} data-ui-slot="summary">
             <article className={styles.kpiCard}>
               <span className={`${styles.kpiIcon} ${styles.incomeIcon}`}>
                 <ArrowDown />
@@ -679,12 +639,10 @@ export default function TransactionsPage() {
               <div>
                 <span className={styles.kpiLabel}>Einnahmen</span>
                 <strong className={styles.incomeValue}>
-                  {displayAmount(totalIncome).replace("+", "")}
+                  <LoadingText loading={loading}>{displayAmount(totalIncome).replace("+", "")}</LoadingText>
                 </strong>
               </div>
-              <span className={`${styles.trend} ${styles.positive}`}>
-                <TrendingUp /> +18,6 %
-              </span>
+              <TrendIndicator trend={trends.income} loading={loading} />
             </article>
             <article className={styles.kpiCard}>
               <span className={`${styles.kpiIcon} ${styles.expenseIcon}`}>
@@ -693,12 +651,10 @@ export default function TransactionsPage() {
               <div>
                 <span className={styles.kpiLabel}>Ausgaben</span>
                 <strong className={styles.expenseValue}>
-                  {displayAmount(totalExpense).replace("+", "")}
+                  <LoadingText loading={loading}>{displayAmount(totalExpense).replace("+", "")}</LoadingText>
                 </strong>
               </div>
-              <span className={`${styles.trend} ${styles.negative}`}>
-                <TrendingUp /> +9,3 %
-              </span>
+              <TrendIndicator trend={trends.expense} loading={loading} />
             </article>
             <article className={styles.kpiCard}>
               <span className={`${styles.kpiIcon} ${styles.netIcon}`}>
@@ -706,36 +662,37 @@ export default function TransactionsPage() {
               </span>
               <div>
                 <span className={styles.kpiLabel}>Netto</span>
-                <strong>{displayAmount(netBalance)}</strong>
+                <strong><LoadingText loading={loading}>{displayAmount(netBalance)}</LoadingText></strong>
               </div>
-              <span className={`${styles.trend} ${styles.positive}`}>
-                <TrendingUp /> +31,4 %
-              </span>
+              <TrendIndicator trend={trends.net} loading={loading} />
             </article>
           </div>
 
-          <article className={styles.listCard}>
+          <article className={styles.listCard} data-ui-slot="content">
             <header className={styles.listHeader}>
               <div className={styles.headingGroup}>
                 <h2>Alle Transaktionen</h2>
-                <span>{activeFilterCount} aktive Filter</span>
+                <span><LoadingText loading={loading}>{activeFilterCount} aktive Filter</LoadingText></span>
               </div>
               <button
                 type="button"
                 className={styles.primaryButton}
                 onClick={() => setAddOpen(true)}
+                disabled={loading}
+                data-ui-slot="primary-action"
               >
                 <Plus />
                 Transaktion hinzufügen
               </button>
             </header>
 
-            <div className={styles.filters}>
+            <div className={styles.filters} data-ui-slot="toolbar">
               <label className={styles.searchField}>
                 <Search />
                 <span className="sr-only">Transaktionen durchsuchen</span>
                 <input
                   value={query}
+                  disabled={loading}
                   onChange={(event) => {
                     setQuery(event.target.value);
                     setPage(1);
@@ -794,7 +751,7 @@ export default function TransactionsPage() {
               </button>
             </div>
 
-            <div className={`${styles.tableWrap} ui-data-table`}>
+            <div className={`${styles.tableWrap} ui-data-table`} data-ui-slot="list-body">
               <div className={styles.tableHeader}>
                 <span>Transaktion</span>
                 <span>Kategorie</span>
@@ -803,7 +760,18 @@ export default function TransactionsPage() {
                 <span>Beleg</span>
               </div>
               <div className={styles.rows}>
-                {visible.map((transaction) => {
+                {loading ? (
+                  <LoadingCollection loading knownItemCount={items.length} emptyHeight="100%" label="Transaktionen werden geladen…">
+                    <div />
+                  </LoadingCollection>
+                ) : !visible.length ? (
+                  <EmptyState
+                    icon={<Search aria-hidden="true" />}
+                    title="Keine Transaktionen gefunden"
+                    description="Ändere die Suche oder setze die Filter zurück."
+                    action={<button type="button" onClick={resetFilters}>Filter zurücksetzen</button>}
+                  />
+                ) : visible.map((transaction) => {
                   const Icon = transaction.icon;
                   return (
                     <button
@@ -855,25 +823,14 @@ export default function TransactionsPage() {
               </div>
             </div>
 
-            {!visible.length ? (
-              <div className={styles.emptyState}>
-                <Search />
-                <strong>Keine Transaktionen gefunden</strong>
-                <span>Ändere die Suche oder setze die Filter zurück.</span>
-                <button type="button" onClick={resetFilters}>
-                  Filter zurücksetzen
-                </button>
-              </div>
-            ) : null}
-
-            <footer className={styles.pagination}>
+            <footer className={styles.pagination} data-ui-slot="footer">
               <span>
-                {rangeStart}–{rangeEnd} von {results.length}
+                <LoadingText loading={loading}>{rangeStart}–{rangeEnd} von {results.length}</LoadingText>
               </span>
               <Pagination
                 page={currentPage}
                 pageCount={pages}
-                onPageChange={setPage}
+                onPageChange={loading ? () => undefined : setPage}
                 className={styles.pageButtons}
               />
             </footer>
@@ -1077,21 +1034,6 @@ export default function TransactionsPage() {
               </fieldset>
             </div>
 
-            <StyledDropdown
-              ariaLabel="Konto oder Kasse auswählen"
-              label="Konto / Kasse"
-              value={draftAccountFilter}
-              onChange={(value) =>
-                setDraftAccountFilter(value as AccountFilter)
-              }
-              className={styles.formDropdown}
-              placement="bottom"
-              options={[
-                { value: "Alle Konten", label: "Alle Konten" },
-                { value: "Bankkonto", label: "Bankkonto" },
-                { value: "Barkasse", label: "Barkasse" },
-              ]}
-            />
           </div>
           <div className={styles.modalFooter}>
             <button
@@ -1188,19 +1130,6 @@ export default function TransactionsPage() {
                 placeholder="0,00"
               />
             </label>
-            <StyledDropdown
-              ariaLabel="Konto auswählen"
-              label="Konto"
-              value={newAccount}
-              onChange={(value) =>
-                setNewAccount(value as Exclude<AccountFilter, "Alle Konten">)
-              }
-              className={styles.formDropdown}
-              options={[
-                { value: "Bankkonto", label: "Bankkonto" },
-                { value: "Barkasse", label: "Barkasse" },
-              ]}
-            />
           </div>
           <div className={styles.modalFooter}>
             <span />

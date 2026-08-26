@@ -11,10 +11,13 @@ import {
   ShieldCheck,
   Users,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "./settings.module.css";
+import { LoadingStatus } from "@/components/ui/loading-state";
 import phoneStyles from "./settings-phone.module.css";
 import { usePresentationMode } from "@/hooks/use-presentation-mode";
+import { getCommitteeSettingsForCurrentOrganization } from "@/features/finance/actions/queries";
+import { updateCommitteeSettings } from "@/features/settings/actions/settings";
 
 type Section = "general" | "notifications" | "permissions" | "data";
 
@@ -46,6 +49,7 @@ const sections = [
 ];
 
 function PhoneSettingsView({
+  loading,
   activeSection,
   onSectionChange,
   workspaceName,
@@ -58,6 +62,7 @@ function PhoneSettingsView({
   onStatusMessage,
   onSave,
 }: {
+  loading: boolean;
   activeSection: Section;
   onSectionChange: (section: Section) => void;
   workspaceName: string;
@@ -75,8 +80,8 @@ function PhoneSettingsView({
   const ActiveIcon = active.icon;
 
   return (
-    <section className={phoneStyles.root}>
-      <nav className={phoneStyles.nav} aria-label="Einstellungsbereiche">
+    <section className={phoneStyles.root} aria-busy={loading}>
+      <nav className={phoneStyles.nav} aria-label="Einstellungsbereiche" data-ui-slot="toolbar">
         {sections.map((section) => {
           const Icon = section.icon;
           return (
@@ -85,6 +90,7 @@ function PhoneSettingsView({
               key={section.id}
               className={activeSection === section.id ? phoneStyles.active : ""}
               onClick={() => onSectionChange(section.id)}
+              disabled={loading}
             >
               <Icon aria-hidden="true" />
               <span>
@@ -96,7 +102,7 @@ function PhoneSettingsView({
         })}
       </nav>
 
-      <header className={phoneStyles.header}>
+      <header className={phoneStyles.header} data-ui-slot="summary">
         <div>
           <h2>{active.label}</h2>
           <p>{active.description}</p>
@@ -106,7 +112,7 @@ function PhoneSettingsView({
 
       {activeSection === "general" ? (
         <>
-          <section className={phoneStyles.section}>
+          <section className={phoneStyles.section} data-ui-slot="primary-panel">
             <div className={phoneStyles.sectionTitle}>
               <h3>Arbeitsbereich</h3>
               <p>Grundlegende Angaben für euren Abi-Jahrgang.</p>
@@ -118,6 +124,7 @@ function PhoneSettingsView({
                   name="workspaceName"
                   autoComplete="off"
                   value={workspaceName}
+                  disabled={loading}
                   onChange={(event) =>
                     onWorkspaceNameChange(event.target.value)
                   }
@@ -129,6 +136,7 @@ function PhoneSettingsView({
                   name="school"
                   autoComplete="organization"
                   value={school}
+                  disabled={loading}
                   onChange={(event) => onSchoolChange(event.target.value)}
                 />
               </label>
@@ -147,7 +155,7 @@ function PhoneSettingsView({
               </label>
             </div>
           </section>
-          <section className={phoneStyles.section}>
+          <section className={phoneStyles.section} data-ui-slot="secondary-panel">
             <div className={phoneStyles.sectionTitle}>
               <h3>Verantwortliche Person</h3>
               <p>Primärer Kontakt für Finanzfragen.</p>
@@ -273,12 +281,14 @@ function PhoneSettingsView({
         </section>
       ) : null}
 
-      <footer className={phoneStyles.footer}>
+      <footer className={phoneStyles.footer} data-ui-slot="footer">
         <p aria-live="polite">{statusMessage || "\u00a0"}</p>
         <button
           type="button"
           className={phoneStyles.saveButton}
           onClick={onSave}
+          disabled={loading}
+          data-ui-slot="primary-action"
         >
           <Save aria-hidden="true" /> Änderungen speichern
         </button>
@@ -298,9 +308,40 @@ export default function SettingsPage() {
     goals: false,
   });
   const [statusMessage, setStatusMessage] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  function saveSettings() {
-    setStatusMessage("Änderungen gespeichert.");
+  useEffect(() => {
+    let active = true;
+    getCommitteeSettingsForCurrentOrganization()
+      .then((result) => {
+        if (!active || !result.ok || !result.data) return;
+        setSchool(result.data.school_name);
+        setWorkspaceName(`Abi ${result.data.graduation_year}`);
+        const stored = result.data.notifications;
+        if (stored && typeof stored === "object") {
+          setNotifications((current) => ({
+            receipts: typeof stored.receipts === "boolean" ? stored.receipts : current.receipts,
+            payments: typeof stored.payments === "boolean" ? stored.payments : current.payments,
+            goals: typeof stored.goals === "boolean" ? stored.goals : current.goals,
+          }));
+        }
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  async function saveSettings() {
+    const result = await updateCommitteeSettings({
+      schoolName: school,
+      graduationYear: Number(workspaceName.replace(/\D/g, "")) || 2026,
+      notifications,
+    });
+    setStatusMessage(result.ok ? "Änderungen gespeichert." : "Änderungen konnten nicht gespeichert werden.");
   }
 
   function toggleNotification(key: keyof typeof notifications) {
@@ -315,6 +356,7 @@ export default function SettingsPage() {
   if (mode === "phone") {
     return (
       <PhoneSettingsView
+        loading={loading}
         activeSection={activeSection}
         onSectionChange={(section) => {
           setActiveSection(section);
@@ -334,8 +376,9 @@ export default function SettingsPage() {
   }
 
   return (
-    <section className={styles.page}>
-      <aside className={styles.settingsNav}>
+    <section className={styles.page} aria-busy={loading}>
+      <LoadingStatus loading={loading} label="Einstellungen werden geladen…" />
+      <aside className={styles.settingsNav} data-ui-slot="toolbar">
         <div className={styles.workspaceCard}>
           <span className={styles.workspaceMark}>A</span>
           <div>
@@ -358,6 +401,7 @@ export default function SettingsPage() {
                   setActiveSection(section.id);
                   setStatusMessage("");
                 }}
+                disabled={loading}
                 key={section.id}
               >
                 <Icon aria-hidden="true" />
@@ -378,8 +422,8 @@ export default function SettingsPage() {
         </div>
       </aside>
 
-      <article className={styles.settingsPanel}>
-        <header className={styles.panelHeader}>
+      <article className={styles.settingsPanel} data-ui-slot="content">
+        <header className={styles.panelHeader} data-ui-slot="summary">
           <div>
             <h2>{active.label}</h2>
             <p>{active.description}</p>
@@ -388,7 +432,7 @@ export default function SettingsPage() {
         </header>
 
         {activeSection === "general" ? (
-          <div className={styles.panelBody}>
+          <div className={styles.panelBody} data-ui-slot="primary-panel">
             <section className={styles.settingSection}>
               <div className={styles.sectionTitle}>
                 <Building2 aria-hidden="true" />
@@ -403,6 +447,7 @@ export default function SettingsPage() {
                   <input
                     name="workspaceName"
                     value={workspaceName}
+                    disabled={loading}
                     maxLength={40}
                     onChange={(event) => setWorkspaceName(event.target.value)}
                   />
@@ -412,6 +457,7 @@ export default function SettingsPage() {
                   <input
                     name="school"
                     value={school}
+                    disabled={loading}
                     maxLength={60}
                     onChange={(event) => setSchool(event.target.value)}
                   />
@@ -564,12 +610,14 @@ export default function SettingsPage() {
           </div>
         ) : null}
 
-        <footer className={styles.panelFooter}>
+        <footer className={styles.panelFooter} data-ui-slot="footer">
           <p aria-live="polite">{statusMessage || "\u00a0"}</p>
           <button
             type="button"
             className={styles.saveButton}
             onClick={saveSettings}
+            disabled={loading}
+            data-ui-slot="primary-action"
           >
             <Save aria-hidden="true" />
             Änderungen speichern

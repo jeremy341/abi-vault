@@ -12,12 +12,16 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Dialog } from "@/components/ui/dialog";
+import { LoadingCollection, LoadingStatus, LoadingText } from "@/components/ui/loading-state";
 import styles from "./people.module.css";
 import phoneStyles from "./people-phone.module.css";
 import { usePresentationMode } from "@/hooks/use-presentation-mode";
+import { listMembersForCurrentOrganization } from "@/features/finance/actions/queries";
+import { inviteMember } from "@/features/people/actions/invitations";
+import { removeMember, updateMemberRole } from "@/features/people/actions/memberships";
 
 type Person = {
-  id: number;
+  id: number | string;
   name: string;
   role: string;
   access: string;
@@ -69,11 +73,13 @@ const initialPeople: Person[] = [
 ];
 
 function PhonePeopleView({
+  loading,
   people,
   query,
   onQueryChange,
   onAdd,
 }: {
+  loading: boolean;
   people: Person[];
   query: string;
   onQueryChange: (value: string) => void;
@@ -89,28 +95,29 @@ function PhonePeopleView({
   const members = people.filter((person) => person.role === "Mitglied").length;
 
   return (
-    <div className={phoneStyles.root}>
-      <section className={phoneStyles.summary} aria-label="Mitgliederstatus">
+    <div className={phoneStyles.root} aria-busy={loading}>
+      <section className={phoneStyles.summary} aria-label="Mitgliederstatus" data-ui-slot="summary">
         <div>
           <span>Mitglieder</span>
-          <strong>{people.length}</strong>
+          <strong><LoadingText loading={loading}>{people.length}</LoadingText></strong>
         </div>
         <div>
           <span>Aktiv</span>
-          <strong>{active}</strong>
+          <strong><LoadingText loading={loading}>{active}</LoadingText></strong>
         </div>
         <div>
           <span>Administratoren</span>
-          <strong>{admins}</strong>
+          <strong><LoadingText loading={loading}>{admins}</LoadingText></strong>
         </div>
       </section>
 
-      <div className={phoneStyles.toolbar}>
+      <div className={phoneStyles.toolbar} data-ui-slot="toolbar">
         <label className={phoneStyles.search}>
           <Search aria-hidden="true" />
           <span className="sr-only">Mitglieder suchen</span>
           <input
             value={query}
+            disabled={loading}
             onChange={(event) => onQueryChange(event.target.value)}
             placeholder="Name oder Rolle …"
           />
@@ -119,18 +126,20 @@ function PhonePeopleView({
           type="button"
           className={phoneStyles.addButton}
           onClick={onAdd}
+          disabled={loading}
           aria-label="Person hinzufügen"
         >
           <Plus aria-hidden="true" />
         </button>
       </div>
 
-      <header className={phoneStyles.sectionHeader}>
+      <header className={phoneStyles.sectionHeader} data-ui-slot="list-header">
         <h2>Mitglieder</h2>
         <span>Abi 2026</span>
       </header>
-      <div className={phoneStyles.people}>
-        {people.map((person) => (
+      <div className={phoneStyles.people} data-ui-slot="list-body">
+        <LoadingCollection loading={loading} knownItemCount={people.length} emptyHeight="12rem" label="Mitglieder werden geladen…">
+          {people.length ? people.map((person) => (
           <article className={phoneStyles.person} key={person.id}>
             <span className={phoneStyles.avatar}>{person.initials}</span>
             <span className={phoneStyles.identity}>
@@ -145,23 +154,24 @@ function PhonePeopleView({
               {person.status}
             </span>
           </article>
-        ))}
+          )) : <div className={phoneStyles.empty}>Keine Mitglieder gefunden.</div>}
+        </LoadingCollection>
       </div>
 
-      <section className={phoneStyles.roles} aria-label="Rollenübersicht">
+      <section className={phoneStyles.roles} aria-label="Rollenübersicht" data-ui-slot="secondary-panel">
         <div className={phoneStyles.role}>
           <strong>Admin</strong>
-          <b>{admins}</b>
+          <b><LoadingText loading={loading}>{admins}</LoadingText></b>
           <span>Vollzugriff</span>
         </div>
         <div className={phoneStyles.role}>
           <strong>Kassenwart</strong>
-          <b>{treasurers}</b>
+          <b><LoadingText loading={loading}>{treasurers}</LoadingText></b>
           <span>Finanzen</span>
         </div>
         <div className={phoneStyles.role}>
           <strong>Mitglied</strong>
-          <b>{members}</b>
+          <b><LoadingText loading={loading}>{members}</LoadingText></b>
           <span>Nur ansehen</span>
         </div>
       </section>
@@ -171,13 +181,37 @@ function PhonePeopleView({
 
 export default function PeoplePage() {
   const mode = usePresentationMode();
-  const [people, setPeople] = useState(initialPeople);
+  const [people, setPeople] = useState<Person[]>([]);
+  const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [newName, setNewName] = useState("");
+  const [newEmail, setNewEmail] = useState("");
   const [newRole, setNewRole] = useState("Mitglied");
   const [message, setMessage] = useState("");
-  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<number | string | null>(null);
+  useEffect(() => {
+    let active = true;
+    listMembersForCurrentOrganization()
+      .then((result) => {
+        if (!active || !result.ok) return;
+        setPeople(result.items.map((member) => ({
+          id: member.id,
+          name: member.name,
+          role: member.role === "admin" ? "Administrator" : member.role === "supervisor" ? "Kassenwart" : "Mitglied",
+          access: member.role === "admin" ? "Vollzugriff" : member.role === "supervisor" ? "Finanzen verwalten" : "Nur ansehen",
+          status: member.status === "active" ? "Aktiv" : "Einladung offen",
+          initials: member.name.split(/\s+/).map((part: string) => part[0]).join("").slice(0, 2).toUpperCase(),
+        })));
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
   const filteredPeople = useMemo(
     () =>
       people.filter((person) =>
@@ -191,6 +225,7 @@ export default function PeoplePage() {
   function closeModal() {
     setModalOpen(false);
     setNewName("");
+    setNewEmail("");
     setNewRole("Mitglied");
   }
 
@@ -210,7 +245,26 @@ export default function PeoplePage() {
     };
   }, [openMenuId]);
 
-  function cycleRole(personId: number) {
+  async function cycleRole(personId: number | string) {
+    const selected = people.find((person) => person.id === personId);
+    if (!selected) return;
+    const nextRole = selected.role.includes("Kassenwart")
+      ? "student"
+      : selected.role === "Mitglied"
+        ? "admin"
+        : "supervisor";
+    if (typeof personId === "string" && /^[^\s]+$/.test(personId)) {
+      const result = await updateMemberRole({
+        clerkUserId: personId,
+        role: nextRole,
+        reason: "Rolle über die Mitgliederverwaltung geändert",
+      });
+      if (!result.ok) {
+        setMessage("Die Rolle konnte nicht aktualisiert werden.");
+        setOpenMenuId(null);
+        return;
+      }
+    }
     setPeople((current) =>
       current.map((person) => {
         if (person.id !== personId) return person;
@@ -235,9 +289,27 @@ export default function PeoplePage() {
     setOpenMenuId(null);
   }
 
-  function addPerson(event: React.FormEvent<HTMLFormElement>) {
+  async function addPerson(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!newName.trim()) return;
+    if (!newName.trim() || !newEmail.trim()) {
+      setMessage("Bitte Name und E-Mail-Adresse ausfüllen.");
+      return;
+    }
+    const role =
+      newRole === "Administrator"
+        ? "admin"
+        : newRole === "Kassenwart"
+          ? "supervisor"
+          : "student";
+    const invitation = await inviteMember({ email: newEmail.trim(), role });
+    if (!invitation.ok) {
+      setMessage(
+        invitation.error === "INVALID_INPUT"
+          ? "Bitte eine gültige E-Mail-Adresse eingeben."
+          : "Die Einladung konnte nicht versendet werden.",
+      );
+      return;
+    }
     const initials = newName
       .trim()
       .split(/\s+/)
@@ -261,14 +333,16 @@ export default function PeoplePage() {
         initials,
       },
     ]);
-    setMessage("Einladung vorbereitet.");
+    setMessage("Einladung versendet.");
     closeModal();
   }
 
   return (
-    <section className={mode === "phone" ? phoneStyles.root : styles.page}>
+    <section className={mode === "phone" ? phoneStyles.root : styles.page} aria-busy={loading}>
+      <LoadingStatus loading={loading} label="Mitglieder werden geladen…" />
       {mode === "phone" ? (
         <PhonePeopleView
+          loading={loading}
           people={filteredPeople}
           query={query}
           onQueryChange={setQuery}
@@ -276,14 +350,14 @@ export default function PeoplePage() {
         />
       ) : (
         <>
-          <div className={styles.summaryGrid}>
+          <div className={styles.summaryGrid} data-ui-slot="summary">
             <article className={styles.summaryCard}>
               <span className={styles.summaryIcon}>
                 <Users aria-hidden="true" />
               </span>
               <div>
                 <span>Mitglieder</span>
-                <strong>{people.length}</strong>
+                <strong><LoadingText loading={loading}>{people.length}</LoadingText></strong>
               </div>
             </article>
             <article className={`${styles.summaryCard} ${styles.greenCard}`}>
@@ -292,9 +366,9 @@ export default function PeoplePage() {
               </span>
               <div>
                 <span>Aktiv</span>
-                <strong>
+                <strong><LoadingText loading={loading}>
                   {people.filter((person) => person.status === "Aktiv").length}
-                </strong>
+                </LoadingText></strong>
               </div>
             </article>
             <article className={`${styles.summaryCard} ${styles.violetCard}`}>
@@ -303,18 +377,18 @@ export default function PeoplePage() {
               </span>
               <div>
                 <span>Administratoren</span>
-                <strong>
+                <strong><LoadingText loading={loading}>
                   {
                     people.filter((person) => person.role === "Administrator")
                       .length
                   }
-                </strong>
+                </LoadingText></strong>
               </div>
             </article>
           </div>
 
-          <div className={styles.contentGrid}>
-            <article className={styles.peoplePanel}>
+          <div className={styles.contentGrid} data-ui-slot="content">
+            <article className={styles.peoplePanel} data-ui-slot="primary-panel">
               <header className={styles.panelHeader}>
                 <div>
                   <h2>Mitglieder</h2>
@@ -324,6 +398,8 @@ export default function PeoplePage() {
                   type="button"
                   className={styles.primaryButton}
                   onClick={() => setModalOpen(true)}
+                  disabled={loading}
+                  data-ui-slot="primary-action"
                 >
                   <Plus aria-hidden="true" />
                   Person hinzufügen
@@ -337,12 +413,14 @@ export default function PeoplePage() {
                 <input
                   id="people-search"
                   value={query}
+                  disabled={loading}
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder="Nach Name oder Rolle suchen …"
                 />
               </div>
-              <div className={styles.peopleList}>
-                {filteredPeople.map((person) => (
+              <div className={styles.peopleList} data-ui-slot="list-body">
+                <LoadingCollection loading={loading} knownItemCount={people.length} emptyHeight="16rem" label="Mitglieder werden geladen…">
+                  {filteredPeople.map((person) => (
                   <div className={styles.personRow} key={person.id}>
                     <span className={styles.avatar}>{person.initials}</span>
                     <div className={styles.personIdentity}>
@@ -418,7 +496,21 @@ export default function PeoplePage() {
                           type="button"
                           role="menuitem"
                           className={styles.destructiveMenuItem}
-                          onClick={() => {
+                          onClick={async () => {
+                            if (typeof person.id !== "string") return;
+                            const result = await removeMember({
+                              clerkUserId: person.id,
+                              reason: "Mitglied über die Mitgliederverwaltung entfernt",
+                            });
+                            if (!result.ok) {
+                              setMessage(
+                                result.error === "LAST_ADMIN_REQUIRED"
+                                  ? "Der letzte Administrator kann nicht entfernt werden."
+                                  : "Die Person konnte nicht entfernt werden.",
+                              );
+                              setOpenMenuId(null);
+                              return;
+                            }
                             setPeople((current) =>
                               current.filter((entry) => entry.id !== person.id),
                             );
@@ -431,16 +523,17 @@ export default function PeoplePage() {
                       </div>
                     ) : null}
                   </div>
-                ))}
+                  ))}
+                </LoadingCollection>
               </div>
-              {!filteredPeople.length ? (
+              {!loading && !filteredPeople.length ? (
                 <div className={styles.emptyState}>
                   Keine Mitglieder gefunden.
                 </div>
               ) : null}
             </article>
 
-            <aside className={styles.sideColumn}>
+            <aside className={styles.sideColumn} data-ui-slot="secondary-panel">
               <article className={styles.rolePanel}>
                 <header className={styles.panelHeader}>
                   <div>
@@ -558,6 +651,17 @@ export default function PeoplePage() {
                   value={newName}
                   onChange={(event) => setNewName(event.target.value)}
                   placeholder="Vor- und Nachname …"
+                />
+              </label>
+              <label className={styles.formField}>
+                <span>E-Mail-Adresse</span>
+                <input
+                  name="personEmail"
+                  type="email"
+                  autoComplete="email"
+                  value={newEmail}
+                  onChange={(event) => setNewEmail(event.target.value)}
+                  placeholder="name@beispiel.de"
                 />
               </label>
               <label className={styles.formField}>

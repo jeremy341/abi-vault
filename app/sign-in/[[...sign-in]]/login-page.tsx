@@ -23,34 +23,7 @@ export default function SignInPage() {
 
       <section className="flex flex-1 items-center justify-center px-5 pb-24 pt-8 sm:px-8">
         <div className="w-full max-w-md">
-          <SignIn
-            appearance={{
-              variables: {
-                colorPrimary: "#1d1d1f",
-                colorBackground: "#ffffff",
-                colorForeground: "#1d1d1f",
-                colorMutedForeground: "#6b6b70",
-                colorInput: "#ffffff",
-                colorInputForeground: "#1d1d1f",
-                borderRadius: "12px",
-                fontFamily: "var(--font-geist-sans)",
-              },
-              elements: {
-                rootBox: "w-full",
-                cardBox: "w-full shadow-none",
-                card: "w-full rounded-2xl border border-black/[0.08] bg-white p-2 shadow-[0_16px_50px_rgb(0_0_0/0.08)]",
-                header: "hidden",
-                formButtonPrimary: "rounded-xl bg-ink shadow-sm hover:bg-black",
-                formFieldInput:
-                  "rounded-xl border-line bg-white shadow-none focus:border-ink",
-                socialButtonsBlockButton:
-                  "rounded-xl border-line bg-white shadow-none hover:bg-canvas",
-                footer: "rounded-b-2xl bg-transparent",
-                footerActionLink:
-                  "text-ink underline decoration-line underline-offset-4",
-              },
-            }}
-          />
+          <SignIn />
         </div>
       </section>
     </main>

@@ -9,6 +9,8 @@ import {
   Banknote,
   CheckCircle2,
   FileText,
+  HandCoins,
+  MoreHorizontal,
   Plus,
   ReceiptText,
   Target,
@@ -19,64 +21,129 @@ import AccountCard from "@/components/dashboard/AccountCard";
 import { Dialog } from "@/components/ui/dialog";
 import {
   dashboardCategories,
-  dashboardGoals,
-  dashboardTransactions,
 } from "@/components/dashboard/DashboardPanels";
 import { usePresentationMode } from "@/hooks/use-presentation-mode";
 import styles from "@/app/dashboard/dashboard-adaptive.module.css";
 import desktopStyles from "@/app/dashboard/dashboard-desktop.module.css";
+import { useDashboardSnapshot, type DashboardSnapshot } from "@/hooks/use-dashboard-snapshot";
+import { LoadingCollection, LoadingStatus, LoadingText } from "@/components/ui/loading-state";
 
-function DesktopDashboard() {
+function displayMinor(value: string) {
+  return (Number(value) / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
+}
+
+function formatLastTransaction(date: string | undefined) {
+  if (!date) return "Noch keine Transaktionen";
+  const parsed = new Date(date);
+  if (Number.isNaN(parsed.getTime())) return "Noch keine Transaktionen";
+
+  const days = Math.max(0, Math.floor((Date.now() - parsed.getTime()) / 86_400_000));
+  const time = parsed.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+  if (days === 0) return `${time}, heute`;
+  if (days === 1) return `${time}, vor 1 Tag`;
+  return `${time}, vor ${days} Tagen`;
+}
+
+function displayDashboardTransactions(snapshot: DashboardSnapshot | null) {
+  if (!snapshot) return [];
+  return snapshot.transactions.map((item) => ({
+    title: item.title,
+    category: item.category,
+    date: item.date,
+    amount: `${Number(item.amountMinor) >= 0 ? "+" : ""}${displayMinor(item.amountMinor)}`,
+    tone: Number(item.amountMinor) >= 0 ? "green" : "violet",
+    icon: Number(item.amountMinor) >= 0 ? HandCoins : FileText,
+  }));
+}
+
+function displayDashboardGoals(snapshot: DashboardSnapshot | null) {
+  if (!snapshot) return [];
+  return snapshot.goals.map((goal) => {
+    const target = Number(goal.target_amount_minor) / 100;
+    const saved = Number(goal.saved_amount_minor) / 100;
+    return {
+      title: goal.title,
+      target: target.toLocaleString("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }),
+      saved: `${saved.toLocaleString("de-DE", { style: "currency", currency: "EUR" })} gesammelt`,
+      progress: target ? Math.round((saved / target) * 100) : 0,
+      date: new Date(`${goal.deadline}T00:00:00`).toLocaleDateString("de-DE"),
+    };
+  });
+}
+
+function displayDashboardCategories(snapshot: DashboardSnapshot | null) {
+  if (!snapshot) return [];
+  return snapshot.categories.map((item, index) => ({
+    title: item.name,
+    amount: displayMinor(item.amountMinor),
+    progress: item.progress,
+    color: dashboardCategories[index % dashboardCategories.length]?.color ?? "bg-black",
+    bubble: dashboardCategories[index % dashboardCategories.length]?.bubble ?? "bg-black/[0.04] text-ink",
+    icon: dashboardCategories[index % dashboardCategories.length]?.icon ?? MoreHorizontal,
+  }));
+}
+
+function DesktopDashboard({ snapshot, loading }: { snapshot: DashboardSnapshot | null; loading: boolean }) {
   const [cardPreviewOpen, setCardPreviewOpen] = useState(false);
+  const transactionItems = displayDashboardTransactions(snapshot);
+  const goalItems = displayDashboardGoals(snapshot);
+  const categoryItems = displayDashboardCategories(snapshot);
+  const cashBalance = snapshot ? snapshot.wallets.filter((wallet) => wallet.type === "cash").reduce((sum, wallet) => sum + Number(wallet.balanceMinor), 0) : 0;
+  const incomeTotal = snapshot ? snapshot.transactions.filter((item) => Number(item.amountMinor) >= 0).reduce((sum, item) => sum + Number(item.amountMinor), 0) : 0;
+  const expenseTotal = snapshot ? snapshot.transactions.filter((item) => Number(item.amountMinor) < 0).reduce((sum, item) => sum + Math.abs(Number(item.amountMinor)), 0) : 0;
+  const lastTransaction = formatLastTransaction(snapshot?.transactions[0]?.date);
 
   return (
-    <section className={desktopStyles.page} aria-label="Finanzübersicht">
-      <div className={desktopStyles.metrics} aria-label="Finanzkennzahlen">
+    <section className={desktopStyles.page} aria-label="Finanzübersicht" aria-busy={loading}>
+      <LoadingStatus loading={loading} label="Finanzübersicht wird geladen…" />
+      <div className={desktopStyles.metrics} aria-label="Finanzkennzahlen" data-ui-slot="summary">
         <div>
           <span>Gesamt verfügbar</span>
-          <strong>3.476,00 €</strong>
-          <small>Bank und Barkasse</small>
+          <strong><LoadingText loading={loading}>{displayMinor(String(cashBalance))}</LoadingText></strong>
+          <small>Barkasse</small>
         </div>
         <div>
-          <span>Bankguthaben</span>
-          <strong>2.850,75 €</strong>
-          <small>Heute synchronisiert</small>
+          <span>Einnahmen</span>
+          <strong><LoadingText loading={loading}>{displayMinor(String(incomeTotal))}</LoadingText></strong>
+          <small>Aus Barkasse</small>
         </div>
         <div>
-          <span>Bargeldbestand</span>
-          <strong>625,25 €</strong>
-          <small>Zuletzt am 15.05. gezählt</small>
+          <span>Ausgaben</span>
+          <strong><LoadingText loading={loading}>{displayMinor(String(expenseTotal))}</LoadingText></strong>
+          <small>Aus Barkasse</small>
         </div>
         <div>
           <span>Offene Prüfung</span>
-          <strong>4 Vorgänge</strong>
+          <strong><LoadingText loading={loading}>4 Vorgänge</LoadingText></strong>
           <small>3 Belege, 1 Zahlung</small>
         </div>
       </div>
 
-      <div className={desktopStyles.workspace}>
+      <div className={desktopStyles.workspace} data-ui-slot="content">
         <div className={desktopStyles.primaryColumn}>
-          <article className={desktopStyles.accountPanel}>
+          <article className={desktopStyles.accountPanel} data-ui-slot="primary-panel">
             <button
               type="button"
               className={desktopStyles.accountCard}
-              aria-label="Bankkonto anzeigen"
+              aria-label="Barkasse anzeigen"
               onClick={() => setCardPreviewOpen(true)}
             >
-              <AccountCard />
+              <AccountCard details={{ accountName: "Barkasse" }} />
             </button>
             <div className={desktopStyles.accountSummary}>
               <div>
-                <span className={desktopStyles.eyebrow}>Klassenkonto</span>
-                <strong>2.850,75 €</strong>
-                <p>API verbunden · heute um 09:42 synchronisiert</p>
+                <span className={desktopStyles.eyebrow}>Barkasse</span>
+                <strong><LoadingText loading={loading}>{displayMinor(String(cashBalance))}</LoadingText></strong>
+                <Link className={desktopStyles.accountActivity} href="/dashboard/transactions">
+                  Letzte Transaktion: <LoadingText loading={loading}>{lastTransaction}</LoadingText>
+                </Link>
               </div>
               <div className={desktopStyles.accountActions}>
                 <Link href="/dashboard/transactions">
                   <Plus aria-hidden="true" /> Transaktion
                 </Link>
                 <Link href="/dashboard/funds">
-                  Konto öffnen <ArrowUpRight aria-hidden="true" />
+                  Kasse öffnen <ArrowUpRight aria-hidden="true" />
                 </Link>
               </div>
             </div>
@@ -98,8 +165,9 @@ function DesktopDashboard() {
               <span>Datum</span>
               <span>Betrag</span>
             </div>
-            <div className={desktopStyles.transactionRows}>
-              {dashboardTransactions.map((item) => {
+            <div className={desktopStyles.transactionRows} data-ui-slot="list-body">
+              <LoadingCollection loading={loading} knownItemCount={transactionItems.length} emptyHeight="100%" label="Transaktionen werden geladen…">
+              {transactionItems.map((item) => {
                 const Icon = item.icon;
                 return (
                   <div
@@ -124,11 +192,12 @@ function DesktopDashboard() {
                   </div>
                 );
               })}
+              </LoadingCollection>
             </div>
           </article>
         </div>
 
-        <aside className={desktopStyles.secondaryColumn}>
+        <aside className={desktopStyles.secondaryColumn} data-ui-slot="secondary-panel">
           <article className={desktopStyles.goalsPanel}>
             <header className={desktopStyles.panelHeader}>
               <div>
@@ -140,7 +209,8 @@ function DesktopDashboard() {
               </Link>
             </header>
             <div className={desktopStyles.goalRows}>
-              {dashboardGoals.map((goal) => (
+              <LoadingCollection loading={loading} knownItemCount={goalItems.length} emptyHeight="8rem" label="Ziele werden geladen…">
+              {goalItems.map((goal) => (
                 <div className={desktopStyles.goalRow} key={goal.title}>
                   <span>
                     <strong>{goal.title}</strong>
@@ -152,6 +222,7 @@ function DesktopDashboard() {
                   <b>{goal.progress}%</b>
                 </div>
               ))}
+              </LoadingCollection>
             </div>
           </article>
 
@@ -164,7 +235,8 @@ function DesktopDashboard() {
               <span className={desktopStyles.panelValue}>2.503,10 €</span>
             </header>
             <div className={desktopStyles.spendingRows}>
-              {dashboardCategories.map((item) => (
+              <LoadingCollection loading={loading} knownItemCount={categoryItems.length} emptyHeight="7rem" label="Ausgaben werden geladen…">
+              {categoryItems.map((item) => (
                 <div className={desktopStyles.spendingRow} key={item.title}>
                   <span>{item.title}</span>
                   <div>
@@ -173,6 +245,7 @@ function DesktopDashboard() {
                   <b>{item.progress}%</b>
                 </div>
               ))}
+              </LoadingCollection>
             </div>
           </article>
 
@@ -216,14 +289,14 @@ function DesktopDashboard() {
 
       {cardPreviewOpen ? (
         <Dialog
-          label="Bankkonto anzeigen"
+          label="Barkasse anzeigen"
           onClose={() => setCardPreviewOpen(false)}
           overlayClassName={desktopStyles.accountOverlay}
           dialogClassName={desktopStyles.accountDialog}
         >
           <header className={desktopStyles.accountDialogHeader}>
             <div>
-              <h2>Bankkonto</h2>
+              <h2>Barkasse</h2>
               <p>Kartenvorschau</p>
             </div>
             <button
@@ -235,7 +308,7 @@ function DesktopDashboard() {
             </button>
           </header>
           <div className={desktopStyles.accountDialogCard}>
-            <AccountCard />
+            <AccountCard details={{ accountName: "Barkasse" }} />
           </div>
         </Dialog>
       ) : null}
@@ -243,21 +316,29 @@ function DesktopDashboard() {
   );
 }
 
-function TabletDashboard() {
+function TabletDashboard({ snapshot, loading }: { snapshot: DashboardSnapshot | null; loading: boolean }) {
+  const transactionItems = displayDashboardTransactions(snapshot);
+  const goalItems = displayDashboardGoals(snapshot);
+  const categoryItems = displayDashboardCategories(snapshot);
+  const cashBalance = snapshot ? snapshot.wallets.filter((wallet) => wallet.type === "cash").reduce((sum, wallet) => sum + Number(wallet.balanceMinor), 0) : 0;
+  const lastTransaction = formatLastTransaction(snapshot?.transactions[0]?.date);
+  const incomeTotal = snapshot ? snapshot.transactions.filter((item) => Number(item.amountMinor) >= 0).reduce((sum, item) => sum + Number(item.amountMinor), 0) : 0;
+  const expenseTotal = snapshot ? snapshot.transactions.filter((item) => Number(item.amountMinor) < 0).reduce((sum, item) => sum + Math.abs(Number(item.amountMinor)), 0) : 0;
   return (
-    <section className={styles.tabletPage}>
-      <div className={styles.tabletMetricStrip} aria-label="Finanzkennzahlen">
+    <section className={styles.tabletPage} aria-busy={loading}>
+      <LoadingStatus loading={loading} label="Finanzübersicht wird geladen…" />
+      <div className={styles.tabletMetricStrip} aria-label="Finanzkennzahlen" data-ui-slot="summary">
         <div className={styles.tabletMetric}>
-          <span>Gesamt verfügbar</span>
-          <strong>3.476,00 €</strong>
+          <span>Kassenbestand</span>
+          <strong><LoadingText loading={loading}>{displayMinor(String(cashBalance))}</LoadingText></strong>
         </div>
         <div className={styles.tabletMetric}>
-          <span>Bank</span>
-          <strong>2.850,75 €</strong>
+          <span>Einnahmen</span>
+          <strong><LoadingText loading={loading}>{displayMinor(String(incomeTotal))}</LoadingText></strong>
         </div>
         <div className={styles.tabletMetric}>
-          <span>Barkasse</span>
-          <strong>625,25 €</strong>
+          <span>Ausgaben</span>
+          <strong><LoadingText loading={loading}>{displayMinor(String(expenseTotal))}</LoadingText></strong>
         </div>
         <div className={styles.tabletMetric}>
           <span>Zu prüfen</span>
@@ -265,16 +346,18 @@ function TabletDashboard() {
         </div>
       </div>
 
-      <div className={styles.tabletWorkspace}>
+      <div className={styles.tabletWorkspace} data-ui-slot="content">
         <div className={styles.tabletPrimary}>
           <article className={styles.tabletAccount}>
             <div className={styles.tabletCardSlot}>
-              <AccountCard />
+              <AccountCard details={{ accountName: "Barkasse" }} />
             </div>
             <div className={styles.tabletBalance}>
-              <span>Klassenkonto</span>
-              <strong>2.850,75 €</strong>
-              <p>API verbunden, zuletzt heute synchronisiert</p>
+              <span>Barkasse</span>
+              <strong><LoadingText loading={loading}>{displayMinor(String(cashBalance))}</LoadingText></strong>
+              <Link className={styles.tabletActivity} href="/dashboard/transactions">
+                Letzte Transaktion: <LoadingText loading={loading}>{lastTransaction}</LoadingText>
+              </Link>
               <div className={styles.tabletActions}>
                 <Link
                   href="/dashboard/transactions"
@@ -300,8 +383,9 @@ function TabletDashboard() {
                 <ArrowRight aria-hidden="true" className="size-4" />
               </Link>
             </header>
-            <div className={styles.tabletTransactionList}>
-              {dashboardTransactions.slice(0, 6).map((item) => (
+            <div className={styles.tabletTransactionList} data-ui-slot="list-body">
+              <LoadingCollection loading={loading} knownItemCount={transactionItems.length} emptyHeight="12rem" label="Transaktionen werden geladen…">
+              {transactionItems.slice(0, 6).map((item) => (
                 <div className={styles.tabletTransaction} key={item.title}>
                   <span>{item.title}</span>
                   <small>{item.category}</small>
@@ -316,11 +400,12 @@ function TabletDashboard() {
                   </b>
                 </div>
               ))}
+              </LoadingCollection>
             </div>
           </article>
         </div>
 
-        <aside className={styles.tabletSecondary}>
+        <aside className={styles.tabletSecondary} data-ui-slot="secondary-panel">
           <article className={styles.tabletGoals}>
             <header className={styles.tabletSectionHeader}>
               <h2>Ziele</h2>
@@ -329,7 +414,7 @@ function TabletDashboard() {
               </Link>
             </header>
             <div className={styles.tabletGoalList}>
-              {dashboardGoals.map((goal) => (
+              {goalItems.map((goal) => (
                 <div className={styles.tabletGoal} key={goal.title}>
                   <strong>{goal.title}</strong>
                   <span>{goal.progress}%</span>
@@ -347,7 +432,7 @@ function TabletDashboard() {
               <span className={styles.sectionMeta}>Nach Kategorie</span>
             </header>
             <div className={styles.tabletSpendingList}>
-              {dashboardCategories.map((item) => (
+              {categoryItems.map((item) => (
                 <div className={styles.tabletSpendingRow} key={item.title}>
                   <strong>{item.title}</strong>
                   <div
@@ -396,19 +481,24 @@ function TabletDashboard() {
   );
 }
 
-function PhoneDashboard() {
+function PhoneDashboard({ snapshot, loading }: { snapshot: DashboardSnapshot | null; loading: boolean }) {
+  const transactionItems = displayDashboardTransactions(snapshot);
+  const goalItems = displayDashboardGoals(snapshot);
+  const cashBalance = snapshot ? snapshot.wallets.filter((wallet) => wallet.type === "cash").reduce((sum, wallet) => sum + Number(wallet.balanceMinor), 0) : 0;
+  const lastTransaction = formatLastTransaction(snapshot?.transactions[0]?.date);
   return (
-    <section className={styles.phonePage}>
-      <div className={styles.phoneBalanceHero}>
+    <section className={styles.phonePage} aria-busy={loading}>
+      <LoadingStatus loading={loading} label="Finanzübersicht wird geladen…" />
+      <div className={styles.phoneBalanceHero} data-ui-slot="summary">
         <span className={styles.phoneEyebrow}>Gesamt verfügbar</span>
-        <strong>3.476,00 €</strong>
+        <strong><LoadingText loading={loading}>{displayMinor(String(cashBalance))}</LoadingText></strong>
         <div className={styles.phoneBalanceMeta}>
-          <span>Bankkonto & Barkasse</span>
+          <span>Barkasse</span>
           <b>Abgleich stimmt</b>
         </div>
       </div>
 
-      <nav className={styles.phoneQuickActions} aria-label="Schnellaktionen">
+      <nav className={styles.phoneQuickActions} aria-label="Schnellaktionen" data-ui-slot="toolbar">
         <Link
           href="/dashboard/transactions"
           className={styles.phoneQuickAction}
@@ -423,13 +513,17 @@ function PhoneDashboard() {
         </Link>
       </nav>
 
-      <Link href="/dashboard/funds" className={styles.phoneAccountStrip}>
+      <div className={styles.phoneAccountStrip}>
         <div>
-          <strong>Klassenkonto</strong>
-          <span>API verbunden</span>
+          <Link href="/dashboard/funds">
+            <strong>Barkasse</strong>
+          </Link>
+          <Link href="/dashboard/transactions">
+            <span>Letzte Transaktion: {lastTransaction}</span>
+          </Link>
         </div>
-        <b>2.850,75 €</b>
-      </Link>
+        <b><LoadingText loading={loading}>{displayMinor(String(cashBalance))}</LoadingText></b>
+      </div>
 
       <section className={styles.phoneSection}>
         <header className={styles.phoneSectionHeader}>
@@ -438,8 +532,9 @@ function PhoneDashboard() {
             Alle <ArrowRight aria-hidden="true" className="size-4" />
           </Link>
         </header>
-        <div className={styles.phoneTransactionList}>
-          {dashboardTransactions.slice(0, 4).map((item) => (
+        <div className={styles.phoneTransactionList} data-ui-slot="list-body">
+          <LoadingCollection loading={loading} knownItemCount={transactionItems.length} emptyHeight="4rem" label="Transaktionen werden geladen…">
+          {transactionItems.slice(0, 4).map((item) => (
             <div className={styles.phoneTransaction} key={item.title}>
               <span>
                 <strong>{item.title}</strong>
@@ -458,6 +553,7 @@ function PhoneDashboard() {
               </b>
             </div>
           ))}
+          </LoadingCollection>
         </div>
       </section>
 
@@ -469,7 +565,8 @@ function PhoneDashboard() {
           </Link>
         </header>
         <div className={styles.phoneGoalScroller}>
-          {dashboardGoals.map((goal) => (
+          <LoadingCollection loading={loading} knownItemCount={goalItems.length} emptyHeight="5rem" label="Ziele werden geladen…">
+          {goalItems.map((goal) => (
             <article className={styles.phoneGoal} key={goal.title}>
               <header>
                 <strong>{goal.title}</strong>
@@ -482,6 +579,7 @@ function PhoneDashboard() {
               </div>
             </article>
           ))}
+          </LoadingCollection>
         </div>
       </section>
 
@@ -512,7 +610,8 @@ function PhoneDashboard() {
 
 export default function AdaptiveDashboardPage() {
   const mode = usePresentationMode();
-  if (mode === "tablet") return <TabletDashboard />;
-  if (mode === "phone") return <PhoneDashboard />;
-  return <DesktopDashboard />;
+  const { snapshot, loading } = useDashboardSnapshot();
+  if (mode === "tablet") return <TabletDashboard snapshot={snapshot} loading={loading} />;
+  if (mode === "phone") return <PhoneDashboard snapshot={snapshot} loading={loading} />;
+  return <DesktopDashboard snapshot={snapshot} loading={loading} />;
 }

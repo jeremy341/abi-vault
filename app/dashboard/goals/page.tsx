@@ -104,26 +104,26 @@ function PhoneGoalsView({
       <div className={phoneStyles.goals} data-ui-slot="list-body">
         <LoadingCollection loading={loading} knownItemCount={goals.length} emptyHeight="12rem" label="Ziele werden geladen…">
           {goals.length ? goals.map((goal, index) => (
-          <button
-            type="button"
-            className={phoneStyles.goal}
-            key={`${goal.title}-${index}`}
-            onClick={() => onEdit(goal, index)}
-          >
-            <strong>{goal.title}</strong>
-            <b>{euro.format(goal.target)}</b>
-            <span className={phoneStyles.goalMeta}>
-              {euroPrecise.format(goal.saved)} gespart
-            </span>
-            <span className={phoneStyles.goalMeta}>{goal.progress}%</span>
-            <div className={phoneStyles.goalTrack} aria-hidden="true">
-              <i style={{ width: `${goal.progress}%` }} />
-            </div>
-            <span className={phoneStyles.goalFooter}>
-              <span>Ziel: {goal.date}</span>
-              <span>{euroPrecise.format(goal.target - goal.saved)} offen</span>
-            </span>
-          </button>
+            <button
+              type="button"
+              className={phoneStyles.goal}
+              key={`${goal.title}-${index}`}
+              onClick={() => onEdit(goal, index)}
+            >
+              <strong>{goal.title}</strong>
+              <b>{euro.format(goal.target)}</b>
+              <span className={phoneStyles.goalMeta}>
+                {euroPrecise.format(goal.saved)} gespart
+              </span>
+              <span className={phoneStyles.goalMeta}>{goal.progress}%</span>
+              <div className={phoneStyles.goalTrack} aria-hidden="true">
+                <i style={{ width: `${goal.progress}%` }} />
+              </div>
+              <span className={phoneStyles.goalFooter}>
+                <span>Ziel: {goal.date}</span>
+                <span>{euroPrecise.format(goal.target - goal.saved)} offen</span>
+              </span>
+            </button>
           )) : <div className={phoneStyles.empty}>Noch keine Sparziele vorhanden.</div>}
         </LoadingCollection>
       </div>
@@ -230,10 +230,15 @@ export default function GoalsPage() {
 
   async function handleSaveGoal(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const target = Number(targetAmount.replace(",", "."));
-    const saved = Number(savedAmount.replace(",", ".")) || 0;
+    const formData = new FormData(event.currentTarget);
+    const submittedName = String(formData.get("goalName") ?? "").trim();
+    const submittedDeadline = String(formData.get("deadline") ?? "");
+    const submittedTargetAmount = String(formData.get("targetAmount") ?? "");
+    const submittedSavedAmount = String(formData.get("savedAmount") ?? "");
+    const target = Number(submittedTargetAmount.replace(",", "."));
+    const saved = Number(submittedSavedAmount.replace(",", ".")) || 0;
 
-    if (!goalName.trim() || !target || target <= 0 || !deadline) {
+    if (!submittedName || !target || target <= 0 || !submittedDeadline) {
       setFormError(
         "Bitte Name, Zielbetrag und Zieldatum vollständig ausfüllen.",
       );
@@ -246,7 +251,7 @@ export default function GoalsPage() {
       return;
     }
 
-    const [year, month, day] = deadline.split("-");
+    const [year, month, day] = submittedDeadline.split("-");
     const formattedDate = `${day}.${month}.${year}`;
     const progress = Math.round((saved / target) * 100);
 
@@ -255,10 +260,10 @@ export default function GoalsPage() {
       if (currentGoal && /^[0-9a-f-]{36}$/i.test(currentGoal.id)) {
         const result = await updateGoal({
           goalId: currentGoal.id,
-          title: goalName.trim(),
+          title: submittedName,
           description: null,
-          targetAmount: targetAmount,
-          deadline,
+          targetAmount: submittedTargetAmount,
+          deadline: submittedDeadline,
           reason: "Ziel im Ziel-Dialog aktualisiert",
         });
         if (!result.ok) {
@@ -271,22 +276,22 @@ export default function GoalsPage() {
         current.map((g, idx) =>
           idx === editingGoalIndex
             ? {
-                id: g.id,
-                title: goalName.trim(),
-                target,
-                saved,
-                progress,
-                date: formattedDate,
-              }
+              id: g.id,
+              title: submittedName,
+              target,
+              saved,
+              progress,
+              date: formattedDate,
+            }
             : g,
         ),
       );
     } else {
       const result = await createGoal({
-        title: goalName.trim(),
+        title: submittedName,
         description: null,
-        targetAmount: targetAmount,
-        deadline,
+        targetAmount: submittedTargetAmount,
+        deadline: submittedDeadline,
         visibility: "private",
         idempotencyKey: `goal-${crypto.randomUUID()}`,
       });
@@ -299,7 +304,7 @@ export default function GoalsPage() {
         ...current,
         {
           id: result.data.id,
-          title: goalName.trim(),
+          title: submittedName,
           target,
           saved,
           progress,
@@ -397,46 +402,46 @@ export default function GoalsPage() {
               <div className={styles.goalGrid} data-ui-slot="list-body">
                 <LoadingCollection loading={loading} knownItemCount={goals.length} emptyHeight="14rem" label="Ziele werden geladen…">
                   {goals.map((goal, idx) => (
-                  <article
-                    className={styles.goalCard}
-                    key={`${goal.title}-${idx}`}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => openEditModal(goal, idx)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        openEditModal(goal, idx);
-                      }
-                    }}
-                    title="Klicken zum Anpassen"
-                  >
-                    <div className={styles.goalCardHeader}>
-                      <h3>{goal.title}</h3>
-                      <Target aria-hidden="true" />
-                    </div>
-                    <strong className={styles.goalTarget}>
-                      {euro.format(goal.target)}
-                    </strong>
-                    <p className={styles.goalSaved}>
-                      {euroPrecise.format(goal.saved)} gesammelt
-                    </p>
-                    <div className={styles.progressLine}>
-                      <div className={styles.progressTrack}>
-                        <span style={{ width: `${goal.progress}%` }} />
+                    <article
+                      className={styles.goalCard}
+                      key={`${goal.title}-${idx}`}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => openEditModal(goal, idx)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          openEditModal(goal, idx);
+                        }
+                      }}
+                      title="Klicken zum Anpassen"
+                    >
+                      <div className={styles.goalCardHeader}>
+                        <h3>{goal.title}</h3>
+                        <Target aria-hidden="true" />
                       </div>
-                      <strong>{goal.progress}%</strong>
-                    </div>
-                    <div className={styles.goalFooter}>
-                      <span>
-                        <CalendarDays aria-hidden="true" />
-                        Ziel: {goal.date}
-                      </span>
-                      <span>
-                        {euroPrecise.format(goal.target - goal.saved)} offen
-                      </span>
-                    </div>
-                  </article>
+                      <strong className={styles.goalTarget}>
+                        {euro.format(goal.target)}
+                      </strong>
+                      <p className={styles.goalSaved}>
+                        {euroPrecise.format(goal.saved)} gesammelt
+                      </p>
+                      <div className={styles.progressLine}>
+                        <div className={styles.progressTrack}>
+                          <span style={{ width: `${goal.progress}%` }} />
+                        </div>
+                        <strong>{goal.progress}%</strong>
+                      </div>
+                      <div className={styles.goalFooter}>
+                        <span>
+                          <CalendarDays aria-hidden="true" />
+                          Ziel: {goal.date}
+                        </span>
+                        <span>
+                          {euroPrecise.format(goal.target - goal.saved)} offen
+                        </span>
+                      </div>
+                    </article>
                   ))}
                 </LoadingCollection>
               </div>
@@ -472,40 +477,40 @@ export default function GoalsPage() {
                 </header>
                 <div className={styles.upcomingList}>
                   <LoadingCollection loading={loading} knownItemCount={goals.length} emptyHeight="10rem" label="Fristen werden geladen…">
-                  {goals
-                    .slice()
-                    .sort((a, b) =>
-                      a.date
-                        .split(".")
-                        .reverse()
-                        .join("")
-                        .localeCompare(b.date.split(".").reverse().join("")),
-                    )
-                    .slice(0, 3)
-                    .map((goal) => {
-                      const originalIndex = goals.findIndex(
-                        (g) => g.title === goal.title,
-                      );
-                      return (
-                        <button
-                          type="button"
-                          className={styles.upcomingItem}
-                          key={`upcoming-${goal.title}`}
-                          onClick={() =>
-                            openEditModal(
-                              goal,
-                              originalIndex >= 0 ? originalIndex : 0,
-                            )
-                          }
-                        >
-                          <div>
-                            <strong>{goal.title}</strong>
-                            <span>{goal.date}</span>
-                          </div>
-                          <ArrowRight aria-hidden="true" />
-                        </button>
-                      );
-                    })}
+                    {goals
+                      .slice()
+                      .sort((a, b) =>
+                        a.date
+                          .split(".")
+                          .reverse()
+                          .join("")
+                          .localeCompare(b.date.split(".").reverse().join("")),
+                      )
+                      .slice(0, 3)
+                      .map((goal) => {
+                        const originalIndex = goals.findIndex(
+                          (g) => g.title === goal.title,
+                        );
+                        return (
+                          <button
+                            type="button"
+                            className={styles.upcomingItem}
+                            key={`upcoming-${goal.title}`}
+                            onClick={() =>
+                              openEditModal(
+                                goal,
+                                originalIndex >= 0 ? originalIndex : 0,
+                              )
+                            }
+                          >
+                            <div>
+                              <strong>{goal.title}</strong>
+                              <span>{goal.date}</span>
+                            </div>
+                            <ArrowRight aria-hidden="true" />
+                          </button>
+                        );
+                      })}
                   </LoadingCollection>
                 </div>
               </article>

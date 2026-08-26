@@ -55,27 +55,6 @@ import { exportReport } from "@/features/reports/actions/export";
 import { useReportSnapshot } from "@/hooks/use-report-snapshot";
 import { LoadingStatus, LoadingText } from "@/components/ui/loading-state";
 
-const cashflowData = [
-  { month: "Jan", income: 860, expenses: 520 },
-  { month: "Feb", income: 1120, expenses: 740 },
-  { month: "Mär", income: 940, expenses: 1010 },
-  { month: "Apr", income: 1380, expenses: 890 },
-  { month: "Mai", income: 1210, expenses: 1640 },
-  { month: "Jun", income: 1395.5, expenses: 2503.1 },
-];
-
-const categories = [
-  { name: "Veranstaltung", amount: 1740, share: 58 },
-  { name: "Material", amount: 384.9, share: 32 },
-  { name: "Sonstiges", amount: 185.5, share: 10 },
-];
-
-const goals = [
-  { name: "Abiball", saved: 2100, target: 3000 },
-  { name: "Abizeitung", saved: 540, target: 1200 },
-  { name: "Reserve", saved: 800, target: 1000 },
-];
-
 const reviewItems: Array<{
   title: string;
   detail: string;
@@ -92,38 +71,6 @@ const chartConfig = {
     theme: { light: "#a1a1aa", dark: "#71717a" },
   },
 } satisfies ChartConfig;
-
-const analysisBalance = [
-  { month: "Jan 2026", balance: 820 },
-  { month: "Feb 2026", balance: 1280 },
-  { month: "Mär 2026", balance: 2010 },
-  { month: "Apr 2026", balance: 3160 },
-  { month: "Mai 2026", balance: 2850.75 },
-  { month: "Jun 2026", balance: 3476 },
-];
-
-const analysisFlow = [
-  { month: "Jan", income: 980, expenses: 560 },
-  { month: "Feb", income: 2240, expenses: 1120 },
-  { month: "Mär", income: 2480, expenses: 1380 },
-  { month: "Apr", income: 3000, expenses: 1680 },
-  { month: "Mai", income: 3020, expenses: 2100 },
-  { month: "Jun", income: 2950, expenses: 2503.1 },
-];
-
-const analysisSpend = [
-  { name: "Veranstaltung", value: 1447.4, share: 58 },
-  { name: "Material", value: 676.2, share: 27 },
-  { name: "Sonstiges", value: 379.5, share: 15 },
-];
-
-const analysisProfile = [
-  { name: "Zielerreichung", current: 72, target: 80 },
-  { name: "Liquidität", current: 86, target: 75 },
-  { name: "Belegstatus", current: 68, target: 90 },
-  { name: "Kassenabgleich", current: 100, target: 100 },
-  { name: "Planerfüllung", current: 74, target: 85 },
-];
 
 const analysisChartConfig = {
   balance: { label: "Kontostand", color: "#18181b" },
@@ -144,6 +91,9 @@ type PhoneReportTab = "overview" | "analysis" | "review" | "export";
 function PhoneReportsView({
   loading,
   kpis,
+  cashflow,
+  categories: liveCategories,
+  analysisBalance,
   period,
   onPeriodChange,
   exportMessage,
@@ -151,6 +101,9 @@ function PhoneReportsView({
 }: {
   loading: boolean;
   kpis: { income: string; expenses: string; net: string; review: string };
+  cashflow: Array<{ month: string; income: number; expenses: number }>;
+  categories: Array<{ name: string; amount: number; share: number }>;
+  analysisBalance: Array<{ month: string; balance: number }>;
   period: string;
   onPeriodChange: (value: string) => void;
   exportMessage: string;
@@ -190,7 +143,7 @@ function PhoneReportsView({
           <section className={phoneStyles.hero} data-ui-slot="summary">
             <span>Netto</span>
             <strong><LoadingText loading={loading}>{kpis.net}</LoadingText></strong>
-            <p className={phoneStyles.positive}><LoadingText loading={loading}>Barkasse</LoadingText></p>
+            <p className={phoneStyles.positive}><LoadingText loading={loading}>Kassenbestand</LoadingText></p>
             <div className={phoneStyles.heroSide}>
               <span>Liquidität</span>
               <b><LoadingText loading={loading}>{kpis.income}</LoadingText></b>
@@ -216,7 +169,7 @@ function PhoneReportsView({
               <span>6 Monate</span>
             </header>
             <ChartContainer config={chartConfig} className={phoneStyles.chart}>
-              <LineChart data={cashflowData} accessibilityLayer>
+              {cashflow.length ? <LineChart data={cashflow} accessibilityLayer>
                 <CartesianGrid vertical={false} strokeDasharray="3 3" />
                 <XAxis dataKey="month" tickLine={false} axisLine={false} />
                 <YAxis hide />
@@ -236,16 +189,16 @@ function PhoneReportsView({
                   strokeDasharray="5 4"
                   dot={false}
                 />
-              </LineChart>
+              </LineChart> : <div className={phoneStyles.emptyState}>Keine Daten für diesen Zeitraum.</div>}
             </ChartContainer>
           </section>
           <section className={phoneStyles.section}>
             <header className={phoneStyles.sectionHeader}>
               <h2>Ausgaben</h2>
-              <span>2.503,10 €</span>
+            <span>{liveCategories.length ? money.format(liveCategories.reduce((sum, item) => sum + item.amount, 0)) : "Keine Ausgaben"}</span>
             </header>
             <div className={phoneStyles.rows}>
-              {categories.map((item) => (
+              {liveCategories.length ? liveCategories.map((item) => (
                 <div className={phoneStyles.row} key={item.name}>
                   <span>
                     <strong>{item.name}</strong>
@@ -255,7 +208,7 @@ function PhoneReportsView({
                   </span>
                   <b>{item.share}%</b>
                 </div>
-              ))}
+              )) : <div className={phoneStyles.emptyState}>Keine Ausgaben für diesen Zeitraum.</div>}
             </div>
           </section>
         </>
@@ -263,7 +216,7 @@ function PhoneReportsView({
         <>
           <section className={phoneStyles.hero}>
             <span>Kontostand</span>
-            <strong>3.476,00 €</strong>
+            <strong>{kpis.income}</strong>
             <p>Entwicklung im gewählten Zeitraum</p>
           </section>
           <section className={phoneStyles.section}>
@@ -275,7 +228,7 @@ function PhoneReportsView({
               config={analysisChartConfig}
               className={phoneStyles.chart}
             >
-              <AreaChart data={analysisBalance} accessibilityLayer>
+              {analysisBalance.length ? <AreaChart data={analysisBalance} accessibilityLayer>
                 <CartesianGrid vertical={false} strokeDasharray="3 3" />
                 <XAxis
                   dataKey="month"
@@ -292,7 +245,7 @@ function PhoneReportsView({
                   fillOpacity={0.12}
                   stroke="var(--color-balance)"
                 />
-              </AreaChart>
+              </AreaChart> : <div className={phoneStyles.emptyState}>Keine Daten für diesen Zeitraum.</div>}
             </ChartContainer>
           </section>
           <section className={phoneStyles.section}>
@@ -301,15 +254,7 @@ function PhoneReportsView({
               <span>Aktuell</span>
             </header>
             <div className={phoneStyles.rows}>
-              {analysisProfile.map((item) => (
-                <div className={phoneStyles.row} key={item.name}>
-                  <span>
-                    <strong>{item.name}</strong>
-                    <small>Ziel {item.target}%</small>
-                  </span>
-                  <b>{item.current}%</b>
-                </div>
-              ))}
+              <div className={phoneStyles.emptyState}>Noch kein Finanzprofil verfügbar.</div>
             </div>
           </section>
         </>
@@ -317,7 +262,7 @@ function PhoneReportsView({
         <section className={phoneStyles.section}>
           <header className={phoneStyles.sectionHeader}>
             <h2>Offene Vorgänge</h2>
-            <span>4 insgesamt</span>
+            <span>{kpis.review} insgesamt</span>
           </header>
           <div className={phoneStyles.rows}>
             {reviewItems.map((item) => (
@@ -462,6 +407,9 @@ export default function ReportsPage() {
         <PhoneReportsView
           loading={loading}
           kpis={reportKpis}
+          cashflow={liveCashflowData}
+          categories={liveCategories}
+          analysisBalance={liveAnalysisBalance}
           period={period}
           onPeriodChange={setPeriod}
           exportMessage={exportMessage}
@@ -490,21 +438,21 @@ export default function ReportsPage() {
               <AnalysisKpi
                 label="Netto"
                 value={reportKpis.net}
-                meta="+342,55 € vs. Vormonat"
+                meta="Aus den aktuellen Ledger-Daten"
                 positive
                 loading={loading}
               />
               <AnalysisKpi
                 label="Liquidität"
                 value={reportKpis.income}
-                meta="+1.236,25 € vs. Vormonat"
+                meta="Aus den aktuellen Ledger-Daten"
                 positive
                 loading={loading}
               />
               <AnalysisKpi
                 label="Ausgaben"
                 value={reportKpis.expenses}
-                meta="−215,40 € vs. Vormonat"
+                meta="Aus den aktuellen Ledger-Daten"
                 loading={loading}
               />
               <AnalysisKpi
@@ -699,24 +647,24 @@ export default function ReportsPage() {
             <div className={styles.analysisKpiGrid}>
               <AnalysisKpi
                 label="Netto"
-                value="1.107,60 €"
-                meta="+342,55 € vs. Vormonat"
+                value={reportKpis.net}
+                meta="Aus den aktuellen Ledger-Daten"
                 positive
               />
               <AnalysisKpi
                 label="Liquidität"
-                value="3.476,00 €"
-                meta="+1.236,25 € vs. Vormonat"
+                value={reportKpis.income}
+                meta="Aus den aktuellen Ledger-Daten"
                 positive
               />
               <AnalysisKpi
                 label="Ausgaben"
-                value="2.503,10 €"
-                meta="−215,40 € vs. Vormonat"
+                value={reportKpis.expenses}
+                meta="Aus den aktuellen Ledger-Daten"
               />
               <AnalysisKpi
                 label="Prüfbedarf"
-                value="4"
+                value={reportKpis.review}
                 meta="Belege / Transaktionen"
               />
             </div>
@@ -810,7 +758,7 @@ export default function ReportsPage() {
                         content={<ChartTooltipContent nameKey="name" />}
                       />
                       <Pie
-                        data={analysisSpend}
+                        data={liveCategories.map((entry) => ({ name: entry.name, value: entry.amount, share: entry.share }))}
                         dataKey="value"
                         nameKey="name"
                         innerRadius={48}
@@ -818,7 +766,7 @@ export default function ReportsPage() {
                         paddingAngle={2}
                         strokeWidth={1}
                       >
-                        {analysisSpend.map((entry, index) => (
+                        {liveCategories.map((entry, index) => (
                           <Cell
                             key={entry.name}
                             fill={["#18181b", "#a1a1aa", "#d4d4d8"][index]}
@@ -828,7 +776,7 @@ export default function ReportsPage() {
                     </PieChart>
                   </ChartContainer>
                   <div className={styles.donutLegend}>
-                    {analysisSpend.map((entry, index) => (
+                    {liveCategories.map((entry, index) => (
                       <div key={entry.name}>
                         <span>
                           <i
@@ -841,7 +789,7 @@ export default function ReportsPage() {
                           {entry.name}
                         </span>
                         <strong>{entry.share}%</strong>
-                        <small>{money.format(entry.value)}</small>
+                        <small>{money.format(entry.amount)}</small>
                       </div>
                     ))}
                   </div>
@@ -857,7 +805,7 @@ export default function ReportsPage() {
                   config={analysisChartConfig}
                   className={styles.analysisChart}
                 >
-                  <LineChart
+                  {liveAnalysisFlow.length ? <LineChart
                     accessibilityLayer
                     data={liveAnalysisFlow}
                     margin={{ left: 0, right: 8, top: 8, bottom: 0 }}
@@ -893,7 +841,7 @@ export default function ReportsPage() {
                       strokeDasharray="5 4"
                       dot={{ r: 3 }}
                     />
-                  </LineChart>
+                  </LineChart> : <div className={styles.emptyChart}>Keine Daten für diesen Zeitraum.</div>}
                 </ChartContainer>
               </ChartPanel>
 
@@ -907,7 +855,7 @@ export default function ReportsPage() {
                 >
                   <RadarChart
                     accessibilityLayer
-                    data={analysisProfile}
+                    data={[]}
                     outerRadius="68%"
                   >
                     <PolarGrid />
@@ -965,7 +913,7 @@ export default function ReportsPage() {
                     <h3>Offene Vorgänge</h3>
                     <p>Arbeite die wichtigsten Prüfungen der Reihe nach ab.</p>
                   </div>
-                  <span>4 Vorgänge</span>
+                  <span>{reportKpis.review} Vorgänge</span>
                 </header>
                 <div className={styles.reviewQueueList}>
                   {reviewItems.map((item) => (
@@ -1004,35 +952,35 @@ export default function ReportsPage() {
                   <Info aria-hidden="true" />
                 </header>
                 <div className={styles.reviewStatusValue}>
-                  <strong>4</strong>
+                  <strong>{reportKpis.review}</strong>
                   <span>Vorgänge insgesamt</span>
                 </div>
                 <div className={styles.reviewStatusBars}>
                   <div>
                     <span>
                       <b>Geprüft</b>
-                      <b>18</b>
+                      <b>0</b>
                     </span>
                     <i>
-                      <em style={{ width: "82%" }} />
+                      <em style={{ width: "0%" }} />
                     </i>
                   </div>
                   <div>
                     <span>
                       <b>Zu prüfen</b>
-                      <b>3</b>
+                      <b>{reportKpis.review}</b>
                     </span>
                     <i>
-                      <em style={{ width: "14%" }} />
+                      <em style={{ width: "0%" }} />
                     </i>
                   </div>
                   <div>
                     <span>
                       <b>Ohne Zuordnung</b>
-                      <b>1</b>
+                      <b>0</b>
                     </span>
                     <i>
-                      <em style={{ width: "5%" }} />
+                      <em style={{ width: "0%" }} />
                     </i>
                   </div>
                 </div>
@@ -1106,24 +1054,7 @@ export default function ReportsPage() {
                 </div>
               </header>
               <div className={styles.exportHistoryList}>
-                <div>
-                  <FileText />
-                  <span>
-                    <strong>Klassenfinanzen_Mai_2026.pdf</strong>
-                    <small>Erstellt heute, 10:32 Uhr</small>
-                  </span>
-                  <b>PDF</b>
-                  <ArrowRight />
-                </div>
-                <div>
-                  <FileSpreadsheet />
-                  <span>
-                    <strong>Transaktionen_April_2026.xlsx</strong>
-                    <small>Erstellt am 30.04.2026</small>
-                  </span>
-                  <b>Excel</b>
-                  <ArrowRight />
-                </div>
+                <p className={styles.emptyHistory}>Noch keine Exporte erstellt.</p>
               </div>
             </section>
           </TabsContent>

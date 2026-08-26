@@ -144,33 +144,34 @@ function SummaryRail({
   euro,
 }: Pick<AdaptiveFundsViewProps, "cards" | "cashBox" | "euro">) {
   const bankBalance = totalBankBalance(cards);
-  const total = bankBalance + cashBox.balance;
-  const matched = cashBox.countStatus === "matched";
+  const hasCashBox = Boolean(cashBox.id);
+  const total = bankBalance + (hasCashBox && !cards.length ? cashBox.balance : 0);
+  const matched = hasCashBox && cashBox.countStatus === "matched";
 
   return (
     <section className={styles.summaryRail} aria-label="Finanzübersicht">
       <div>
         <span>Gesamt verfügbar</span>
         <strong>{euro(total)}</strong>
-        <small>{cards.length + 1} Kassen insgesamt</small>
+        <small>{cards.length || (hasCashBox ? 1 : 0)} Kassen insgesamt</small>
       </div>
       <div>
-        <span>Bankguthaben</span>
+        <span>Kassenbestand</span>
         <strong>{euro(bankBalance)}</strong>
-        <small>Weitere Kassenkarten</small>
+        <small>{cards.length ? "Weitere Kassen" : "Keine Kassen angelegt"}</small>
       </div>
       <div>
-        <span>Barkasse</span>
-        <strong>{euro(cashBox.balance)}</strong>
-        <small>Gezählt am {cashBox.lastCountDate}</small>
+        <span>Ausgewählte Kasse</span>
+        <strong>{hasCashBox ? euro(cashBox.balance) : "Keine Kasse"}</strong>
+        <small>{hasCashBox ? `Gezählt am ${cashBox.lastCountDate}` : "Noch nicht angelegt"}</small>
       </div>
       <div>
         <span>Kassenstatus</span>
-        <strong className={matched ? styles.positive : styles.negative}>
-          {matched ? "Stimmt" : "Prüfen"}
+        <strong className={!hasCashBox || matched ? styles.positive : styles.negative}>
+          {!hasCashBox ? "Keine Kasse" : matched ? "Stimmt" : "Prüfen"}
         </strong>
         <small>
-          {matched
+          {!hasCashBox ? "Lege eine Kasse an" : matched
             ? "Keine Differenz festgestellt"
             : `${euro(cashBox.difference)} Differenz`}
         </small>
@@ -208,16 +209,16 @@ function AccountList({
       <header className={styles.panelHeader}>
         <div>
           <h2 id="account-list-title">Kassen</h2>
-          <p>{cards.length + (cashBox.id ? 1 : 0)} Geldbestände</p>
+          <p>{cards.length || (cashBox.id ? 1 : 0)} Geldbestände</p>
         </div>
-        {cashBox.id ? <button
+        <button
           type="button"
           className={styles.iconAction}
           aria-label="Karte hinzufügen"
           onClick={onAddCard}
         >
           <Plus aria-hidden="true" />
-        </button> : null}
+        </button>
       </header>
       <div className={styles.accountList}>
         {cards.map((card, index) => (
@@ -245,30 +246,10 @@ function AccountList({
             </span>
           </button>
         ))}
-        {cashBox.id ? <button
-          type="button"
-          className={styles.accountRow}
-          aria-pressed={cashSelected}
-          onClick={onSelectCash}
-        >
-          <span className={styles.accountIcon}>
-            <Banknote aria-hidden="true" />
-          </span>
-          <span className={styles.accountIdentity}>
-            <strong>Barkasse</strong>
-            <small>{cashBox.responsible}</small>
-          </span>
-          <span className={styles.accountAmount}>
-            <strong>{euro(cashBox.balance)}</strong>
-            <small>
-              {cashBox.countStatus === "matched" ? "Abgeglichen" : "Prüfen"}
-            </small>
-          </span>
-        </button> : null}
       </div>
       <div className={styles.accountListFooter}>
         <span>Alle Kassen</span>
-        <strong>{euro(totalBankBalance(cards) + cashBox.balance)}</strong>
+        <strong>{euro(totalBankBalance(cards) + (!cards.length && cashBox.id ? cashBox.balance : 0))}</strong>
       </div>
     </section>
   );
@@ -429,7 +410,7 @@ function CashDetail({ props }: { props: AdaptiveFundsViewProps }) {
     <section className={styles.cashDetail}>
       <header className={styles.panelHeader}>
         <div>
-          <h2>Barkasse</h2>
+          <h2>{cashBox.name}</h2>
           <p>{cashBox.name}</p>
         </div>
         <Banknote aria-hidden="true" />
@@ -744,14 +725,14 @@ function TabletAccountSelector({
           </span>
         </button>
       ))}
-      {props.cashBox.id ? <button
+      {props.cashBox.id && !props.cards.length ? <button
         type="button"
         aria-pressed={cashSelected}
         onClick={onSelectCash}
       >
         <Banknote aria-hidden="true" />
         <span>
-          <strong>Barkasse</strong>
+          <strong>{props.cashBox.name}</strong>
           <small>{props.euro(props.cashBox.balance)}</small>
         </span>
       </button> : null}
@@ -844,7 +825,7 @@ function PhoneAccountCard(props: AdaptiveFundsViewProps) {
       {props.activeCard ? (
         <div className={styles.phoneAccountSummary}>
           <span>
-          <strong>{props.activeCard.details.accountName}</strong>
+            <strong>{props.activeCard.details.accountName}</strong>
             <small>Kartendarstellung</small>
           </span>
           <b>{props.euro(props.activeCard.balance)}</b>
@@ -876,6 +857,7 @@ function PhoneRows({ props }: { props: AdaptiveFundsViewProps }) {
 function PhoneFunds(props: AdaptiveFundsViewProps) {
   const [section, setSection] = useState<FundsSection>("overview");
   const bankBalance = totalBankBalance(props.cards);
+  const hasCashBox = Boolean(props.cashBox.id);
 
   return (
     <div className={`${styles.root} ${styles.phoneRoot}`}>
@@ -883,8 +865,7 @@ function PhoneFunds(props: AdaptiveFundsViewProps) {
         <span>Gesamt verfügbar</span>
         <strong>{props.euro(bankBalance + props.cashBox.balance)}</strong>
         <div>
-          <span>{props.euro(bankBalance)} Bank</span>
-          <span>{props.euro(props.cashBox.balance)} Bargeld</span>
+          {hasCashBox ? <span>{props.euro(props.cashBox.balance)} Kasse</span> : <span>Keine Kasse angelegt</span>}
         </div>
       </section>
       <FundsTabs active={section} onChange={setSection} />
@@ -918,9 +899,9 @@ function PhoneFunds(props: AdaptiveFundsViewProps) {
               <Plus aria-hidden="true" /> Karte
             </button>
           </div>
-          <section className={styles.phoneSection}>
+          {hasCashBox ? <section className={styles.phoneSection}>
             <header>
-              <h2>Barkasse</h2>
+              <h2>{props.cashBox.name}</h2>
               <b>{props.euro(props.cashBox.balance)}</b>
             </header>
             <button
@@ -942,7 +923,7 @@ function PhoneFunds(props: AdaptiveFundsViewProps) {
                 {props.cashBox.countStatus === "matched" ? "Stimmt" : "Prüfen"}
               </b>
             </button>
-          </section>
+          </section> : null}
           <section className={styles.phoneSection}>
             <header>
               <h2>Letzte Aktivitäten</h2>

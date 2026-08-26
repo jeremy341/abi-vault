@@ -12,6 +12,8 @@ import { usePresentationMode } from "@/hooks/use-presentation-mode";
 import adaptiveStyles from "./funds-adaptive.module.css";
 import styles from "./funds.module.css";
 import { listWalletsForCurrentOrganization } from "@/features/finance/actions/queries";
+import { cachedFinanceQuery } from "@/lib/finance/client-cache";
+import { invalidateFinanceQuery } from "@/lib/finance/client-cache";
 import { archiveWallet, createWallet, updateWallet } from "@/features/finance/actions/wallets";
 import { recordCashCount } from "@/features/finance/actions/cash-counts";
 import { createTransfer } from "@/features/finance/actions/transfers";
@@ -233,31 +235,31 @@ export default function FundsPage() {
 
   useEffect(() => {
     let active = true;
-    listWalletsForCurrentOrganization()
+    cachedFinanceQuery("wallets", listWalletsForCurrentOrganization)
       .then((result) => {
         if (!active || !result.ok) return;
-        const bankWallets = result.items.filter((item) => item.type !== "cash");
-        setCards(bankWallets.map((wallet, index) => ({
+        const cashWallets = result.items.filter((item) => item.type === "cash");
+        setCards(cashWallets.map((wallet, index) => ({
           id: wallet.id,
           details: {
             accountName: wallet.name,
-            cardNumber: `•••• •••• •••• ${wallet.connected?.iban_last4 ?? "0000"}`,
-            holder: wallet.connected?.account_holder ?? "Abi Komitee",
-            expiry: "—",
+            cardNumber: `4000 0000 0000 ${String(index + 1).padStart(4, "0")}`,
+            holder: "Abi Komitee",
+            expiry: "12/30",
             color: index % 2 ? "#3b3b40" : "#111114",
           },
           balance: Number(wallet.balanceMinor) / 100,
-          iban: wallet.connected?.iban_last4 ? `•••• ${wallet.connected.iban_last4}` : "",
-          bic: wallet.connected?.bic ?? "",
-          bankName: wallet.connected?.display_name ?? "Manuelles Konto",
+          iban: "",
+          bic: "",
+          bankName: "Kasse",
           status: "Kasse · Kartendarstellung",
           lastSync: "Ledger-basiert",
         })));
-        const cash = result.items.find((item) => item.type === "cash");
+        const cash = cashWallets[0];
         if (cash) {
           setCashBox((current) => ({ ...current, id: cash.id, name: cash.name, balance: Number(cash.balanceMinor) / 100 }));
         } else {
-          setCashBox((current) => ({ ...current, balance: 0 }));
+          setCashBox((current) => ({ ...current, id: "", name: "", balance: 0, responsible: "", lastCountDate: "" }));
         }
       })
       .catch(() => undefined)
@@ -319,13 +321,13 @@ export default function FundsPage() {
   async function handleSaveNewCard(details: AccountCardDetails) {
     const persisted = await createWallet({
       name: details.accountName,
-      type: "manual_bank",
+      type: "cash",
       responsibleClerkUserId: null,
       bankConnectionId: null,
       idempotencyKey: `wallet-${crypto.randomUUID()}`,
     });
     if (!persisted.success) {
-      setNotice("Konto konnte nicht gespeichert werden.");
+      setNotice(persisted.error.message);
       return;
     }
     const newCard: DashboardCard = {
@@ -341,7 +343,8 @@ export default function FundsPage() {
     setCards((current) => [...current, newCard]);
     setActiveCardIndex(cards.length);
     setIsAddCardOpen(false);
-    setNotice("Karte hinzugefügt.");
+    invalidateFinanceQuery("wallets");
+    setNotice("Kasse hinzugefügt.");
   }
 
   async function handleUpdateCard(details: AccountCardDetails) {
@@ -361,15 +364,11 @@ export default function FundsPage() {
       ),
     );
     setIsEditCardOpen(false);
+    invalidateFinanceQuery("wallets");
     setNotice("Kartendaten gespeichert.");
   }
 
   function requestDeleteCard() {
-    if (cards.length <= 1) {
-      setIsEditCardOpen(false);
-      setNotice("Mindestens eine Karte muss verbunden bleiben.");
-      return;
-    }
     setIsEditCardOpen(false);
     setIsDeleteOpen(true);
   }
@@ -420,7 +419,7 @@ export default function FundsPage() {
     setCountMode(nextMode);
     event.currentTarget.parentElement
       ?.querySelectorAll<HTMLElement>('[role="tab"]')
-      [nextMode === "direct" ? 0 : 1]?.focus();
+    [nextMode === "direct" ? 0 : 1]?.focus();
   }
 
   async function confirmDeleteCard() {
@@ -436,8 +435,12 @@ export default function FundsPage() {
     setCards((current) =>
       current.filter((_, index) => index !== safeIndex),
     );
+    setCashBox((current) => current.id === activeCard.id
+      ? { ...current, id: "", name: "", balance: 0, responsible: "", lastCountDate: "" }
+      : current);
     setActiveCardIndex((current) => Math.max(0, current - 1));
     setIsDeleteOpen(false);
+    invalidateFinanceQuery("wallets");
     setNotice("Karte entfernt.");
   }
 
@@ -884,7 +887,7 @@ export default function FundsPage() {
                 </span>
                 <div>
                   <h2>Umbuchung</h2>
-                <p>Geld zwischen Kassen verschieben.</p>
+                  <p>Geld zwischen Kassen verschieben.</p>
                 </div>
               </div>
               <button
@@ -907,8 +910,8 @@ export default function FundsPage() {
                     onChange={(event) =>
                       setTransferDirection(
                         event.target.value as
-                          | "bank-to-cash"
-                          | "cash-to-bank",
+                        | "bank-to-cash"
+                        | "cash-to-bank",
                       )
                     }
                   >

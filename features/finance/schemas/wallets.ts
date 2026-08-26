@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const walletCreateSchema = z.object({
   name: z.string().trim().min(1).max(120),
-  type: z.enum(["cash", "manual_bank", "bank_connected"]),
+  type: z.literal("cash"),
   responsibleClerkUserId: z.string().trim().nullable().optional(),
   bankConnectionId: z.string().uuid().nullable().optional(),
   idempotencyKey: z.string().trim().min(16).max(128),

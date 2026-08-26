@@ -11,6 +11,7 @@ import {
   type WalletCreateInput,
 } from "@/features/finance/schemas/wallets";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 function mapWalletError(code?: string) {
   if (code === "42501") return actionFailure("FORBIDDEN", "You are not allowed to perform this action.");
@@ -29,18 +30,30 @@ export async function createWallet(
   }
 
   const context = await requirePermission("manageWallets");
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase.rpc("create_wallet", {
-    p_organization_id: context.organizationId,
-    p_name: parsed.data.name,
-    p_type: parsed.data.type,
-    p_responsible_clerk_user_id: parsed.data.responsibleClerkUserId ?? null,
-    p_bank_connection_id: parsed.data.bankConnectionId ?? null,
-    p_idempotency_key: parsed.data.idempotencyKey,
-  });
+  const admin = createSupabaseAdminClient();
+  const { data: wallet, error: insertError } = await admin
+    .from("wallets")
+    .upsert({
+      organization_id: context.organizationId,
+      name: parsed.data.name,
+      type: "cash",
+      status: "active",
+      responsible_clerk_user_id: parsed.data.responsibleClerkUserId ?? null,
+      created_by: context.clerkUserId,
+      idempotency_key: parsed.data.idempotencyKey,
+    }, { onConflict: "organization_id,idempotency_key" })
+    .select("id")
+    .single();
+  if (insertError) return mapWalletError(insertError.code);
 
-  if (error) return mapWalletError(error.code);
-  return actionSuccess({ id: String(data) });
+  const { error: ledgerError } = await admin.from("ledger_accounts").upsert({
+    organization_id: context.organizationId,
+    type: "wallet",
+    name: parsed.data.name,
+    wallet_id: wallet.id,
+  }, { onConflict: "wallet_id" });
+  if (ledgerError) return mapWalletError(ledgerError.code);
+  return actionSuccess({ id: String(wallet.id) });
 }
 
 export async function updateWallet(input: unknown) {

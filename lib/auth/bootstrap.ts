@@ -51,17 +51,6 @@ export async function ensureCurrentOrganizationData() {
     timezone: "Europe/Berlin",
   }, { onConflict: "organization_id", ignoreDuplicates: true });
 
-  await admin.from("wallets").upsert({
-    organization_id: session.orgId,
-    name: "Barkasse",
-    type: "cash",
-    status: "active",
-    opening_balance_minor: 0,
-    responsible_clerk_user_id: session.userId,
-    created_by: session.userId,
-    idempotency_key: "cash-only-default",
-  }, { onConflict: "organization_id,idempotency_key", ignoreDuplicates: true });
-
   const year = new Date().getFullYear();
   await admin.from("accounting_periods").upsert(
     Array.from({ length: 12 }, (_, index) => ({ organization_id: session.orgId!, year, month: index + 1 })),

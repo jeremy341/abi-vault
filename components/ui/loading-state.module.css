@@ -44,6 +44,8 @@
 
 .collectionLoading {
   display: grid;
+  grid-column: 1 / -1;
+  align-self: stretch;
   place-items: center;
   width: 100%;
   color: var(--ui-muted-ink);

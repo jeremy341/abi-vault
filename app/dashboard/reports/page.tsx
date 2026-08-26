@@ -11,7 +11,7 @@ import {
   ReceiptText,
   ShieldCheck,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -50,6 +50,10 @@ import {
 import styles from "./reports.module.css";
 import phoneStyles from "./reports-phone.module.css";
 import { usePresentationMode } from "@/hooks/use-presentation-mode";
+import { getReportKpisForCurrentOrganization } from "@/features/finance/actions/queries";
+import { exportReport } from "@/features/reports/actions/export";
+import { useReportSnapshot } from "@/hooks/use-report-snapshot";
+import { LoadingStatus, LoadingText } from "@/components/ui/loading-state";
 
 const cashflowData = [
   { month: "Jan", income: 860, expenses: 520 },
@@ -72,28 +76,11 @@ const goals = [
   { name: "Reserve", saved: 800, target: 1000 },
 ];
 
-const reviewItems = [
-  {
-    title: "3 Belege warten auf Prüfung",
-    detail: "Zuletzt aktualisiert heute, 12:18 Uhr",
-    tone: "warning",
-  },
-  {
-    title: "1 Bargeldzahlung ohne Beleg",
-    detail: "Kuchenverkauf vom 11.05.2024",
-    tone: "neutral",
-  },
-  {
-    title: "1 Beleg ohne Transaktionszuordnung",
-    detail: "Bon_Bäckerei.jpg",
-    tone: "neutral",
-  },
-  {
-    title: "Kassenabgleich vollständig",
-    detail: "Letzter Kassensturz am 15.05.2024",
-    tone: "positive",
-  },
-];
+const reviewItems: Array<{
+  title: string;
+  detail: string;
+  tone: "warning" | "neutral" | "positive";
+}> = [];
 
 const chartConfig = {
   income: {
@@ -155,24 +142,24 @@ const money = new Intl.NumberFormat("de-DE", {
 type PhoneReportTab = "overview" | "analysis" | "review" | "export";
 
 function PhoneReportsView({
+  loading,
+  kpis,
   period,
   onPeriodChange,
-  account,
-  onAccountChange,
   exportMessage,
   onExport,
 }: {
+  loading: boolean;
+  kpis: { income: string; expenses: string; net: string; review: string };
   period: string;
   onPeriodChange: (value: string) => void;
-  account: string;
-  onAccountChange: (value: string) => void;
   exportMessage: string;
   onExport: (format: string) => void;
 }) {
   const [tab, setTab] = useState<PhoneReportTab>("overview");
 
   return (
-    <section className={phoneStyles.root}>
+    <section className={phoneStyles.root} aria-busy={loading}>
       <div
         className={phoneStyles.tabs}
         role="tablist"
@@ -191,6 +178,7 @@ function PhoneReportsView({
             aria-selected={tab === value}
             className={tab === value ? phoneStyles.activeTab : ""}
             onClick={() => setTab(value as PhoneReportTab)}
+            disabled={loading}
           >
             {label}
           </button>
@@ -199,18 +187,18 @@ function PhoneReportsView({
 
       {tab === "overview" ? (
         <>
-          <section className={phoneStyles.hero}>
+          <section className={phoneStyles.hero} data-ui-slot="summary">
             <span>Netto</span>
-            <strong>1.107,60 €</strong>
-            <p className={phoneStyles.positive}>+342,55 € zum Vormonat</p>
+            <strong><LoadingText loading={loading}>{kpis.net}</LoadingText></strong>
+            <p className={phoneStyles.positive}><LoadingText loading={loading}>Barkasse</LoadingText></p>
             <div className={phoneStyles.heroSide}>
               <span>Liquidität</span>
-              <b>3.476,00 €</b>
+              <b><LoadingText loading={loading}>{kpis.income}</LoadingText></b>
               <span>Prüfbedarf</span>
-              <b>4 Vorgänge</b>
+              <b><LoadingText loading={loading}>{kpis.review} Vorgänge</LoadingText></b>
             </div>
           </section>
-          <div className={phoneStyles.filters}>
+          <div className={phoneStyles.filters} data-ui-slot="toolbar">
             <FieldDropdown
               ariaLabel="Zeitraum"
               value={period}
@@ -221,18 +209,8 @@ function PhoneReportsView({
                 { value: "jahr", label: "Dieses Jahr" },
               ]}
             />
-            <FieldDropdown
-              ariaLabel="Konto"
-              value={account}
-              onChange={onAccountChange}
-              options={[
-                { value: "alle-konten", label: "Alle Konten" },
-                { value: "bankkonto", label: "Bankkonto" },
-                { value: "barkasse", label: "Barkasse" },
-              ]}
-            />
           </div>
-          <section className={phoneStyles.section}>
+          <section className={phoneStyles.section} data-ui-slot="primary-panel">
             <header className={phoneStyles.sectionHeader}>
               <h2>Cashflow</h2>
               <span>6 Monate</span>
@@ -418,22 +396,74 @@ function PhoneReportsView({
 export default function ReportsPage() {
   const mode = usePresentationMode();
   const [period, setPeriod] = useState("6-monate");
-  const [account, setAccount] = useState("alle-konten");
   const [category, setCategory] = useState("alle-kategorien");
   const [exportMessage, setExportMessage] = useState("");
+  const { snapshot: reportSnapshot, loading: snapshotLoading } = useReportSnapshot();
+  const liveCashflowData = reportSnapshot?.cashflow ?? [];
+  const liveCategories = reportSnapshot?.categories ?? [];
+  const liveGoals = reportSnapshot?.goals ?? [];
+  const liveAnalysisBalance = reportSnapshot?.analysisBalance ?? [];
+  const liveAnalysisFlow = reportSnapshot?.analysisFlow ?? [];
+  const [kpiLoading, setKpiLoading] = useState(true);
+  const [reportKpis, setReportKpis] = useState({
+    income: "0,00 €",
+    expenses: "0,00 €",
+    net: "0,00 €",
+    review: "0",
+  });
+  const loading = snapshotLoading || kpiLoading;
 
-  function prepareExport(format: string) {
-    setExportMessage(`${format}-Bericht wurde vorbereitet.`);
+  useEffect(() => {
+    let active = true;
+    getReportKpisForCurrentOrganization()
+      .then((result) => {
+        if (!active || !result.ok) return;
+        const format = (minor: string | number) => (Number(minor) / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
+        const net = Number(result.netMinor) / 100;
+        setReportKpis({
+          income: format(result.liquidMinor),
+          expenses: format(result.expenseMinor),
+          net: `${net < 0 ? "−" : ""}${format(Math.abs(Number(result.netMinor)))}`,
+          review: String(result.reviewCount),
+        });
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (active) setKpiLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  async function prepareExport(format: string) {
+    if (format === "PDF") {
+      setExportMessage("PDF-Export ist noch nicht aktiviert.");
+      return;
+    }
+    const result = await exportReport(format === "Prüfprotokoll" ? "Prüfprotokoll" : "Excel");
+    if (!result.ok) {
+      setExportMessage("Export konnte nicht erstellt werden.");
+      return;
+    }
+    const blob = new Blob([result.content], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = result.filename;
+    link.click();
+    URL.revokeObjectURL(url);
+    setExportMessage(`${format}-Export wurde heruntergeladen.`);
   }
 
   if (mode === "phone") {
     return (
       <TooltipProvider>
         <PhoneReportsView
+          loading={loading}
+          kpis={reportKpis}
           period={period}
           onPeriodChange={setPeriod}
-          account={account}
-          onAccountChange={setAccount}
           exportMessage={exportMessage}
           onExport={prepareExport}
         />
@@ -443,7 +473,8 @@ export default function ReportsPage() {
 
   return (
     <TooltipProvider>
-      <section className={styles.page}>
+      <section className={styles.page} aria-busy={loading}>
+        <LoadingStatus loading={loading} label="Berichte werden geladen…" />
         <Tabs defaultValue="overview" className={styles.reportWorkspace}>
           <header className={styles.referenceTabsHeader}>
             <TabsList variant="line" className={styles.workspaceTabs}>
@@ -455,31 +486,35 @@ export default function ReportsPage() {
           </header>
 
           <TabsContent value="overview" className={styles.tabContent}>
-            <div className={styles.analysisKpiGrid}>
+            <div className={styles.analysisKpiGrid} data-ui-slot="summary">
               <AnalysisKpi
                 label="Netto"
-                value="1.107,60 €"
+                value={reportKpis.net}
                 meta="+342,55 € vs. Vormonat"
                 positive
+                loading={loading}
               />
               <AnalysisKpi
                 label="Liquidität"
-                value="3.476,00 €"
+                value={reportKpis.income}
                 meta="+1.236,25 € vs. Vormonat"
                 positive
+                loading={loading}
               />
               <AnalysisKpi
                 label="Ausgaben"
-                value="2.503,10 €"
+                value={reportKpis.expenses}
                 meta="−215,40 € vs. Vormonat"
+                loading={loading}
               />
               <AnalysisKpi
                 label="Prüfbedarf"
-                value="4"
+                value={reportKpis.review}
                 meta="Belege / Transaktionen"
+                loading={loading}
               />
             </div>
-            <div className={styles.filters}>
+            <div className={styles.filters} data-ui-slot="toolbar">
               <FieldDropdown
                 ariaLabel="Berichtszeitraum"
                 value={period}
@@ -488,16 +523,6 @@ export default function ReportsPage() {
                   { value: "6-monate", label: "Letzte 6 Monate" },
                   { value: "abi-jahr", label: "Abi-Jahr 2026" },
                   { value: "gesamt", label: "Gesamter Zeitraum" },
-                ]}
-              />
-              <FieldDropdown
-                ariaLabel="Konto"
-                value={account}
-                onChange={setAccount}
-                options={[
-                  { value: "alle-konten", label: "Alle Konten" },
-                  { value: "klassenkonto", label: "Klassenkonto" },
-                  { value: "barkasse", label: "Barkasse" },
                 ]}
               />
               <FieldDropdown
@@ -521,7 +546,7 @@ export default function ReportsPage() {
               </button>
             </div>
 
-            <div className={styles.reportGrid}>
+            <div className={styles.reportGrid} data-ui-slot="content">
               <article className={styles.cashflowPanel}>
                 <header className={styles.panelHeader}>
                   <div>
@@ -551,7 +576,7 @@ export default function ReportsPage() {
                 >
                   <BarChart
                     accessibilityLayer
-                    data={cashflowData}
+                    data={liveCashflowData}
                     margin={{ left: 2, right: 8, top: 12, bottom: 0 }}
                   >
                     <CartesianGrid vertical={false} strokeDasharray="3 3" />
@@ -616,7 +641,7 @@ export default function ReportsPage() {
                     </div>
                   </header>
                   <div className={styles.categoryList}>
-                    {categories.map((item, index) => (
+                    {liveCategories.map((item, index) => (
                       <div className={styles.categoryItem} key={item.name}>
                         <div>
                           <strong>{item.name}</strong>
@@ -644,7 +669,7 @@ export default function ReportsPage() {
                     </div>
                   </header>
                   <div className={styles.goalList}>
-                    {goals.map((goal) => {
+                    {liveGoals.map((goal) => {
                       const progress = Math.round(
                         (goal.saved / goal.target) * 100,
                       );
@@ -707,16 +732,6 @@ export default function ReportsPage() {
                 ]}
               />
               <FieldDropdown
-                ariaLabel="Analysekonto"
-                value={account}
-                onChange={setAccount}
-                options={[
-                  { value: "alle-konten", label: "Alle Konten" },
-                  { value: "klassenkonto", label: "Klassenkonto" },
-                  { value: "barkasse", label: "Barkasse" },
-                ]}
-              />
-              <FieldDropdown
                 ariaLabel="Analysekategorie"
                 value={category}
                 onChange={setCategory}
@@ -731,7 +746,6 @@ export default function ReportsPage() {
                 className={styles.resetButton}
                 onClick={() => {
                   setPeriod("6-monate");
-                  setAccount("alle-konten");
                   setCategory("alle-kategorien");
                 }}
               >
@@ -750,7 +764,7 @@ export default function ReportsPage() {
                 >
                   <AreaChart
                     accessibilityLayer
-                    data={analysisBalance}
+                    data={liveAnalysisBalance}
                     margin={{ left: 0, right: 8, top: 8, bottom: 0 }}
                   >
                     <CartesianGrid vertical={false} strokeDasharray="3 3" />
@@ -845,7 +859,7 @@ export default function ReportsPage() {
                 >
                   <LineChart
                     accessibilityLayer
-                    data={analysisFlow}
+                    data={liveAnalysisFlow}
                     margin={{ left: 0, right: 8, top: 8, bottom: 0 }}
                   >
                     <CartesianGrid vertical={false} strokeDasharray="3 3" />
@@ -1050,16 +1064,6 @@ export default function ReportsPage() {
                   ]}
                 />
                 <FieldDropdown
-                  ariaLabel="Exportkonto"
-                  value={account}
-                  onChange={setAccount}
-                  options={[
-                    { value: "alle-konten", label: "Alle Konten" },
-                    { value: "klassenkonto", label: "Klassenkonto" },
-                    { value: "barkasse", label: "Barkasse" },
-                  ]}
-                />
-                <FieldDropdown
                   ariaLabel="Exportkategorie"
                   value={category}
                   onChange={setCategory}
@@ -1157,17 +1161,19 @@ function AnalysisKpi({
   value,
   meta,
   positive = false,
+  loading = false,
 }: {
   label: string;
   value: string;
   meta: string;
   positive?: boolean;
+  loading?: boolean;
 }) {
   return (
     <article className={styles.analysisKpi}>
       <span>{label}</span>
-      <strong>{value}</strong>
-      <small className={positive ? styles.analysisPositive : ""}>{meta}</small>
+      <strong><LoadingText loading={loading}>{value}</LoadingText></strong>
+      <small className={positive ? styles.analysisPositive : ""}><LoadingText loading={loading}>{meta}</LoadingText></small>
     </article>
   );
 }

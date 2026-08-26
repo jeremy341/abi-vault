@@ -122,6 +122,15 @@
   display: grid;
 }
 
+.empty {
+  display: grid;
+  min-height: 10rem;
+  place-items: center;
+  color: var(--ui-muted-ink);
+  font-size: 0.78rem;
+  text-align: center;
+}
+
 .row {
   display: grid;
   min-height: 4.75rem;

@@ -286,6 +286,11 @@
   flex: 1 1 auto;
   grid-template-rows: repeat(var(--ui-receipt-table-rows), minmax(0, 1fr));
 }
+.rows > :global([data-loading-collection="true"]) {
+  grid-row: 1 / -1;
+  min-height: 0;
+  height: 100%;
+}
 
 .emptyState {
   display: grid;

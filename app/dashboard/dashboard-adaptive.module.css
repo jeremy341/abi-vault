@@ -91,6 +91,11 @@
   background: var(--ui-surface);
 }
 
+.tabletTransactions {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
 .tabletAccount {
   display: grid;
   grid-template-columns: minmax(15rem, 1fr) minmax(12rem, 0.72fr);
@@ -127,6 +132,18 @@
 
 .tabletBalance p {
   margin: 0;
+}
+
+.tabletActivity {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: -0.05rem;
+  transform: translateY(-5px);
+  color: var(--ui-muted-ink);
+  font-size: 0.72rem;
+  text-decoration: underline;
+  text-decoration-color: var(--ui-border);
+  text-underline-offset: 0.18rem;
 }
 
 .tabletActions {
@@ -201,6 +218,9 @@
 
 .tabletTransactionList {
   display: grid;
+  min-height: 0;
+  align-content: stretch;
+  grid-template-rows: repeat(5, minmax(0, 1fr));
   padding: 0.2rem 1rem 0.5rem;
 }
 

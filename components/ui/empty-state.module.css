@@ -1,0 +1,44 @@
+.root {
+  display: grid;
+  grid-row: 1 / -1;
+  min-height: 17rem;
+  place-items: center;
+  align-content: center;
+  gap: 0.55rem;
+  color: var(--ui-muted-ink);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.root strong {
+  color: var(--ui-ink);
+  font-weight: 650;
+}
+
+.icon {
+  display: inline-flex;
+  color: var(--ui-muted-ink);
+}
+
+.icon :global(svg) {
+  width: 2rem;
+  height: 2rem;
+}
+
+.action :global(button) {
+  border: 0;
+  background: transparent;
+  color: var(--ui-ink);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.2rem;
+}
+
+@media (max-width: 767px) {
+  .root {
+    min-height: 12rem;
+    font-size: 0.78rem;
+  }
+}

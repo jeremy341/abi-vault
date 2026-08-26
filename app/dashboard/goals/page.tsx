@@ -11,13 +11,18 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Dialog } from "@/components/ui/dialog";
+import { LoadingCollection, LoadingStatus, LoadingText } from "@/components/ui/loading-state";
 import styles from "./goals.module.css";
 import phoneStyles from "./goals-phone.module.css";
 import { usePresentationMode } from "@/hooks/use-presentation-mode";
+import { listGoalsForCurrentOrganization } from "@/features/finance/actions/queries";
+import { createGoal } from "@/features/goals/actions/goals";
+import { archiveGoal, updateGoal } from "@/features/goals/actions/goal-mutations";
 
 type Goal = {
+  id: string;
   title: string;
   target: number;
   saved: number;
@@ -27,6 +32,7 @@ type Goal = {
 
 const initialGoals: Goal[] = [
   {
+    id: "demo-goal-1",
     title: "Abiball",
     target: 3000,
     saved: 2100,
@@ -34,6 +40,7 @@ const initialGoals: Goal[] = [
     date: "15.05.2026",
   },
   {
+    id: "demo-goal-2",
     title: "Abizeitung",
     target: 1200,
     saved: 540,
@@ -41,6 +48,7 @@ const initialGoals: Goal[] = [
     date: "30.04.2026",
   },
   {
+    id: "demo-goal-3",
     title: "Reserve",
     target: 1000,
     saved: 800,
@@ -61,6 +69,7 @@ const euroPrecise = new Intl.NumberFormat("de-DE", {
 });
 
 function PhoneGoalsView({
+  loading,
   goals,
   totalSaved,
   totalTarget,
@@ -68,6 +77,7 @@ function PhoneGoalsView({
   onAdd,
   onEdit,
 }: {
+  loading: boolean;
   goals: Goal[];
   totalSaved: number;
   totalTarget: number;
@@ -76,23 +86,24 @@ function PhoneGoalsView({
   onEdit: (goal: Goal, index: number) => void;
 }) {
   return (
-    <div className={phoneStyles.root}>
-      <section className={phoneStyles.hero} aria-label="Gesamtfortschritt">
+    <div className={phoneStyles.root} aria-busy={loading}>
+      <section className={phoneStyles.hero} aria-label="Gesamtfortschritt" data-ui-slot="summary">
         <span>Gesamt gespart</span>
-        <strong>{euro.format(totalSaved)}</strong>
-        <p>von {euro.format(totalTarget)}</p>
+        <strong><LoadingText loading={loading}>{euro.format(totalSaved)}</LoadingText></strong>
+        <p>von <LoadingText loading={loading}>{euro.format(totalTarget)}</LoadingText></p>
         <div className={phoneStyles.heroProgress}>
-          <b>{progress}%</b>
+          <b><LoadingText loading={loading}>{progress}%</LoadingText></b>
           <span>erreicht</span>
         </div>
       </section>
 
-      <header className={phoneStyles.sectionHeader}>
+      <header className={phoneStyles.sectionHeader} data-ui-slot="list-header">
         <h2>Sparziele</h2>
-        <span>{goals.length} aktiv</span>
+        <span><LoadingText loading={loading}>{goals.length} aktiv</LoadingText></span>
       </header>
-      <div className={phoneStyles.goals}>
-        {goals.map((goal, index) => (
+      <div className={phoneStyles.goals} data-ui-slot="list-body">
+        <LoadingCollection loading={loading} knownItemCount={goals.length} emptyHeight="12rem" label="Ziele werden geladen…">
+          {goals.length ? goals.map((goal, index) => (
           <button
             type="button"
             className={phoneStyles.goal}
@@ -113,9 +124,10 @@ function PhoneGoalsView({
               <span>{euroPrecise.format(goal.target - goal.saved)} offen</span>
             </span>
           </button>
-        ))}
+          )) : <div className={phoneStyles.empty}>Noch keine Sparziele vorhanden.</div>}
+        </LoadingCollection>
       </div>
-      <button type="button" className={phoneStyles.addButton} onClick={onAdd}>
+      <button type="button" className={phoneStyles.addButton} onClick={onAdd} disabled={loading} data-ui-slot="primary-action">
         <Plus aria-hidden="true" /> Ziel hinzufügen
       </button>
     </div>
@@ -124,7 +136,8 @@ function PhoneGoalsView({
 
 export default function GoalsPage() {
   const mode = usePresentationMode();
-  const [goals, setGoals] = useState<Goal[]>(initialGoals);
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingGoalIndex, setEditingGoalIndex] = useState<number | null>(null);
 
@@ -133,6 +146,32 @@ export default function GoalsPage() {
   const [savedAmount, setSavedAmount] = useState("");
   const [deadline, setDeadline] = useState("");
   const [formError, setFormError] = useState("");
+  useEffect(() => {
+    let active = true;
+    listGoalsForCurrentOrganization()
+      .then((result) => {
+        if (!active || !result.ok) return;
+        setGoals(result.items.map((goal) => {
+          const target = Number(goal.target_amount_minor) / 100;
+          const saved = Number(goal.saved_amount_minor) / 100;
+          return {
+            id: goal.id,
+            title: goal.title,
+            target,
+            saved,
+            progress: target ? Math.round((saved / target) * 100) : 0,
+            date: new Date(`${goal.deadline}T00:00:00`).toLocaleDateString("de-DE"),
+          };
+        }));
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const totalTarget = useMemo(
     () => goals.reduce((sum, goal) => sum + goal.target, 0),
@@ -189,7 +228,7 @@ export default function GoalsPage() {
     setModalOpen(true);
   }
 
-  function handleSaveGoal(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSaveGoal(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const target = Number(targetAmount.replace(",", "."));
     const saved = Number(savedAmount.replace(",", ".")) || 0;
@@ -212,11 +251,27 @@ export default function GoalsPage() {
     const progress = Math.round((saved / target) * 100);
 
     if (editingGoalIndex !== null) {
+      const currentGoal = goals[editingGoalIndex];
+      if (currentGoal && /^[0-9a-f-]{36}$/i.test(currentGoal.id)) {
+        const result = await updateGoal({
+          goalId: currentGoal.id,
+          title: goalName.trim(),
+          description: null,
+          targetAmount: targetAmount,
+          deadline,
+          reason: "Ziel im Ziel-Dialog aktualisiert",
+        });
+        if (!result.ok) {
+          setFormError("Das Ziel konnte nicht gespeichert werden.");
+          return;
+        }
+      }
       // Update existing goal
       setGoals((current) =>
         current.map((g, idx) =>
           idx === editingGoalIndex
             ? {
+                id: g.id,
                 title: goalName.trim(),
                 target,
                 saved,
@@ -227,10 +282,23 @@ export default function GoalsPage() {
         ),
       );
     } else {
+      const result = await createGoal({
+        title: goalName.trim(),
+        description: null,
+        targetAmount: targetAmount,
+        deadline,
+        visibility: "private",
+        idempotencyKey: `goal-${crypto.randomUUID()}`,
+      });
+      if (!result.success) {
+        setFormError("Das Ziel konnte nicht gespeichert werden.");
+        return;
+      }
       // Add new goal
       setGoals((current) => [
         ...current,
         {
+          id: result.data.id,
           title: goalName.trim(),
           target,
           saved,
@@ -242,16 +310,29 @@ export default function GoalsPage() {
     closeModal();
   }
 
-  function handleDeleteGoal() {
+  async function handleDeleteGoal() {
     if (editingGoalIndex === null) return;
+    const currentGoal = goals[editingGoalIndex];
+    if (/^[0-9a-f-]{36}$/i.test(currentGoal.id)) {
+      const result = await archiveGoal({
+        goalId: currentGoal.id,
+        reason: "Ziel im Ziel-Dialog archiviert",
+      });
+      if (!result.ok) {
+        setFormError("Das Ziel konnte nicht archiviert werden.");
+        return;
+      }
+    }
     setGoals((current) => current.filter((_, idx) => idx !== editingGoalIndex));
     closeModal();
   }
 
   return (
-    <section className={mode === "phone" ? phoneStyles.root : styles.page}>
+    <section className={mode === "phone" ? phoneStyles.root : styles.page} aria-busy={loading}>
+      <LoadingStatus loading={loading} label="Ziele werden geladen…" />
       {mode === "phone" ? (
         <PhoneGoalsView
+          loading={loading}
           goals={goals}
           totalSaved={totalSaved}
           totalTarget={totalTarget}
@@ -261,7 +342,7 @@ export default function GoalsPage() {
         />
       ) : (
         <>
-          <div className={styles.summaryGrid}>
+          <div className={styles.summaryGrid} data-ui-slot="summary">
             <div className={styles.summaryLeft}>
               <article className={styles.summaryCard}>
                 <span className={styles.summaryIcon}>
@@ -269,7 +350,7 @@ export default function GoalsPage() {
                 </span>
                 <div>
                   <span>Aktive Ziele</span>
-                  <strong>{goals.length}</strong>
+                  <strong><LoadingText loading={loading}>{goals.length}</LoadingText></strong>
                 </div>
               </article>
               <article className={styles.summaryCard}>
@@ -278,7 +359,7 @@ export default function GoalsPage() {
                 </span>
                 <div>
                   <span>Gesamt gespart</span>
-                  <strong>{euro.format(totalSaved)}</strong>
+                  <strong><LoadingText loading={loading}>{euro.format(totalSaved)}</LoadingText></strong>
                 </div>
               </article>
             </div>
@@ -288,13 +369,13 @@ export default function GoalsPage() {
               </span>
               <div>
                 <span>Gesamtfortschritt</span>
-                <strong>{overallProgress}%</strong>
+                <strong><LoadingText loading={loading}>{overallProgress}%</LoadingText></strong>
               </div>
             </article>
           </div>
 
-          <div className={styles.contentGrid}>
-            <article className={styles.goalsPanel}>
+          <div className={styles.contentGrid} data-ui-slot="content">
+            <article className={styles.goalsPanel} data-ui-slot="primary-panel">
               <header className={styles.panelHeader}>
                 <div>
                   <h2>Meine Ziele</h2>
@@ -306,13 +387,16 @@ export default function GoalsPage() {
                   type="button"
                   className={styles.primaryButton}
                   onClick={openAddModal}
+                  disabled={loading}
+                  data-ui-slot="primary-action"
                 >
                   <Plus aria-hidden="true" />
                   Ziel hinzufügen
                 </button>
               </header>
-              <div className={styles.goalGrid}>
-                {goals.map((goal, idx) => (
+              <div className={styles.goalGrid} data-ui-slot="list-body">
+                <LoadingCollection loading={loading} knownItemCount={goals.length} emptyHeight="14rem" label="Ziele werden geladen…">
+                  {goals.map((goal, idx) => (
                   <article
                     className={styles.goalCard}
                     key={`${goal.title}-${idx}`}
@@ -353,11 +437,12 @@ export default function GoalsPage() {
                       </span>
                     </div>
                   </article>
-                ))}
+                  ))}
+                </LoadingCollection>
               </div>
             </article>
 
-            <aside className={styles.sideColumn}>
+            <aside className={styles.sideColumn} data-ui-slot="secondary-panel">
               <article className={styles.progressPanel}>
                 <header className={styles.panelHeader}>
                   <div>
@@ -365,15 +450,15 @@ export default function GoalsPage() {
                     <p>Über alle aktiven Ziele</p>
                   </div>
                   <span className={styles.progressPercent}>
-                    {overallProgress}%
+                    <LoadingText loading={loading}>{overallProgress}%</LoadingText>
                   </span>
                 </header>
                 <div className={styles.largeProgress}>
                   <span style={{ width: `${overallProgress}%` }} />
                 </div>
                 <div className={styles.progressStats}>
-                  <span>{euroPrecise.format(totalSaved)} gespart</span>
-                  <span>von {euro.format(totalTarget)}</span>
+                  <span><LoadingText loading={loading}>{euroPrecise.format(totalSaved)} gespart</LoadingText></span>
+                  <span>von <LoadingText loading={loading}>{euro.format(totalTarget)}</LoadingText></span>
                 </div>
               </article>
 
@@ -386,6 +471,7 @@ export default function GoalsPage() {
                   <CalendarDays aria-hidden="true" />
                 </header>
                 <div className={styles.upcomingList}>
+                  <LoadingCollection loading={loading} knownItemCount={goals.length} emptyHeight="10rem" label="Fristen werden geladen…">
                   {goals
                     .slice()
                     .sort((a, b) =>
@@ -420,6 +506,7 @@ export default function GoalsPage() {
                         </button>
                       );
                     })}
+                  </LoadingCollection>
                 </div>
               </article>
             </aside>

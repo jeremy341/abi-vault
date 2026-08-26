@@ -106,6 +106,15 @@
   display: grid;
 }
 
+.empty {
+  display: grid;
+  min-height: 12rem;
+  place-items: center;
+  color: var(--ui-muted-ink);
+  font-size: 0.78rem;
+  text-align: center;
+}
+
 .person {
   display: grid;
   min-height: 4.4rem;

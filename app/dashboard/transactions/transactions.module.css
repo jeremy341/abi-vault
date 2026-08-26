@@ -443,6 +443,11 @@
   flex: 1 1 auto;
   grid-template-rows: repeat(var(--ui-fixed-table-rows), minmax(0, 1fr));
 }
+.rows > :global([data-loading-collection="true"]) {
+  grid-row: 1 / -1;
+  min-height: 0;
+  height: 100%;
+}
 .row {
   width: 100%;
   min-height: 0;
@@ -580,6 +585,10 @@
   gap: 0.55rem;
   color: var(--muted-foreground);
   text-align: center;
+}
+
+.tableWrap > .rows > .emptyState {
+  grid-row: 1 / -1;
 }
 .emptyState svg {
   width: 2rem;

@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useMemo, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
   Check,
   ChevronsUpDown,
@@ -19,6 +19,9 @@ import {
   type FieldDropdownOption,
 } from "@/components/ui/field-dropdown";
 import { Pagination } from "@/components/ui/pagination";
+import { ModalSkeleton } from "@/components/ui/modal-skeleton";
+import { LoadingCollection, LoadingStatus, LoadingText } from "@/components/ui/loading-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Popover,
   PopoverContent,
@@ -27,10 +30,15 @@ import {
 import { useResponsivePageSize } from "@/hooks/use-responsive-page-size";
 import { usePresentationMode } from "@/hooks/use-presentation-mode";
 import phoneStyles from "./receipts-phone.module.css";
+import {
+  listReceiptsForCurrentOrganization,
+  listTransactionsForCurrentOrganization,
+} from "@/features/finance/actions/queries";
+import { uploadReceipt } from "@/features/receipts/actions/receipts";
 
 type ReceiptStatus = "Geprüft" | "Zu prüfen" | "Ohne Zuordnung";
 type Receipt = {
-  id: number;
+  id: number | string;
   file: string;
   type: string;
   size: string;
@@ -40,6 +48,13 @@ type Receipt = {
   amount: number;
   status: ReceiptStatus;
 };
+
+function formatReceiptDate(value: string) {
+  const date = new Date(`${value.slice(0, 10)}T00:00:00`);
+  return Number.isNaN(date.getTime())
+    ? value
+    : date.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
 
 const receipts: Receipt[] = [
   {
@@ -309,17 +324,26 @@ function Dropdown({
   );
 }
 
+type TransactionOption = {
+  value: string;
+  label: string;
+  date: string;
+  amount: string;
+};
+
 function TransactionCombobox({
   value,
   onChange,
+  options,
 }: {
   value: string;
   onChange: (value: string) => void;
+  options: readonly TransactionOption[];
 }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const selected = transactionOptions.find((option) => option.value === value);
-  const filteredOptions = transactionOptions.filter((option) =>
+  const selected = options.find((option) => option.value === value);
+  const filteredOptions = options.filter((option) =>
     `${option.label} ${option.date} ${option.amount}`
       .toLowerCase()
       .includes(search.trim().toLowerCase()),
@@ -426,6 +450,7 @@ function formatAmount(amount: number) {
 }
 
 function PhoneReceiptsView({
+  loading,
   receipts,
   query,
   onQueryChange,
@@ -436,11 +461,14 @@ function PhoneReceiptsView({
   page,
   pageCount,
   total,
+  pendingCount,
+  unassignedCount,
   rangeStart,
   rangeEnd,
   onPageChange,
   onAdd,
 }: {
+  loading: boolean;
   receipts: Receipt[];
   query: string;
   onQueryChange: (value: string) => void;
@@ -451,34 +479,37 @@ function PhoneReceiptsView({
   page: number;
   pageCount: number;
   total: number;
+  pendingCount: number;
+  unassignedCount: number;
   rangeStart: number;
   rangeEnd: number;
   onPageChange: (page: number) => void;
   onAdd: () => void;
 }) {
   return (
-    <div className={phoneStyles.root}>
-      <section className={phoneStyles.summary} aria-label="Belegstatus">
+    <div className={phoneStyles.root} aria-busy={loading}>
+      <section className={phoneStyles.summary} aria-label="Belegstatus" data-ui-slot="summary">
         <div className={phoneStyles.summaryItem}>
           <span>Alle</span>
-          <strong>24</strong>
+          <strong><LoadingText loading={loading}>{total}</LoadingText></strong>
         </div>
         <div className={phoneStyles.summaryItem}>
           <span>Zu prüfen</span>
-          <strong>3</strong>
+          <strong><LoadingText loading={loading}>{pendingCount}</LoadingText></strong>
         </div>
         <div className={phoneStyles.summaryItem}>
           <span>Ohne Zuordnung</span>
-          <strong>1</strong>
+          <strong><LoadingText loading={loading}>{unassignedCount}</LoadingText></strong>
         </div>
       </section>
 
-      <div className={phoneStyles.toolbar}>
+      <div className={phoneStyles.toolbar} data-ui-slot="toolbar">
         <label className={phoneStyles.search}>
           <Search aria-hidden="true" />
           <span className="sr-only">Belege suchen</span>
           <input
             value={query}
+            disabled={loading}
             onChange={(event) => onQueryChange(event.target.value)}
             placeholder="Dateiname oder Transaktion …"
           />
@@ -487,6 +518,7 @@ function PhoneReceiptsView({
           type="button"
           className={phoneStyles.uploadButton}
           onClick={onAdd}
+          disabled={loading}
           aria-label="Beleg hinzufügen"
         >
           <Upload aria-hidden="true" />
@@ -507,13 +539,14 @@ function PhoneReceiptsView({
         </div>
       </div>
 
-      <header className={phoneStyles.listHeader}>
+      <header className={phoneStyles.listHeader} data-ui-slot="list-header">
         <h2>Belege</h2>
-        <span>{total} Dateien</span>
+        <span><LoadingText loading={loading}>{total} Dateien</LoadingText></span>
       </header>
 
-      <div className={phoneStyles.rows}>
-        {receipts.map((receipt) => (
+      <div className={phoneStyles.rows} data-ui-slot="list-body">
+        <LoadingCollection loading={loading} knownItemCount={receipts.length} emptyHeight="10rem" label="Belege werden geladen…">
+          {receipts.length ? receipts.map((receipt) => (
           <article className={phoneStyles.row} key={receipt.id}>
             <FileText aria-hidden="true" />
             <span className={phoneStyles.rowMain}>
@@ -543,17 +576,18 @@ function PhoneReceiptsView({
               </small>
             </span>
           </article>
-        ))}
+          )) : <div className={phoneStyles.empty}>Keine Belege gefunden.</div>}
+        </LoadingCollection>
       </div>
 
-      <footer className={phoneStyles.footer}>
+      <footer className={phoneStyles.footer} data-ui-slot="footer">
         <span>
-          {rangeStart}-{rangeEnd} von {total}
+          <LoadingText loading={loading}>{rangeStart}-{rangeEnd} von {total}</LoadingText>
         </span>
         <Pagination
           page={page}
           pageCount={pageCount}
-          onPageChange={onPageChange}
+          onPageChange={loading ? () => undefined : onPageChange}
         />
       </footer>
     </div>
@@ -562,6 +596,8 @@ function PhoneReceiptsView({
 
 export default function ReceiptsPage() {
   const mode = usePresentationMode();
+  const [items, setItems] = useState<Receipt[]>([]);
+  const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("Alle");
   const [period, setPeriod] = useState("Alle");
@@ -569,11 +605,63 @@ export default function ReceiptsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [fileName, setFileName] = useState("");
   const [transaction, setTransaction] = useState("");
+  const [availableTransactions, setAvailableTransactions] =
+    useState<readonly TransactionOption[]>([]);
+  const [transactionsLoading, setTransactionsLoading] = useState(true);
   const fileInput = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    let active = true;
+    listReceiptsForCurrentOrganization()
+      .then((result) => {
+        if (!active || !result.ok) return;
+        setItems(result.items.map((item) => ({
+          id: item.id,
+          file: item.file,
+          type: item.type,
+          size: `${Math.round(item.sizeBytes / 1024)} KB`,
+          transaction: item.transaction,
+          kind: "",
+          date: item.date ? formatReceiptDate(item.date) : formatReceiptDate(new Date().toISOString()),
+          amount: Number(item.amountMinor) / 100,
+          status: item.status === "approved" ? "Geprüft" : item.status === "rejected" ? "Ohne Zuordnung" : "Zu prüfen",
+        })));
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    listTransactionsForCurrentOrganization()
+      .then((result) => {
+        if (!active || !result.ok) return;
+        setAvailableTransactions([
+          { value: "", label: "Ohne Zuordnung", date: "", amount: "" },
+          ...result.items.map((item) => ({
+            value: item.id,
+            label: item.title,
+            date: item.date ? formatReceiptDate(item.date) : "",
+            amount: `${Number(item.amountMinor) >= 0 ? "+" : "-"}${Math.abs(Number(item.amountMinor) / 100).toLocaleString("de-DE", { minimumFractionDigits: 2 })} €`,
+          })),
+        ]);
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (active) setTransactionsLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const filtered = useMemo(
     () =>
-      receipts.filter((receipt) => {
+      items.filter((receipt) => {
         const needle = query.trim().toLowerCase();
         const month = receipt.date.slice(3, 5);
         return (
@@ -587,7 +675,7 @@ export default function ReceiptsPage() {
             (period === "Dieser Monat" ? month === "05" : month === "04"))
         );
       }),
-    [period, query, status],
+    [items, period, query, status],
   );
   const pageSize = useResponsivePageSize({
     defaultSize: 9,
@@ -606,6 +694,16 @@ export default function ReceiptsPage() {
     if (file) setFileName(file.name);
   }
 
+  async function submitReceipt() {
+    const file = fileInput.current?.files?.[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append("file", file);
+    if (/^[0-9a-f-]{36}$/i.test(transaction)) formData.append("transactionId", transaction);
+    const result = await uploadReceipt(formData);
+    if (result.success) closeModal();
+  }
+
   function closeModal() {
     setModalOpen(false);
     setFileName("");
@@ -621,9 +719,12 @@ export default function ReceiptsPage() {
             ? `${styles.page} ${styles.tabletPage}`
             : styles.page
       }
+      aria-busy={loading}
     >
+      <LoadingStatus loading={loading} label="Belege werden geladen…" />
       {mode === "phone" ? (
         <PhoneReceiptsView
+          loading={loading}
           receipts={visible}
           query={query}
           onQueryChange={(value) => {
@@ -643,6 +744,8 @@ export default function ReceiptsPage() {
           page={currentPage}
           pageCount={pageCount}
           total={filtered.length}
+          pendingCount={items.filter((item) => item.status === "Zu prüfen").length}
+          unassignedCount={items.filter((item) => item.status === "Ohne Zuordnung").length}
           rangeStart={filtered.length ? (currentPage - 1) * pageSize + 1 : 0}
           rangeEnd={Math.min(currentPage * pageSize, filtered.length)}
           onPageChange={setPage}
@@ -650,14 +753,14 @@ export default function ReceiptsPage() {
         />
       ) : (
         <>
-          <div className={styles.summaryGrid}>
+          <div className={styles.summaryGrid} data-ui-slot="summary">
             <article className={styles.summaryCard}>
               <span className={styles.summaryIcon}>
                 <FileText />
               </span>
               <div>
                 <span>Alle Belege</span>
-                <strong>24</strong>
+                <strong><LoadingText loading={loading}>{items.length}</LoadingText></strong>
               </div>
             </article>
             <article className={styles.summaryCard}>
@@ -666,7 +769,7 @@ export default function ReceiptsPage() {
               </span>
               <div>
                 <span>Zu prüfen</span>
-                <strong>3</strong>
+                <strong><LoadingText loading={loading}>{items.filter((item) => item.status === "Zu prüfen").length}</LoadingText></strong>
               </div>
             </article>
             <article className={styles.summaryCard}>
@@ -675,29 +778,32 @@ export default function ReceiptsPage() {
               </span>
               <div>
                 <span>Ohne Zuordnung</span>
-                <strong>1</strong>
+                <strong><LoadingText loading={loading}>{items.filter((item) => item.status === "Ohne Zuordnung").length}</LoadingText></strong>
               </div>
             </article>
           </div>
 
-          <article className={styles.listCard}>
+          <article className={styles.listCard} data-ui-slot="content">
             <header className={styles.listHeader}>
               <h2>Belegübersicht</h2>
               <button
                 type="button"
                 className={styles.primaryButton}
                 onClick={() => setModalOpen(true)}
+                disabled={loading}
+                data-ui-slot="primary-action"
               >
                 <Upload />
                 Beleg hinzufügen
               </button>
             </header>
-            <div className={styles.filters}>
+            <div className={styles.filters} data-ui-slot="toolbar">
               <label className={styles.searchField}>
                 <Search />
                 <span className="sr-only">Belege suchen</span>
                 <input
                   value={query}
+                  disabled={loading}
                   onChange={(event) => {
                     setQuery(event.target.value);
                     setPage(1);
@@ -721,7 +827,7 @@ export default function ReceiptsPage() {
                 onChange={setPeriod}
               />
             </div>
-            <div className={`${styles.tableWrap} ui-data-table`}>
+            <div className={`${styles.tableWrap} ui-data-table`} data-ui-slot="list-body">
               <div className={styles.tableHeader}>
                 <span>Beleg</span>
                 <span>Zugeordnete Transaktion</span>
@@ -731,24 +837,16 @@ export default function ReceiptsPage() {
                 <span />
               </div>
               <div className={styles.rows}>
-                {!visible.length ? (
-                  <div className={styles.emptyState} role="status">
-                    <strong>Keine Belege gefunden</strong>
-                    <span>Ändere die Suche oder setze die Filter zurück.</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setQuery("");
-                        setStatus("Alle");
-                        setPeriod("Alle");
-                        setPage(1);
-                      }}
-                    >
-                      Filter zurücksetzen
-                    </button>
-                  </div>
+                {loading ? (
+                  <LoadingCollection loading knownItemCount={items.length} emptyHeight="100%" label="Belege werden geladen…"><div /></LoadingCollection>
+                ) : !visible.length ? (
+                  <EmptyState
+                    title="Keine Belege gefunden"
+                    description="Ändere die Suche oder setze die Filter zurück."
+                    action={<button type="button" onClick={() => { setQuery(""); setStatus("Alle"); setPeriod("Alle"); setPage(1); }}>Filter zurücksetzen</button>}
+                  />
                 ) : null}
-                {visible.map((receipt) => (
+                {!loading && visible.map((receipt) => (
                   <div className={styles.row} key={receipt.id}>
                     <span className={styles.fileCell}>
                       <span className={styles.fileIcon}>
@@ -800,16 +898,16 @@ export default function ReceiptsPage() {
                 ))}
               </div>
             </div>
-            <footer className={styles.pagination}>
+            <footer className={styles.pagination} data-ui-slot="footer">
               <span>
-                {filtered.length
+                <LoadingText loading={loading}>{filtered.length
                   ? `${(currentPage - 1) * pageSize + 1}–${Math.min(currentPage * pageSize, filtered.length)} von ${filtered.length}`
-                  : "0 von 0"}
+                  : "0 von 0"}</LoadingText>
               </span>
               <Pagination
                 page={currentPage}
                 pageCount={pageCount}
-                onPageChange={setPage}
+                onPageChange={loading ? () => undefined : setPage}
                 className={styles.pageButtons}
               />
             </footer>
@@ -842,7 +940,8 @@ export default function ReceiptsPage() {
             <input
               ref={fileInput}
               type="file"
-              accept=".pdf,.jpg,.jpeg,.png"
+              accept=".pdf,image/*"
+              capture="environment"
               hidden
               onChange={handleFile}
             />
@@ -854,7 +953,9 @@ export default function ReceiptsPage() {
               <Upload />
               <strong>{fileName || "Beleg hier ablegen"}</strong>
               <span>
-                {fileName ? "Datei ausgewählt" : "PDF, JPG oder PNG bis 10 MB"}
+                {fileName
+                  ? "Datei ausgewählt"
+                  : "PDF oder Bild bis 10 MB. Auf dem Handy ist auch die Kamera verfügbar."}
               </span>
               <span className={styles.uploadButton}>Datei auswählen</span>
             </button>
@@ -866,10 +967,15 @@ export default function ReceiptsPage() {
                 placeholder="z. B. Rechnung_Mai_2026.pdf"
               />
             </label>
-            <TransactionCombobox
-              value={transaction}
-              onChange={setTransaction}
-            />
+            {transactionsLoading ? (
+              <ModalSkeleton />
+            ) : (
+              <TransactionCombobox
+                value={transaction}
+                onChange={setTransaction}
+                options={availableTransactions}
+              />
+            )}
           </div>
           <footer className={styles.modalFooter}>
             <button
@@ -882,7 +988,7 @@ export default function ReceiptsPage() {
             <button
               type="button"
               className={styles.primaryButton}
-              onClick={closeModal}
+              onClick={submitReceipt}
             >
               Beleg hinzufügen
             </button>

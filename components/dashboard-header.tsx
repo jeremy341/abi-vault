@@ -5,7 +5,6 @@ import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import styles from "@/app/dashboard/dashboard.module.css";
-import { useTheme } from "@/components/theme-provider";
 
 const ClerkUserButton = dynamic(
   () => import("@clerk/nextjs").then((module) => module.UserButton),
@@ -32,7 +31,7 @@ const pageInformation: Record<string, { title: string; description: string }> =
     },
     "/dashboard/funds": {
       title: "Kasse & Konten",
-      description: "Bankkonto und Bargeldbestand verwalten.",
+      description: "Barkasse und Kassenbestand verwalten.",
     },
     "/dashboard/reports": {
       title: "Berichte",
@@ -51,8 +50,6 @@ const pageInformation: Record<string, { title: string; description: string }> =
 export default function DashboardHeader() {
   const pathname = usePathname();
   const page = pageInformation[pathname] ?? pageInformation["/dashboard"];
-  const { dark } = useTheme();
-
   return (
     <header
       className={`${styles.header} flex min-h-14 items-center justify-between border-b border-black/[0.06] dark:border-white/[0.14] px-4 md:min-h-28 md:border-b-0 md:px-8 md:pb-4 md:pt-7`}
@@ -92,39 +89,7 @@ export default function DashboardHeader() {
           <Bell className="size-6" />
         </button>
 
-        <ClerkUserButton
-          appearance={{
-            variables: {
-              colorBackground: dark ? "#1d1d1f" : "#ffffff",
-            },
-            elements: {
-              avatarBox: "size-8 md:size-11",
-              userButtonPopoverCard: dark
-                ? "rounded-2xl !border-white/10 !bg-[#1d1d1f] !text-white shadow-xl"
-                : "rounded-2xl !border-black/10 !bg-white !text-ink shadow-xl",
-              userButtonPopoverMain: dark ? "!text-white" : "!text-ink",
-              userPreviewMainIdentifier: dark ? "!text-white" : "!text-ink",
-              userPreviewSecondaryIdentifier: dark
-                ? "!text-white/60"
-                : "!text-black/55",
-              userButtonPopoverActionButton: dark
-                ? "rounded-lg !text-white hover:!bg-white/10"
-                : "rounded-lg !text-ink hover:!bg-black/5",
-              userButtonPopoverActionButtonText: dark
-                ? "!text-white"
-                : "!text-ink",
-              userButtonPopoverFooter: dark
-                ? "!border-white/25 !bg-[#1d1d1f] !text-white/75"
-                : "!bg-white",
-              userButtonPopoverFooterAction: dark
-                ? "!text-white/80"
-                : "!text-black/55",
-              userButtonPopoverFooterActionText: dark
-                ? "!text-white/80"
-                : "!text-black/55",
-            },
-          }}
-        />
+        <ClerkUserButton />
       </div>
     </header>
   );

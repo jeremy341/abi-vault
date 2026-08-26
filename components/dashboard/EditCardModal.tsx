@@ -133,7 +133,7 @@ export default function EditCardModal({
     const nextErrors: FormErrors = {};
 
     if (!values.accountName.trim()) {
-      nextErrors.accountName = "Bitte einen Kontonamen eingeben.";
+      nextErrors.accountName = "Bitte einen Kassennamen eingeben.";
     }
     if (values.cardNumber.replace(/\D/g, "").length !== 16) {
       nextErrors.cardNumber = "Die Kartennummer muss 16 Ziffern enthalten.";
@@ -178,7 +178,7 @@ export default function EditCardModal({
         <header className={styles.header}>
           <div className={styles.heading}>
             <h2 id="edit-card-title">Kartendaten bearbeiten</h2>
-            <p>Darstellung und Kartendaten dieses Kontos aktualisieren.</p>
+            <p>Name und Kartendarstellung dieser Kasse aktualisieren.</p>
           </div>
           <button
             type="button"
@@ -196,7 +196,7 @@ export default function EditCardModal({
               cardColor={selectedColor}
               details={{
                 ...values,
-                accountName: values.accountName || "Bankkonto",
+                accountName: values.accountName || "Kasse",
                 cardNumber: values.cardNumber || previewCardNumber,
                 holder: values.holder || "Mike Smith",
                 expiry: values.expiry || "06/21",
@@ -234,7 +234,7 @@ export default function EditCardModal({
             </h3>
             <div className={styles.formGrid}>
               <Field
-                label="Kontoname"
+                label="Kassenname"
                 error={errors.accountName}
                 errorId="edit-account-name-error"
               >
@@ -253,7 +253,7 @@ export default function EditCardModal({
                       filterLetters(event.target.value, 20),
                     )
                   }
-                  placeholder="Zum Beispiel Klassenkonto"
+                  placeholder="Zum Beispiel Getränkekasse"
                 />
               </Field>
               <Field

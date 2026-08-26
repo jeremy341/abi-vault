@@ -17,7 +17,7 @@ export async function createManualTransactionFromUi(input: unknown) {
   }
   const type = parsed.data.direction;
   const [{ data: wallet }, { data: category }] = await Promise.all([
-    supabase.from("wallets").select("id").eq("organization_id", context.organizationId).eq("name", "Barkasse").eq("type", "cash").eq("status", "active").maybeSingle(),
+    supabase.from("wallets").select("id").eq("organization_id", context.organizationId).eq("id", parsed.data.walletId).eq("type", "cash").eq("status", "active").maybeSingle(),
     supabase.from("categories").select("id").eq("organization_id", context.organizationId).eq("name", parsed.data.categoryName).eq("kind", type).is("archived_at", null).maybeSingle(),
   ]);
   const today = new Date().toISOString().slice(0, 10);

@@ -13,6 +13,7 @@ export type TransactionListItem = {
   receipt: boolean;
   reviewStatus: "Geprüft" | "Zu prüfen";
   account: string;
+  walletId: string | null;
 };
 
 export async function listTransactionsForCurrentOrganization() {
@@ -45,6 +46,7 @@ export async function listTransactionsForCurrentOrganization() {
         receipt: false,
         reviewStatus: "Geprüft",
         account: item.wallet_label ?? "Barkasse",
+        walletId: null,
       })),
     };
   }
@@ -95,6 +97,7 @@ export async function listTransactionsForCurrentOrganization() {
       receipt: receiptMap.has(item.id),
       reviewStatus: receiptMap.get(item.id) === "approved" ? "Geprüft" : "Zu prüfen",
       account: walletMap.get(item.type === "income" ? item.to_wallet_id : item.from_wallet_id) ?? "Barkasse",
+      walletId: item.type === "income" ? item.to_wallet_id : item.from_wallet_id,
     })),
   };
 }

@@ -212,6 +212,11 @@
   grid-template-rows: repeat(7, minmax(0, 1fr));
   min-height: 0;
 }
+.transactionRows > :global([data-loading-collection="true"]) {
+  grid-row: 1 / -1;
+  min-height: 0;
+  height: 100%;
+}
 .transactionRow {
   min-height: calc(100% / 7);
   border-bottom: 1px solid var(--ui-border-subtle);

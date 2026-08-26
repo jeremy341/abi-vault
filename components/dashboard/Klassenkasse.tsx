@@ -83,7 +83,7 @@ export default function Klassenkasse() {
                   type="button"
                   className={dashboardStyles.cashCardButton}
                   onClick={() => setPreviewOpen(true)}
-                  aria-label={`${currentCard.details?.accountName ?? "Bankkonto"} anzeigen`}
+                  aria-label={`${currentCard.details?.accountName ?? "Kasse"} anzeigen`}
                 >
                   <AccountCard
                     variant="bank"
@@ -143,7 +143,7 @@ export default function Klassenkasse() {
                   2.850,75 €
                 </strong>
                 <p className={dashboardStyles.cashBalanceMeta}>
-                  Bankkonto · <span>API verbunden</span>
+                  Kartendarstellung · Ledger-basiert
                 </p>
               </>
             ) : (
@@ -210,7 +210,7 @@ function CardPreviewDialog({
               id="dashboard-card-preview-title"
               className="text-lg font-semibold tracking-tight"
             >
-              {card.details?.accountName ?? "Bankkonto"}
+              {card.details?.accountName ?? "Kasse"}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">Kartenvorschau</p>
           </div>

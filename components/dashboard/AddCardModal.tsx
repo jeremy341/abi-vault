@@ -28,7 +28,7 @@ const cardColors = [
 type AddCardModalProps = {
   open: boolean;
   onClose: () => void;
-  onSave: (details: AccountCardDetails) => void;
+  onSave: (details: AccountCardDetails, idempotencyKey: string) => Promise<boolean>;
 };
 
 type FormValues = Omit<AccountCardDetails, "color">;
@@ -61,6 +61,9 @@ export default function AddCardModal({
   const [selectedColor, setSelectedColor] = useState(cardColors[0].value);
   const [values, setValues] = useState<FormValues>(initialValues);
   const [errors, setErrors] = useState<FormErrors>({});
+  const [submitError, setSubmitError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const idempotencyKey = useRef<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
@@ -151,13 +154,31 @@ export default function AddCardModal({
     return Object.keys(nextErrors).length === 0;
   }
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (saving) return;
     if (!validate()) return;
 
-    onSave({ ...values, color: selectedColor });
-    setValues(initialValues);
-    setErrors({});
+    idempotencyKey.current ??= `wallet-${crypto.randomUUID()}`;
+    setSaving(true);
+    setSubmitError("");
+    try {
+      const saved = await onSave(
+        { ...values, color: selectedColor },
+        idempotencyKey.current,
+      );
+      if (saved) {
+        setValues(initialValues);
+        setErrors({});
+        idempotencyKey.current = null;
+      } else {
+        setSubmitError("Die Kasse konnte nicht gespeichert werden.");
+      }
+    } catch {
+      setSubmitError("Die Kasse konnte nicht gespeichert werden.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return createPortal(
@@ -179,7 +200,7 @@ export default function AddCardModal({
       >
         <header className={styles.header}>
           <div className={styles.heading}>
-            <h2 id="add-card-title">Karte hinzufügen</h2>
+            <h2 id="add-card-title">Kasse hinzufügen</h2>
             <p>Lege eine weitere Kasse mit eigener Kartendarstellung an.</p>
           </div>
           <button
@@ -187,6 +208,7 @@ export default function AddCardModal({
             className={styles.closeButton}
             aria-label="Dialog schließen"
             onClick={onClose}
+            disabled={saving}
           >
             <X aria-hidden="true" />
           </button>
@@ -328,16 +350,19 @@ export default function AddCardModal({
           </section>
         </div>
 
+        {submitError ? <p className="mt-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{submitError}</p> : null}
+
         <footer className={styles.footer}>
           <button
             type="button"
             className={styles.secondaryButton}
             onClick={onClose}
+            disabled={saving}
           >
             Abbrechen
           </button>
-          <button type="submit" className={styles.primaryButton}>
-            Karte hinzufügen
+          <button type="submit" className={styles.primaryButton} disabled={saving} aria-busy={saving}>
+            {saving ? "Kasse wird gespeichert …" : "Kasse hinzufügen"}
           </button>
         </footer>
       </form>

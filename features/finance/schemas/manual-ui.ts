@@ -7,6 +7,7 @@ export const manualUiTransactionSchema = z.object({
   direction: z.enum(["income", "expense"]),
   categoryName: z.string().trim().min(1).max(80),
   walletId: z.string().uuid(),
+  idempotencyKey: z.string().trim().min(16).max(128),
 });
 
 export function parseManualUiAmount(value: string) {

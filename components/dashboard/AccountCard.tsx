@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import styles from "./AccountCard.module.css";
-import { maskCardNumber, previewCardNumber } from "@/lib/card-format";
+import { maskCardNumber } from "@/lib/card-format";
 
 type AccountCardVariant = "bank" | "add";
 export type AccountCardDetails = {
@@ -25,9 +25,11 @@ export default function AccountCard({
   details,
 }: AccountCardProps) {
   const accountName = details?.accountName || "Kasse";
-  const cardNumber = maskCardNumber(details?.cardNumber || previewCardNumber);
-  const holder = details?.holder || "Mike Smith";
-  const expiry = details?.expiry || "06/21";
+  const cardNumber = details?.cardNumber
+    ? maskCardNumber(details.cardNumber)
+    : "•••• •••• •••• ••••";
+  const holder = details?.holder || "Nicht festgelegt";
+  const expiry = details?.expiry || "—";
   const isLightCard = cardColor === "#e9e9e7";
   function handlePointerMove(event: React.PointerEvent<HTMLDivElement>) {
     if (event.pointerType === "touch") return;

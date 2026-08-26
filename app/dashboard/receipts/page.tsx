@@ -35,7 +35,7 @@ import {
   listTransactionsForCurrentOrganization,
 } from "@/features/finance/actions/queries";
 import { uploadReceipt } from "@/features/receipts/actions/receipts";
-import { cachedFinanceQuery } from "@/lib/finance/client-cache";
+import { cachedFinanceQuery, invalidateFinanceQuery } from "@/lib/finance/client-cache";
 
 type ReceiptStatus = "Geprüft" | "Zu prüfen" | "Ohne Zuordnung";
 type Receipt = {
@@ -57,7 +57,8 @@ function formatReceiptDate(value: string) {
     : date.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
-const receipts: Receipt[] = [
+/*
+const receipts: Receipt[] = [];
   {
     id: 1,
     file: "Rechnung_Abizeitung.pdf",
@@ -246,6 +247,7 @@ const receipts: Receipt[] = [
     status: "Geprüft",
   },
 ];
+*/
 
 const statusOptions = [
   "Alle",
@@ -259,6 +261,7 @@ const periodOptions = [
   "Letzter Monat",
   "Dieses Jahr",
 ] as const;
+/*
 const transactionOptions = [
   { value: "", label: "Ohne Zuordnung", date: "", amount: "" },
   {
@@ -297,7 +300,7 @@ const transactionOptions = [
     date: "03.05.2024",
     amount: "-950,00 €",
   },
-] as const;
+] as const; */
 
 function Dropdown({
   value,
@@ -599,6 +602,7 @@ export default function ReceiptsPage() {
   const mode = usePresentationMode();
   const [items, setItems] = useState<Receipt[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("Alle");
   const [period, setPeriod] = useState("Alle");
@@ -609,12 +613,18 @@ export default function ReceiptsPage() {
   const [availableTransactions, setAvailableTransactions] =
     useState<readonly TransactionOption[]>([]);
   const [transactionsLoading, setTransactionsLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploadError, setUploadError] = useState("");
   const fileInput = useRef<HTMLInputElement>(null);
   useEffect(() => {
     let active = true;
     cachedFinanceQuery("receipts", listReceiptsForCurrentOrganization)
       .then((result) => {
-        if (!active || !result.ok) return;
+        if (!active) return;
+        if (!result.ok) {
+          setLoadError("Die Belege konnten nicht geladen werden.");
+          return;
+        }
         setItems(result.items.map((item) => ({
           id: item.id,
           file: item.file,
@@ -624,10 +634,12 @@ export default function ReceiptsPage() {
           kind: "",
           date: item.date ? formatReceiptDate(item.date) : formatReceiptDate(new Date().toISOString()),
           amount: Number(item.amountMinor) / 100,
-          status: item.status === "approved" ? "Geprüft" : item.status === "rejected" ? "Ohne Zuordnung" : "Zu prüfen",
+          status: item.status === "approved" ? "Geprüft" : item.status === "rejected" || !item.assigned ? "Ohne Zuordnung" : "Zu prüfen",
         })));
       })
-      .catch(() => undefined)
+      .catch(() => {
+        if (active) setLoadError("Die Belege konnten nicht geladen werden.");
+      })
       .finally(() => {
         if (active) setLoading(false);
       });
@@ -640,7 +652,11 @@ export default function ReceiptsPage() {
     let active = true;
     cachedFinanceQuery("transactions", listTransactionsForCurrentOrganization)
       .then((result) => {
-        if (!active || !result.ok) return;
+        if (!active) return;
+        if (!result.ok) {
+          setUploadError("Die Transaktionen konnten nicht geladen werden.");
+          return;
+        }
         setAvailableTransactions([
           { value: "", label: "Ohne Zuordnung", date: "", amount: "" },
           ...result.items.map((item) => ({
@@ -651,7 +667,9 @@ export default function ReceiptsPage() {
           })),
         ]);
       })
-      .catch(() => undefined)
+      .catch(() => {
+        if (active) setUploadError("Die Transaktionen konnten nicht geladen werden.");
+      })
       .finally(() => {
         if (active) setTransactionsLoading(false);
       });
@@ -696,13 +714,25 @@ export default function ReceiptsPage() {
   }
 
   async function submitReceipt() {
+    if (saving) return;
     const file = fileInput.current?.files?.[0];
     if (!file) return;
+    setSaving(true);
+    setUploadError("");
     const formData = new FormData();
     formData.append("file", file);
     if (/^[0-9a-f-]{36}$/i.test(transaction)) formData.append("transactionId", transaction);
-    const result = await uploadReceipt(formData);
-    if (result.success) closeModal();
+    try {
+      const result = await uploadReceipt(formData);
+      if (result.success) {
+        invalidateFinanceQuery("receipts", "transactions", "dashboard-snapshot", "report-snapshot", "report-kpis");
+        closeModal();
+      } else {
+        setUploadError("Der Beleg konnte nicht hochgeladen werden.");
+      }
+    } finally {
+      setSaving(false);
+    }
   }
 
   function closeModal() {
@@ -723,6 +753,7 @@ export default function ReceiptsPage() {
       aria-busy={loading}
     >
       <LoadingStatus loading={loading} label="Belege werden geladen…" />
+      {loadError ? <p className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{loadError}</p> : null}
       {mode === "phone" ? (
         <PhoneReceiptsView
           loading={loading}
@@ -941,7 +972,7 @@ export default function ReceiptsPage() {
             <input
               ref={fileInput}
               type="file"
-              accept=".pdf,image/*"
+              accept=".pdf,image/jpeg,image/png"
               capture="environment"
               hidden
               onChange={handleFile}
@@ -956,7 +987,7 @@ export default function ReceiptsPage() {
               <span>
                 {fileName
                   ? "Datei ausgewählt"
-                  : "PDF oder Bild bis 10 MB. Auf dem Handy ist auch die Kamera verfügbar."}
+                  : "PDF oder JPG/PNG bis 5 MB. Auf dem Handy ist auch die Kamera verfügbar."}
               </span>
               <span className={styles.uploadButton}>Datei auswählen</span>
             </button>
@@ -978,11 +1009,13 @@ export default function ReceiptsPage() {
               />
             )}
           </div>
+          {uploadError ? <p className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{uploadError}</p> : null}
           <footer className={styles.modalFooter}>
             <button
               type="button"
               className={styles.secondaryButton}
               onClick={closeModal}
+              disabled={saving}
             >
               Abbrechen
             </button>
@@ -990,8 +1023,10 @@ export default function ReceiptsPage() {
               type="button"
               className={styles.primaryButton}
               onClick={submitReceipt}
+              disabled={saving}
+              aria-busy={saving}
             >
-              Beleg hinzufügen
+              {saving ? "Wird hochgeladen …" : "Beleg hinzufügen"}
             </button>
           </footer>
         </Dialog>

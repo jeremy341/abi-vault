@@ -1030,6 +1030,15 @@
   display: grid;
   padding: 0.4rem 1rem 0.65rem;
 }
+
+.reviewEmpty {
+  display: grid;
+  min-height: 8rem;
+  place-items: center;
+  padding: 1rem;
+  color: var(--ui-muted-ink);
+  font-size: 0.8rem;
+}
 .reviewQueueItem {
   display: grid;
   min-height: 4rem;

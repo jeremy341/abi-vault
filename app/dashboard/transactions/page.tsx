@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowDown,
   ArrowUp,
@@ -34,7 +34,7 @@ import { usePresentationMode } from "@/hooks/use-presentation-mode";
 import phoneStyles from "./transactions-phone.module.css";
 import { listTransactionsForCurrentOrganization, listWalletsForCurrentOrganization } from "@/features/finance/actions/queries";
 import { createManualTransactionFromUi } from "@/features/finance/actions/manual-ui";
-import { cachedFinanceQuery } from "@/lib/finance/client-cache";
+import { cachedFinanceQuery, invalidateFinanceQuery } from "@/lib/finance/client-cache";
 
 type Category = "Material" | "Sonstiges" | "Veranstaltung";
 type FilterType = "Einnahmen" | "Ausgaben";
@@ -249,6 +249,7 @@ function PhoneTransactionsView({
   onOpenFilters,
   onOpenAdd,
   onSelect,
+  canCreate,
 }: {
   loading: boolean;
   transactions: Transaction[];
@@ -267,6 +268,7 @@ function PhoneTransactionsView({
   onOpenFilters: () => void;
   onOpenAdd: () => void;
   onSelect: (transaction: Transaction) => void;
+  canCreate: boolean;
 }) {
   return (
     <div className={phoneStyles.root} aria-busy={loading}>
@@ -373,7 +375,7 @@ function PhoneTransactionsView({
         type="button"
         className={phoneStyles.addButton}
         onClick={onOpenAdd}
-        disabled={loading}
+        disabled={loading || !canCreate}
         data-ui-slot="primary-action"
       >
         <Plus aria-hidden="true" /> Transaktion hinzufügen
@@ -387,12 +389,21 @@ export default function TransactionsPage() {
   const [items, setItems] = useState<Transaction[]>([]);
   const [cashRegisters, setCashRegisters] = useState<Array<{ id: string; name: string }>>([]);
   const [selectedCashRegisterId, setSelectedCashRegisterId] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [transactionsLoading, setTransactionsLoading] = useState(true);
+  const [walletLoading, setWalletLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState("");
+  const idempotencyKey = useRef<string | null>(null);
   useEffect(() => {
     let active = true;
     cachedFinanceQuery("transactions", listTransactionsForCurrentOrganization)
       .then((result) => {
-        if (!active || !result.ok) return;
+        if (!active) return;
+        if (!result.ok) {
+          setLoadError("Die Transaktionen konnten nicht geladen werden.");
+          return;
+        }
         setItems(result.items.map((item) => ({
           id: item.id,
           title: item.title,
@@ -401,15 +412,17 @@ export default function TransactionsPage() {
           amount: Number(item.amountMinor) / 100,
           receipt: item.receipt ? "receipt" : undefined,
           reviewStatus: item.reviewStatus as Transaction["reviewStatus"],
-          account: "Barkasse",
+          account: item.account,
           walletId: item.walletId,
           tone: item.type === "income" ? "green" : item.type === "expense" ? "violet" : "orange",
           icon: item.type === "income" ? HandCoins : item.type === "expense" ? FileText : Equal,
         })));
       })
-      .catch(() => undefined)
+      .catch(() => {
+        if (active) setLoadError("Die Transaktionen konnten nicht geladen werden.");
+      })
       .finally(() => {
-        if (active) setLoading(false);
+        if (active) setTransactionsLoading(false);
       });
     return () => {
       active = false;
@@ -418,11 +431,19 @@ export default function TransactionsPage() {
   useEffect(() => {
     let active = true;
     cachedFinanceQuery("wallets", listWalletsForCurrentOrganization).then((result) => {
-      if (!active || !result.ok) return;
+      if (!active) return;
+      if (!result.ok) {
+        setLoadError("Die Kassen konnten nicht geladen werden.");
+        return;
+      }
       const next = result.items.map((item) => ({ id: item.id, name: item.name }));
       setCashRegisters(next);
       setSelectedCashRegisterId((current) => current || next[0]?.id || "");
-    }).catch(() => undefined);
+    }).catch(() => {
+      if (active) setLoadError("Die Kassen konnten nicht geladen werden.");
+    }).finally(() => {
+      if (active) setWalletLoading(false);
+    });
     return () => { active = false; };
   }, []);
   const [query, setQuery] = useState("");
@@ -611,17 +632,33 @@ export default function TransactionsPage() {
         : [...current, value],
     );
   }
+
+  const loading = transactionsLoading || walletLoading;
+
   async function addTransaction() {
+    if (saving) return;
     const amount = Number(newAmount.replace(",", "."));
-    if (!newTitle.trim() || !Number.isFinite(amount) || !selectedCashRegisterId) return;
-    const persisted = await createManualTransactionFromUi({
-      title: newTitle.trim(),
-      amount: newAmount,
-      direction: newType === "Einnahme" ? "income" : "expense",
-      categoryName: newType === "Einnahme" ? "Verkäufe" : newCategory,
-      walletId: selectedCashRegisterId,
-    });
-    if (!persisted.ok) return;
+    if (!newTitle.trim() || !Number.isFinite(amount) || !selectedCashRegisterId) {
+      setFormError("Bitte Kasse, Bezeichnung und Betrag vollständig ausfüllen.");
+      return;
+    }
+    setSaving(true);
+    setFormError("");
+    idempotencyKey.current ??= `ui-${crypto.randomUUID()}`;
+    try {
+      const persisted = await createManualTransactionFromUi({
+        title: newTitle.trim(),
+        amount: newAmount,
+        direction: newType === "Einnahme" ? "income" : "expense",
+        categoryName: newType === "Einnahme" ? "Verkäufe" : newCategory,
+        walletId: selectedCashRegisterId,
+        idempotencyKey: idempotencyKey.current,
+      });
+      if (!persisted.ok) {
+        setFormError("Die Transaktion konnte nicht gespeichert werden.");
+        return;
+      }
+      const selectedCashRegister = cashRegisters.find((item) => item.id === selectedCashRegisterId);
     setItems((current) => [
       {
         id: persisted.id,
@@ -630,7 +667,7 @@ export default function TransactionsPage() {
         date: displayDate(new Date()),
         amount: newType === "Ausgabe" ? -Math.abs(amount) : Math.abs(amount),
         reviewStatus: "Zu prüfen",
-        account: "Barkasse",
+        account: selectedCashRegister?.name ?? "Nicht zugeordnet",
         walletId: selectedCashRegisterId,
         tone: newType === "Einnahme" ? "green" : "violet",
         icon: newType === "Einnahme" ? HandCoins : FileText,
@@ -641,6 +678,11 @@ export default function TransactionsPage() {
     setNewAmount("");
     setAddOpen(false);
     setPage(1);
+      invalidateFinanceQuery("transactions", "wallets", "dashboard-snapshot", "report-snapshot", "report-kpis");
+      idempotencyKey.current = null;
+    } finally {
+      setSaving(false);
+    }
   }
 
   const dateLabel =
@@ -660,6 +702,7 @@ export default function TransactionsPage() {
       aria-busy={loading}
     >
       <LoadingStatus loading={loading} label="Transaktionen werden geladen…" />
+      {loadError ? <p className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{loadError}</p> : null}
       {mode === "phone" ? (
         <PhoneTransactionsView
           loading={loading}
@@ -682,6 +725,7 @@ export default function TransactionsPage() {
           onOpenFilters={openFilters}
           onOpenAdd={() => setAddOpen(true)}
           onSelect={setSelected}
+          canCreate={Boolean(selectedCashRegisterId) && !loadError}
         />
       ) : (
         <>
@@ -732,7 +776,7 @@ export default function TransactionsPage() {
                 type="button"
                 className={styles.primaryButton}
                 onClick={() => setAddOpen(true)}
-                disabled={loading}
+                disabled={loading || !selectedCashRegisterId || Boolean(loadError)}
                 data-ui-slot="primary-action"
               >
                 <Plus />
@@ -1135,6 +1179,7 @@ export default function TransactionsPage() {
               type="button"
               className={styles.iconButton}
               onClick={() => setAddOpen(false)}
+              disabled={saving}
               aria-label="Dialog schließen"
             >
               <X />
@@ -1186,6 +1231,7 @@ export default function TransactionsPage() {
               />
             </label>
           </div>
+          {formError ? <p className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{formError}</p> : null}
           <div className={styles.modalFooter}>
             <span />
             <div>
@@ -1193,6 +1239,7 @@ export default function TransactionsPage() {
                 type="button"
                 className={styles.secondaryButton}
                 onClick={() => setAddOpen(false)}
+                disabled={saving}
               >
                 Abbrechen
               </button>
@@ -1200,8 +1247,10 @@ export default function TransactionsPage() {
                 type="button"
                 className={styles.primaryButton}
                 onClick={addTransaction}
+                disabled={saving}
+                aria-busy={saving}
               >
-                Hinzufügen
+                {saving ? "Wird gespeichert …" : "Hinzufügen"}
               </button>
             </div>
           </div>

@@ -35,7 +35,7 @@ export async function createManualTransactionFromUi(input: unknown) {
     p_to_wallet_id: type === "income" ? wallet.id : null,
     p_period_id: period.id,
     p_booked_at: today,
-    p_idempotency_key: `ui-${context.clerkUserId}-${crypto.randomUUID()}`,
+    p_idempotency_key: parsed.data.idempotencyKey,
   });
   return error ? { ok: false as const, error: "TRANSACTION_CREATE_FAILED" } : { ok: true as const, id: String(data) };
 }

@@ -61,6 +61,7 @@ function PhoneSettingsView({
   statusMessage,
   onStatusMessage,
   onSave,
+  saving,
 }: {
   loading: boolean;
   activeSection: Section;
@@ -74,6 +75,7 @@ function PhoneSettingsView({
   statusMessage: string;
   onStatusMessage: (message: string) => void;
   onSave: () => void;
+  saving: boolean;
 }) {
   const active =
     sections.find((section) => section.id === activeSection) ?? sections[0];
@@ -287,10 +289,10 @@ function PhoneSettingsView({
           type="button"
           className={phoneStyles.saveButton}
           onClick={onSave}
-          disabled={loading}
+          disabled={loading || saving}
           data-ui-slot="primary-action"
         >
-          <Save aria-hidden="true" /> Änderungen speichern
+          <Save aria-hidden="true" /> {saving ? "Wird gespeichert …" : "Änderungen speichern"}
         </button>
       </footer>
     </section>
@@ -309,12 +311,18 @@ export default function SettingsPage() {
   });
   const [statusMessage, setStatusMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     let active = true;
     getCommitteeSettingsForCurrentOrganization()
       .then((result) => {
-        if (!active || !result.ok || !result.data) return;
+        if (!active) return;
+        if (!result.ok || !result.data) {
+          setLoadError("Die Einstellungen konnten nicht geladen werden.");
+          return;
+        }
         setSchool(result.data.school_name);
         setWorkspaceName(`Abi ${result.data.graduation_year}`);
         const stored = result.data.notifications;
@@ -326,7 +334,9 @@ export default function SettingsPage() {
           }));
         }
       })
-      .catch(() => undefined)
+      .catch(() => {
+        if (active) setLoadError("Die Einstellungen konnten nicht geladen werden.");
+      })
       .finally(() => {
         if (active) setLoading(false);
       });
@@ -336,12 +346,20 @@ export default function SettingsPage() {
   }, []);
 
   async function saveSettings() {
-    const result = await updateCommitteeSettings({
-      schoolName: school,
-      graduationYear: Number(workspaceName.replace(/\D/g, "")) || 2026,
-      notifications,
-    });
-    setStatusMessage(result.ok ? "Änderungen gespeichert." : "Änderungen konnten nicht gespeichert werden.");
+    if (saving) return;
+    setSaving(true);
+    try {
+      const result = await updateCommitteeSettings({
+        schoolName: school,
+        graduationYear: Number(workspaceName.replace(/\D/g, "")) || 2026,
+        notifications,
+      });
+      setStatusMessage(result.ok ? "Änderungen gespeichert." : "Änderungen konnten nicht gespeichert werden.");
+    } catch {
+      setStatusMessage("Änderungen konnten nicht gespeichert werden.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   function toggleNotification(key: keyof typeof notifications) {
@@ -371,6 +389,7 @@ export default function SettingsPage() {
         statusMessage={statusMessage}
         onStatusMessage={setStatusMessage}
         onSave={saveSettings}
+        saving={saving}
       />
     );
   }
@@ -378,6 +397,7 @@ export default function SettingsPage() {
   return (
     <section className={styles.page} aria-busy={loading}>
       <LoadingStatus loading={loading} label="Einstellungen werden geladen…" />
+      {loadError ? <p className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{loadError}</p> : null}
       <aside className={styles.settingsNav} data-ui-slot="toolbar">
         <div className={styles.workspaceCard}>
           <span className={styles.workspaceMark}>A</span>
@@ -616,11 +636,11 @@ export default function SettingsPage() {
             type="button"
             className={styles.saveButton}
             onClick={saveSettings}
-            disabled={loading}
+            disabled={loading || saving}
             data-ui-slot="primary-action"
           >
             <Save aria-hidden="true" />
-            Änderungen speichern
+            {saving ? "Wird gespeichert …" : "Änderungen speichern"}
           </button>
         </footer>
       </article>

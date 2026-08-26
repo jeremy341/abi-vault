@@ -54,6 +54,7 @@ import { getReportKpisForCurrentOrganization } from "@/features/finance/actions/
 import { exportReport } from "@/features/reports/actions/export";
 import { useReportSnapshot } from "@/hooks/use-report-snapshot";
 import { LoadingStatus, LoadingText } from "@/components/ui/loading-state";
+import { cachedFinanceQuery } from "@/lib/finance/client-cache";
 
 const reviewItems: Array<{
   title: string;
@@ -90,6 +91,7 @@ type PhoneReportTab = "overview" | "analysis" | "review" | "export";
 
 function PhoneReportsView({
   loading,
+  errorMessage,
   kpis,
   cashflow,
   categories: liveCategories,
@@ -100,6 +102,7 @@ function PhoneReportsView({
   onExport,
 }: {
   loading: boolean;
+  errorMessage: string;
   kpis: { income: string; expenses: string; net: string; review: string };
   cashflow: Array<{ month: string; income: number; expenses: number }>;
   categories: Array<{ name: string; amount: number; share: number }>;
@@ -113,6 +116,7 @@ function PhoneReportsView({
 
   return (
     <section className={phoneStyles.root} aria-busy={loading}>
+      {errorMessage ? <p className={phoneStyles.message} role="alert">{errorMessage}</p> : null}
       <div
         className={phoneStyles.tabs}
         role="tablist"
@@ -265,7 +269,7 @@ function PhoneReportsView({
             <span>{kpis.review} insgesamt</span>
           </header>
           <div className={phoneStyles.rows}>
-            {reviewItems.map((item) => (
+            {reviewItems.length ? reviewItems.map((item) => (
               <div className={phoneStyles.reviewRow} key={item.title}>
                 {item.tone === "warning" ? (
                   <AlertTriangle
@@ -286,7 +290,7 @@ function PhoneReportsView({
                 </span>
                 <b>{item.tone === "positive" ? "Erledigt" : "Offen"}</b>
               </div>
-            ))}
+            )) : <div className={phoneStyles.emptyState}>Keine offenen Vorgänge.</div>}
           </div>
         </section>
       ) : (
@@ -343,26 +347,39 @@ export default function ReportsPage() {
   const [period, setPeriod] = useState("6-monate");
   const [category, setCategory] = useState("alle-kategorien");
   const [exportMessage, setExportMessage] = useState("");
-  const { snapshot: reportSnapshot, loading: snapshotLoading } = useReportSnapshot();
+  const { snapshot: reportSnapshot, loading: snapshotLoading, error: snapshotError } = useReportSnapshot();
   const liveCashflowData = reportSnapshot?.cashflow ?? [];
   const liveCategories = reportSnapshot?.categories ?? [];
   const liveGoals = reportSnapshot?.goals ?? [];
   const liveAnalysisBalance = reportSnapshot?.analysisBalance ?? [];
   const liveAnalysisFlow = reportSnapshot?.analysisFlow ?? [];
   const [kpiLoading, setKpiLoading] = useState(true);
+  const [kpiError, setKpiError] = useState("");
   const [reportKpis, setReportKpis] = useState({
     income: "0,00 €",
     expenses: "0,00 €",
     net: "0,00 €",
     review: "0",
+    reviewed: "0",
+    unassigned: "0",
+    reconciliation: "Noch nicht geprüft",
   });
   const loading = snapshotLoading || kpiLoading;
+  const reportError = snapshotError ?? kpiError;
+  const reviewedReceiptCount = Number(reportKpis.reviewed);
+  const pendingReceiptCount = Number(reportKpis.review);
+  const unassignedReceiptCount = Number(reportKpis.unassigned);
+  const receiptTotal = Math.max(1, reviewedReceiptCount + pendingReceiptCount);
 
   useEffect(() => {
     let active = true;
-    getReportKpisForCurrentOrganization()
+    cachedFinanceQuery("report-kpis", getReportKpisForCurrentOrganization)
       .then((result) => {
-        if (!active || !result.ok) return;
+        if (!active) return;
+        if (!result.ok) {
+          setKpiError("Die Prüfungsdaten konnten nicht geladen werden.");
+          return;
+        }
         const format = (minor: string | number) => (Number(minor) / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
         const net = Number(result.netMinor) / 100;
         setReportKpis({
@@ -370,9 +387,14 @@ export default function ReportsPage() {
           expenses: format(result.expenseMinor),
           net: `${net < 0 ? "−" : ""}${format(Math.abs(Number(result.netMinor)))}`,
           review: String(result.reviewCount),
+          reviewed: String(result.reviewedReceiptCount),
+          unassigned: String(result.unassignedReceiptCount),
+          reconciliation: result.reconciliationPercent === null ? "Noch nicht geprüft" : `${result.reconciliationPercent} %`,
         });
       })
-      .catch(() => undefined)
+      .catch(() => {
+        if (active) setKpiError("Die Prüfungsdaten konnten nicht geladen werden.");
+      })
       .finally(() => {
         if (active) setKpiLoading(false);
       });
@@ -406,6 +428,7 @@ export default function ReportsPage() {
       <TooltipProvider>
         <PhoneReportsView
           loading={loading}
+          errorMessage={reportError}
           kpis={reportKpis}
           cashflow={liveCashflowData}
           categories={liveCategories}
@@ -423,6 +446,7 @@ export default function ReportsPage() {
     <TooltipProvider>
       <section className={styles.page} aria-busy={loading}>
         <LoadingStatus loading={loading} label="Berichte werden geladen…" />
+        {reportError ? <p className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{reportError}</p> : null}
         <Tabs defaultValue="overview" className={styles.reportWorkspace}>
           <header className={styles.referenceTabsHeader}>
             <TabsList variant="line" className={styles.workspaceTabs}>
@@ -892,18 +916,18 @@ export default function ReportsPage() {
             <div className={styles.reviewSummaryGrid}>
               <article>
                 <span>Offene Belege</span>
-                <strong>3</strong>
+                <strong><LoadingText loading={loading}>{reportKpis.review}</LoadingText></strong>
                 <small>Warten auf Prüfung</small>
               </article>
               <article>
                 <span>Ohne Zuordnung</span>
-                <strong>1</strong>
+                <strong><LoadingText loading={loading}>{reportKpis.unassigned}</LoadingText></strong>
                 <small>Beleg zuordnen</small>
               </article>
               <article>
                 <span>Abgleich</span>
-                <strong className={styles.analysisPositive}>100 %</strong>
-                <small>Kassenbestand stimmt</small>
+                <strong className={reportKpis.reconciliation === "Noch nicht geprüft" ? "" : styles.analysisPositive}><LoadingText loading={loading}>{reportKpis.reconciliation}</LoadingText></strong>
+                <small>{reportKpis.reconciliation === "Noch nicht geprüft" ? "Keine Kassenprüfung vorhanden" : "Kassenbestand geprüft"}</small>
               </article>
             </div>
             <div className={styles.reviewLayout}>
@@ -916,7 +940,7 @@ export default function ReportsPage() {
                   <span>{reportKpis.review} Vorgänge</span>
                 </header>
                 <div className={styles.reviewQueueList}>
-                  {reviewItems.map((item) => (
+                  {reviewItems.length ? reviewItems.map((item) => (
                     <button
                       type="button"
                       className={styles.reviewQueueItem}
@@ -940,7 +964,7 @@ export default function ReportsPage() {
                       <b>{item.tone === "positive" ? "Erledigt" : "Öffnen"}</b>
                       <ArrowRight aria-hidden="true" />
                     </button>
-                  ))}
+                  )) : <div className={styles.reviewEmpty}>Keine offenen Vorgänge.</div>}
                 </div>
               </section>
               <aside className={styles.reviewStatusPanel}>
@@ -959,10 +983,10 @@ export default function ReportsPage() {
                   <div>
                     <span>
                       <b>Geprüft</b>
-                      <b>0</b>
+                      <b>{reportKpis.reviewed}</b>
                     </span>
                     <i>
-                      <em style={{ width: "0%" }} />
+                      <em style={{ width: `${Math.round((reviewedReceiptCount / receiptTotal) * 100)}%` }} />
                     </i>
                   </div>
                   <div>
@@ -971,16 +995,16 @@ export default function ReportsPage() {
                       <b>{reportKpis.review}</b>
                     </span>
                     <i>
-                      <em style={{ width: "0%" }} />
+                      <em style={{ width: `${Math.round((pendingReceiptCount / receiptTotal) * 100)}%` }} />
                     </i>
                   </div>
                   <div>
                     <span>
                       <b>Ohne Zuordnung</b>
-                      <b>0</b>
+                      <b>{reportKpis.unassigned}</b>
                     </span>
                     <i>
-                      <em style={{ width: "0%" }} />
+                      <em style={{ width: `${Math.min(100, Math.round((unassignedReceiptCount / receiptTotal) * 100))}%` }} />
                     </i>
                   </div>
                 </div>

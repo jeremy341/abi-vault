@@ -3,7 +3,6 @@
 import { type KeyboardEvent, useState } from "react";
 import {
   Activity,
-  ArrowRightLeft,
   Banknote,
   Check,
   ChevronLeft,
@@ -18,17 +17,13 @@ import AccountCard, {
   type AccountCardDetails,
 } from "@/components/dashboard/AccountCard";
 import type { PresentationMode } from "@/hooks/use-presentation-mode";
+import { InlineLoading } from "@/components/ui/loading-state";
 import styles from "@/app/dashboard/funds/funds-adaptive.module.css";
 
 type FundsCard = {
   id: string;
-  details: AccountCardDetails;
+  details: Pick<AccountCardDetails, "accountName"> & Partial<Omit<AccountCardDetails, "accountName">>;
   balance: number;
-  iban: string;
-  bic: string;
-  bankName: string;
-  status: string;
-  lastSync: string;
 };
 
 type FundsCashBox = {
@@ -63,6 +58,9 @@ type FundsActivity = {
 
 type AdaptiveFundsViewProps = {
   mode: PresentationMode;
+  loading: boolean;
+  error: string | null;
+  onRetry: () => void;
   cards: FundsCard[];
   activeCard: FundsCard | undefined;
   activeCardIndex: number;
@@ -75,8 +73,26 @@ type AdaptiveFundsViewProps = {
   onAddCard: () => void;
   onEditCard: () => void;
   onCountCash: () => void;
-  onTransfer: () => void;
 };
+
+function PanelLoading({ label }: { label: string }) {
+  return (
+    <div className={styles.panelLoading} aria-busy="true">
+      <InlineLoading label={label} />
+    </div>
+  );
+}
+
+function PanelError({ message, onRetry }: { message: string; onRetry: () => void }) {
+  return (
+    <div className={styles.panelError} role="alert">
+      <span>{message}</span>
+      <button type="button" className={styles.secondaryAction} onClick={onRetry}>
+        Erneut laden
+      </button>
+    </div>
+  );
+}
 
 type FundsSection = "overview" | "accounts" | "audit";
 
@@ -142,7 +158,8 @@ function SummaryRail({
   cards,
   cashBox,
   euro,
-}: Pick<AdaptiveFundsViewProps, "cards" | "cashBox" | "euro">) {
+  loading,
+}: Pick<AdaptiveFundsViewProps, "cards" | "cashBox" | "euro" | "loading">) {
   const bankBalance = totalBankBalance(cards);
   const hasCashBox = Boolean(cashBox.id);
   const total = bankBalance + (hasCashBox && !cards.length ? cashBox.balance : 0);
@@ -152,26 +169,26 @@ function SummaryRail({
     <section className={styles.summaryRail} aria-label="Finanzübersicht">
       <div>
         <span>Gesamt verfügbar</span>
-        <strong>{euro(total)}</strong>
-        <small>{cards.length || (hasCashBox ? 1 : 0)} Kassen insgesamt</small>
+        <strong>{loading ? <InlineLoading label="Bestand wird geladen…" /> : euro(total)}</strong>
+        <small>{loading ? "Kassen werden geladen…" : `${cards.length} Kassen insgesamt`}</small>
       </div>
       <div>
         <span>Kassenbestand</span>
-        <strong>{euro(bankBalance)}</strong>
-        <small>{cards.length ? "Weitere Kassen" : "Keine Kassen angelegt"}</small>
+        <strong>{loading ? <InlineLoading label="Bestand wird geladen…" /> : euro(bankBalance)}</strong>
+        <small>{loading ? "Bestand wird geladen…" : cards.length ? "Alle aktiven Kassen" : "Keine Kassen angelegt"}</small>
       </div>
       <div>
         <span>Ausgewählte Kasse</span>
-        <strong>{hasCashBox ? euro(cashBox.balance) : "Keine Kasse"}</strong>
-        <small>{hasCashBox ? `Gezählt am ${cashBox.lastCountDate}` : "Noch nicht angelegt"}</small>
+        <strong>{loading ? <InlineLoading label="Kasse wird geladen…" /> : hasCashBox ? euro(cashBox.balance) : "Keine Kasse"}</strong>
+        <small>{loading ? "Kasse wird geladen…" : hasCashBox && cashBox.lastCountDate ? `Gezählt am ${cashBox.lastCountDate}` : "Noch nicht geprüft"}</small>
       </div>
       <div>
         <span>Kassenstatus</span>
-        <strong className={!hasCashBox || matched ? styles.positive : styles.negative}>
-          {!hasCashBox ? "Keine Kasse" : matched ? "Stimmt" : "Prüfen"}
+        <strong className={hasCashBox && matched ? styles.positive : hasCashBox ? styles.negative : ""}>
+          {loading ? <InlineLoading label="Status wird geladen…" /> : !hasCashBox ? "Keine Kasse" : !cashBox.lastCountDate ? "Noch nicht geprüft" : matched ? "Stimmt" : "Prüfen"}
         </strong>
         <small>
-          {!hasCashBox ? "Lege eine Kasse an" : matched
+          {loading ? "Status wird geladen…" : !hasCashBox ? "Lege eine Kasse an" : !cashBox.lastCountDate ? "Noch keine Zählung" : matched
             ? "Keine Differenz festgestellt"
             : `${euro(cashBox.difference)} Differenz`}
         </small>
@@ -182,24 +199,26 @@ function SummaryRail({
 
 function AccountList({
   cards,
-  cashBox,
   activeCardIndex,
   cashSelected,
   euro,
   onSelectCard,
-  onSelectCash,
   onAddCard,
+  loading,
+  error,
+  onRetry,
 }: Pick<
   AdaptiveFundsViewProps,
   | "cards"
-  | "cashBox"
   | "activeCardIndex"
   | "euro"
   | "onSelectCard"
   | "onAddCard"
+  | "loading"
+  | "error"
+  | "onRetry"
 > & {
   cashSelected: boolean;
-  onSelectCash: () => void;
 }) {
   return (
     <section
@@ -209,19 +228,20 @@ function AccountList({
       <header className={styles.panelHeader}>
         <div>
           <h2 id="account-list-title">Kassen</h2>
-          <p>{cards.length || (cashBox.id ? 1 : 0)} Geldbestände</p>
+          <p>{loading ? "Kassen werden geladen…" : `${cards.length} Geldbestände`}</p>
         </div>
         <button
           type="button"
           className={styles.iconAction}
-          aria-label="Karte hinzufügen"
+          aria-label="Kasse hinzufügen"
           onClick={onAddCard}
+          disabled={loading || Boolean(error)}
         >
           <Plus aria-hidden="true" />
         </button>
       </header>
       <div className={styles.accountList}>
-        {cards.map((card, index) => (
+        {error ? <PanelError message={error} onRetry={onRetry} /> : loading ? <PanelLoading label="Kassen werden geladen…" /> : cards.length ? cards.map((card, index) => (
           <button
             key={card.id}
             type="button"
@@ -234,22 +254,20 @@ function AccountList({
             </span>
             <span className={styles.accountIdentity}>
               <strong>{card.details.accountName}</strong>
-              <small>{card.bankName}</small>
+            <small>Kassenkarte</small>
             </span>
             <span className={styles.accountAmount}>
               <strong>{euro(card.balance)}</strong>
               <small>
-                {card.status.includes("verbunden")
-                  ? "Verbunden"
-                  : card.status}
+                Ledger-basiert
               </small>
             </span>
           </button>
-        ))}
+        )) : <p className={styles.panelEmpty}>Noch keine Kassen angelegt.</p>}
       </div>
       <div className={styles.accountListFooter}>
         <span>Alle Kassen</span>
-        <strong>{euro(totalBankBalance(cards) + (!cards.length && cashBox.id ? cashBox.balance : 0))}</strong>
+        <strong>{loading ? <InlineLoading label="Bestand wird geladen…" /> : euro(totalBankBalance(cards))}</strong>
       </div>
     </section>
   );
@@ -262,6 +280,7 @@ function CardStage({
   onSwitchCard,
   onEditCard,
   onAddCard,
+  loading,
 }: Pick<
   AdaptiveFundsViewProps,
   | "cards"
@@ -270,8 +289,22 @@ function CardStage({
   | "onSwitchCard"
   | "onEditCard"
   | "onAddCard"
+  | "loading"
 >) {
   const hasMultiple = cards.length > 1;
+
+  if (loading) {
+    return (
+      <div className={styles.cardStage} aria-busy="true">
+        <span aria-hidden="true" />
+        <div className={styles.cardSlot}>
+          <PanelLoading label="Kasse wird geladen…" />
+        </div>
+        <span aria-hidden="true" />
+        <div className={styles.cardPosition}>Kassendarstellung wird geladen…</div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.cardStage}>
@@ -303,7 +336,7 @@ function CardStage({
         <button
           type="button"
           className={styles.cardSlot}
-          aria-label="Karte hinzufügen"
+          aria-label="Kasse hinzufügen"
           onClick={onAddCard}
         >
           <AccountCard variant="add" />
@@ -340,6 +373,21 @@ function BankDetail({
   compact?: boolean;
 }) {
   const { activeCard, euro } = props;
+
+  if (props.loading) {
+    return (
+      <section className={`${styles.bankDetail} ${compact ? styles.bankDetailCompact : ""}`}>
+        <header className={styles.panelHeader}>
+          <div>
+            <h2>Kasse</h2>
+            <p>Kassendaten werden geladen…</p>
+          </div>
+          <WalletCards aria-hidden="true" />
+        </header>
+        <PanelLoading label="Kasse wird geladen…" />
+      </section>
+    );
+  }
 
   if (!activeCard) {
     return (
@@ -383,16 +431,7 @@ function BankDetail({
         <div className={styles.balanceBlock}>
           <span>Verfügbares Guthaben</span>
           <strong>{euro(activeCard.balance)}</strong>
-          <small>{activeCard.lastSync}</small>
-          <div className={styles.balanceActions}>
-            <button
-              type="button"
-              className={styles.primaryAction}
-              onClick={props.onTransfer}
-            >
-              <ArrowRightLeft aria-hidden="true" /> Umbuchen
-            </button>
-          </div>
+          <small>Ledger-basiert</small>
         </div>
       </div>
       {!compact ? (
@@ -406,6 +445,21 @@ function BankDetail({
 
 function CashDetail({ props }: { props: AdaptiveFundsViewProps }) {
   const { cashBox, euro } = props;
+  if (props.loading) {
+    return (
+      <section className={styles.cashDetail}>
+        <header className={styles.panelHeader}>
+          <div>
+            <h2>Kasse</h2>
+            <p>Kassendaten werden geladen…</p>
+          </div>
+          <Banknote aria-hidden="true" />
+        </header>
+        <PanelLoading label="Kasse wird geladen…" />
+      </section>
+    );
+  }
+
   return (
     <section className={styles.cashDetail}>
       <header className={styles.panelHeader}>
@@ -426,12 +480,12 @@ function CashDetail({ props }: { props: AdaptiveFundsViewProps }) {
         </div>
         <div>
           <dt>Letzte Zählung</dt>
-          <dd>{cashBox.lastCountDate}</dd>
+          <dd>{cashBox.lastCountDate || "Noch keine Zählung"}</dd>
         </div>
         <div>
           <dt>Status</dt>
           <dd>
-            {cashBox.countStatus === "matched" ? "Abgeglichen" : "Prüfen"}
+            {cashBox.lastCountDate ? cashBox.countStatus === "matched" ? "Abgeglichen" : "Prüfen" : "Noch nicht geprüft"}
           </dd>
         </div>
       </dl>
@@ -443,13 +497,6 @@ function CashDetail({ props }: { props: AdaptiveFundsViewProps }) {
         >
           <Banknote aria-hidden="true" /> Kasse zählen
         </button>
-        <button
-          type="button"
-          className={styles.secondaryAction}
-          onClick={props.onTransfer}
-        >
-          <ArrowRightLeft aria-hidden="true" /> Umbuchung
-        </button>
       </div>
     </section>
   );
@@ -457,7 +504,24 @@ function CashDetail({ props }: { props: AdaptiveFundsViewProps }) {
 
 function Reconciliation({ props }: { props: AdaptiveFundsViewProps }) {
   const { cashBox, euro } = props;
-  const matched = cashBox.countStatus === "matched";
+  if (props.loading) {
+    return (
+      <section className={styles.reconciliation}>
+        <header className={styles.panelHeader}>
+          <div>
+            <h2>Kassenabgleich</h2>
+            <p>Abgleich mit dem Buchbestand</p>
+          </div>
+          <ShieldCheck aria-hidden="true" />
+        </header>
+        <PanelLoading label="Abgleich wird geladen…" />
+      </section>
+    );
+  }
+
+  const hasCashBox = Boolean(cashBox.id);
+  const hasCount = Boolean(cashBox.lastCountDate);
+  const matched = hasCashBox && hasCount && cashBox.countStatus === "matched";
   return (
     <section className={styles.reconciliation}>
       <header className={styles.panelHeader}>
@@ -468,28 +532,28 @@ function Reconciliation({ props }: { props: AdaptiveFundsViewProps }) {
         <ShieldCheck aria-hidden="true" />
       </header>
       <div
-        className={`${styles.reconciliationStatus} ${matched ? styles.positive : styles.negative}`}
+        className={`${styles.reconciliationStatus} ${matched ? styles.positive : hasCashBox && hasCount ? styles.negative : ""}`}
       >
         {matched ? (
           <Check aria-hidden="true" />
         ) : (
           <ShieldCheck aria-hidden="true" />
         )}
-        <strong>{matched ? "Stimmt" : "Prüfen"}</strong>
+        <strong>{!hasCashBox ? "Keine Kasse" : !hasCount ? "Noch nicht geprüft" : matched ? "Stimmt" : "Prüfen"}</strong>
       </div>
       <dl className={styles.detailRows}>
         <div>
           <dt>Soll</dt>
-          <dd>{euro(cashBox.balance)}</dd>
+          <dd>{hasCashBox ? euro(cashBox.balance) : "—"}</dd>
         </div>
         <div>
           <dt>Ist</dt>
-          <dd>{euro(cashBox.balance + cashBox.difference)}</dd>
+          <dd>{hasCashBox ? euro(cashBox.balance + cashBox.difference) : "—"}</dd>
         </div>
         <div>
           <dt>Differenz</dt>
-          <dd className={matched ? styles.positive : styles.negative}>
-            {euro(cashBox.difference)}
+          <dd className={matched ? styles.positive : hasCashBox && hasCount ? styles.negative : ""}>
+            {hasCashBox && hasCount ? euro(cashBox.difference) : "—"}
           </dd>
         </div>
       </dl>
@@ -497,6 +561,7 @@ function Reconciliation({ props }: { props: AdaptiveFundsViewProps }) {
         type="button"
         className={styles.primaryAction}
         onClick={props.onCountCash}
+        disabled={!hasCashBox}
       >
         Neuen Abgleich durchführen
       </button>
@@ -528,7 +593,7 @@ function ActivityPanel({
         <span>Betrag</span>
       </div>
       <div className={styles.activityRows}>
-        {props.activities.slice(0, limit).map((item) => (
+        {props.activities.length ? props.activities.slice(0, limit).map((item) => (
           <div
             className={styles.activityRow}
             key={`${item.date}-${item.description}`}
@@ -544,7 +609,7 @@ function ActivityPanel({
               {props.euro(item.amount)}
             </b>
           </div>
-        ))}
+        )) : <p className={styles.panelEmpty}>Noch keine Aktivitäten vorhanden.</p>}
       </div>
     </section>
   );
@@ -561,7 +626,7 @@ function AuditPanel({ props }: { props: AdaptiveFundsViewProps }) {
         <ShieldCheck aria-hidden="true" />
       </header>
       <div className={styles.auditRows}>
-        {props.auditLogs.map((entry) => (
+        {props.auditLogs.length ? props.auditLogs.map((entry) => (
           <div className={styles.auditRow} key={entry.id}>
             <span>
               <strong>{entry.note ?? "Kassenprüfung"}</strong>
@@ -583,7 +648,7 @@ function AuditPanel({ props }: { props: AdaptiveFundsViewProps }) {
               {props.euro(entry.difference)}
             </b>
           </div>
-        ))}
+        )) : <p className={styles.panelEmpty}>Noch keine Kassenprüfungen vorhanden.</p>}
       </div>
     </section>
   );
@@ -601,12 +666,12 @@ function AccessPanel({ props }: { props: AdaptiveFundsViewProps }) {
       </header>
       <dl className={styles.detailRows}>
         <div>
-          <dt>Kassenwart</dt>
-          <dd>Max Müller</dd>
+          <dt>Verantwortlich</dt>
+          <dd>{props.cashBox.responsible || "Noch nicht festgelegt"}</dd>
         </div>
         <div>
           <dt>Vertretung</dt>
-          <dd>Lisa Schmidt</dd>
+          <dd>Keine Vertretung festgelegt</dd>
         </div>
         <div>
           <dt>Letzte Prüfung</dt>
@@ -639,6 +704,7 @@ function DesktopFunds(props: AdaptiveFundsViewProps) {
         cards={props.cards}
         cashBox={props.cashBox}
         euro={props.euro}
+        loading={props.loading}
       />
       <FundsTabs active={section} onChange={setSection} />
       {section === "overview" ? (
@@ -651,7 +717,6 @@ function DesktopFunds(props: AdaptiveFundsViewProps) {
             {...props}
             cashSelected={cashSelected}
             onSelectCard={selectCard}
-            onSelectCash={() => setCashSelected(true)}
           />
           <div className={styles.desktopPrimaryDetail}>
             {cashSelected ? (
@@ -673,7 +738,6 @@ function DesktopFunds(props: AdaptiveFundsViewProps) {
             {...props}
             cashSelected={cashSelected}
             onSelectCard={selectCard}
-            onSelectCash={() => setCashSelected(true)}
           />
           {cashSelected ? (
             <CashDetail props={props} />
@@ -697,14 +761,10 @@ function DesktopFunds(props: AdaptiveFundsViewProps) {
 
 function TabletAccountSelector({
   props,
-  cashSelected,
   onSelectCard,
-  onSelectCash,
 }: {
   props: AdaptiveFundsViewProps;
-  cashSelected: boolean;
   onSelectCard: (index: number) => void;
-  onSelectCash: () => void;
 }) {
   return (
     <div
@@ -715,7 +775,7 @@ function TabletAccountSelector({
         <button
           key={card.id}
           type="button"
-          aria-pressed={!cashSelected && index === props.activeCardIndex}
+          aria-pressed={index === props.activeCardIndex}
           onClick={() => onSelectCard(index)}
         >
           <CreditCard aria-hidden="true" />
@@ -725,21 +785,11 @@ function TabletAccountSelector({
           </span>
         </button>
       ))}
-      {props.cashBox.id && !props.cards.length ? <button
-        type="button"
-        aria-pressed={cashSelected}
-        onClick={onSelectCash}
-      >
-        <Banknote aria-hidden="true" />
-        <span>
-          <strong>{props.cashBox.name}</strong>
-          <small>{props.euro(props.cashBox.balance)}</small>
-        </span>
-      </button> : null}
       <button
         type="button"
         className={styles.addAccountButton}
         onClick={props.onAddCard}
+        disabled={props.loading || Boolean(props.error)}
       >
         <Plus aria-hidden="true" /> <span>Kasse</span>
       </button>
@@ -762,6 +812,7 @@ function TabletFunds(props: AdaptiveFundsViewProps) {
         cards={props.cards}
         cashBox={props.cashBox}
         euro={props.euro}
+        loading={props.loading}
       />
       <FundsTabs active={section} onChange={setSection} />
       {section === "overview" ? (
@@ -772,9 +823,7 @@ function TabletFunds(props: AdaptiveFundsViewProps) {
         >
           <TabletAccountSelector
             props={props}
-            cashSelected={cashSelected}
             onSelectCard={selectCard}
-            onSelectCash={() => setCashSelected(true)}
           />
           <div className={styles.tabletPrimaryDetail}>
             {cashSelected ? (
@@ -796,7 +845,6 @@ function TabletFunds(props: AdaptiveFundsViewProps) {
             {...props}
             cashSelected={cashSelected}
             onSelectCard={selectCard}
-            onSelectCash={() => setCashSelected(true)}
           />
           {cashSelected ? (
             <CashDetail props={props} />
@@ -821,7 +869,7 @@ function TabletFunds(props: AdaptiveFundsViewProps) {
 function PhoneAccountCard(props: AdaptiveFundsViewProps) {
   return (
     <section className={styles.phoneAccountCard}>
-      <CardStage {...props} />
+      {props.error ? <PanelError message={props.error} onRetry={props.onRetry} /> : <CardStage {...props} />}
       {props.activeCard ? (
         <div className={styles.phoneAccountSummary}>
           <span>
@@ -838,7 +886,7 @@ function PhoneAccountCard(props: AdaptiveFundsViewProps) {
 function PhoneRows({ props }: { props: AdaptiveFundsViewProps }) {
   return (
     <div className={styles.phoneActivityRows}>
-      {props.activities.slice(0, 3).map((item) => (
+      {props.activities.length ? props.activities.slice(0, 3).map((item) => (
         <div key={`${item.date}-${item.description}`}>
           <span>
             <strong>{item.description}</strong>
@@ -849,7 +897,7 @@ function PhoneRows({ props }: { props: AdaptiveFundsViewProps }) {
             {props.euro(item.amount)}
           </b>
         </div>
-      ))}
+      )) : <p className={styles.panelEmpty}>Noch keine Aktivitäten vorhanden.</p>}
     </div>
   );
 }
@@ -863,9 +911,9 @@ function PhoneFunds(props: AdaptiveFundsViewProps) {
     <div className={`${styles.root} ${styles.phoneRoot}`}>
       <section className={styles.phoneBalanceHero} aria-label="Gesamtguthaben">
         <span>Gesamt verfügbar</span>
-        <strong>{props.euro(bankBalance + props.cashBox.balance)}</strong>
+        <strong>{props.loading ? <InlineLoading label="Bestand wird geladen…" /> : props.euro(bankBalance + props.cashBox.balance)}</strong>
         <div>
-          {hasCashBox ? <span>{props.euro(props.cashBox.balance)} Kasse</span> : <span>Keine Kasse angelegt</span>}
+          {props.loading ? <span>Kassen werden geladen…</span> : hasCashBox ? <span>{props.euro(props.cashBox.balance)} Kasse</span> : <span>Keine Kasse angelegt</span>}
         </div>
       </section>
       <FundsTabs active={section} onChange={setSection} />
@@ -879,15 +927,9 @@ function PhoneFunds(props: AdaptiveFundsViewProps) {
           <div className={styles.phoneActions}>
             <button
               type="button"
-              className={styles.primaryAction}
-              onClick={props.onTransfer}
-            >
-              <ArrowRightLeft aria-hidden="true" /> Umbuchen
-            </button>
-            <button
-              type="button"
               className={styles.secondaryAction}
               onClick={props.onCountCash}
+              disabled={!hasCashBox || props.loading}
             >
               <Banknote aria-hidden="true" /> Zählen
             </button>
@@ -895,8 +937,9 @@ function PhoneFunds(props: AdaptiveFundsViewProps) {
               type="button"
               className={styles.secondaryAction}
               onClick={props.onAddCard}
+              disabled={props.loading || Boolean(props.error)}
             >
-              <Plus aria-hidden="true" /> Karte
+              <Plus aria-hidden="true" /> Kasse
             </button>
           </div>
           {hasCashBox ? <section className={styles.phoneSection}>
@@ -911,7 +954,7 @@ function PhoneFunds(props: AdaptiveFundsViewProps) {
             >
               <span>
                 <strong>Kassenabgleich</strong>
-                <small>Gezählt am {props.cashBox.lastCountDate}</small>
+                <small>{props.cashBox.lastCountDate ? `Gezählt am ${props.cashBox.lastCountDate}` : "Noch nicht geprüft"}</small>
               </span>
               <b
                 className={
@@ -920,7 +963,7 @@ function PhoneFunds(props: AdaptiveFundsViewProps) {
                     : styles.negative
                 }
               >
-                {props.cashBox.countStatus === "matched" ? "Stimmt" : "Prüfen"}
+                {!props.cashBox.lastCountDate ? "Noch nicht geprüft" : props.cashBox.countStatus === "matched" ? "Stimmt" : "Prüfen"}
               </b>
             </button>
           </section> : null}
@@ -943,6 +986,7 @@ function PhoneFunds(props: AdaptiveFundsViewProps) {
               type="button"
               aria-label="Kasse hinzufügen"
               onClick={props.onAddCard}
+              disabled={props.loading || Boolean(props.error)}
             >
               <Plus aria-hidden="true" />
             </button>
@@ -958,7 +1002,7 @@ function PhoneFunds(props: AdaptiveFundsViewProps) {
                 <CreditCard aria-hidden="true" />
                 <span>
                   <strong>{card.details.accountName}</strong>
-                  <small>{card.bankName}</small>
+                  <small>Kassenkarte</small>
                 </span>
                 <b>{props.euro(card.balance)}</b>
               </button>
@@ -997,7 +1041,7 @@ function PhoneFunds(props: AdaptiveFundsViewProps) {
             <b>{props.auditLogs.length}</b>
           </header>
           <div className={styles.phoneAuditRows}>
-            {props.auditLogs.map((entry) => (
+            {props.auditLogs.length ? props.auditLogs.map((entry) => (
               <button
                 type="button"
                 key={entry.id}
@@ -1020,7 +1064,7 @@ function PhoneFunds(props: AdaptiveFundsViewProps) {
                   {props.euro(entry.difference)}
                 </b>
               </button>
-            ))}
+            )) : <p className={styles.panelEmpty}>Noch keine Kassenprüfungen vorhanden.</p>}
           </div>
         </section>
       )}

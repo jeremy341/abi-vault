@@ -35,6 +35,7 @@ import {
   listTransactionsForCurrentOrganization,
 } from "@/features/finance/actions/queries";
 import { uploadReceipt } from "@/features/receipts/actions/receipts";
+import { cachedFinanceQuery } from "@/lib/finance/client-cache";
 
 type ReceiptStatus = "Geprüft" | "Zu prüfen" | "Ohne Zuordnung";
 type Receipt = {
@@ -611,7 +612,7 @@ export default function ReceiptsPage() {
   const fileInput = useRef<HTMLInputElement>(null);
   useEffect(() => {
     let active = true;
-    listReceiptsForCurrentOrganization()
+    cachedFinanceQuery("receipts", listReceiptsForCurrentOrganization)
       .then((result) => {
         if (!active || !result.ok) return;
         setItems(result.items.map((item) => ({
@@ -637,7 +638,7 @@ export default function ReceiptsPage() {
 
   useEffect(() => {
     let active = true;
-    listTransactionsForCurrentOrganization()
+    cachedFinanceQuery("transactions", listTransactionsForCurrentOrganization)
       .then((result) => {
         if (!active || !result.ok) return;
         setAvailableTransactions([

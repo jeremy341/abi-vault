@@ -34,6 +34,7 @@ import { usePresentationMode } from "@/hooks/use-presentation-mode";
 import phoneStyles from "./transactions-phone.module.css";
 import { listTransactionsForCurrentOrganization, listWalletsForCurrentOrganization } from "@/features/finance/actions/queries";
 import { createManualTransactionFromUi } from "@/features/finance/actions/manual-ui";
+import { cachedFinanceQuery } from "@/lib/finance/client-cache";
 
 type Category = "Material" | "Sonstiges" | "Veranstaltung";
 type FilterType = "Einnahmen" | "Ausgaben";
@@ -321,36 +322,36 @@ function PhoneTransactionsView({
           </LoadingCollection>
         ) : transactions.length ? (
           <div className={phoneStyles.rows}>
-          {transactions.map((transaction) => (
-            <button
-              type="button"
-              className={phoneStyles.row}
-              key={transaction.id}
-              onClick={() => onSelect(transaction)}
-            >
-              <span className={phoneStyles.rowMain}>
-                <strong>{transaction.title}</strong>
-                <span className={phoneStyles.rowMeta}>
-                  <span>{transaction.category}</span>
-                  <span>
-                    {transaction.receipt ? "Beleg vorhanden" : "Ohne Beleg"}
+            {transactions.map((transaction) => (
+              <button
+                type="button"
+                className={phoneStyles.row}
+                key={transaction.id}
+                onClick={() => onSelect(transaction)}
+              >
+                <span className={phoneStyles.rowMain}>
+                  <strong>{transaction.title}</strong>
+                  <span className={phoneStyles.rowMeta}>
+                    <span>{transaction.category}</span>
+                    <span>
+                      {transaction.receipt ? "Beleg vorhanden" : "Ohne Beleg"}
+                    </span>
                   </span>
                 </span>
-              </span>
-              <span className={phoneStyles.rowSide}>
-                <b
-                  className={
-                    transaction.amount >= 0
-                      ? phoneStyles.positive
-                      : phoneStyles.negative
-                  }
-                >
-                  {displayAmount(transaction.amount)}
-                </b>
-                <small>{transaction.date}</small>
-              </span>
-            </button>
-          ))}
+                <span className={phoneStyles.rowSide}>
+                  <b
+                    className={
+                      transaction.amount >= 0
+                        ? phoneStyles.positive
+                        : phoneStyles.negative
+                    }
+                  >
+                    {displayAmount(transaction.amount)}
+                  </b>
+                  <small>{transaction.date}</small>
+                </span>
+              </button>
+            ))}
           </div>
         ) : (
           <div className={phoneStyles.empty}>Keine Transaktionen gefunden.</div>
@@ -389,7 +390,7 @@ export default function TransactionsPage() {
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     let active = true;
-    listTransactionsForCurrentOrganization()
+    cachedFinanceQuery("transactions", listTransactionsForCurrentOrganization)
       .then((result) => {
         if (!active || !result.ok) return;
         setItems(result.items.map((item) => ({
@@ -416,7 +417,7 @@ export default function TransactionsPage() {
   }, []);
   useEffect(() => {
     let active = true;
-    listWalletsForCurrentOrganization().then((result) => {
+    cachedFinanceQuery("wallets", listWalletsForCurrentOrganization).then((result) => {
       if (!active || !result.ok) return;
       const next = result.items.map((item) => ({ id: item.id, name: item.name }));
       setCashRegisters(next);

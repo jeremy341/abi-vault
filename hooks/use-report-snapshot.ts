@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { getReportSnapshot } from "@/features/finance/actions/queries";
+import { cachedFinanceQuery } from "@/lib/finance/client-cache";
 
 export function useReportSnapshot() {
   const [snapshot, setSnapshot] = useState<Extract<Awaited<ReturnType<typeof getReportSnapshot>>, { ok: true }> | null>(null);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     let active = true;
-    getReportSnapshot().then((result) => {
+    cachedFinanceQuery("report-snapshot", getReportSnapshot).then((result) => {
       if (active && result.ok) setSnapshot(result);
     }).catch(() => undefined).finally(() => {
       if (active) setLoading(false);

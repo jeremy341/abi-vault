@@ -3,18 +3,16 @@
 import Link from "next/link";
 import { useState } from "react";
 import {
-  AlertTriangle,
   ArrowRight,
   ArrowUpRight,
-  Banknote,
-  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   FileText,
   HandCoins,
   MoreHorizontal,
   Plus,
   ReceiptText,
   Target,
-  WalletCards,
   X,
 } from "lucide-react";
 import AccountCard from "@/components/dashboard/AccountCard";
@@ -87,6 +85,27 @@ function primaryCashWallet(snapshot: DashboardSnapshot | null) {
   return snapshot?.wallets.find((wallet) => wallet.type === "cash") ?? null;
 }
 
+function DashboardCashCarousel({
+  snapshot,
+  onPreview,
+}: {
+  snapshot: DashboardSnapshot | null;
+  onPreview: () => void;
+}) {
+  const wallets = snapshot?.wallets.filter((wallet) => wallet.type === "cash") ?? [];
+  const [index, setIndex] = useState(0);
+  if (!wallets.length) return <Link href="/dashboard/funds" className={desktopStyles.accountCard} aria-label="Kasse anlegen"><AccountCard variant="add" /></Link>;
+  const safeIndex = Math.min(index, wallets.length - 1);
+  const wallet = wallets[safeIndex];
+  return (
+    <div className={desktopStyles.cashCardCarousel}>
+      {wallets.length > 1 ? <button type="button" aria-label="Vorherige Kasse" onClick={() => setIndex((current) => (current - 1 + wallets.length) % wallets.length)}><ChevronLeft aria-hidden="true" /></button> : null}
+      <button type="button" className={desktopStyles.cashCardCarouselCard} aria-label={`${wallet.name} anzeigen`} onClick={onPreview}><AccountCard details={{ accountName: wallet.name }} /></button>
+      {wallets.length > 1 ? <button type="button" aria-label="Nächste Kasse" onClick={() => setIndex((current) => (current + 1) % wallets.length)}><ChevronRight aria-hidden="true" /></button> : null}
+    </div>
+  );
+}
+
 function displayDashboardReviews(snapshot: DashboardSnapshot | null) {
   if (!snapshot) return [];
   return snapshot.transactions
@@ -139,20 +158,7 @@ function DesktopDashboard({ snapshot, loading }: { snapshot: DashboardSnapshot |
       <div className={desktopStyles.workspace} data-ui-slot="content">
         <div className={desktopStyles.primaryColumn}>
           <article className={desktopStyles.accountPanel} data-ui-slot="primary-panel">
-            {cashWallet ? (
-              <button
-                type="button"
-                className={desktopStyles.accountCard}
-                aria-label={`${cashWallet.name} anzeigen`}
-                onClick={() => setCardPreviewOpen(true)}
-              >
-                <AccountCard details={{ accountName: cashWallet.name }} />
-              </button>
-            ) : (
-              <Link href="/dashboard/funds" className={desktopStyles.accountCard} aria-label="Kasse anlegen">
-                <AccountCard variant="add" />
-              </Link>
-            )}
+            <DashboardCashCarousel snapshot={snapshot} onPreview={() => setCardPreviewOpen(true)} />
             <div className={desktopStyles.accountSummary}>
               <div>
                 <span className={desktopStyles.eyebrow}>{cashWallet?.name ?? "Keine Kasse angelegt"}</span>
@@ -190,31 +196,31 @@ function DesktopDashboard({ snapshot, loading }: { snapshot: DashboardSnapshot |
             </div>
             <div className={desktopStyles.transactionRows} data-ui-slot="list-body">
               <LoadingCollection loading={loading} knownItemCount={transactionItems.length} emptyHeight="100%" label="Transaktionen werden geladen…">
-              {transactionItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <div
-                    className={desktopStyles.transactionRow}
-                    key={item.title}
-                  >
-                    <span className={desktopStyles.transactionName}>
-                      <Icon aria-hidden="true" />
-                      <strong>{item.title}</strong>
-                    </span>
-                    <span>{item.category}</span>
-                    <span>{item.date}</span>
-                    <b
-                      className={
-                        item.amount.startsWith("+")
-                          ? desktopStyles.positive
-                          : desktopStyles.negative
-                      }
+                {transactionItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <div
+                      className={desktopStyles.transactionRow}
+                      key={item.title}
                     >
-                      {item.amount}
-                    </b>
-                  </div>
-                );
-              })}
+                      <span className={desktopStyles.transactionName}>
+                        <Icon aria-hidden="true" />
+                        <strong>{item.title}</strong>
+                      </span>
+                      <span>{item.category}</span>
+                      <span>{item.date}</span>
+                      <b
+                        className={
+                          item.amount.startsWith("+")
+                            ? desktopStyles.positive
+                            : desktopStyles.negative
+                        }
+                      >
+                        {item.amount}
+                      </b>
+                    </div>
+                  );
+                })}
               </LoadingCollection>
             </div>
           </article>
@@ -233,18 +239,18 @@ function DesktopDashboard({ snapshot, loading }: { snapshot: DashboardSnapshot |
             </header>
             <div className={desktopStyles.goalRows}>
               <LoadingCollection loading={loading} knownItemCount={goalItems.length} emptyHeight="8rem" label="Ziele werden geladen…">
-              {goalItems.map((goal) => (
-                <div className={desktopStyles.goalRow} key={goal.title}>
-                  <span>
-                    <strong>{goal.title}</strong>
-                    <small>{goal.saved}</small>
-                  </span>
-                  <div>
-                    <i style={{ width: `${goal.progress}%` }} />
+                {goalItems.map((goal) => (
+                  <div className={desktopStyles.goalRow} key={goal.title}>
+                    <span>
+                      <strong>{goal.title}</strong>
+                      <small>{goal.saved}</small>
+                    </span>
+                    <div>
+                      <i style={{ width: `${goal.progress}%` }} />
+                    </div>
+                    <b>{goal.progress}%</b>
                   </div>
-                  <b>{goal.progress}%</b>
-                </div>
-              ))}
+                ))}
               </LoadingCollection>
             </div>
           </article>
@@ -259,15 +265,15 @@ function DesktopDashboard({ snapshot, loading }: { snapshot: DashboardSnapshot |
             </header>
             <div className={desktopStyles.spendingRows}>
               <LoadingCollection loading={loading} knownItemCount={categoryItems.length} emptyHeight="7rem" label="Ausgaben werden geladen…">
-              {categoryItems.map((item) => (
-                <div className={desktopStyles.spendingRow} key={item.title}>
-                  <span>{item.title}</span>
-                  <div>
-                    <i style={{ width: `${item.progress}%` }} />
+                {categoryItems.map((item) => (
+                  <div className={desktopStyles.spendingRow} key={item.title}>
+                    <span>{item.title}</span>
+                    <div>
+                      <i style={{ width: `${item.progress}%` }} />
+                    </div>
+                    <b>{item.progress}%</b>
                   </div>
-                  <b>{item.progress}%</b>
-                </div>
-              ))}
+                ))}
               </LoadingCollection>
             </div>
           </article>
@@ -393,21 +399,21 @@ function TabletDashboard({ snapshot, loading }: { snapshot: DashboardSnapshot | 
             </header>
             <div className={styles.tabletTransactionList} data-ui-slot="list-body">
               <LoadingCollection loading={loading} knownItemCount={transactionItems.length} emptyHeight="100%" label="Transaktionen werden geladen…">
-              {transactionItems.slice(0, 6).map((item) => (
-                <div className={styles.tabletTransaction} key={item.title}>
-                  <span>{item.title}</span>
-                  <small>{item.category}</small>
-                  <b
-                    className={
-                      item.amount.startsWith("+")
-                        ? styles.positive
-                        : styles.negative
-                    }
-                  >
-                    {item.amount}
-                  </b>
-                </div>
-              ))}
+                {transactionItems.slice(0, 6).map((item) => (
+                  <div className={styles.tabletTransaction} key={item.title}>
+                    <span>{item.title}</span>
+                    <small>{item.category}</small>
+                    <b
+                      className={
+                        item.amount.startsWith("+")
+                          ? styles.positive
+                          : styles.negative
+                      }
+                    >
+                      {item.amount}
+                    </b>
+                  </div>
+                ))}
               </LoadingCollection>
             </div>
           </article>
@@ -531,25 +537,25 @@ function PhoneDashboard({ snapshot, loading }: { snapshot: DashboardSnapshot | n
         </header>
         <div className={styles.phoneTransactionList} data-ui-slot="list-body">
           <LoadingCollection loading={loading} knownItemCount={transactionItems.length} emptyHeight="4rem" label="Transaktionen werden geladen…">
-          {transactionItems.slice(0, 4).map((item) => (
-            <div className={styles.phoneTransaction} key={item.title}>
-              <span>
-                <strong>{item.title}</strong>
-                <small>
-                  {item.category}, {item.date}
-                </small>
-              </span>
-              <b
-                className={
-                  item.amount.startsWith("+")
-                    ? styles.positive
-                    : styles.negative
-                }
-              >
-                {item.amount}
-              </b>
-            </div>
-          ))}
+            {transactionItems.slice(0, 4).map((item) => (
+              <div className={styles.phoneTransaction} key={item.title}>
+                <span>
+                  <strong>{item.title}</strong>
+                  <small>
+                    {item.category}, {item.date}
+                  </small>
+                </span>
+                <b
+                  className={
+                    item.amount.startsWith("+")
+                      ? styles.positive
+                      : styles.negative
+                  }
+                >
+                  {item.amount}
+                </b>
+              </div>
+            ))}
           </LoadingCollection>
         </div>
       </section>
@@ -563,19 +569,19 @@ function PhoneDashboard({ snapshot, loading }: { snapshot: DashboardSnapshot | n
         </header>
         <div className={styles.phoneGoalScroller}>
           <LoadingCollection loading={loading} knownItemCount={goalItems.length} emptyHeight="5rem" label="Ziele werden geladen…">
-          {goalItems.map((goal) => (
-            <article className={styles.phoneGoal} key={goal.title}>
-              <header>
-                <strong>{goal.title}</strong>
-                <span>{goal.progress}%</span>
-              </header>
-              <strong>{goal.target}</strong>
-              <p>{goal.saved}</p>
-              <div className={styles.phoneGoalTrack} aria-hidden="true">
-                <i style={{ width: `${goal.progress}%` }} />
-              </div>
-            </article>
-          ))}
+            {goalItems.map((goal) => (
+              <article className={styles.phoneGoal} key={goal.title}>
+                <header>
+                  <strong>{goal.title}</strong>
+                  <span>{goal.progress}%</span>
+                </header>
+                <strong>{goal.target}</strong>
+                <p>{goal.saved}</p>
+                <div className={styles.phoneGoalTrack} aria-hidden="true">
+                  <i style={{ width: `${goal.progress}%` }} />
+                </div>
+              </article>
+            ))}
           </LoadingCollection>
         </div>
       </section>

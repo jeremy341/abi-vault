@@ -14,6 +14,8 @@ export type TransactionListItem = {
   reviewStatus: "Geprüft" | "Zu prüfen";
   account: string;
   walletId: string | null;
+  fromWalletId?: string | null;
+  toWalletId?: string | null;
 };
 
 export async function listTransactionsForCurrentOrganization() {
@@ -47,6 +49,8 @@ export async function listTransactionsForCurrentOrganization() {
         reviewStatus: "Geprüft",
         account: item.wallet_label ?? "Barkasse",
         walletId: null,
+        fromWalletId: null,
+        toWalletId: null,
       })),
     };
   }
@@ -98,6 +102,8 @@ export async function listTransactionsForCurrentOrganization() {
       reviewStatus: receiptMap.get(item.id) === "approved" ? "Geprüft" : "Zu prüfen",
       account: walletMap.get(item.type === "income" ? item.to_wallet_id : item.from_wallet_id) ?? "Barkasse",
       walletId: item.type === "income" ? item.to_wallet_id : item.from_wallet_id,
+      fromWalletId: item.from_wallet_id,
+      toWalletId: item.to_wallet_id,
     })),
   };
 }
@@ -135,7 +141,7 @@ export async function listReceiptsForCurrentOrganization() {
   };
 }
 
-export async function listWalletsForCurrentOrganization() {
+export async function listWalletsForCurrentOrganization(options?: { includeBalances?: boolean }) {
   const context = await requireClerkContext();
   const supabase = await createSupabaseServerClient();
   const { data: wallets, error } = await supabase
@@ -147,14 +153,17 @@ export async function listWalletsForCurrentOrganization() {
     .order("created_at", { ascending: true });
   if (error) return { ok: false as const, error: "DATABASE_ERROR" as const };
 
-  const { data: transactions } = await supabase
-    .from("transactions")
-    .select("amount_minor, type, from_wallet_id, to_wallet_id")
-    .eq("organization_id", context.organizationId)
-    .eq("status", "posted")
-    .is("deleted_at", null);
+  const transactions = options?.includeBalances === false
+    ? { data: [] as Array<{ amount_minor: number; type: string; from_wallet_id: string | null; to_wallet_id: string | null }> }
+    : await supabase
+      .from("transactions")
+      .select("amount_minor, type, from_wallet_id, to_wallet_id")
+      .eq("organization_id", context.organizationId)
+      .eq("status", "posted")
+      .is("deleted_at", null);
+  const transactionRows = transactions.data ?? [];
   const balances = new Map((wallets ?? []).map((wallet) => [wallet.id, BigInt(String(wallet.opening_balance_minor ?? 0))]));
-  for (const transaction of transactions ?? []) {
+  for (const transaction of transactionRows) {
     const amount = BigInt(String(transaction.amount_minor));
     if (transaction.type === "income" && transaction.to_wallet_id) balances.set(transaction.to_wallet_id, (balances.get(transaction.to_wallet_id) ?? BigInt(0)) + amount);
     if (transaction.type === "expense" && transaction.from_wallet_id) balances.set(transaction.from_wallet_id, (balances.get(transaction.from_wallet_id) ?? BigInt(0)) - amount);
@@ -171,6 +180,7 @@ export async function listWalletsForCurrentOrganization() {
       name: wallet.name,
       type: wallet.type,
       balanceMinor: (balances.get(wallet.id) ?? BigInt(0)).toString(),
+      openingBalanceMinor: String(wallet.opening_balance_minor ?? 0),
       connected: {
         display_name: null,
         iban_last4: null,
@@ -294,7 +304,7 @@ export async function getReportKpisForCurrentOrganization() {
 
 export async function getDashboardSnapshot() {
   const [wallets, transactions, goals] = await Promise.all([
-    listWalletsForCurrentOrganization(),
+    listWalletsForCurrentOrganization({ includeBalances: false }),
     listTransactionsForCurrentOrganization(),
     listGoalsForCurrentOrganization(),
   ]);
@@ -321,7 +331,18 @@ export async function getDashboardSnapshot() {
     amountMinor: String(amountMinor),
     progress: totalExpense ? Math.round((amountMinor / totalExpense) * 100) : 0,
   }));
-  return { ok: true as const, wallets: wallets.items, transactions: transactions.items, goals: goals.items, categories };
+  const balances = new Map(wallets.items.map((wallet) => [wallet.id, BigInt(wallet.openingBalanceMinor)]));
+  for (const transaction of transactions.items) {
+    const amount = BigInt(transaction.amountMinor);
+    if (transaction.type === "income" && transaction.toWalletId) balances.set(transaction.toWalletId, (balances.get(transaction.toWalletId) ?? BigInt(0)) + amount);
+    if (transaction.type === "expense" && transaction.fromWalletId) balances.set(transaction.fromWalletId, (balances.get(transaction.fromWalletId) ?? BigInt(0)) - amount);
+    if (transaction.type === "transfer") {
+      const transferAmount = amount < BigInt(0) ? -amount : amount;
+      if (transaction.fromWalletId) balances.set(transaction.fromWalletId, (balances.get(transaction.fromWalletId) ?? BigInt(0)) - transferAmount);
+      if (transaction.toWalletId) balances.set(transaction.toWalletId, (balances.get(transaction.toWalletId) ?? BigInt(0)) + transferAmount);
+    }
+  }
+  return { ok: true as const, wallets: wallets.items.map((wallet) => ({ ...wallet, balanceMinor: (balances.get(wallet.id) ?? BigInt(0)).toString() })), transactions: transactions.items, goals: goals.items, categories };
 }
 
 export async function getReportSnapshot() {
@@ -346,6 +367,21 @@ export async function getReportSnapshot() {
     if (transaction.type === "expense") categoryTotals.set(transaction.category, (categoryTotals.get(transaction.category) ?? 0) + amount);
   }
   const cashflow = months.map((month) => ({ month, ...(monthly.get(month) ?? { income: 0, expenses: 0 }) }));
+  if (!transactions.items.length) {
+    return {
+      ok: true as const,
+      cashflow: [],
+      categories: [],
+      goals: goals.items.map((goal) => ({
+        name: goal.title,
+        saved: Number(goal.saved_amount_minor) / 100,
+        target: Number(goal.target_amount_minor) / 100,
+      })),
+      analysisBalance: [],
+      analysisFlow: [],
+      reviewItems: [],
+    };
+  }
   const totalExpenses = [...categoryTotals.values()].reduce((sum, value) => sum + value, 0);
   const categories = [...categoryTotals.entries()].map(([name, amount]) => ({
     name,

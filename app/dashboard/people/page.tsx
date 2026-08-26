@@ -17,7 +17,7 @@ import styles from "./people.module.css";
 import phoneStyles from "./people-phone.module.css";
 import { usePresentationMode } from "@/hooks/use-presentation-mode";
 import { listMembersForCurrentOrganization } from "@/features/finance/actions/queries";
-import { inviteMember } from "@/features/people/actions/invitations";
+import { createRoleInviteLink } from "@/features/people/actions/invite-links";
 import { removeMember, updateMemberRole } from "@/features/people/actions/memberships";
 
 type Person = {
@@ -140,20 +140,20 @@ function PhonePeopleView({
       <div className={phoneStyles.people} data-ui-slot="list-body">
         <LoadingCollection loading={loading} knownItemCount={people.length} emptyHeight="12rem" label="Mitglieder werden geladen…">
           {people.length ? people.map((person) => (
-          <article className={phoneStyles.person} key={person.id}>
-            <span className={phoneStyles.avatar}>{person.initials}</span>
-            <span className={phoneStyles.identity}>
-              <strong>{person.name}</strong>
-              <span>
-                {person.role}, {person.access}
+            <article className={phoneStyles.person} key={person.id}>
+              <span className={phoneStyles.avatar}>{person.initials}</span>
+              <span className={phoneStyles.identity}>
+                <strong>{person.name}</strong>
+                <span>
+                  {person.role}, {person.access}
+                </span>
               </span>
-            </span>
-            <span
-              className={`${phoneStyles.status} ${person.status === "Aktiv" ? phoneStyles.active : ""}`}
-            >
-              {person.status}
-            </span>
-          </article>
+              <span
+                className={`${phoneStyles.status} ${person.status === "Aktiv" ? phoneStyles.active : ""}`}
+              >
+                {person.status}
+              </span>
+            </article>
           )) : <div className={phoneStyles.empty}>Keine Mitglieder gefunden.</div>}
         </LoadingCollection>
       </div>
@@ -185,9 +185,8 @@ export default function PeoplePage() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [newEmail, setNewEmail] = useState("");
-  const [newRole, setNewRole] = useState("Mitglied");
+  const [newRole, setNewRole] = useState("Student");
+  const [inviteLink, setInviteLink] = useState("");
   const [message, setMessage] = useState("");
   const [openMenuId, setOpenMenuId] = useState<number | string | null>(null);
   useEffect(() => {
@@ -224,9 +223,8 @@ export default function PeoplePage() {
 
   function closeModal() {
     setModalOpen(false);
-    setNewName("");
-    setNewEmail("");
-    setNewRole("Mitglied");
+    setNewRole("Student");
+    setInviteLink("");
   }
 
   useEffect(() => {
@@ -291,50 +289,29 @@ export default function PeoplePage() {
 
   async function addPerson(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!newName.trim() || !newEmail.trim()) {
-      setMessage("Bitte Name und E-Mail-Adresse ausfüllen.");
-      return;
-    }
     const role =
       newRole === "Administrator"
         ? "admin"
-        : newRole === "Kassenwart"
+        : newRole === "Supervisor"
           ? "supervisor"
           : "student";
-    const invitation = await inviteMember({ email: newEmail.trim(), role });
+    const invitation = await createRoleInviteLink({ role });
     if (!invitation.ok) {
       setMessage(
         invitation.error === "INVALID_INPUT"
-          ? "Bitte eine gültige E-Mail-Adresse eingeben."
-          : "Die Einladung konnte nicht versendet werden.",
+          ? "Bitte eine gültige Rolle auswählen."
+          : "Der Einladungslink konnte nicht erstellt werden.",
       );
       return;
     }
-    const initials = newName
-      .trim()
-      .split(/\s+/)
-      .map((part) => part[0])
-      .join("")
-      .slice(0, 2)
-      .toUpperCase();
-    setPeople((current) => [
-      ...current,
-      {
-        id: Date.now(),
-        name: newName.trim(),
-        role: newRole,
-        access:
-          newRole === "Administrator"
-            ? "Vollzugriff"
-            : newRole === "Kassenwart"
-              ? "Finanzen verwalten"
-              : "Nur ansehen",
-        status: "Einladung offen",
-        initials,
-      },
-    ]);
-    setMessage("Einladung versendet.");
-    closeModal();
+    setInviteLink(invitation.url);
+    setMessage("Einladungslink erstellt.");
+  }
+
+  async function copyInviteLink() {
+    if (!inviteLink) return;
+    await navigator.clipboard.writeText(inviteLink);
+    setMessage("Einladungslink kopiert.");
   }
 
   return (
@@ -421,108 +398,108 @@ export default function PeoplePage() {
               <div className={styles.peopleList} data-ui-slot="list-body">
                 <LoadingCollection loading={loading} knownItemCount={people.length} emptyHeight="16rem" label="Mitglieder werden geladen…">
                   {filteredPeople.map((person) => (
-                  <div className={styles.personRow} key={person.id}>
-                    <span className={styles.avatar}>{person.initials}</span>
-                    <div className={styles.personIdentity}>
-                      <strong>{person.name}</strong>
-                      <span>{person.role}</span>
-                    </div>
-                    <span className={styles.access}>{person.access}</span>
-                    <span
-                      className={
-                        person.status === "Aktiv"
-                          ? styles.activeStatus
-                          : styles.pendingStatus
-                      }
-                    >
-                      {person.status === "Aktiv" ? (
-                        <Check aria-hidden="true" />
-                      ) : null}
-                      {person.status}
-                    </span>
-                    <button
-                      type="button"
-                      className={styles.moreButton}
-                      aria-label={`${person.name} Optionen`}
-                      aria-haspopup="menu"
-                      aria-expanded={openMenuId === person.id}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setOpenMenuId((current) =>
-                          current === person.id ? null : person.id,
-                        );
-                      }}
-                    >
-                      <MoreHorizontal aria-hidden="true" />
-                    </button>
-                    {openMenuId === person.id ? (
-                      <div
-                        className={styles.personMenu}
-                        role="menu"
-                        aria-label={`${person.name} verwalten`}
-                        onPointerDown={(event) => event.stopPropagation()}
+                    <div className={styles.personRow} key={person.id}>
+                      <span className={styles.avatar}>{person.initials}</span>
+                      <div className={styles.personIdentity}>
+                        <strong>{person.name}</strong>
+                        <span>{person.role}</span>
+                      </div>
+                      <span className={styles.access}>{person.access}</span>
+                      <span
+                        className={
+                          person.status === "Aktiv"
+                            ? styles.activeStatus
+                            : styles.pendingStatus
+                        }
                       >
-                        <button
-                          type="button"
-                          role="menuitem"
-                          onClick={() => cycleRole(person.id)}
+                        {person.status === "Aktiv" ? (
+                          <Check aria-hidden="true" />
+                        ) : null}
+                        {person.status}
+                      </span>
+                      <button
+                        type="button"
+                        className={styles.moreButton}
+                        aria-label={`${person.name} Optionen`}
+                        aria-haspopup="menu"
+                        aria-expanded={openMenuId === person.id}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setOpenMenuId((current) =>
+                            current === person.id ? null : person.id,
+                          );
+                        }}
+                      >
+                        <MoreHorizontal aria-hidden="true" />
+                      </button>
+                      {openMenuId === person.id ? (
+                        <div
+                          className={styles.personMenu}
+                          role="menu"
+                          aria-label={`${person.name} verwalten`}
+                          onPointerDown={(event) => event.stopPropagation()}
                         >
-                          Rolle wechseln
-                        </button>
-                        <button
-                          type="button"
-                          role="menuitem"
-                          onClick={() => {
-                            setPeople((current) =>
-                              current.map((entry) =>
-                                entry.id === person.id
-                                  ? {
+                          <button
+                            type="button"
+                            role="menuitem"
+                            onClick={() => cycleRole(person.id)}
+                          >
+                            Rolle wechseln
+                          </button>
+                          <button
+                            type="button"
+                            role="menuitem"
+                            onClick={() => {
+                              setPeople((current) =>
+                                current.map((entry) =>
+                                  entry.id === person.id
+                                    ? {
                                       ...entry,
                                       status:
                                         entry.status === "Aktiv"
                                           ? "Einladung offen"
                                           : "Aktiv",
                                     }
-                                  : entry,
-                              ),
-                            );
-                            setMessage("Status aktualisiert.");
-                            setOpenMenuId(null);
-                          }}
-                        >
-                          Status wechseln
-                        </button>
-                        <button
-                          type="button"
-                          role="menuitem"
-                          className={styles.destructiveMenuItem}
-                          onClick={async () => {
-                            if (typeof person.id !== "string") return;
-                            const result = await removeMember({
-                              clerkUserId: person.id,
-                              reason: "Mitglied über die Mitgliederverwaltung entfernt",
-                            });
-                            if (!result.ok) {
-                              setMessage(
-                                result.error === "LAST_ADMIN_REQUIRED"
-                                  ? "Der letzte Administrator kann nicht entfernt werden."
-                                  : "Die Person konnte nicht entfernt werden.",
+                                    : entry,
+                                ),
                               );
+                              setMessage("Status aktualisiert.");
                               setOpenMenuId(null);
-                              return;
-                            }
-                            setPeople((current) =>
-                              current.filter((entry) => entry.id !== person.id),
-                            );
-                            setMessage("Person entfernt.");
-                            setOpenMenuId(null);
-                          }}
-                        >
-                          Person entfernen
-                        </button>
-                      </div>
-                    ) : null}
-                  </div>
+                            }}
+                          >
+                            Status wechseln
+                          </button>
+                          <button
+                            type="button"
+                            role="menuitem"
+                            className={styles.destructiveMenuItem}
+                            onClick={async () => {
+                              if (typeof person.id !== "string") return;
+                              const result = await removeMember({
+                                clerkUserId: person.id,
+                                reason: "Mitglied über die Mitgliederverwaltung entfernt",
+                              });
+                              if (!result.ok) {
+                                setMessage(
+                                  result.error === "LAST_ADMIN_REQUIRED"
+                                    ? "Der letzte Administrator kann nicht entfernt werden."
+                                    : "Die Person konnte nicht entfernt werden.",
+                                );
+                                setOpenMenuId(null);
+                                return;
+                              }
+                              setPeople((current) =>
+                                current.filter((entry) => entry.id !== person.id),
+                              );
+                              setMessage("Person entfernt.");
+                              setOpenMenuId(null);
+                            }}
+                          >
+                            Person entfernen
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
                   ))}
                 </LoadingCollection>
               </div>
@@ -629,8 +606,8 @@ export default function PeoplePage() {
           <form onSubmit={addPerson}>
             <header className={styles.modalHeader}>
               <div>
-                <h2>Person hinzufügen</h2>
-                <p>Lade ein Mitglied in euren Abi-Arbeitsbereich ein.</p>
+              <h2>Einladungslink erstellen</h2>
+              <p>Teile den Link, damit ein Mitglied eurem Abi-Arbeitsbereich beitritt.</p>
               </div>
               <button
                 type="button"
@@ -643,39 +620,26 @@ export default function PeoplePage() {
             </header>
             <div className={styles.modalBody}>
               <label className={styles.formField}>
-                <span>Name</span>
-                <input
-                  autoFocus
-                  name="personName"
-                  autoComplete="off"
-                  value={newName}
-                  onChange={(event) => setNewName(event.target.value)}
-                  placeholder="Vor- und Nachname …"
-                />
-              </label>
-              <label className={styles.formField}>
-                <span>E-Mail-Adresse</span>
-                <input
-                  name="personEmail"
-                  type="email"
-                  autoComplete="email"
-                  value={newEmail}
-                  onChange={(event) => setNewEmail(event.target.value)}
-                  placeholder="name@beispiel.de"
-                />
-              </label>
-              <label className={styles.formField}>
                 <span>Rolle</span>
                 <select
                   name="personRole"
                   value={newRole}
                   onChange={(event) => setNewRole(event.target.value)}
                 >
-                  <option>Mitglied</option>
-                  <option>Kassenwart</option>
+                  <option>Student</option>
+                  <option>Supervisor</option>
                   <option>Administrator</option>
                 </select>
               </label>
+              {inviteLink ? (
+                <div className={styles.inviteLinkBox}>
+                  <span>Link für {newRole}</span>
+                  <input readOnly value={inviteLink} aria-label="Einladungslink" />
+                  <button type="button" className={styles.secondaryButton} onClick={copyInviteLink}>
+                    Link kopieren
+                  </button>
+                </div>
+              ) : null}
             </div>
             <footer className={styles.modalFooter}>
               <button
@@ -686,7 +650,7 @@ export default function PeoplePage() {
                 Abbrechen
               </button>
               <button type="submit" className={styles.primaryButton}>
-                Einladung vorbereiten
+                {inviteLink ? "Neuen Link erstellen" : "Link erstellen"}
               </button>
             </footer>
           </form>

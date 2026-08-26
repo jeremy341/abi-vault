@@ -29,49 +29,6 @@ type Person = {
   initials: string;
 };
 
-const initialPeople: Person[] = [
-  {
-    id: 1,
-    name: "Jeremy",
-    role: "Administrator",
-    access: "Vollzugriff",
-    status: "Aktiv",
-    initials: "J",
-  },
-  {
-    id: 2,
-    name: "Lena Müller",
-    role: "Kassenwartin",
-    access: "Finanzen verwalten",
-    status: "Aktiv",
-    initials: "LM",
-  },
-  {
-    id: 3,
-    name: "Max Schneider",
-    role: "Kassenwart",
-    access: "Finanzen verwalten",
-    status: "Aktiv",
-    initials: "MS",
-  },
-  {
-    id: 4,
-    name: "Sophie Weber",
-    role: "Mitglied",
-    access: "Nur ansehen",
-    status: "Aktiv",
-    initials: "SW",
-  },
-  {
-    id: 5,
-    name: "Jonas Klein",
-    role: "Mitglied",
-    access: "Nur ansehen",
-    status: "Einladung offen",
-    initials: "JK",
-  },
-];
-
 function PhonePeopleView({
   loading,
   people,
@@ -89,10 +46,9 @@ function PhonePeopleView({
   const admins = people.filter(
     (person) => person.role === "Administrator",
   ).length;
-  const treasurers = people.filter((person) =>
-    person.role.includes("Kassenwart"),
+  const supervisors = people.filter((person) =>
+    person.role === "Supervisor",
   ).length;
-  const members = people.filter((person) => person.role === "Mitglied").length;
 
   return (
     <div className={phoneStyles.root} aria-busy={loading}>
@@ -165,14 +121,14 @@ function PhonePeopleView({
           <span>Vollzugriff</span>
         </div>
         <div className={phoneStyles.role}>
-          <strong>Kassenwart</strong>
-          <b><LoadingText loading={loading}>{treasurers}</LoadingText></b>
+          <strong>Supervisor</strong>
+          <b><LoadingText loading={loading}>{supervisors}</LoadingText></b>
           <span>Finanzen</span>
         </div>
         <div className={phoneStyles.role}>
-          <strong>Mitglied</strong>
-          <b><LoadingText loading={loading}>{members}</LoadingText></b>
-          <span>Nur ansehen</span>
+          <strong>Rollen</strong>
+          <b><LoadingText loading={loading}>{admins + supervisors}</LoadingText></b>
+          <span>Admin und Supervisor</span>
         </div>
       </section>
     </div>
@@ -185,7 +141,7 @@ export default function PeoplePage() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
-  const [newRole, setNewRole] = useState("Student");
+  const [newRole, setNewRole] = useState("Supervisor");
   const [inviteLink, setInviteLink] = useState("");
   const [message, setMessage] = useState("");
   const [openMenuId, setOpenMenuId] = useState<number | string | null>(null);
@@ -197,8 +153,8 @@ export default function PeoplePage() {
         setPeople(result.items.map((member) => ({
           id: member.id,
           name: member.name,
-          role: member.role === "admin" ? "Administrator" : member.role === "supervisor" ? "Kassenwart" : "Mitglied",
-          access: member.role === "admin" ? "Vollzugriff" : member.role === "supervisor" ? "Finanzen verwalten" : "Nur ansehen",
+          role: member.role === "admin" ? "Administrator" : "Supervisor",
+          access: member.role === "admin" ? "Vollzugriff" : "Finanzen verwalten",
           status: member.status === "active" ? "Aktiv" : "Einladung offen",
           initials: member.name.split(/\s+/).map((part: string) => part[0]).join("").slice(0, 2).toUpperCase(),
         })));
@@ -223,7 +179,7 @@ export default function PeoplePage() {
 
   function closeModal() {
     setModalOpen(false);
-    setNewRole("Student");
+    setNewRole("Supervisor");
     setInviteLink("");
   }
 
@@ -246,11 +202,7 @@ export default function PeoplePage() {
   async function cycleRole(personId: number | string) {
     const selected = people.find((person) => person.id === personId);
     if (!selected) return;
-    const nextRole = selected.role.includes("Kassenwart")
-      ? "student"
-      : selected.role === "Mitglied"
-        ? "admin"
-        : "supervisor";
+    const nextRole = selected.role === "Administrator" ? "supervisor" : "admin";
     if (typeof personId === "string" && /^[^\s]+$/.test(personId)) {
       const result = await updateMemberRole({
         clerkUserId: personId,
@@ -266,20 +218,14 @@ export default function PeoplePage() {
     setPeople((current) =>
       current.map((person) => {
         if (person.id !== personId) return person;
-        const role = person.role.includes("Kassenwart")
-          ? "Mitglied"
-          : person.role === "Mitglied"
-            ? "Administrator"
-            : "Kassenwart";
+        const role = person.role === "Administrator" ? "Supervisor" : "Administrator";
         return {
           ...person,
           role,
           access:
             role === "Administrator"
               ? "Vollzugriff"
-              : role === "Kassenwart"
-                ? "Finanzen verwalten"
-                : "Nur ansehen",
+              : "Finanzen verwalten",
         };
       }),
     );
@@ -294,7 +240,7 @@ export default function PeoplePage() {
         ? "admin"
         : newRole === "Supervisor"
           ? "supervisor"
-          : "student";
+        : "supervisor";
     const invitation = await createRoleInviteLink({ role });
     if (!invitation.ok) {
       setMessage(
@@ -305,7 +251,11 @@ export default function PeoplePage() {
       return;
     }
     setInviteLink(invitation.url);
-    setMessage("Einladungslink erstellt.");
+    setMessage(
+      newRole === "Supervisor"
+        ? "Supervisor-Link erstellt: 30 Verwendungen, 30 Tage gültig."
+        : "Administrator-Link erstellt: einmalig, 7 Tage gültig.",
+    );
   }
 
   async function copyInviteLink() {
@@ -541,29 +491,12 @@ export default function PeoplePage() {
                       <CircleUserRound aria-hidden="true" />
                     </span>
                     <span>
-                      <strong>Kassenwart</strong>
+                      <strong>Supervisor</strong>
                       <small>Finanzen verwalten</small>
                     </span>
                     <b>
                       {
-                        people.filter((person) =>
-                          person.role.includes("Kassenwart"),
-                        ).length
-                      }
-                    </b>
-                  </div>
-                  <div>
-                    <span className={styles.roleIcon}>
-                      <Users aria-hidden="true" />
-                    </span>
-                    <span>
-                      <strong>Mitglied</strong>
-                      <small>Nur ansehen</small>
-                    </span>
-                    <b>
-                      {
-                        people.filter((person) => person.role === "Mitglied")
-                          .length
+                        people.filter((person) => person.role === "Supervisor").length
                       }
                     </b>
                   </div>
@@ -626,7 +559,6 @@ export default function PeoplePage() {
                   value={newRole}
                   onChange={(event) => setNewRole(event.target.value)}
                 >
-                  <option>Student</option>
                   <option>Supervisor</option>
                   <option>Administrator</option>
                 </select>

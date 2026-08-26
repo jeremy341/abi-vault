@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const updateMemberRoleSchema = z.object({
   clerkUserId: z.string().trim().min(1).max(255),
-  role: z.enum(["admin", "supervisor", "student"]),
+  role: z.enum(["admin", "supervisor"]),
   reason: z.string().trim().min(1).max(1000),
 });
 

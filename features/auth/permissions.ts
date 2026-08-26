@@ -1,10 +1,10 @@
 import "server-only";
 
-export const APP_ROLES = ["admin", "supervisor", "student"] as const;
+export const APP_ROLES = ["admin", "supervisor"] as const;
 export type AppRole = (typeof APP_ROLES)[number];
 
 export const PERMISSIONS = {
-  viewTransparency: ["admin", "supervisor", "student"],
+  viewTransparency: ["admin", "supervisor"],
   viewOperationalTransactions: ["admin", "supervisor"],
   viewReceipts: ["admin", "supervisor"],
   uploadReceipts: ["admin", "supervisor"],

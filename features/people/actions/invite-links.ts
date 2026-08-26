@@ -9,8 +9,7 @@ import { requirePermission } from "@/lib/auth/permissions-server";
 import { inviteLinkRoleSchema } from "@/features/people/schemas/invite-links";
 
 const ROLE_LIMITS = {
-  student: { days: 30, uses: 30 },
-  supervisor: { days: 14, uses: 5 },
+  supervisor: { days: 30, uses: 30 },
   admin: { days: 7, uses: 1 },
 } as const;
 
@@ -92,9 +91,11 @@ export async function acceptRoleInviteLink(token: string) {
 
   if (consumeError || !consumed) return { ok: false as const, error: "LINK_ALREADY_USED" };
 
+  const clerkRole = invite.role === "admin" ? "org:admin" : "org:member";
+
   const { data: existingMembership } = await admin
     .from("committee_memberships")
-    .select("role")
+    .select("role, clerk_role")
     .eq("organization_id", invite.organization_id)
     .eq("clerk_user_id", session.userId)
     .eq("status", "active")
@@ -106,7 +107,7 @@ export async function acceptRoleInviteLink(token: string) {
       await client.organizations.createOrganizationMembership({
         organizationId: invite.organization_id,
         userId: session.userId,
-        role: `org:${invite.role}`,
+        role: clerkRole,
       });
     }
   } catch {
@@ -119,7 +120,7 @@ export async function acceptRoleInviteLink(token: string) {
       organization_id: invite.organization_id,
       clerk_user_id: session.userId,
       role: existingMembership?.role ?? invite.role,
-      clerk_role: existingMembership ? `org:${existingMembership.role}` : `org:${invite.role}`,
+      clerk_role: existingMembership?.clerk_role ?? clerkRole,
       status: "active",
     }, { onConflict: "organization_id,clerk_user_id" });
 

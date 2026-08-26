@@ -51,7 +51,7 @@ const initialCards: DashboardCard[] = [
   {
     id: "bank-1",
     details: {
-      accountName: "Bankkonto",
+      accountName: "Kasse",
       cardNumber: "5789 1234 5678 2847",
       holder: "Mike Smith",
       expiry: "06/21",
@@ -61,7 +61,7 @@ const initialCards: DashboardCard[] = [
     iban: "DE89 3704 0044 0532 0143 21",
     bic: "COBADEFFXXX",
     bankName: "Sparkasse KölnBonn",
-    status: "Bankkonto · API verbunden",
+    status: "Kasse · Kartendarstellung",
     lastSync: "Heute, 14:32 Uhr",
   },
   {
@@ -77,7 +77,7 @@ const initialCards: DashboardCard[] = [
     iban: "DE21 3704 0044 0532 0143 89",
     bic: "COBADEFFXXX",
     bankName: "Sparkasse KölnBonn",
-    status: "Bankkonto · API verbunden",
+    status: "Kasse · Kartendarstellung",
     lastSync: "Heute, 09:40 Uhr",
   },
 ];
@@ -194,7 +194,6 @@ export default function FundsPage() {
   });
   const [auditLogs, setAuditLogs] =
     useState<CashAuditEntry[]>([]);
-  const [copiedField, setCopiedField] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -251,8 +250,8 @@ export default function FundsPage() {
           iban: wallet.connected?.iban_last4 ? `•••• ${wallet.connected.iban_last4}` : "",
           bic: wallet.connected?.bic ?? "",
           bankName: wallet.connected?.display_name ?? "Manuelles Konto",
-          status: wallet.connected ? "Bankkonto · API verbunden" : "Bankkonto · manuell",
-          lastSync: wallet.connected ? "Synchronisierung aktiv" : "Noch nicht synchronisiert",
+          status: "Kasse · Kartendarstellung",
+          lastSync: "Ledger-basiert",
         })));
         const cash = result.items.find((item) => item.type === "cash");
         if (cash) {
@@ -315,17 +314,6 @@ export default function FundsPage() {
 
   function selectCard(index: number) {
     setActiveCardIndex(index);
-  }
-
-  async function copyToClipboard(text: string, fieldId: string) {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedField(fieldId);
-      setNotice("IBAN kopiert.");
-      window.setTimeout(() => setCopiedField(null), 2000);
-    } catch {
-      setNotice("IBAN konnte nicht kopiert werden.");
-    }
   }
 
   async function handleSaveNewCard(details: AccountCardDetails) {
@@ -543,7 +531,7 @@ export default function FundsPage() {
     if (transferDirection === "bank-to-cash") {
       if (amount > (activeCard?.balance ?? 0)) {
         setTransferError(
-          "Nicht genügend Guthaben auf dem Bankkonto verfügbar.",
+          "Nicht genügend Guthaben in der ausgewählten Kasse verfügbar.",
         );
         window.requestAnimationFrame(() => {
           (
@@ -616,7 +604,6 @@ export default function FundsPage() {
         cashBox={cashBox}
         auditLogs={auditLogs}
         activities={[]}
-        copiedField={copiedField}
         euro={euro}
         onSwitchCard={switchCard}
         onSelectCard={selectCard}
@@ -624,7 +611,6 @@ export default function FundsPage() {
         onEditCard={() => setIsEditCardOpen(true)}
         onCountCash={openCountDialog}
         onTransfer={openTransferDialog}
-        onCopy={copyToClipboard}
       />
 
       <AddCardModal
@@ -898,7 +884,7 @@ export default function FundsPage() {
                 </span>
                 <div>
                   <h2>Umbuchung</h2>
-                  <p>Geld zwischen Bankkonto und Barkasse verschieben.</p>
+                <p>Geld zwischen Kassen verschieben.</p>
                 </div>
               </div>
               <button
@@ -927,10 +913,10 @@ export default function FundsPage() {
                     }
                   >
                     <option value="bank-to-cash">
-                      Bankkonto ({euro(activeCard?.balance ?? 0)}) zu Barkasse
+                      Kasse ({euro(activeCard?.balance ?? 0)}) zu Barkasse
                     </option>
                     <option value="cash-to-bank">
-                      Barkasse ({euro(cashBox.balance)}) zu Bankkonto
+                      Barkasse ({euro(cashBox.balance)}) zu Kasse
                     </option>
                   </select>
                 </label>

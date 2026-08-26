@@ -83,12 +83,29 @@ function displayDashboardCategories(snapshot: DashboardSnapshot | null) {
   }));
 }
 
+function primaryCashWallet(snapshot: DashboardSnapshot | null) {
+  return snapshot?.wallets.find((wallet) => wallet.type === "cash") ?? null;
+}
+
+function displayDashboardReviews(snapshot: DashboardSnapshot | null) {
+  if (!snapshot) return [];
+  return snapshot.transactions
+    .filter((item) => item.reviewStatus !== "Geprüft")
+    .map((item) => ({
+      title: item.title,
+      detail: item.receipt ? "Belegstatus offen" : "Bargeldzahlung ohne Beleg",
+      href: "/dashboard/transactions",
+    }));
+}
+
 function DesktopDashboard({ snapshot, loading }: { snapshot: DashboardSnapshot | null; loading: boolean }) {
   const [cardPreviewOpen, setCardPreviewOpen] = useState(false);
   const transactionItems = displayDashboardTransactions(snapshot);
   const goalItems = displayDashboardGoals(snapshot);
   const categoryItems = displayDashboardCategories(snapshot);
-  const cashBalance = snapshot ? snapshot.wallets.filter((wallet) => wallet.type === "cash").reduce((sum, wallet) => sum + Number(wallet.balanceMinor), 0) : 0;
+  const reviewItems = displayDashboardReviews(snapshot);
+  const cashWallet = primaryCashWallet(snapshot);
+  const cashBalance = cashWallet ? Number(cashWallet.balanceMinor) : 0;
   const incomeTotal = snapshot ? snapshot.transactions.filter((item) => Number(item.amountMinor) >= 0).reduce((sum, item) => sum + Number(item.amountMinor), 0) : 0;
   const expenseTotal = snapshot ? snapshot.transactions.filter((item) => Number(item.amountMinor) < 0).reduce((sum, item) => sum + Math.abs(Number(item.amountMinor)), 0) : 0;
   const lastTransaction = formatLastTransaction(snapshot?.transactions[0]?.date);
@@ -100,42 +117,48 @@ function DesktopDashboard({ snapshot, loading }: { snapshot: DashboardSnapshot |
         <div>
           <span>Gesamt verfügbar</span>
           <strong><LoadingText loading={loading}>{displayMinor(String(cashBalance))}</LoadingText></strong>
-          <small>Barkasse</small>
+          <small>{cashWallet?.name ?? "Keine Kasse angelegt"}</small>
         </div>
         <div>
           <span>Einnahmen</span>
           <strong><LoadingText loading={loading}>{displayMinor(String(incomeTotal))}</LoadingText></strong>
-          <small>Aus Barkasse</small>
+          <small>{cashWallet ? `Aus ${cashWallet.name}` : "Keine Daten"}</small>
         </div>
         <div>
           <span>Ausgaben</span>
           <strong><LoadingText loading={loading}>{displayMinor(String(expenseTotal))}</LoadingText></strong>
-          <small>Aus Barkasse</small>
+          <small>{cashWallet ? `Aus ${cashWallet.name}` : "Keine Daten"}</small>
         </div>
         <div>
           <span>Offene Prüfung</span>
-          <strong><LoadingText loading={loading}>4 Vorgänge</LoadingText></strong>
-          <small>3 Belege, 1 Zahlung</small>
+          <strong><LoadingText loading={loading}>{reviewItems.length} Vorgänge</LoadingText></strong>
+          <small>{reviewItems.length ? "Aktive Prüfungen" : "Keine offenen Prüfungen"}</small>
         </div>
       </div>
 
       <div className={desktopStyles.workspace} data-ui-slot="content">
         <div className={desktopStyles.primaryColumn}>
           <article className={desktopStyles.accountPanel} data-ui-slot="primary-panel">
-            <button
-              type="button"
-              className={desktopStyles.accountCard}
-              aria-label="Barkasse anzeigen"
-              onClick={() => setCardPreviewOpen(true)}
-            >
-              <AccountCard details={{ accountName: "Barkasse" }} />
-            </button>
+            {cashWallet ? (
+              <button
+                type="button"
+                className={desktopStyles.accountCard}
+                aria-label={`${cashWallet.name} anzeigen`}
+                onClick={() => setCardPreviewOpen(true)}
+              >
+                <AccountCard details={{ accountName: cashWallet.name }} />
+              </button>
+            ) : (
+              <Link href="/dashboard/funds" className={desktopStyles.accountCard} aria-label="Kasse anlegen">
+                <AccountCard variant="add" />
+              </Link>
+            )}
             <div className={desktopStyles.accountSummary}>
               <div>
-                <span className={desktopStyles.eyebrow}>Barkasse</span>
+                <span className={desktopStyles.eyebrow}>{cashWallet?.name ?? "Keine Kasse angelegt"}</span>
                 <strong><LoadingText loading={loading}>{displayMinor(String(cashBalance))}</LoadingText></strong>
                 <Link className={desktopStyles.accountActivity} href="/dashboard/transactions">
-                  Letzte Transaktion: <LoadingText loading={loading}>{lastTransaction}</LoadingText>
+                  {cashWallet ? <>Letzte Transaktion: <LoadingText loading={loading}>{lastTransaction}</LoadingText></> : "Lege eine Kasse an, um Transaktionen zu verwalten."}
                 </Link>
               </div>
               <div className={desktopStyles.accountActions}>
@@ -153,7 +176,7 @@ function DesktopDashboard({ snapshot, loading }: { snapshot: DashboardSnapshot |
             <header className={desktopStyles.panelHeader}>
               <div>
                 <h2>Letzte Transaktionen</h2>
-                <p>Aktuelle Bewegungen aus allen Konten</p>
+                <p>Aktuelle Bewegungen aus allen Kassen</p>
               </div>
               <Link href="/dashboard/transactions">
                 Alle anzeigen <ArrowRight aria-hidden="true" />
@@ -232,7 +255,7 @@ function DesktopDashboard({ snapshot, loading }: { snapshot: DashboardSnapshot |
                 <h2>Ausgaben</h2>
                 <p>Nach Kategorie</p>
               </div>
-              <span className={desktopStyles.panelValue}>2.503,10 €</span>
+              <span className={desktopStyles.panelValue}>{displayMinor(String(expenseTotal))}</span>
             </header>
             <div className={desktopStyles.spendingRows}>
               <LoadingCollection loading={loading} knownItemCount={categoryItems.length} emptyHeight="7rem" label="Ausgaben werden geladen…">
@@ -255,33 +278,16 @@ function DesktopDashboard({ snapshot, loading }: { snapshot: DashboardSnapshot |
                 <h2>Zu prüfen</h2>
                 <p>Aufgaben mit Handlungsbedarf</p>
               </div>
-              <span className={desktopStyles.reviewCount}>4</span>
+              <span className={desktopStyles.reviewCount}>{reviewItems.length}</span>
             </header>
             <div className={desktopStyles.reviewRows}>
-              <Link href="/dashboard/receipts">
-                <FileText aria-hidden="true" />
-                <span>
-                  <strong>3 Belege prüfen</strong>
-                  <small>Belegstatus offen</small>
-                </span>
-                <ArrowRight aria-hidden="true" />
-              </Link>
-              <Link href="/dashboard/transactions">
-                <Banknote aria-hidden="true" />
-                <span>
-                  <strong>1 Zahlung ohne Beleg</strong>
-                  <small>Bargeldzahlung zuordnen</small>
-                </span>
-                <ArrowRight aria-hidden="true" />
-              </Link>
-              <Link href="/dashboard/funds">
-                <CheckCircle2 aria-hidden="true" />
-                <span>
-                  <strong>Kassenabgleich stimmt</strong>
-                  <small>Zuletzt am 15.05. geprüft</small>
-                </span>
-                <ArrowRight aria-hidden="true" />
-              </Link>
+              {reviewItems.map((item) => (
+                <Link href={item.href} key={item.title}>
+                  <FileText aria-hidden="true" />
+                  <span><strong>{item.title}</strong><small>{item.detail}</small></span>
+                  <ArrowRight aria-hidden="true" />
+                </Link>
+              ))}
             </div>
           </article>
         </aside>
@@ -289,14 +295,14 @@ function DesktopDashboard({ snapshot, loading }: { snapshot: DashboardSnapshot |
 
       {cardPreviewOpen ? (
         <Dialog
-          label="Barkasse anzeigen"
+          label={`${cashWallet?.name ?? "Kasse"} anzeigen`}
           onClose={() => setCardPreviewOpen(false)}
           overlayClassName={desktopStyles.accountOverlay}
           dialogClassName={desktopStyles.accountDialog}
         >
           <header className={desktopStyles.accountDialogHeader}>
             <div>
-              <h2>Barkasse</h2>
+              <h2>{cashWallet?.name ?? "Kasse"}</h2>
               <p>Kartenvorschau</p>
             </div>
             <button
@@ -308,7 +314,7 @@ function DesktopDashboard({ snapshot, loading }: { snapshot: DashboardSnapshot |
             </button>
           </header>
           <div className={desktopStyles.accountDialogCard}>
-            <AccountCard details={{ accountName: "Barkasse" }} />
+            <AccountCard details={{ accountName: cashWallet?.name ?? "Kasse" }} />
           </div>
         </Dialog>
       ) : null}
@@ -320,7 +326,9 @@ function TabletDashboard({ snapshot, loading }: { snapshot: DashboardSnapshot | 
   const transactionItems = displayDashboardTransactions(snapshot);
   const goalItems = displayDashboardGoals(snapshot);
   const categoryItems = displayDashboardCategories(snapshot);
-  const cashBalance = snapshot ? snapshot.wallets.filter((wallet) => wallet.type === "cash").reduce((sum, wallet) => sum + Number(wallet.balanceMinor), 0) : 0;
+  const reviewItems = displayDashboardReviews(snapshot);
+  const cashWallet = primaryCashWallet(snapshot);
+  const cashBalance = cashWallet ? Number(cashWallet.balanceMinor) : 0;
   const lastTransaction = formatLastTransaction(snapshot?.transactions[0]?.date);
   const incomeTotal = snapshot ? snapshot.transactions.filter((item) => Number(item.amountMinor) >= 0).reduce((sum, item) => sum + Number(item.amountMinor), 0) : 0;
   const expenseTotal = snapshot ? snapshot.transactions.filter((item) => Number(item.amountMinor) < 0).reduce((sum, item) => sum + Math.abs(Number(item.amountMinor)), 0) : 0;
@@ -342,7 +350,7 @@ function TabletDashboard({ snapshot, loading }: { snapshot: DashboardSnapshot | 
         </div>
         <div className={styles.tabletMetric}>
           <span>Zu prüfen</span>
-          <strong>4 Vorgänge</strong>
+          <strong>{reviewItems.length} Vorgänge</strong>
         </div>
       </div>
 
@@ -350,10 +358,10 @@ function TabletDashboard({ snapshot, loading }: { snapshot: DashboardSnapshot | 
         <div className={styles.tabletPrimary}>
           <article className={styles.tabletAccount}>
             <div className={styles.tabletCardSlot}>
-              <AccountCard details={{ accountName: "Barkasse" }} />
+              {cashWallet ? <AccountCard details={{ accountName: cashWallet.name }} /> : <Link href="/dashboard/funds" aria-label="Kasse anlegen"><AccountCard variant="add" /></Link>}
             </div>
             <div className={styles.tabletBalance}>
-              <span>Barkasse</span>
+              <span>{cashWallet?.name ?? "Keine Kasse angelegt"}</span>
               <strong><LoadingText loading={loading}>{displayMinor(String(cashBalance))}</LoadingText></strong>
               <Link className={styles.tabletActivity} href="/dashboard/transactions">
                 Letzte Transaktion: <LoadingText loading={loading}>{lastTransaction}</LoadingText>
@@ -384,7 +392,7 @@ function TabletDashboard({ snapshot, loading }: { snapshot: DashboardSnapshot | 
               </Link>
             </header>
             <div className={styles.tabletTransactionList} data-ui-slot="list-body">
-              <LoadingCollection loading={loading} knownItemCount={transactionItems.length} emptyHeight="12rem" label="Transaktionen werden geladen…">
+              <LoadingCollection loading={loading} knownItemCount={transactionItems.length} emptyHeight="100%" label="Transaktionen werden geladen…">
               {transactionItems.slice(0, 6).map((item) => (
                 <div className={styles.tabletTransaction} key={item.title}>
                   <span>{item.title}</span>
@@ -450,29 +458,16 @@ function TabletDashboard({ snapshot, loading }: { snapshot: DashboardSnapshot | 
           <article className={styles.tabletAttention}>
             <header className={styles.tabletSectionHeader}>
               <h2>Aufmerksamkeit</h2>
-              <span className={styles.sectionMeta}>4 offen</span>
+              <span className={styles.sectionMeta}>{reviewItems.length} offen</span>
             </header>
             <div className={styles.tabletAttentionList}>
-              <Link
-                href="/dashboard/receipts"
-                className={styles.tabletAttentionRow}
-              >
-                <AlertTriangle aria-hidden="true" className={styles.negative} />
-                <span>
-                  <strong>3 Belege prüfen</strong>
-                </span>
-                <ArrowRight aria-hidden="true" />
-              </Link>
-              <Link
-                href="/dashboard/transactions"
-                className={styles.tabletAttentionRow}
-              >
-                <FileText aria-hidden="true" />
-                <span>
-                  <strong>1 Zahlung ohne Beleg</strong>
-                </span>
-                <ArrowRight aria-hidden="true" />
-              </Link>
+              {reviewItems.map((item) => (
+                <Link href={item.href} className={styles.tabletAttentionRow} key={item.title}>
+                  <FileText aria-hidden="true" />
+                  <span><strong>{item.title}</strong></span>
+                  <ArrowRight aria-hidden="true" />
+                </Link>
+              ))}
             </div>
           </article>
         </aside>
@@ -484,7 +479,9 @@ function TabletDashboard({ snapshot, loading }: { snapshot: DashboardSnapshot | 
 function PhoneDashboard({ snapshot, loading }: { snapshot: DashboardSnapshot | null; loading: boolean }) {
   const transactionItems = displayDashboardTransactions(snapshot);
   const goalItems = displayDashboardGoals(snapshot);
-  const cashBalance = snapshot ? snapshot.wallets.filter((wallet) => wallet.type === "cash").reduce((sum, wallet) => sum + Number(wallet.balanceMinor), 0) : 0;
+  const reviewItems = displayDashboardReviews(snapshot);
+  const cashWallet = primaryCashWallet(snapshot);
+  const cashBalance = cashWallet ? Number(cashWallet.balanceMinor) : 0;
   const lastTransaction = formatLastTransaction(snapshot?.transactions[0]?.date);
   return (
     <section className={styles.phonePage} aria-busy={loading}>
@@ -493,8 +490,8 @@ function PhoneDashboard({ snapshot, loading }: { snapshot: DashboardSnapshot | n
         <span className={styles.phoneEyebrow}>Gesamt verfügbar</span>
         <strong><LoadingText loading={loading}>{displayMinor(String(cashBalance))}</LoadingText></strong>
         <div className={styles.phoneBalanceMeta}>
-          <span>Barkasse</span>
-          <b>Abgleich stimmt</b>
+          <span>{cashWallet?.name ?? "Keine Kasse angelegt"}</span>
+          {cashWallet ? <b>Abgleich stimmt</b> : null}
         </div>
       </div>
 
@@ -516,7 +513,7 @@ function PhoneDashboard({ snapshot, loading }: { snapshot: DashboardSnapshot | n
       <div className={styles.phoneAccountStrip}>
         <div>
           <Link href="/dashboard/funds">
-            <strong>Barkasse</strong>
+            <strong>{cashWallet?.name ?? "Keine Kasse angelegt"}</strong>
           </Link>
           <Link href="/dashboard/transactions">
             <span>Letzte Transaktion: {lastTransaction}</span>
@@ -586,22 +583,16 @@ function PhoneDashboard({ snapshot, loading }: { snapshot: DashboardSnapshot | n
       <section className={styles.phoneSection}>
         <header className={styles.phoneSectionHeader}>
           <h2>Zu prüfen</h2>
-          <span className={styles.sectionMeta}>4 Vorgänge</span>
+          <span className={styles.sectionMeta}>{reviewItems.length} Vorgänge</span>
         </header>
         <div className={styles.phoneAttentionList}>
-          <Link href="/dashboard/receipts" className={styles.phoneAttentionRow}>
-            <AlertTriangle aria-hidden="true" className={styles.negative} />
-            <span>3 Belege warten auf Prüfung</span>
-            <ArrowRight aria-hidden="true" />
-          </Link>
-          <Link
-            href="/dashboard/transactions"
-            className={styles.phoneAttentionRow}
-          >
-            <WalletCards aria-hidden="true" />
-            <span>1 Bargeldzahlung ohne Beleg</span>
-            <ArrowRight aria-hidden="true" />
-          </Link>
+          {reviewItems.map((item) => (
+            <Link href={item.href} className={styles.phoneAttentionRow} key={item.title}>
+              <FileText aria-hidden="true" />
+              <span>{item.title}</span>
+              <ArrowRight aria-hidden="true" />
+            </Link>
+          ))}
         </div>
       </section>
     </section>

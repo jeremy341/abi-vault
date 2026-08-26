@@ -35,18 +35,6 @@ values
   ('org_local_demo', 'Verkäufe', 'income', 50)
 on conflict (organization_id, name, kind) do nothing;
 
-insert into public.wallets (
-  organization_id,
-  name,
-  type,
-  opening_balance_minor,
-  responsible_clerk_user_id,
-  created_by
-)
-values
-  ('org_local_demo', 'Barkasse', 'cash', 347600, 'user_local_supervisor', 'user_local_admin')
-on conflict do nothing;
-
 insert into public.ledger_accounts (organization_id, type, name, wallet_id)
 select wallet.organization_id, 'wallet', wallet.name, wallet.id
 from public.wallets wallet

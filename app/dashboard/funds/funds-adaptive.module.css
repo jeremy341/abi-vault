@@ -289,10 +289,7 @@
 .desktopOverview {
   display: grid;
   min-height: 0;
-  grid-template-columns: minmax(15rem, 0.72fr) minmax(28rem, 1.45fr) minmax(
-      18rem,
-      0.88fr
-    );
+  grid-template-columns: minmax(0, 1fr) minmax(28rem, 2fr) minmax(18rem, 1fr);
   grid-template-rows: minmax(16rem, 0.95fr) minmax(12.5rem, 1.05fr);
   gap: 0.75rem;
 }
@@ -304,6 +301,7 @@
 .desktopPrimaryDetail {
   min-width: 0;
   min-height: 0;
+  padding-right: 0.75rem;
 }
 
 .desktopPrimaryDetail > * {
@@ -313,6 +311,11 @@
 .desktopOverview > .activityPanel {
   grid-row: 2;
   grid-column: 2 / 4;
+}
+
+.desktopOverview > .reconciliation {
+  margin-left: -0.75rem;
+  width: calc(100% + 0.75rem);
 }
 
 .desktopAccounts,
@@ -774,9 +777,18 @@
 .tabletOverview {
   display: grid;
   min-height: 0;
-  grid-template-columns: minmax(0, 1.25fr) minmax(17rem, 0.75fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   grid-template-rows: auto minmax(13rem, 1fr) minmax(8rem, 0.62fr);
   gap: 0.5rem;
+}
+
+.tabletOverview > .tabletPrimaryDetail {
+  padding-right: 0.5rem;
+}
+
+.tabletOverview > .reconciliation {
+  margin-left: -0.5rem;
+  width: calc(100% + 0.5rem);
 }
 
 .tabletOverview > .activityPanel .panelHeader {
@@ -1219,12 +1231,18 @@
   }
 
   .desktopOverview {
-    grid-template-columns: minmax(13rem, 0.55fr) minmax(39rem, 1.6fr) minmax(
-        15rem,
-        0.65fr
-      );
+    grid-template-columns: minmax(0, 1fr) minmax(28rem, 2fr) minmax(15rem, 1fr);
     grid-template-rows: minmax(15rem, 0.98fr) minmax(11rem, 1.02fr);
     gap: 0.6rem;
+  }
+
+  .desktopPrimaryDetail {
+    padding-right: 0.6rem;
+  }
+
+  .desktopOverview > .reconciliation {
+    margin-left: -0.6rem;
+    width: calc(100% + 0.6rem);
   }
 
   .desktopAccounts,
@@ -1287,6 +1305,15 @@
     gap: 0.5rem;
   }
 
+  .desktopPrimaryDetail {
+    padding-right: 1rem;
+  }
+
+  .desktopOverview > .reconciliation {
+    margin-left: -1rem;
+    width: calc(100% + 1rem);
+  }
+
   .panelHeader {
     min-height: 3.2rem;
     padding-block: 0.45rem;
@@ -1312,12 +1339,14 @@
   }
 
   .desktopOverview {
-    grid-template-columns: minmax(19rem, 0.72fr) minmax(40rem, 1.6fr) minmax(
-        22rem,
-        0.85fr
-      );
+    grid-template-columns: minmax(0, 1fr) minmax(40rem, 2fr) minmax(22rem, 1fr);
     grid-template-rows: minmax(21rem, 0.95fr) minmax(16rem, 1.05fr);
     gap: 1rem;
+  }
+
+  .desktopOverview > .reconciliation {
+    margin-left: -1rem;
+    width: calc(100% + 1rem);
   }
 
   .desktopAccounts {

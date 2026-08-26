@@ -128,7 +128,7 @@ export default function AddCardModal({
     const nextErrors: FormErrors = {};
 
     if (!values.accountName.trim()) {
-      nextErrors.accountName = "Bitte einen Kontonamen eingeben.";
+      nextErrors.accountName = "Bitte einen Kassennamen eingeben.";
     }
     if (values.cardNumber.replace(/\D/g, "").length !== 16) {
       nextErrors.cardNumber = "Die Kartennummer muss 16 Ziffern enthalten.";
@@ -180,7 +180,7 @@ export default function AddCardModal({
         <header className={styles.header}>
           <div className={styles.heading}>
             <h2 id="add-card-title">Karte hinzufügen</h2>
-            <p>Verbinde ein weiteres Konto mit der Klassenkasse.</p>
+            <p>Lege eine weitere Kasse mit eigener Kartendarstellung an.</p>
           </div>
           <button
             type="button"
@@ -198,7 +198,7 @@ export default function AddCardModal({
               cardColor={selectedColor}
               details={{
                 ...values,
-                accountName: values.accountName || "Bankkonto",
+                accountName: values.accountName || "Neue Kasse",
                 cardNumber: values.cardNumber || previewCardNumber,
                 holder: values.holder || "Mike Smith",
                 expiry: values.expiry || "06/21",
@@ -236,7 +236,7 @@ export default function AddCardModal({
             </h3>
             <div className={styles.formGrid}>
               <Field
-                label="Kontoname"
+                label="Kassenname"
                 error={errors.accountName}
                 errorId="add-account-name-error"
               >
@@ -255,7 +255,7 @@ export default function AddCardModal({
                       filterLetters(event.target.value, 26),
                     )
                   }
-                  placeholder="Zum Beispiel Klassenkonto"
+                  placeholder="Zum Beispiel Getränkekasse"
                 />
               </Field>
               <Field

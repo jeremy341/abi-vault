@@ -223,6 +223,11 @@
   grid-template-rows: repeat(5, minmax(0, 1fr));
   padding: 0.2rem 1rem 0.5rem;
 }
+.tabletTransactionList > :global([data-loading-collection="true"]) {
+  grid-row: 1 / -1;
+  min-height: 0;
+  height: 100%;
+}
 
 .tabletTransaction {
   display: grid;

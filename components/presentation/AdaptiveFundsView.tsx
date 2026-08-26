@@ -8,7 +8,6 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
-  Copy,
   CreditCard,
   Pencil,
   Plus,
@@ -33,6 +32,7 @@ type FundsCard = {
 };
 
 type FundsCashBox = {
+  id: string;
   name: string;
   balance: number;
   responsible: string;
@@ -69,7 +69,6 @@ type AdaptiveFundsViewProps = {
   cashBox: FundsCashBox;
   auditLogs: FundsAudit[];
   activities: FundsActivity[];
-  copiedField?: string | null;
   euro: (value: number) => string;
   onSwitchCard: (direction: -1 | 1) => void;
   onSelectCard: (index: number) => void;
@@ -77,7 +76,6 @@ type AdaptiveFundsViewProps = {
   onEditCard: () => void;
   onCountCash: () => void;
   onTransfer: () => void;
-  onCopy: (value: string, field: string) => void;
 };
 
 type FundsSection = "overview" | "accounts" | "audit";
@@ -95,7 +93,7 @@ function FundsTabs({
 }) {
   const tabs: Array<{ value: FundsSection; label: string }> = [
     { value: "overview", label: "Übersicht" },
-    { value: "accounts", label: "Konten" },
+    { value: "accounts", label: "Kassen" },
     { value: "audit", label: "Prüfung" },
   ];
 
@@ -154,12 +152,12 @@ function SummaryRail({
       <div>
         <span>Gesamt verfügbar</span>
         <strong>{euro(total)}</strong>
-        <small>{cards.length} Bankkonten und Barkasse</small>
+        <small>{cards.length + 1} Kassen insgesamt</small>
       </div>
       <div>
         <span>Bankguthaben</span>
         <strong>{euro(bankBalance)}</strong>
-        <small>{cards.length} verbundene Konten</small>
+        <small>Weitere Kassenkarten</small>
       </div>
       <div>
         <span>Barkasse</span>
@@ -209,17 +207,17 @@ function AccountList({
     >
       <header className={styles.panelHeader}>
         <div>
-          <h2 id="account-list-title">Konten</h2>
-          <p>{cards.length + 1} Geldbestände</p>
+          <h2 id="account-list-title">Kassen</h2>
+          <p>{cards.length + (cashBox.id ? 1 : 0)} Geldbestände</p>
         </div>
-        <button
+        {cashBox.id ? <button
           type="button"
           className={styles.iconAction}
           aria-label="Karte hinzufügen"
           onClick={onAddCard}
         >
           <Plus aria-hidden="true" />
-        </button>
+        </button> : null}
       </header>
       <div className={styles.accountList}>
         {cards.map((card, index) => (
@@ -247,7 +245,7 @@ function AccountList({
             </span>
           </button>
         ))}
-        <button
+        {cashBox.id ? <button
           type="button"
           className={styles.accountRow}
           aria-pressed={cashSelected}
@@ -266,10 +264,10 @@ function AccountList({
               {cashBox.countStatus === "matched" ? "Abgeglichen" : "Prüfen"}
             </small>
           </span>
-        </button>
+        </button> : null}
       </div>
       <div className={styles.accountListFooter}>
-        <span>Bank und Bargeld</span>
+        <span>Alle Kassen</span>
         <strong>{euro(totalBankBalance(cards) + cashBox.balance)}</strong>
       </div>
     </section>
@@ -345,8 +343,8 @@ function CardStage({
       <div className={styles.cardPosition}>
         <span>
           {cards.length
-            ? `Karte ${activeCardIndex + 1} von ${cards.length}`
-            : "Keine Karte verbunden"}
+            ? `Kasse ${activeCardIndex + 1} von ${cards.length}`
+            : "Keine Kasse angelegt"}
         </span>
       </div>
     </div>
@@ -360,22 +358,22 @@ function BankDetail({
   props: AdaptiveFundsViewProps;
   compact?: boolean;
 }) {
-  const { activeCard, copiedField, euro } = props;
+  const { activeCard, euro } = props;
 
   if (!activeCard) {
     return (
       <section className={styles.emptyAccount} role="status">
         <WalletCards aria-hidden="true" />
-        <h2>Keine Karte verbunden</h2>
+        <h2>Keine Kasse angelegt</h2>
         <p>
-          Füge eine Bankkarte hinzu, um Kontodaten und Guthaben zu verwalten.
+          Lege eine Kasse an, um Bestand und Kartendarstellung zu verwalten.
         </p>
         <button
           type="button"
           className={styles.primaryAction}
           onClick={props.onAddCard}
         >
-          <Plus aria-hidden="true" /> Karte hinzufügen
+          <Plus aria-hidden="true" /> Kasse hinzufügen
         </button>
       </section>
     );
@@ -388,12 +386,12 @@ function BankDetail({
       <header className={styles.panelHeader}>
         <div>
           <h2>{activeCard.details.accountName}</h2>
-          <p>{activeCard.status}</p>
+          <p>Kartendarstellung für diese Kasse</p>
         </div>
         <button
           type="button"
           className={styles.iconAction}
-          aria-label="Kontodaten bearbeiten"
+          aria-label="Kasse bearbeiten"
           onClick={props.onEditCard}
         >
           <Pencil aria-hidden="true" />
@@ -413,37 +411,13 @@ function BankDetail({
             >
               <ArrowRightLeft aria-hidden="true" /> Umbuchen
             </button>
-            <button
-              type="button"
-              className={styles.secondaryAction}
-              aria-label="IBAN kopieren"
-              onClick={() => props.onCopy(activeCard.iban, "iban")}
-            >
-              <Copy aria-hidden="true" />
-              {copiedField === "iban" ? "Kopiert" : "IBAN"}
-            </button>
           </div>
         </div>
       </div>
       {!compact ? (
-        <dl className={styles.bankMetadata}>
-          <div>
-            <dt>Bank</dt>
-            <dd>{activeCard.bankName}</dd>
-          </div>
-          <div>
-            <dt>IBAN</dt>
-            <dd>{activeCard.iban}</dd>
-          </div>
-          <div>
-            <dt>BIC</dt>
-            <dd>{activeCard.bic}</dd>
-          </div>
-          <div>
-            <dt>Inhaber</dt>
-            <dd>{activeCard.details.holder}</dd>
-          </div>
-        </dl>
+        <p className={styles.cardPresentationNote}>
+          Die Kartendaten dienen ausschließlich der visuellen Darstellung.
+        </p>
       ) : null}
     </section>
   );
@@ -561,7 +535,7 @@ function ActivityPanel({
       <header className={styles.panelHeader}>
         <div>
           <h2>Letzte Aktivitäten</h2>
-          <p>Bankkonto und Barkasse</p>
+          <p>Bewegungen und Kassenprüfungen</p>
         </div>
         <Activity aria-hidden="true" />
       </header>
@@ -712,7 +686,7 @@ function DesktopFunds(props: AdaptiveFundsViewProps) {
         <div
           className={styles.desktopAccounts}
           role="tabpanel"
-          aria-label="Konten"
+          aria-label="Kassen"
         >
           <AccountList
             {...props}
@@ -754,7 +728,7 @@ function TabletAccountSelector({
   return (
     <div
       className={styles.tabletAccountSelector}
-      aria-label="Konten auswählen"
+      aria-label="Kassen auswählen"
     >
       {props.cards.map((card, index) => (
         <button
@@ -770,7 +744,7 @@ function TabletAccountSelector({
           </span>
         </button>
       ))}
-      <button
+      {props.cashBox.id ? <button
         type="button"
         aria-pressed={cashSelected}
         onClick={onSelectCash}
@@ -780,13 +754,13 @@ function TabletAccountSelector({
           <strong>Barkasse</strong>
           <small>{props.euro(props.cashBox.balance)}</small>
         </span>
-      </button>
+      </button> : null}
       <button
         type="button"
         className={styles.addAccountButton}
         onClick={props.onAddCard}
       >
-        <Plus aria-hidden="true" /> <span>Karte</span>
+        <Plus aria-hidden="true" /> <span>Kasse</span>
       </button>
     </div>
   );
@@ -835,7 +809,7 @@ function TabletFunds(props: AdaptiveFundsViewProps) {
         <div
           className={styles.tabletAccounts}
           role="tabpanel"
-          aria-label="Konten"
+          aria-label="Kassen"
         >
           <AccountList
             {...props}
@@ -870,8 +844,8 @@ function PhoneAccountCard(props: AdaptiveFundsViewProps) {
       {props.activeCard ? (
         <div className={styles.phoneAccountSummary}>
           <span>
-            <strong>{props.activeCard.details.accountName}</strong>
-            <small>{props.activeCard.status}</small>
+          <strong>{props.activeCard.details.accountName}</strong>
+            <small>Kartendarstellung</small>
           </span>
           <b>{props.euro(props.activeCard.balance)}</b>
         </div>
@@ -980,13 +954,13 @@ function PhoneFunds(props: AdaptiveFundsViewProps) {
         <section
           className={styles.phoneSection}
           role="tabpanel"
-          aria-label="Konten"
+          aria-label="Kassen"
         >
           <header>
-            <h2>Konten</h2>
+            <h2>Kassen</h2>
             <button
               type="button"
-              aria-label="Karte hinzufügen"
+              aria-label="Kasse hinzufügen"
               onClick={props.onAddCard}
             >
               <Plus aria-hidden="true" />
@@ -1012,29 +986,20 @@ function PhoneFunds(props: AdaptiveFundsViewProps) {
           {props.activeCard ? (
             <dl className={styles.phoneBankDetails}>
               <div>
-                <dt>IBAN</dt>
-                <dd>{props.activeCard.iban}</dd>
+                <dt>Darstellung</dt>
+                <dd>Kassenkarte</dd>
               </div>
               <div>
-                <dt>BIC</dt>
-                <dd>{props.activeCard.bic}</dd>
+                <dt>Bestand</dt>
+                <dd>{props.euro(props.activeCard.balance)}</dd>
               </div>
               <div>
-                <dt>Synchronisiert</dt>
-                <dd>{props.activeCard.lastSync}</dd>
+                <dt>Verwaltung</dt>
+                <dd>Ledger-basiert</dd>
               </div>
               <div className={styles.phoneDetailActions}>
                 <button type="button" onClick={props.onEditCard}>
                   <Pencil aria-hidden="true" /> Bearbeiten
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    props.onCopy(props.activeCard?.iban ?? "", "iban")
-                  }
-                >
-                  <Copy aria-hidden="true" />
-                  {props.copiedField === "iban" ? "Kopiert" : "Kopieren"}
                 </button>
               </div>
             </dl>

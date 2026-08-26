@@ -32,14 +32,14 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { useResponsivePageSize } from "@/hooks/use-responsive-page-size";
 import { usePresentationMode } from "@/hooks/use-presentation-mode";
 import phoneStyles from "./transactions-phone.module.css";
-import { listTransactionsForCurrentOrganization } from "@/features/finance/actions/queries";
+import { listTransactionsForCurrentOrganization, listWalletsForCurrentOrganization } from "@/features/finance/actions/queries";
 import { createManualTransactionFromUi } from "@/features/finance/actions/manual-ui";
 
 type Category = "Material" | "Sonstiges" | "Veranstaltung";
 type FilterType = "Einnahmen" | "Ausgaben";
 type ReceiptFilter = "Alle" | "Vorhanden" | "Fehlt";
 type ReviewFilter = "Alle" | "Geprüft" | "Zu prüfen";
-type AccountFilter = "Barkasse";
+type AccountFilter = string;
 type Transaction = {
   id: number | string;
   title: string;
@@ -49,6 +49,7 @@ type Transaction = {
   receipt?: string;
   reviewStatus: "Geprüft" | "Zu prüfen";
   account: AccountFilter;
+  walletId: string | null;
   tone: "violet" | "green" | "orange";
   icon: typeof FileText;
 };
@@ -188,6 +189,44 @@ function StyledDropdown({
       className={className}
       placement={placement}
     />
+  );
+}
+
+function CashRegisterCombobox({
+  value,
+  options,
+  onChange,
+}: {
+  value: string;
+  options: Array<{ id: string; name: string }>;
+  onChange: (value: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const selected = options.find((option) => option.id === value);
+  const filtered = options.filter((option) => option.name.toLowerCase().includes(query.trim().toLowerCase()));
+  return (
+    <div className={styles.formField}>
+      <span>Kasse</span>
+      <div className={styles.cashRegisterCombobox}>
+        <button type="button" className={styles.cashRegisterTrigger} aria-haspopup="listbox" aria-expanded={open} onClick={() => setOpen((current) => !current)}>
+          <span>{selected?.name ?? "Kasse auswählen"}</span>
+          <span aria-hidden="true">⌄</span>
+        </button>
+        {open ? (
+          <div className={styles.cashRegisterMenu}>
+            <input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Kasse suchen …" aria-label="Kassen suchen" />
+            <div role="listbox" aria-label="Kassen">
+              {filtered.length ? filtered.map((option) => (
+                <button type="button" role="option" aria-selected={option.id === value} key={option.id} onClick={() => { onChange(option.id); setOpen(false); setQuery(""); }}>
+                  {option.name}
+                </button>
+              )) : <span className={styles.cashRegisterEmpty}>Keine Kasse gefunden.</span>}
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </div>
   );
 }
 
@@ -345,6 +384,8 @@ function PhoneTransactionsView({
 export default function TransactionsPage() {
   const mode = usePresentationMode();
   const [items, setItems] = useState<Transaction[]>([]);
+  const [cashRegisters, setCashRegisters] = useState<Array<{ id: string; name: string }>>([]);
+  const [selectedCashRegisterId, setSelectedCashRegisterId] = useState("");
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     let active = true;
@@ -360,6 +401,7 @@ export default function TransactionsPage() {
           receipt: item.receipt ? "receipt" : undefined,
           reviewStatus: item.reviewStatus as Transaction["reviewStatus"],
           account: "Barkasse",
+          walletId: item.walletId,
           tone: item.type === "income" ? "green" : item.type === "expense" ? "violet" : "orange",
           icon: item.type === "income" ? HandCoins : item.type === "expense" ? FileText : Equal,
         })));
@@ -371,6 +413,16 @@ export default function TransactionsPage() {
     return () => {
       active = false;
     };
+  }, []);
+  useEffect(() => {
+    let active = true;
+    listWalletsForCurrentOrganization().then((result) => {
+      if (!active || !result.ok) return;
+      const next = result.items.map((item) => ({ id: item.id, name: item.name }));
+      setCashRegisters(next);
+      setSelectedCashRegisterId((current) => current || next[0]?.id || "");
+    }).catch(() => undefined);
+    return () => { active = false; };
   }, []);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<"Alle" | Category>("Alle");
@@ -560,13 +612,13 @@ export default function TransactionsPage() {
   }
   async function addTransaction() {
     const amount = Number(newAmount.replace(",", "."));
-    if (!newTitle.trim() || !Number.isFinite(amount)) return;
+    if (!newTitle.trim() || !Number.isFinite(amount) || !selectedCashRegisterId) return;
     const persisted = await createManualTransactionFromUi({
       title: newTitle.trim(),
       amount: newAmount,
       direction: newType === "Einnahme" ? "income" : "expense",
       categoryName: newType === "Einnahme" ? "Verkäufe" : newCategory,
-      walletName: "Barkasse",
+      walletId: selectedCashRegisterId,
     });
     if (!persisted.ok) return;
     setItems((current) => [
@@ -578,6 +630,7 @@ export default function TransactionsPage() {
         amount: newType === "Ausgabe" ? -Math.abs(amount) : Math.abs(amount),
         reviewStatus: "Zu prüfen",
         account: "Barkasse",
+        walletId: selectedCashRegisterId,
         tone: newType === "Einnahme" ? "green" : "violet",
         icon: newType === "Einnahme" ? HandCoins : FileText,
       },
@@ -1096,6 +1149,7 @@ export default function TransactionsPage() {
                 placeholder="z. B. Sponsoring Schule"
               />
             </label>
+            <CashRegisterCombobox value={selectedCashRegisterId} options={cashRegisters} onChange={setSelectedCashRegisterId} />
             <div className={styles.dateFields}>
               <StyledDropdown
                 ariaLabel="Typ auswählen"

@@ -24,7 +24,7 @@ export default function AccountCard({
   cardColor,
   details,
 }: AccountCardProps) {
-  const accountName = details?.accountName || "Bankkonto";
+  const accountName = details?.accountName || "Kasse";
   const cardNumber = maskCardNumber(details?.cardNumber || previewCardNumber);
   const holder = details?.holder || "Mike Smith";
   const expiry = details?.expiry || "06/21";

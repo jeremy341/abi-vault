@@ -63,7 +63,7 @@ const navigationItems = [
     icon: Target,
   },
   {
-    label: "Kasse & Konten",
+    label: "Kassen",
     shortLabel: "Kasse",
     href: "/dashboard/funds",
     icon: WalletCards,
@@ -107,7 +107,7 @@ const pageInformation: Record<string, { title: string; description: string }> =
       description: "Sparziele planen und Fortschritte verfolgen.",
     },
     "/dashboard/funds": {
-      title: "Kasse & Konten",
+      title: "Kassen",
       description: "Barkasse und Kassenbestand verwalten.",
     },
     "/dashboard/reports": {

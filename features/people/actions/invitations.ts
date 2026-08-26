@@ -13,7 +13,7 @@ export async function inviteMember(input: unknown) {
     const invitation = await client.organizations.createOrganizationInvitation({
       organizationId: context.organizationId,
       emailAddress: parsed.data.email,
-      role: `org:${parsed.data.role}`,
+      role: parsed.data.role === "admin" ? "org:admin" : "org:member",
       inviterUserId: context.clerkUserId,
       expiresInDays: 30,
     });

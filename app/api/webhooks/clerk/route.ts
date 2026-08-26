@@ -21,7 +21,7 @@ function primaryEmail(data: {
 function applicationRoleFromClerkRole(role: string | null | undefined) {
   if (role === "org:admin" || role === "admin") return "admin" as const;
   if (role === "org:supervisor" || role === "supervisor") return "supervisor" as const;
-  return "student" as const;
+  return "supervisor" as const;
 }
 
 async function recordWebhook(

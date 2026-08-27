@@ -619,14 +619,14 @@ function PhoneReceiptsView({
               >
                 {receipt.status}
               </small>
-              <RowActionMenu
-                label={receipt.file}
-                canEdit={receipt.canEdit}
-                canDelete={receipt.canDelete}
-                onEdit={() => onEdit(receipt)}
-                onDelete={() => onDelete(receipt)}
-              />
             </span>
+            <RowActionMenu
+              label={receipt.file}
+              canEdit={receipt.canEdit}
+              canDelete={receipt.canDelete}
+              onEdit={() => onEdit(receipt)}
+              onDelete={() => onDelete(receipt)}
+            />
           </article>
           )) : <div className={phoneStyles.empty}>Keine Belege gefunden.</div>}
         </LoadingCollection>

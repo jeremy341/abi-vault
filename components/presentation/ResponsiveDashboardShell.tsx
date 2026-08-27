@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import {
   BarChart3,
   Bell,
@@ -31,6 +31,10 @@ import {
 } from "@/components/ui/sheet";
 import { usePresentationMode } from "@/hooks/use-presentation-mode";
 import styles from "./presentation.module.css";
+
+const subscribeToHydration = () => () => {};
+const getClientHydrationState = () => true;
+const getServerHydrationState = () => false;
 
 const ClerkUserButton = dynamic(
   () => import("@clerk/nextjs").then((module) => module.UserButton),
@@ -193,13 +197,21 @@ function PhoneTopbar({ pathname }: { pathname: string }) {
         <p>{page.description}</p>
       </div>
       <div className={styles.phoneActions}>
-        <button
-          type="button"
-          className={styles.iconButton}
-          aria-label="Benachrichtigungen"
-        >
-          <Bell aria-hidden="true" />
-        </button>
+        <Sheet>
+          <SheetTrigger
+            className={styles.iconButton}
+            aria-label="Benachrichtigungen"
+          >
+            <Bell aria-hidden="true" />
+          </SheetTrigger>
+          <SheetContent side="bottom" className={styles.phoneSheet}>
+            <div className={styles.phoneSheetHandle} aria-hidden="true" />
+            <SheetHeader>
+              <SheetTitle>Benachrichtigungen</SheetTitle>
+              <SheetDescription>Keine neuen Hinweise.</SheetDescription>
+            </SheetHeader>
+          </SheetContent>
+        </Sheet>
         <ClerkUserButton />
       </div>
     </header>
@@ -452,6 +464,38 @@ export default function ResponsiveDashboardShell({
 }) {
   const mode = usePresentationMode();
   const pathname = usePathname();
+  const shellReady = useSyncExternalStore(
+    subscribeToHydration,
+    getClientHydrationState,
+    getServerHydrationState,
+  );
+
+  if (!shellReady) {
+    return (
+      <div className={styles.presentationFallback} aria-hidden="true">
+        <div className={styles.presentationFallbackRail}>
+          <span className={styles.presentationFallbackLogo} />
+          <span />
+          <span />
+          <span />
+          <span />
+          <span />
+        </div>
+        <div className={styles.presentationFallbackWorkspace}>
+          <div className={styles.presentationFallbackTopbar}>
+            <span />
+            <span />
+            <span />
+          </div>
+          <div className={styles.presentationFallbackContent}>
+            <span />
+            <span />
+            <span />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (mode === "desktop") {
     return <DesktopShell pathname={pathname}>{children}</DesktopShell>;

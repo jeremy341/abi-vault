@@ -125,11 +125,6 @@ function PhonePeopleView({
           <b><LoadingText loading={loading}>{supervisors}</LoadingText></b>
           <span>Finanzen</span>
         </div>
-        <div className={phoneStyles.role}>
-          <strong>Rollen</strong>
-          <b><LoadingText loading={loading}>{admins + supervisors}</LoadingText></b>
-          <span>Admin und Supervisor</span>
-        </div>
       </section>
     </div>
   );

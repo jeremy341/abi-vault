@@ -113,14 +113,14 @@ export default function AccountCard({
             <div className={styles.cardMeta}>
               <div>
                 <span className={`${styles.cardMetaLabel} ${isLightCard ? "text-black/55" : "text-white/75"}`}>
-                  Card holder
+                  Inhaber
                 </span>
                 <span className={styles.cardMetaValue}>{holder}</span>
               </div>
 
               <div>
                 <span className={`${styles.cardMetaLabel} ${isLightCard ? "text-black/55" : "text-white/75"}`}>
-                  Expire date
+                  Gültig bis
                 </span>
                 <span className={styles.cardMetaValue}>{expiry}</span>
               </div>

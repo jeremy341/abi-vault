@@ -114,6 +114,11 @@ function PhoneReportsView({
   onExport: (format: string) => void;
 }) {
   const [tab, setTab] = useState<PhoneReportTab>("overview");
+  const periodLabel = period === "3-monate"
+    ? "3 Monate"
+    : period === "jahr"
+      ? "Dieses Jahr"
+      : "6 Monate";
 
   return (
     <section className={phoneStyles.root} aria-busy={loading}>
@@ -133,7 +138,10 @@ function PhoneReportsView({
             key={value}
             type="button"
             role="tab"
+            id={`reports-tab-${value}`}
             aria-selected={tab === value}
+            aria-controls={`reports-panel-${value}`}
+            tabIndex={tab === value ? 0 : -1}
             className={tab === value ? phoneStyles.activeTab : ""}
             onClick={() => setTab(value as PhoneReportTab)}
             disabled={loading}
@@ -144,7 +152,12 @@ function PhoneReportsView({
       </div>
 
       {tab === "overview" ? (
-        <>
+        <div
+          id="reports-panel-overview"
+          role="tabpanel"
+          aria-labelledby="reports-tab-overview"
+          className={phoneStyles.tabPanel}
+        >
           <section className={phoneStyles.hero} data-ui-slot="summary">
             <span>Netto</span>
             <strong><LoadingText loading={loading}>{kpis.net}</LoadingText></strong>
@@ -171,10 +184,13 @@ function PhoneReportsView({
           <section className={phoneStyles.section} data-ui-slot="primary-panel">
             <header className={phoneStyles.sectionHeader}>
               <h2>Cashflow</h2>
-              <span>6 Monate</span>
+              <span>{periodLabel}</span>
             </header>
-            <ChartContainer config={chartConfig} className={phoneStyles.chart}>
-              {cashflow.length ? <LineChart data={cashflow} accessibilityLayer>
+            {cashflow.length ? <ChartContainer
+              config={chartConfig}
+              className={phoneStyles.chart}
+            >
+              <LineChart data={cashflow} accessibilityLayer>
                 <CartesianGrid vertical={false} strokeDasharray="3 3" />
                 <XAxis dataKey="month" tickLine={false} axisLine={false} />
                 <YAxis hide />
@@ -194,8 +210,8 @@ function PhoneReportsView({
                   strokeDasharray="5 4"
                   dot={false}
                 />
-              </LineChart> : <div className={phoneStyles.emptyState}>Keine Daten für diesen Zeitraum.</div>}
-            </ChartContainer>
+              </LineChart>
+            </ChartContainer> : <div className={`${phoneStyles.chartEmpty} ${phoneStyles.emptyState}`}>Keine Daten für diesen Zeitraum.</div>}
           </section>
           <section className={phoneStyles.section}>
             <header className={phoneStyles.sectionHeader}>
@@ -216,9 +232,14 @@ function PhoneReportsView({
               )) : <div className={phoneStyles.emptyState}>Keine Ausgaben für diesen Zeitraum.</div>}
             </div>
           </section>
-        </>
+        </div>
       ) : tab === "analysis" ? (
-        <>
+        <div
+          id="reports-panel-analysis"
+          role="tabpanel"
+          aria-labelledby="reports-tab-analysis"
+          className={phoneStyles.tabPanel}
+        >
           <section className={phoneStyles.hero}>
             <span>Kontostand</span>
             <strong>{kpis.income}</strong>
@@ -229,11 +250,11 @@ function PhoneReportsView({
               <h2>Kontostand-Verlauf</h2>
               <span>Monatlich</span>
             </header>
-            <ChartContainer
+            {analysisBalance.length ? <ChartContainer
               config={analysisChartConfig}
               className={phoneStyles.chart}
             >
-              {analysisBalance.length ? <AreaChart data={analysisBalance} accessibilityLayer>
+              <AreaChart data={analysisBalance} accessibilityLayer>
                 <CartesianGrid vertical={false} strokeDasharray="3 3" />
                 <XAxis
                   dataKey="month"
@@ -250,8 +271,8 @@ function PhoneReportsView({
                   fillOpacity={0.12}
                   stroke="var(--color-balance)"
                 />
-              </AreaChart> : <div className={phoneStyles.emptyState}>Keine Daten für diesen Zeitraum.</div>}
-            </ChartContainer>
+              </AreaChart>
+            </ChartContainer> : <div className={`${phoneStyles.chartEmpty} ${phoneStyles.emptyState}`}>Keine Daten für diesen Zeitraum.</div>}
           </section>
           <section className={phoneStyles.section}>
             <header className={phoneStyles.sectionHeader}>
@@ -262,9 +283,14 @@ function PhoneReportsView({
               <div className={phoneStyles.emptyState}>Noch kein Finanzprofil verfügbar.</div>
             </div>
           </section>
-        </>
+        </div>
       ) : tab === "review" ? (
-        <section className={phoneStyles.section}>
+        <section
+          id="reports-panel-review"
+          role="tabpanel"
+          aria-labelledby="reports-tab-review"
+          className={phoneStyles.section}
+        >
           <header className={phoneStyles.sectionHeader}>
             <h2>Offene Vorgänge</h2>
             <span>{kpis.review} insgesamt</span>
@@ -295,7 +321,12 @@ function PhoneReportsView({
           </div>
         </section>
       ) : (
-        <section className={phoneStyles.section}>
+        <section
+          id="reports-panel-export"
+          role="tabpanel"
+          aria-labelledby="reports-tab-export"
+          className={phoneStyles.section}
+        >
           <header className={phoneStyles.sectionHeader}>
             <h2>Bericht exportieren</h2>
             <span>Abi 2026</span>

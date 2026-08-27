@@ -327,10 +327,16 @@ function PhoneTransactionsView({
         <span>Netto</span>
         <strong><LoadingText loading={loading}>{displayAmount(netBalance)}</LoadingText></strong>
         <div className={phoneStyles.summaryBreakdown}>
-          <b><LoadingText loading={loading}>+{displayAmount(totalIncome).replace("+", "")}</LoadingText></b>
-          <b>
-            <LoadingText loading={loading}>-{displayAmount(totalExpense).replace("+", "").replace("-", "")}</LoadingText>
-          </b>
+          {totalIncome || totalExpense ? (
+            <>
+              <b><LoadingText loading={loading}>+{displayAmount(totalIncome).replace("+", "")}</LoadingText></b>
+              <b>
+                <LoadingText loading={loading}>-{displayAmount(totalExpense).replace("+", "").replace("-", "")}</LoadingText>
+              </b>
+            </>
+          ) : (
+            <span className={phoneStyles.summaryEmpty}>Keine Bewegungen</span>
+          )}
         </div>
       </section>
 
@@ -373,46 +379,43 @@ function PhoneTransactionsView({
           <div className={phoneStyles.rows}>
             {transactions.map((transaction) => (
               <article
-                role="button"
-                tabIndex={0}
                 className={phoneStyles.row}
                 key={transaction.id}
-                onClick={() => onSelect(transaction)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    onSelect(transaction);
-                  }
-                }}
               >
-                <span className={phoneStyles.rowMain}>
-                  <strong>{transaction.title}</strong>
-                  <span className={phoneStyles.rowMeta}>
-                    <span>{transaction.category}</span>
-                    <span>
-                      {transaction.receipt ? "Beleg vorhanden" : "Ohne Beleg"}
+                <button
+                  type="button"
+                  className={phoneStyles.rowOpen}
+                  onClick={() => onSelect(transaction)}
+                >
+                  <span className={phoneStyles.rowMain}>
+                    <strong>{transaction.title}</strong>
+                    <span className={phoneStyles.rowMeta}>
+                      <span>{transaction.category}</span>
+                      <span>
+                        {transaction.receipt ? "Beleg vorhanden" : "Ohne Beleg"}
+                      </span>
                     </span>
                   </span>
-                </span>
-                <span className={phoneStyles.rowSide}>
-                  <b
-                    className={
-                      transaction.amount >= 0
-                        ? phoneStyles.positive
-                        : phoneStyles.negative
-                    }
-                  >
-                    {displayAmount(transaction.amount)}
-                  </b>
-                  <small>{transaction.date}</small>
-                  <RowActionMenu
-                    label={transaction.title}
-                    canEdit={transaction.canEdit}
-                    canDelete={transaction.canDelete}
-                    onEdit={() => onEdit(transaction)}
-                    onDelete={() => onDelete(transaction)}
-                  />
-                </span>
+                  <span className={phoneStyles.rowSide}>
+                    <b
+                      className={
+                        transaction.amount >= 0
+                          ? phoneStyles.positive
+                          : phoneStyles.negative
+                      }
+                    >
+                      {displayAmount(transaction.amount)}
+                    </b>
+                    <small>{transaction.date}</small>
+                  </span>
+                </button>
+                <RowActionMenu
+                  label={transaction.title}
+                  canEdit={transaction.canEdit}
+                  canDelete={transaction.canDelete}
+                  onEdit={() => onEdit(transaction)}
+                  onDelete={() => onDelete(transaction)}
+                />
               </article>
             ))}
           </div>

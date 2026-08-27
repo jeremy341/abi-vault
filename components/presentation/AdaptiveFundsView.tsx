@@ -1064,7 +1064,12 @@ function PhoneFunds(props: AdaptiveFundsViewProps) {
                   {props.euro(entry.difference)}
                 </b>
               </button>
-            )) : <p className={styles.panelEmpty}>Noch keine Kassenprüfungen vorhanden.</p>}
+            )) : (
+              <div className={styles.auditEmpty}>
+                <p>Noch keine Kassenprüfungen vorhanden.</p>
+                {props.cashBox.id ? <button type="button" className={styles.secondaryAction} onClick={props.onCountCash}>Kasse zählen</button> : null}
+              </div>
+            )}
           </div>
         </section>
       )}

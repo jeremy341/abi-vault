@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import ResponsiveDashboardShell from "@/components/presentation/ResponsiveDashboardShell";
+import { FinanceCacheLifecycle } from "@/components/finance-cache-lifecycle";
 
 export default async function DashboardLayout({
   children,
@@ -15,6 +16,7 @@ export default async function DashboardLayout({
 
   return (
     <ResponsiveDashboardShell>
+      <FinanceCacheLifecycle />
       {orgId ? children : (
         <main className="flex min-h-full items-center justify-center p-6">
           <section className="w-full max-w-lg rounded-2xl border border-black/10 bg-white p-6 text-center shadow-sm dark:border-white/10 dark:bg-card">

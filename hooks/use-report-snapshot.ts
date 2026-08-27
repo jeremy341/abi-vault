@@ -1,28 +1,41 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAuth } from "@clerk/nextjs";
 import { getReportSnapshot } from "@/features/finance/actions/queries";
-import { cachedFinanceQuery } from "@/lib/finance/client-cache";
+import {
+  cachedFinanceQuery,
+  getFinanceCacheState,
+  subscribeFinanceQuery,
+} from "@/lib/finance/client-cache";
 
 export function useReportSnapshot() {
-  const [snapshot, setSnapshot] = useState<Extract<Awaited<ReturnType<typeof getReportSnapshot>>, { ok: true }> | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { userId, orgId } = useAuth();
+  const scope = `${orgId ?? "no-org"}:${userId ?? "anonymous"}`;
+  type ReportSnapshot = Extract<Awaited<ReturnType<typeof getReportSnapshot>>, { ok: true }>;
+  const cached = getFinanceCacheState<ReportSnapshot>("report-snapshot", scope);
+  const [snapshot, setSnapshot] = useState<ReportSnapshot | null>(cached.data ?? null);
+  const [loading, setLoading] = useState(!cached.data);
+  const [refreshing, setRefreshing] = useState(Boolean(cached.data && !cached.fresh));
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     let active = true;
-    cachedFinanceQuery("report-snapshot", getReportSnapshot).then((result) => {
+    const applyResult = (result: Awaited<ReturnType<typeof getReportSnapshot>>) => {
       if (!active) return;
       if (result.ok) {
         setSnapshot(result);
+        setError(null);
       } else {
         setError("Die Berichte konnten nicht geladen werden.");
       }
-    }).catch(() => {
+    };
+    const unsubscribe = subscribeFinanceQuery("report-snapshot", (value) => applyResult(value as Awaited<ReturnType<typeof getReportSnapshot>>), scope);
+    cachedFinanceQuery("report-snapshot", getReportSnapshot, { scope }).then(applyResult).catch(() => {
       if (active) setError("Die Berichte konnten nicht geladen werden.");
     }).finally(() => {
-      if (active) setLoading(false);
+      if (active) { setLoading(false); setRefreshing(false); }
     });
-    return () => { active = false; };
-  }, []);
-  return { snapshot, loading, error };
+    return () => { active = false; unsubscribe(); };
+  }, [scope]);
+  return { snapshot, loading, refreshing, error };
 }

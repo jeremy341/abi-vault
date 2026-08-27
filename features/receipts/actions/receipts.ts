@@ -8,6 +8,12 @@ import {
   receiptReviewSchema,
   type ReceiptReviewInput,
 } from "@/features/receipts/schemas/receipts";
+import {
+  receiptArchiveSchema,
+  receiptUpdateSchema,
+  type ReceiptArchiveInput,
+  type ReceiptUpdateInput,
+} from "@/features/receipts/schemas/mutations";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const MIME_EXTENSIONS = {
@@ -94,7 +100,7 @@ export async function reviewReceipt(
   if (!parsed.success) return invalidReceipt();
 
   const supabase = await createSupabaseServerClient();
-  const { error } = await supabase
+  const { data: reviewed, error } = await supabase
     .from("receipts")
     .update({
       review_status: parsed.data.status,
@@ -102,9 +108,86 @@ export async function reviewReceipt(
       reviewed_at: new Date().toISOString(),
     })
     .eq("id", parsed.data.receiptId)
-    .eq("organization_id", context.organizationId);
+    .eq("organization_id", context.organizationId)
+    .is("archived_at", null)
+    .select("id")
+    .maybeSingle();
 
   if (error) return actionFailure("DATABASE_ERROR", "The receipt review could not be saved.");
+  if (!reviewed) return actionFailure("NOT_FOUND", "Der Beleg ist nicht mehr verfügbar.");
+  return actionSuccess(null);
+}
+
+export async function updateReceiptMetadata(
+  input: ReceiptUpdateInput,
+): Promise<ActionResult<null>> {
+  const parsed = receiptUpdateSchema.safeParse(input);
+  if (!parsed.success) return invalidReceipt("Die Belegdaten sind ungültig.");
+  const context = await requirePermission("uploadReceipts");
+  const supabase = await createSupabaseServerClient();
+
+  const { data: receipt, error: receiptError } = await supabase
+    .from("receipts")
+    .select("id, uploaded_by, archived_at")
+    .eq("id", parsed.data.receiptId)
+    .eq("organization_id", context.organizationId)
+    .maybeSingle();
+  if (receiptError) return actionFailure("DATABASE_ERROR", "Der Beleg konnte nicht geladen werden.");
+  if (!receipt || receipt.archived_at) return actionFailure("NOT_FOUND", "Der Beleg ist nicht mehr verfügbar.");
+  if (context.role !== "admin" && receipt.uploaded_by !== context.clerkUserId) {
+    return actionFailure("FORBIDDEN", "Nur der Uploader oder ein Admin kann den Beleg bearbeiten.");
+  }
+
+  if (parsed.data.transactionId) {
+    const { data: transaction, error: transactionError } = await supabase
+      .from("transactions")
+      .select("id, status, period_id, accounting_periods(status)")
+      .eq("id", parsed.data.transactionId)
+      .eq("organization_id", context.organizationId)
+      .maybeSingle();
+    if (transactionError || !transaction) return actionFailure("NOT_FOUND", "Die Transaktion wurde nicht gefunden.");
+    const period = Array.isArray(transaction.accounting_periods)
+      ? transaction.accounting_periods[0]
+      : transaction.accounting_periods;
+    if (transaction.status === "soft_deleted" || period?.status === "locked") {
+      return actionFailure("PERIOD_LOCKED", "Der Beleg kann für diese Transaktion nicht geändert werden.");
+    }
+  }
+
+  const { data: updated, error } = await supabase
+    .from("receipts")
+    .update({
+      file_name: parsed.data.fileName,
+      transaction_id: parsed.data.transactionId,
+    })
+    .eq("id", parsed.data.receiptId)
+    .eq("organization_id", context.organizationId)
+    .is("archived_at", null)
+    .select("id")
+    .maybeSingle();
+  if (error) return actionFailure("DATABASE_ERROR", "Der Beleg konnte nicht gespeichert werden.");
+  if (!updated) return actionFailure("NOT_FOUND", "Der Beleg ist nicht mehr verfügbar.");
+  return actionSuccess(null);
+}
+
+export async function archiveReceipt(
+  input: ReceiptArchiveInput,
+): Promise<ActionResult<null>> {
+  const parsed = receiptArchiveSchema.safeParse(input);
+  if (!parsed.success) return invalidReceipt("Ein Archivierungsgrund ist erforderlich.");
+  const context = await requirePermission("archiveFinanceRecords");
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.rpc("archive_receipt", {
+    p_organization_id: context.organizationId,
+    p_receipt_id: parsed.data.receiptId,
+    p_reason: parsed.data.reason,
+    p_idempotency_key: parsed.data.idempotencyKey,
+  });
+  if (error) {
+    if (error.code === "42501") return actionFailure("FORBIDDEN", "Nur Admins können Belege archivieren.");
+    if (error.code === "23503") return actionFailure("NOT_FOUND", "Der Beleg ist nicht mehr verfügbar.");
+    return actionFailure("DATABASE_ERROR", "Der Beleg konnte nicht archiviert werden.");
+  }
   return actionSuccess(null);
 }
 

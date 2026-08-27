@@ -1,13 +1,13 @@
 "use client";
 
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
+import { useAuth } from "@clerk/nextjs";
 import {
   Check,
   ChevronsUpDown,
   Clock3,
   FileText,
   Link2,
-  MoreVertical,
   Search,
   Upload,
   X,
@@ -31,11 +31,13 @@ import { useResponsivePageSize } from "@/hooks/use-responsive-page-size";
 import { usePresentationMode } from "@/hooks/use-presentation-mode";
 import phoneStyles from "./receipts-phone.module.css";
 import {
+  getDashboardSnapshot,
   listReceiptsForCurrentOrganization,
-  listTransactionsForCurrentOrganization,
 } from "@/features/finance/actions/queries";
 import { uploadReceipt } from "@/features/receipts/actions/receipts";
-import { cachedFinanceQuery, invalidateFinanceQuery } from "@/lib/finance/client-cache";
+import { archiveReceipt, updateReceiptMetadata } from "@/features/receipts/actions/receipts";
+import { cachedFinanceQuery, getFinanceCacheState, invalidateFinanceQuery, subscribeFinanceQuery } from "@/lib/finance/client-cache";
+import { RowActionMenu } from "@/components/ui/row-actions";
 
 type ReceiptStatus = "Geprüft" | "Zu prüfen" | "Ohne Zuordnung";
 type Receipt = {
@@ -48,6 +50,9 @@ type Receipt = {
   date: string;
   amount: number;
   status: ReceiptStatus;
+  transactionId: string | null;
+  canEdit: boolean;
+  canDelete: boolean;
 };
 
 function formatReceiptDate(value: string) {
@@ -55,6 +60,38 @@ function formatReceiptDate(value: string) {
   return Number.isNaN(date.getTime())
     ? value
     : date.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
+type ServerReceipt = {
+  id: string;
+  file: string;
+  type: string;
+  sizeBytes: number;
+  transaction: string;
+  transactionId: string | null;
+  assigned: boolean;
+  date: string;
+  amountMinor: string;
+  status: string;
+  canEdit: boolean;
+  canDelete: boolean;
+};
+
+function mapReceipt(item: ServerReceipt): Receipt {
+  return {
+    id: item.id,
+    file: item.file,
+    type: item.type,
+    size: `${Math.round(item.sizeBytes / 1024)} KB`,
+    transaction: item.transaction,
+    transactionId: item.transactionId,
+    kind: "",
+    date: item.date ? formatReceiptDate(item.date) : formatReceiptDate(new Date().toISOString()),
+    amount: Number(item.amountMinor) / 100,
+    status: item.status === "approved" ? "Geprüft" : item.status === "rejected" || !item.assigned ? "Ohne Zuordnung" : "Zu prüfen",
+    canEdit: item.canEdit,
+    canDelete: item.canDelete,
+  };
 }
 
 /*
@@ -471,6 +508,8 @@ function PhoneReceiptsView({
   rangeEnd,
   onPageChange,
   onAdd,
+  onEdit,
+  onDelete,
 }: {
   loading: boolean;
   receipts: Receipt[];
@@ -489,6 +528,8 @@ function PhoneReceiptsView({
   rangeEnd: number;
   onPageChange: (page: number) => void;
   onAdd: () => void;
+  onEdit: (receipt: Receipt) => void;
+  onDelete: (receipt: Receipt) => void;
 }) {
   return (
     <div className={phoneStyles.root} aria-busy={loading}>
@@ -578,6 +619,13 @@ function PhoneReceiptsView({
               >
                 {receipt.status}
               </small>
+              <RowActionMenu
+                label={receipt.file}
+                canEdit={receipt.canEdit}
+                canDelete={receipt.canDelete}
+                onEdit={() => onEdit(receipt)}
+                onDelete={() => onDelete(receipt)}
+              />
             </span>
           </article>
           )) : <div className={phoneStyles.empty}>Keine Belege gefunden.</div>}
@@ -600,14 +648,22 @@ function PhoneReceiptsView({
 
 export default function ReceiptsPage() {
   const mode = usePresentationMode();
-  const [items, setItems] = useState<Receipt[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { userId, orgId } = useAuth();
+  const cacheScope = `${orgId ?? "no-org"}:${userId ?? "anonymous"}`;
+  const initialReceipts = getFinanceCacheState<Awaited<ReturnType<typeof listReceiptsForCurrentOrganization>>>("receipts", cacheScope);
+  const [items, setItems] = useState<Receipt[]>(() => initialReceipts.data?.ok ? initialReceipts.data.items.map(mapReceipt) : []);
+  const [loading, setLoading] = useState(!initialReceipts.data?.ok);
+  const [refreshing, setRefreshing] = useState(Boolean(initialReceipts.data?.ok && !initialReceipts.fresh));
   const [loadError, setLoadError] = useState("");
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("Alle");
   const [period, setPeriod] = useState("Alle");
   const [page, setPage] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingReceipt, setEditingReceipt] = useState<Receipt | null>(null);
+  const [archiveTarget, setArchiveTarget] = useState<Receipt | null>(null);
+  const [archiveReason, setArchiveReason] = useState("");
+  const [actionError, setActionError] = useState("");
   const [fileName, setFileName] = useState("");
   const [transaction, setTransaction] = useState("");
   const [availableTransactions, setAvailableTransactions] =
@@ -616,41 +672,36 @@ export default function ReceiptsPage() {
   const [saving, setSaving] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const fileInput = useRef<HTMLInputElement>(null);
+  const archiveIdempotencyKey = useRef<string | null>(null);
   useEffect(() => {
     let active = true;
-    cachedFinanceQuery("receipts", listReceiptsForCurrentOrganization)
-      .then((result) => {
+    const applyResult = (result: Awaited<ReturnType<typeof listReceiptsForCurrentOrganization>>) => {
         if (!active) return;
         if (!result.ok) {
           setLoadError("Die Belege konnten nicht geladen werden.");
           return;
         }
-        setItems(result.items.map((item) => ({
-          id: item.id,
-          file: item.file,
-          type: item.type,
-          size: `${Math.round(item.sizeBytes / 1024)} KB`,
-          transaction: item.transaction,
-          kind: "",
-          date: item.date ? formatReceiptDate(item.date) : formatReceiptDate(new Date().toISOString()),
-          amount: Number(item.amountMinor) / 100,
-          status: item.status === "approved" ? "Geprüft" : item.status === "rejected" || !item.assigned ? "Ohne Zuordnung" : "Zu prüfen",
-        })));
-      })
+        setItems(result.items.map(mapReceipt));
+        setLoadError("");
+      };
+    const unsubscribe = subscribeFinanceQuery("receipts", (value) => applyResult(value as Awaited<ReturnType<typeof listReceiptsForCurrentOrganization>>), cacheScope);
+    cachedFinanceQuery("receipts", listReceiptsForCurrentOrganization, { scope: cacheScope })
+      .then(applyResult)
       .catch(() => {
         if (active) setLoadError("Die Belege konnten nicht geladen werden.");
       })
       .finally(() => {
-        if (active) setLoading(false);
+        if (active) { setLoading(false); setRefreshing(false); }
       });
     return () => {
       active = false;
+      unsubscribe();
     };
-  }, []);
+  }, [cacheScope]);
 
   useEffect(() => {
     let active = true;
-    cachedFinanceQuery("transactions", listTransactionsForCurrentOrganization)
+    cachedFinanceQuery("dashboard-snapshot", getDashboardSnapshot, { scope: cacheScope })
       .then((result) => {
         if (!active) return;
         if (!result.ok) {
@@ -659,7 +710,7 @@ export default function ReceiptsPage() {
         }
         setAvailableTransactions([
           { value: "", label: "Ohne Zuordnung", date: "", amount: "" },
-          ...result.items.map((item) => ({
+          ...result.transactions.map((item) => ({
             value: item.id,
             label: item.title,
             date: item.date ? formatReceiptDate(item.date) : "",
@@ -676,7 +727,7 @@ export default function ReceiptsPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [cacheScope]);
 
   const filtered = useMemo(
     () =>
@@ -713,8 +764,54 @@ export default function ReceiptsPage() {
     if (file) setFileName(file.name);
   }
 
+  function openEditReceipt(receipt: Receipt) {
+    setEditingReceipt(receipt);
+    setFileName(receipt.file);
+    setTransaction(receipt.transactionId ?? "");
+    setUploadError("");
+    setModalOpen(true);
+  }
+
+  function openArchiveReceipt(receipt: Receipt) {
+    setArchiveTarget(receipt);
+    setArchiveReason("");
+    setActionError("");
+    archiveIdempotencyKey.current = `archive-receipt-${receipt.id}-${crypto.randomUUID()}`;
+  }
+
   async function submitReceipt() {
     if (saving) return;
+    if (editingReceipt) {
+      if (!fileName.trim()) {
+        setUploadError("Bitte einen Dateinamen eingeben.");
+        return;
+      }
+      setSaving(true);
+      setUploadError("");
+      try {
+        const result = await updateReceiptMetadata({
+          receiptId: editingReceipt.id.toString(),
+          fileName: fileName.trim(),
+          transactionId: /^[0-9a-f-]{36}$/i.test(transaction) ? transaction : null,
+        });
+        if (!result.success) {
+          setUploadError(result.error.message);
+          return;
+        }
+        setItems((current) => current.map((item) => item.id === editingReceipt.id ? {
+          ...item,
+          file: fileName.trim(),
+          transactionId: /^[0-9a-f-]{36}$/i.test(transaction) ? transaction : null,
+          transaction: availableTransactions.find((option) => option.value === transaction)?.label ?? "Nicht zugeordnet",
+          status: transaction ? item.status : "Ohne Zuordnung",
+        } : item));
+        invalidateFinanceQuery("receipts", "transactions", "dashboard-snapshot", "report-snapshot", "report-kpis");
+        closeModal();
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
     const file = fileInput.current?.files?.[0];
     if (!file) return;
     setSaving(true);
@@ -737,15 +834,40 @@ export default function ReceiptsPage() {
 
   function closeModal() {
     setModalOpen(false);
+    setEditingReceipt(null);
     setFileName("");
     setTransaction("");
+  }
+
+  async function confirmArchiveReceipt() {
+    if (!archiveTarget || saving || !archiveReason.trim()) return;
+    setSaving(true);
+    setActionError("");
+    try {
+      const result = await archiveReceipt({
+        receiptId: archiveTarget.id.toString(),
+        reason: archiveReason,
+        idempotencyKey: archiveIdempotencyKey.current ?? `archive-receipt-${archiveTarget.id}`,
+      });
+      if (!result.success) {
+        setActionError(result.error.message);
+        return;
+      }
+      setItems((current) => current.filter((item) => item.id !== archiveTarget.id));
+      setArchiveTarget(null);
+      setArchiveReason("");
+      archiveIdempotencyKey.current = null;
+      invalidateFinanceQuery("receipts", "transactions", "dashboard-snapshot", "report-snapshot", "report-kpis");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
     <section
       className={
         mode === "phone"
-          ? phoneStyles.root
+          ? phoneStyles.pageShell
           : mode === "tablet"
             ? `${styles.page} ${styles.tabletPage}`
             : styles.page
@@ -753,6 +875,7 @@ export default function ReceiptsPage() {
       aria-busy={loading}
     >
       <LoadingStatus loading={loading} label="Belege werden geladen…" />
+      {refreshing && !loading ? <span className="sr-only" role="status">Belege werden aktualisiert…</span> : null}
       {loadError ? <p className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{loadError}</p> : null}
       {mode === "phone" ? (
         <PhoneReceiptsView
@@ -782,6 +905,8 @@ export default function ReceiptsPage() {
           rangeEnd={Math.min(currentPage * pageSize, filtered.length)}
           onPageChange={setPage}
           onAdd={() => setModalOpen(true)}
+          onEdit={openEditReceipt}
+          onDelete={openArchiveReceipt}
         />
       ) : (
         <>
@@ -919,13 +1044,13 @@ export default function ReceiptsPage() {
                       )}
                       {receipt.status}
                     </span>
-                    <button
-                      type="button"
-                      className={styles.moreButton}
-                      aria-label={`${receipt.file} Optionen`}
-                    >
-                      <MoreVertical />
-                    </button>
+                    <RowActionMenu
+                      label={receipt.file}
+                      canEdit={receipt.canEdit}
+                      canDelete={receipt.canDelete}
+                      onEdit={() => openEditReceipt(receipt)}
+                      onDelete={() => openArchiveReceipt(receipt)}
+                    />
                   </div>
                 ))}
               </div>
@@ -949,15 +1074,15 @@ export default function ReceiptsPage() {
 
       {modalOpen ? (
         <Dialog
-          label="Beleg hinzufügen"
+          label={editingReceipt ? "Beleg bearbeiten" : "Beleg hinzufügen"}
           onClose={closeModal}
           overlayClassName={styles.overlay}
           dialogClassName={`${styles.modal} ${mode === "phone" ? phoneStyles.phoneDialog : ""}`}
         >
           <header className={styles.modalHeader}>
             <div>
-              <h2>Beleg hinzufügen</h2>
-              <p>Lade einen neuen Beleg hoch und ordne ihn direkt zu.</p>
+              <h2>{editingReceipt ? "Beleg bearbeiten" : "Beleg hinzufügen"}</h2>
+              <p>{editingReceipt ? "Ändere Dateiname oder Zuordnung. Der Prüfstatus bleibt unverändert." : "Lade einen neuen Beleg hoch und ordne ihn direkt zu."}</p>
             </div>
             <button
               type="button"
@@ -969,28 +1094,32 @@ export default function ReceiptsPage() {
             </button>
           </header>
           <div className={styles.modalBody}>
-            <input
-              ref={fileInput}
-              type="file"
-              accept=".pdf,image/jpeg,image/png"
-              capture="environment"
-              hidden
-              onChange={handleFile}
-            />
-            <button
-              type="button"
-              className={styles.uploadArea}
-              onClick={() => fileInput.current?.click()}
-            >
-              <Upload />
-              <strong>{fileName || "Beleg hier ablegen"}</strong>
-              <span>
-                {fileName
-                  ? "Datei ausgewählt"
-                  : "PDF oder JPG/PNG bis 5 MB. Auf dem Handy ist auch die Kamera verfügbar."}
-              </span>
-              <span className={styles.uploadButton}>Datei auswählen</span>
-            </button>
+            {!editingReceipt ? (
+              <>
+                <input
+                  ref={fileInput}
+                  type="file"
+                  accept=".pdf,image/jpeg,image/png"
+                  capture="environment"
+                  hidden
+                  onChange={handleFile}
+                />
+                <button
+                  type="button"
+                  className={styles.uploadArea}
+                  onClick={() => fileInput.current?.click()}
+                >
+                  <Upload />
+                  <strong>{fileName || "Beleg hier ablegen"}</strong>
+                  <span>
+                    {fileName
+                      ? "Datei ausgewählt"
+                      : "PDF oder JPG/PNG bis 5 MB. Auf dem Handy ist auch die Kamera verfügbar."}
+                  </span>
+                  <span className={styles.uploadButton}>Datei auswählen</span>
+                </button>
+              </>
+            ) : null}
             <label className={styles.formField}>
               <span>Dateiname</span>
               <input
@@ -1026,8 +1155,36 @@ export default function ReceiptsPage() {
               disabled={saving}
               aria-busy={saving}
             >
-              {saving ? "Wird hochgeladen …" : "Beleg hinzufügen"}
+              {saving ? (editingReceipt ? "Wird gespeichert …" : "Wird hochgeladen …") : editingReceipt ? "Änderungen speichern" : "Beleg hinzufügen"}
             </button>
+          </footer>
+        </Dialog>
+      ) : null}
+
+      {archiveTarget ? (
+        <Dialog
+          label="Beleg archivieren"
+          onClose={() => { if (!saving) setArchiveTarget(null); }}
+          overlayClassName={styles.overlay}
+          dialogClassName={`${styles.modal} ${mode === "phone" ? phoneStyles.phoneDialog : ""}`}
+        >
+          <header className={styles.modalHeader}>
+            <div>
+              <h2>Beleg archivieren?</h2>
+              <p>Die Datei bleibt für die Nachvollziehbarkeit erhalten und wird aus der aktiven Liste entfernt.</p>
+            </div>
+            <button type="button" className={styles.closeButton} onClick={() => setArchiveTarget(null)} disabled={saving} aria-label="Dialog schließen"><X /></button>
+          </header>
+          <div className={styles.modalBody}>
+            <label className={styles.formField}>
+              <span>Grund</span>
+              <input autoFocus value={archiveReason} onChange={(event) => setArchiveReason(event.target.value)} placeholder="Warum soll der Beleg archiviert werden?" />
+            </label>
+            {actionError ? <p className="rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{actionError}</p> : null}
+          </div>
+          <footer className={styles.modalFooter}>
+            <button type="button" className={styles.secondaryButton} onClick={() => setArchiveTarget(null)} disabled={saving}>Abbrechen</button>
+            <button type="button" className={styles.primaryButton} onClick={confirmArchiveReceipt} disabled={saving || !archiveReason.trim()} aria-busy={saving}>{saving ? "Wird archiviert …" : "Archivieren"}</button>
           </footer>
         </Dialog>
       ) : null}

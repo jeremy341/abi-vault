@@ -12,15 +12,16 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useAuth } from "@clerk/nextjs";
 import { Dialog } from "@/components/ui/dialog";
 import { LoadingCollection, LoadingStatus, LoadingText } from "@/components/ui/loading-state";
 import styles from "./goals.module.css";
 import phoneStyles from "./goals-phone.module.css";
 import { usePresentationMode } from "@/hooks/use-presentation-mode";
-import { listGoalsForCurrentOrganization } from "@/features/finance/actions/queries";
+import { getDashboardSnapshot } from "@/features/finance/actions/queries";
 import { createGoal } from "@/features/goals/actions/goals";
 import { archiveGoal, updateGoal } from "@/features/goals/actions/goal-mutations";
-import { cachedFinanceQuery, invalidateFinanceQuery } from "@/lib/finance/client-cache";
+import { cachedFinanceQuery, getFinanceCacheState, invalidateFinanceQuery } from "@/lib/finance/client-cache";
 
 type Goal = {
   id: string;
@@ -110,8 +111,24 @@ function PhoneGoalsView({
 
 export default function GoalsPage() {
   const mode = usePresentationMode();
-  const [goals, setGoals] = useState<Goal[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { userId, orgId } = useAuth();
+  const cacheScope = `${orgId ?? "no-org"}:${userId ?? "anonymous"}`;
+  type DashboardResult = Awaited<ReturnType<typeof getDashboardSnapshot>>;
+  const initialSnapshot = getFinanceCacheState<DashboardResult>("dashboard-snapshot", cacheScope);
+  const initialGoals = initialSnapshot.data?.ok ? initialSnapshot.data.goals : [];
+  const [goals, setGoals] = useState<Goal[]>(() => initialGoals.map((goal) => {
+    const target = Number(goal.target_amount_minor) / 100;
+    const saved = Number(goal.saved_amount_minor) / 100;
+    return {
+      id: goal.id,
+      title: goal.title,
+      target,
+      saved,
+      progress: target ? Math.round((saved / target) * 100) : 0,
+      date: new Date(`${goal.deadline}T00:00:00`).toLocaleDateString("de-DE"),
+    };
+  }));
+  const [loading, setLoading] = useState(!initialSnapshot.data?.ok);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingGoalIndex, setEditingGoalIndex] = useState<number | null>(null);
 
@@ -125,14 +142,14 @@ export default function GoalsPage() {
   const idempotencyKey = useRef<string | null>(null);
   useEffect(() => {
     let active = true;
-    cachedFinanceQuery("goals", listGoalsForCurrentOrganization)
+    cachedFinanceQuery("dashboard-snapshot", getDashboardSnapshot, { scope: cacheScope })
       .then((result) => {
         if (!active) return;
         if (!result.ok) {
           setLoadError("Die Ziele konnten nicht geladen werden.");
           return;
         }
-        setGoals(result.items.map((goal) => {
+        setGoals(result.goals.map((goal) => {
           const target = Number(goal.target_amount_minor) / 100;
           const saved = Number(goal.saved_amount_minor) / 100;
           return {
@@ -154,7 +171,7 @@ export default function GoalsPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [cacheScope]);
 
   const totalTarget = useMemo(
     () => goals.reduce((sum, goal) => sum + goal.target, 0),
@@ -334,7 +351,7 @@ export default function GoalsPage() {
   }
 
   return (
-    <section className={mode === "phone" ? phoneStyles.root : styles.page} aria-busy={loading}>
+    <section className={mode === "phone" ? phoneStyles.pageShell : styles.page} aria-busy={loading}>
       <LoadingStatus loading={loading} label="Ziele werden geladen…" />
       {loadError ? <p className={styles.formError} role="alert">{loadError}</p> : null}
       {mode === "phone" ? (

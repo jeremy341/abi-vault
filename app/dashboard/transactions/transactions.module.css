@@ -468,6 +468,19 @@
 .row:hover {
   background: rgb(0 0 0 / 0.025);
 }
+
+@media (min-width: 768px) {
+  .tableHeader,
+  .row {
+    grid-template-columns:
+      minmax(220px, 1.45fr) minmax(130px, 0.8fr)
+      120px 130px minmax(150px, 0.9fr) 2.5rem;
+  }
+
+  .row > :global([data-slot="dropdown-menu"]) {
+    justify-self: end;
+  }
+}
 .transactionName {
   display: flex;
   min-width: 0;
@@ -1299,8 +1312,8 @@
 
 @media (min-width: 768px) and (max-width: 1399px) {
   .page {
-    min-height: auto;
-    flex: 0 0 auto;
+    min-height: 0;
+    flex: 1 1 0%;
     gap: 1.25rem;
     padding-inline: 1.25rem;
     padding-bottom: 1.5rem;
@@ -1329,8 +1342,9 @@
     grid-column: 2;
   }
   .listCard {
-    flex: 0 0 auto;
-    overflow: visible;
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
   }
   .rows {
     grid-template-rows: none;
@@ -1412,17 +1426,16 @@
     min-height: 2.75rem;
   }
   .tableWrap {
-    flex: none;
+    min-height: 0;
+    flex: 1 1 auto;
     margin-inline: 1.25rem;
-    overflow: visible;
-    border: 0;
-    border-radius: 0;
-    box-shadow: none;
+    overflow: hidden;
   }
   .tableHeader {
     display: none;
   }
   .rows {
+    min-height: 14rem;
     gap: 0.75rem;
   }
   .row {
@@ -1488,6 +1501,19 @@
 }
 .pageButtons {
   gap: 0.55rem;
+}
+
+@media (min-width: 768px) and (max-width: 1099px) {
+  .tabletPage .tableHeader,
+  .tabletPage .row {
+    grid-template-columns:
+      minmax(0, 1.35fr) minmax(7rem, 0.72fr)
+      5.5rem 6.5rem 2.5rem;
+  }
+
+  .tabletPage .row > :global([data-slot="dropdown-menu"]) {
+    justify-self: end;
+  }
 }
 
 @media (max-width: 760px) {

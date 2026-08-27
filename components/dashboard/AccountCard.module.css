@@ -125,11 +125,48 @@
 }
 
 .cardNumber {
-  font-size: clamp(0.78rem, 6cqw, 1.25rem);
+  font-size: clamp(0.9rem, 6.4cqw, 1.35rem);
+}
+
+.cardName {
+  font-size: clamp(0.75rem, 3.2cqw, 1rem);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.cardMeta {
+  display: flex;
+  gap: clamp(2.25rem, 11cqw, 5rem);
+  font-size: clamp(0.8rem, 3.1cqw, 1rem);
+}
+
+.cardMetaLabel {
+  display: block;
+  font-size: clamp(0.58rem, 1.9cqw, 0.7rem);
+}
+
+.cardMetaValue {
+  display: block;
+  max-width: 12ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 @media (min-width: 2200px) {
   .cardNumber {
     font-size: 1.5rem;
+  }
+
+  .cardName {
+    font-size: 1.15rem;
+  }
+
+  .cardMeta {
+    font-size: 1.05rem;
+  }
+
+  .cardMetaLabel {
+    font-size: 0.78rem;
   }
 }

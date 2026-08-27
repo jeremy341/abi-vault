@@ -93,6 +93,8 @@ function PhoneSettingsView({
               className={activeSection === section.id ? phoneStyles.active : ""}
               onClick={() => onSectionChange(section.id)}
               disabled={loading}
+              aria-label={section.label}
+              title={section.label}
             >
               <Icon aria-hidden="true" />
               <span>

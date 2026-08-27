@@ -511,10 +511,17 @@
 }
 
 .tabletContent {
+  display: flex;
   min-height: 0;
   flex: 1 1 auto;
+  flex-direction: column;
   overflow: auto;
   overscroll-behavior: contain;
+}
+
+.tabletContent > * {
+  min-height: 0;
+  flex: 1 1 auto;
 }
 
 .tabletContent :global(.ui-pagination-buttons button),
@@ -568,12 +575,19 @@
 }
 
 .phoneContent {
+  display: flex;
   min-height: 0;
   flex: 1 1 auto;
+  flex-direction: column;
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
   padding-bottom: calc(5.2rem + env(safe-area-inset-bottom));
+}
+
+.phoneContent > * {
+  min-height: 0;
+  flex: 1 1 auto;
 }
 
 .phoneNav {

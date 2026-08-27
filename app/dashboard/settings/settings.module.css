@@ -488,14 +488,15 @@
 
 @media (min-width: 768px) and (max-width: 1399px) {
   .page {
-    min-height: auto;
-    flex: 0 0 auto;
+    min-height: 0;
+    flex: 1 1 0%;
     grid-template-columns: 14rem minmax(0, 1fr);
     gap: 1.25rem;
     padding-inline: 1.25rem;
     padding-bottom: 1.5rem;
   }
   .settingsNav {
+    min-width: 0;
     padding: 0.75rem;
   }
   .navItem,

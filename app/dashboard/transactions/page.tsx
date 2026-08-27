@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useAuth } from "@clerk/nextjs";
 import {
   ArrowDown,
   ArrowUp,
@@ -32,9 +33,11 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { useResponsivePageSize } from "@/hooks/use-responsive-page-size";
 import { usePresentationMode } from "@/hooks/use-presentation-mode";
 import phoneStyles from "./transactions-phone.module.css";
-import { listTransactionsForCurrentOrganization, listWalletsForCurrentOrganization } from "@/features/finance/actions/queries";
+import { getDashboardSnapshot } from "@/features/finance/actions/queries";
 import { createManualTransactionFromUi } from "@/features/finance/actions/manual-ui";
-import { cachedFinanceQuery, invalidateFinanceQuery } from "@/lib/finance/client-cache";
+import { archiveTransaction as archiveTransactionAction, correctTransactionFromUi } from "@/features/finance/actions/corrections";
+import { cachedFinanceQuery, getFinanceCacheState, invalidateFinanceQuery, subscribeFinanceQuery } from "@/lib/finance/client-cache";
+import { RowActionMenu } from "@/components/ui/row-actions";
 
 type Category = "Material" | "Sonstiges" | "Veranstaltung";
 type FilterType = "Einnahmen" | "Ausgaben";
@@ -48,12 +51,52 @@ type Transaction = {
   date: string;
   amount: number;
   receipt?: string;
-  reviewStatus: "Geprüft" | "Zu prüfen";
+  reviewStatus: string;
   account: AccountFilter;
   walletId: string | null;
   tone: "violet" | "green" | "orange";
   icon: typeof FileText;
+  type: "income" | "expense" | "transfer";
+  createdBy: string | null;
+  canEdit: boolean;
+  canDelete: boolean;
 };
+
+type ServerTransaction = {
+  id: string;
+  title: string;
+  category: string;
+  date: string;
+  amountMinor: string;
+  type: "income" | "expense" | "transfer";
+  receipt: boolean;
+  reviewStatus: string;
+  account: string;
+  walletId: string | null;
+  createdBy: string | null;
+  canEdit: boolean;
+  canDelete: boolean;
+};
+
+function mapTransaction(item: ServerTransaction): Transaction {
+  return {
+    id: item.id,
+    title: item.title,
+    category: item.category as Category,
+    date: item.date ? displayDate(fromIso(item.date)) : displayDate(new Date()),
+    amount: Number(item.amountMinor) / 100,
+    receipt: item.receipt ? "receipt" : undefined,
+    reviewStatus: item.reviewStatus as Transaction["reviewStatus"],
+    account: item.account,
+    walletId: item.walletId,
+    tone: item.type === "income" ? "green" : item.type === "expense" ? "violet" : "orange",
+    icon: item.type === "income" ? HandCoins : item.type === "expense" ? FileText : Equal,
+    type: item.type,
+    createdBy: item.createdBy,
+    canEdit: item.canEdit,
+    canDelete: item.canDelete,
+  };
+}
 
 
 const toneClasses = {
@@ -249,6 +292,8 @@ function PhoneTransactionsView({
   onOpenFilters,
   onOpenAdd,
   onSelect,
+  onEdit,
+  onDelete,
   canCreate,
 }: {
   loading: boolean;
@@ -268,6 +313,8 @@ function PhoneTransactionsView({
   onOpenFilters: () => void;
   onOpenAdd: () => void;
   onSelect: (transaction: Transaction) => void;
+  onEdit: (transaction: Transaction) => void;
+  onDelete: (transaction: Transaction) => void;
   canCreate: boolean;
 }) {
   return (
@@ -325,11 +372,18 @@ function PhoneTransactionsView({
         ) : transactions.length ? (
           <div className={phoneStyles.rows}>
             {transactions.map((transaction) => (
-              <button
-                type="button"
+              <article
+                role="button"
+                tabIndex={0}
                 className={phoneStyles.row}
                 key={transaction.id}
                 onClick={() => onSelect(transaction)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    onSelect(transaction);
+                  }
+                }}
               >
                 <span className={phoneStyles.rowMain}>
                   <strong>{transaction.title}</strong>
@@ -351,8 +405,15 @@ function PhoneTransactionsView({
                     {displayAmount(transaction.amount)}
                   </b>
                   <small>{transaction.date}</small>
+                  <RowActionMenu
+                    label={transaction.title}
+                    canEdit={transaction.canEdit}
+                    canDelete={transaction.canDelete}
+                    onEdit={() => onEdit(transaction)}
+                    onDelete={() => onDelete(transaction)}
+                  />
                 </span>
-              </button>
+              </article>
             ))}
           </div>
         ) : (
@@ -386,66 +447,51 @@ function PhoneTransactionsView({
 
 export default function TransactionsPage() {
   const mode = usePresentationMode();
-  const [items, setItems] = useState<Transaction[]>([]);
-  const [cashRegisters, setCashRegisters] = useState<Array<{ id: string; name: string }>>([]);
-  const [selectedCashRegisterId, setSelectedCashRegisterId] = useState("");
-  const [transactionsLoading, setTransactionsLoading] = useState(true);
-  const [walletLoading, setWalletLoading] = useState(true);
+  const { userId, orgId } = useAuth();
+  const cacheScope = `${orgId ?? "no-org"}:${userId ?? "anonymous"}`;
+  type DashboardResult = Awaited<ReturnType<typeof getDashboardSnapshot>>;
+  const initialSnapshot = getFinanceCacheState<DashboardResult>("dashboard-snapshot", cacheScope);
+  const [items, setItems] = useState<Transaction[]>(() => initialSnapshot.data?.ok ? initialSnapshot.data.transactions.map(mapTransaction) : []);
+  const [cashRegisters, setCashRegisters] = useState<Array<{ id: string; name: string }>>(() => initialSnapshot.data?.ok ? initialSnapshot.data.wallets.map((item) => ({ id: item.id, name: item.name })) : []);
+  const [selectedCashRegisterId, setSelectedCashRegisterId] = useState(() => initialSnapshot.data?.ok ? initialSnapshot.data.wallets[0]?.id ?? "" : "");
+  const [transactionsLoading, setTransactionsLoading] = useState(!initialSnapshot.data?.ok);
+  const [walletLoading, setWalletLoading] = useState(!initialSnapshot.data?.ok);
   const [loadError, setLoadError] = useState("");
+  const [refreshing, setRefreshing] = useState(Boolean(initialSnapshot.data?.ok && !initialSnapshot.fresh));
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
   const idempotencyKey = useRef<string | null>(null);
+  const archiveIdempotencyKey = useRef<string | null>(null);
   useEffect(() => {
     let active = true;
-    cachedFinanceQuery("transactions", listTransactionsForCurrentOrganization)
-      .then((result) => {
-        if (!active) return;
-        if (!result.ok) {
-          setLoadError("Die Transaktionen konnten nicht geladen werden.");
-          return;
-        }
-        setItems(result.items.map((item) => ({
-          id: item.id,
-          title: item.title,
-          category: item.category as Category,
-          date: item.date ? displayDate(fromIso(item.date)) : displayDate(new Date()),
-          amount: Number(item.amountMinor) / 100,
-          receipt: item.receipt ? "receipt" : undefined,
-          reviewStatus: item.reviewStatus as Transaction["reviewStatus"],
-          account: item.account,
-          walletId: item.walletId,
-          tone: item.type === "income" ? "green" : item.type === "expense" ? "violet" : "orange",
-          icon: item.type === "income" ? HandCoins : item.type === "expense" ? FileText : Equal,
-        })));
-      })
+    const applyResult = (result: DashboardResult) => {
+      if (!active) return;
+      if (!result.ok) {
+        setLoadError("Die Transaktionen konnten nicht geladen werden.");
+        return;
+      }
+      setItems(result.transactions.map(mapTransaction));
+      const nextWallets = result.wallets.map((item) => ({ id: item.id, name: item.name }));
+      setCashRegisters(nextWallets);
+      setSelectedCashRegisterId((current: string) => current || nextWallets[0]?.id || "");
+      setLoadError("");
+      setTransactionsLoading(false);
+      setWalletLoading(false);
+    };
+    const unsubscribe = subscribeFinanceQuery("dashboard-snapshot", (value) => applyResult(value as DashboardResult), cacheScope);
+    cachedFinanceQuery("dashboard-snapshot", getDashboardSnapshot, { scope: cacheScope })
+      .then(applyResult)
       .catch(() => {
         if (active) setLoadError("Die Transaktionen konnten nicht geladen werden.");
       })
       .finally(() => {
-        if (active) setTransactionsLoading(false);
+        if (active) { setTransactionsLoading(false); setRefreshing(false); }
       });
     return () => {
       active = false;
+      unsubscribe();
     };
-  }, []);
-  useEffect(() => {
-    let active = true;
-    cachedFinanceQuery("wallets", listWalletsForCurrentOrganization).then((result) => {
-      if (!active) return;
-      if (!result.ok) {
-        setLoadError("Die Kassen konnten nicht geladen werden.");
-        return;
-      }
-      const next = result.items.map((item) => ({ id: item.id, name: item.name }));
-      setCashRegisters(next);
-      setSelectedCashRegisterId((current) => current || next[0]?.id || "");
-    }).catch(() => {
-      if (active) setLoadError("Die Kassen konnten nicht geladen werden.");
-    }).finally(() => {
-      if (active) setWalletLoading(false);
-    });
-    return () => { active = false; };
-  }, []);
+  }, [cacheScope]);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<"Alle" | Category>("Alle");
   const [type, setType] = useState<"Alle" | "Einnahmen" | "Ausgaben">("Alle");
@@ -475,6 +521,10 @@ export default function TransactionsPage() {
   const [dateOpen, setDateOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [selected, setSelected] = useState<Transaction | null>(null);
+  const [editing, setEditing] = useState<Transaction | null>(null);
+  const [archiveTarget, setArchiveTarget] = useState<Transaction | null>(null);
+  const [archiveReason, setArchiveReason] = useState("");
+  const [actionError, setActionError] = useState("");
   const [page, setPage] = useState(1);
   const pageSize = useResponsivePageSize({
     defaultSize: 10,
@@ -485,6 +535,7 @@ export default function TransactionsPage() {
   const [newAmount, setNewAmount] = useState("");
   const [newCategory, setNewCategory] = useState<Category>("Sonstiges");
   const [newType, setNewType] = useState<"Einnahme" | "Ausgabe">("Einnahme");
+  const [correctionReason, setCorrectionReason] = useState("");
 
   const results = useMemo(
     () =>
@@ -638,14 +689,44 @@ export default function TransactionsPage() {
   async function addTransaction() {
     if (saving) return;
     const amount = Number(newAmount.replace(",", "."));
-    if (!newTitle.trim() || !Number.isFinite(amount) || !selectedCashRegisterId) {
-      setFormError("Bitte Kasse, Bezeichnung und Betrag vollständig ausfüllen.");
+    if (!newTitle.trim() || !Number.isFinite(amount) || (!editing && !selectedCashRegisterId) || (editing && !correctionReason.trim())) {
+      setFormError(editing ? "Bitte Bezeichnung, Betrag und Korrekturgrund ausfüllen." : "Bitte Kasse, Bezeichnung und Betrag vollständig ausfüllen.");
       return;
     }
     setSaving(true);
     setFormError("");
     idempotencyKey.current ??= `ui-${crypto.randomUUID()}`;
     try {
+      if (editing) {
+        const corrected = await correctTransactionFromUi({
+          transactionId: editing.id.toString(),
+          title: newTitle.trim(),
+          amount: newAmount,
+          direction: newType === "Einnahme" ? "income" : "expense",
+          categoryName: newType === "Einnahme" ? "Verkäufe" : newCategory,
+          reason: correctionReason,
+          idempotencyKey: idempotencyKey.current,
+        });
+        if (!corrected.success) {
+          setFormError(corrected.error.message);
+          return;
+        }
+        setItems((current) => current.map((item) => item.id === editing.id ? {
+          ...item,
+          id: corrected.data.id,
+          title: newTitle.trim(),
+          amount: newType === "Ausgabe" ? -Math.abs(amount) : Math.abs(amount),
+          type: newType === "Einnahme" ? "income" : "expense",
+          category: newCategory,
+          canEdit: true,
+        } : item));
+        setAddOpen(false);
+        setEditing(null);
+        setCorrectionReason("");
+        invalidateFinanceQuery("transactions", "wallets", "dashboard-snapshot", "report-snapshot", "report-kpis");
+        idempotencyKey.current = null;
+        return;
+      }
       const persisted = await createManualTransactionFromUi({
         title: newTitle.trim(),
         amount: newAmount,
@@ -671,6 +752,10 @@ export default function TransactionsPage() {
         walletId: selectedCashRegisterId,
         tone: newType === "Einnahme" ? "green" : "violet",
         icon: newType === "Einnahme" ? HandCoins : FileText,
+        type: newType === "Einnahme" ? "income" : "expense",
+        createdBy: null,
+        canEdit: true,
+        canDelete: false,
       },
       ...current,
     ]);
@@ -685,6 +770,58 @@ export default function TransactionsPage() {
     }
   }
 
+  function openEdit(transaction: Transaction) {
+    setSelected(null);
+    setEditing(transaction);
+    setNewTitle(transaction.title);
+    setNewAmount(Math.abs(transaction.amount).toFixed(2).replace(".", ","));
+    setNewType(transaction.type === "income" ? "Einnahme" : "Ausgabe");
+    setNewCategory(transaction.category);
+    setCorrectionReason("");
+    setFormError("");
+    setAddOpen(true);
+  }
+
+  function closeTransactionModal() {
+    if (saving) return;
+    setAddOpen(false);
+    setEditing(null);
+    setCorrectionReason("");
+    setFormError("");
+  }
+
+  function openArchive(transaction: Transaction) {
+    setSelected(null);
+    setArchiveTarget(transaction);
+    setArchiveReason("");
+    setActionError("");
+    archiveIdempotencyKey.current = `archive-${transaction.id}-${crypto.randomUUID()}`;
+  }
+
+  async function confirmArchiveTransaction() {
+    if (!archiveTarget || saving || !archiveReason.trim()) return;
+    setSaving(true);
+    setActionError("");
+    try {
+      const result = await archiveTransactionAction({
+        transactionId: archiveTarget.id.toString(),
+        reason: archiveReason,
+        idempotencyKey: archiveIdempotencyKey.current ?? `archive-${archiveTarget.id}`,
+      });
+      if (!result.success) {
+        setActionError(result.error.message);
+        return;
+      }
+      setItems((current) => current.filter((item) => item.id !== archiveTarget.id));
+      setArchiveTarget(null);
+      setArchiveReason("");
+      archiveIdempotencyKey.current = null;
+      invalidateFinanceQuery("transactions", "wallets", "dashboard-snapshot", "report-snapshot", "report-kpis");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   const dateLabel =
     start || end
       ? `${start ? displayDate(fromIso(start)) : "Offen"} – ${end ? displayDate(fromIso(end)) : "Heute"}`
@@ -694,7 +831,7 @@ export default function TransactionsPage() {
     <section
       className={
         mode === "phone"
-          ? phoneStyles.root
+          ? phoneStyles.pageShell
           : mode === "tablet"
             ? `${styles.page} ${styles.tabletPage}`
             : styles.page
@@ -702,6 +839,7 @@ export default function TransactionsPage() {
       aria-busy={loading}
     >
       <LoadingStatus loading={loading} label="Transaktionen werden geladen…" />
+      {refreshing && !loading ? <span className="sr-only" role="status">Transaktionen werden aktualisiert…</span> : null}
       {loadError ? <p className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{loadError}</p> : null}
       {mode === "phone" ? (
         <PhoneTransactionsView
@@ -723,8 +861,10 @@ export default function TransactionsPage() {
           totalResults={results.length}
           onPageChange={setPage}
           onOpenFilters={openFilters}
-          onOpenAdd={() => setAddOpen(true)}
+          onOpenAdd={() => { setEditing(null); setFormError(""); setAddOpen(true); }}
           onSelect={setSelected}
+          onEdit={openEdit}
+          onDelete={openArchive}
           canCreate={Boolean(selectedCashRegisterId) && !loadError}
         />
       ) : (
@@ -775,7 +915,7 @@ export default function TransactionsPage() {
               <button
                 type="button"
                 className={styles.primaryButton}
-                onClick={() => setAddOpen(true)}
+                onClick={() => { setEditing(null); setFormError(""); setAddOpen(true); }}
                 disabled={loading || !selectedCashRegisterId || Boolean(loadError)}
                 data-ui-slot="primary-action"
               >
@@ -856,6 +996,7 @@ export default function TransactionsPage() {
                 <span>Datum</span>
                 <span>Betrag</span>
                 <span>Beleg</span>
+                <span aria-hidden="true" />
               </div>
               <div className={styles.rows}>
                 {loading ? (
@@ -872,11 +1013,18 @@ export default function TransactionsPage() {
                 ) : visible.map((transaction) => {
                   const Icon = transaction.icon;
                   return (
-                    <button
-                      type="button"
+                    <div
+                      role="button"
+                      tabIndex={0}
                       className={styles.row}
                       key={transaction.id}
                       onClick={() => setSelected(transaction)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          setSelected(transaction);
+                        }
+                      }}
                     >
                       <span className={styles.transactionName}>
                         <span
@@ -915,7 +1063,14 @@ export default function TransactionsPage() {
                           <span>—</span>
                         )}
                       </span>
-                    </button>
+                      <RowActionMenu
+                        label={transaction.title}
+                        canEdit={transaction.canEdit}
+                        canDelete={transaction.canDelete}
+                        onEdit={() => openEdit(transaction)}
+                        onDelete={() => openArchive(transaction)}
+                      />
+                    </div>
                   );
                 })}
               </div>
@@ -1166,19 +1321,19 @@ export default function TransactionsPage() {
 
       {addOpen ? (
         <Overlay
-          label="Transaktion hinzufügen"
-          onClose={() => setAddOpen(false)}
+          label={editing ? "Transaktion bearbeiten" : "Transaktion hinzufügen"}
+          onClose={closeTransactionModal}
           className={mode === "phone" ? phoneStyles.phoneDialog : undefined}
         >
           <div className={styles.modalHeader}>
             <div>
-              <h2>Transaktion hinzufügen</h2>
-              <p>Erfasse eine neue Einnahme oder Ausgabe.</p>
+              <h2>{editing ? "Transaktion bearbeiten" : "Transaktion hinzufügen"}</h2>
+              <p>{editing ? "Die Änderung wird als Korrektur im Kassenbuch festgehalten." : "Erfasse eine neue Einnahme oder Ausgabe."}</p>
             </div>
             <button
               type="button"
               className={styles.iconButton}
-              onClick={() => setAddOpen(false)}
+              onClick={closeTransactionModal}
               disabled={saving}
               aria-label="Dialog schließen"
             >
@@ -1195,7 +1350,10 @@ export default function TransactionsPage() {
                 placeholder="z. B. Sponsoring Schule"
               />
             </label>
-            <CashRegisterCombobox value={selectedCashRegisterId} options={cashRegisters} onChange={setSelectedCashRegisterId} />
+            <div className={editing ? styles.editWalletNote : undefined}>
+              <CashRegisterCombobox value={editing?.walletId ?? selectedCashRegisterId} options={cashRegisters} onChange={setSelectedCashRegisterId} />
+              {editing ? <small>Die Kasse einer gebuchten Transaktion kann nicht geändert werden.</small> : null}
+            </div>
             <div className={styles.dateFields}>
               <StyledDropdown
                 ariaLabel="Typ auswählen"
@@ -1230,6 +1388,17 @@ export default function TransactionsPage() {
                 placeholder="0,00"
               />
             </label>
+            {editing ? (
+              <label className={styles.formField}>
+                <span>Grund der Korrektur</span>
+                <textarea
+                  value={correctionReason}
+                  onChange={(event) => setCorrectionReason(event.target.value)}
+                  placeholder="z. B. Betrag auf dem Beleg war falsch"
+                  rows={3}
+                />
+              </label>
+            ) : null}
           </div>
           {formError ? <p className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{formError}</p> : null}
           <div className={styles.modalFooter}>
@@ -1238,7 +1407,7 @@ export default function TransactionsPage() {
               <button
                 type="button"
                 className={styles.secondaryButton}
-                onClick={() => setAddOpen(false)}
+                onClick={closeTransactionModal}
                 disabled={saving}
               >
                 Abbrechen
@@ -1250,7 +1419,7 @@ export default function TransactionsPage() {
                 disabled={saving}
                 aria-busy={saving}
               >
-                {saving ? "Wird gespeichert …" : "Hinzufügen"}
+                {saving ? "Wird gespeichert …" : editing ? "Korrektur speichern" : "Hinzufügen"}
               </button>
             </div>
           </div>
@@ -1292,6 +1461,36 @@ export default function TransactionsPage() {
             </strong>
             <span>Beleg</span>
             <strong>{selected.receipt ?? "Kein Beleg"}</strong>
+          </div>
+        </Overlay>
+      ) : null}
+
+      {archiveTarget ? (
+        <Overlay
+          label="Transaktion archivieren"
+          onClose={() => { if (!saving) setArchiveTarget(null); }}
+          className={mode === "phone" ? phoneStyles.phoneDialog : undefined}
+        >
+          <div className={styles.modalHeader}>
+            <div>
+              <h2>Transaktion archivieren?</h2>
+              <p>Die Buchung bleibt im Prüfprotokoll erhalten und wird aus den aktiven Summen entfernt.</p>
+            </div>
+            <button type="button" className={styles.iconButton} onClick={() => setArchiveTarget(null)} disabled={saving} aria-label="Dialog schließen"><X /></button>
+          </div>
+          <div className={styles.modalBody}>
+            <label className={styles.formField}>
+              <span>Grund</span>
+              <textarea value={archiveReason} onChange={(event) => setArchiveReason(event.target.value)} placeholder="Warum soll die Transaktion archiviert werden?" rows={3} autoFocus />
+            </label>
+            {actionError ? <p className="rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{actionError}</p> : null}
+          </div>
+          <div className={styles.modalFooter}>
+            <span />
+            <div>
+              <button type="button" className={styles.secondaryButton} onClick={() => setArchiveTarget(null)} disabled={saving}>Abbrechen</button>
+              <button type="button" className={styles.primaryButton} onClick={confirmArchiveTransaction} disabled={saving || !archiveReason.trim()} aria-busy={saving}>{saving ? "Wird archiviert …" : "Archivieren"}</button>
+            </div>
           </div>
         </Overlay>
       ) : null}

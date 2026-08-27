@@ -1,5 +1,13 @@
+.pageShell {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+}
+
 .root {
   display: grid;
+  min-height: 100%;
+  grid-template-rows: auto auto auto minmax(12rem, 1fr) auto;
   color: var(--ui-ink);
   padding: 0 1rem 1rem;
 }
@@ -120,6 +128,13 @@
 
 .rows {
   display: grid;
+  min-height: 12rem;
+  align-content: stretch;
+}
+
+.rows > :global([data-loading-collection="true"]) {
+  height: 100%;
+  min-height: 100%;
 }
 
 .empty {
@@ -168,8 +183,13 @@
 
 .rowSide {
   display: grid;
+  grid-template-columns: auto auto auto;
   justify-items: end;
   gap: 0.18rem;
+}
+
+.rowSide > :global([data-slot="dropdown-menu"]) {
+  align-self: center;
 }
 
 .rowSide b {

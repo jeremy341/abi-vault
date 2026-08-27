@@ -12,6 +12,7 @@ export const PERMISSIONS = {
   createTransactions: ["admin", "supervisor"],
   editOpenTransactions: ["admin", "supervisor"],
   softDeleteOpenTransactions: ["admin", "supervisor"],
+  archiveFinanceRecords: ["admin"],
   lockPeriods: ["admin"],
   unlockPeriods: ["admin"],
   manageGoals: ["admin", "supervisor"],

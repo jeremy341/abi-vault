@@ -319,7 +319,7 @@ export default function PeoplePage() {
   }
 
   return (
-    <section className={mode === "phone" ? phoneStyles.root : styles.page} aria-busy={loading}>
+    <section className={mode === "phone" ? phoneStyles.pageShell : styles.page} aria-busy={loading}>
       <LoadingStatus loading={loading} label="Mitglieder werden geladen…" />
       {loadError ? <p className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{loadError}</p> : null}
       {mode === "phone" ? (

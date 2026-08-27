@@ -37,6 +37,22 @@
   text-align: center;
 }
 
+.auditEmpty {
+  display: grid;
+  min-height: 10rem;
+  place-items: center;
+  align-content: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  color: var(--ui-muted-ink);
+  font-size: 0.7rem;
+  text-align: center;
+}
+
+.auditEmpty p {
+  margin: 0;
+}
+
 .positive {
   color: var(--ui-positive);
 }

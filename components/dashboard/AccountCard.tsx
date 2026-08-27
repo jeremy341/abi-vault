@@ -100,7 +100,7 @@ export default function AccountCard({
           <div
             className={`relative z-10 flex h-full flex-col justify-between px-5 py-4 sm:px-6 sm:py-5 min-[2200px]:px-8 min-[2200px]:py-7 ${isLightCard ? "text-black" : "text-white"}`}
           >
-            <span className="text-[11px] font-medium tracking-wide sm:text-xs min-[2200px]:text-sm">
+            <span className={styles.cardName}>
               {accountName}
             </span>
 
@@ -110,23 +110,19 @@ export default function AccountCard({
               {cardNumber}
             </strong>
 
-            <div className="flex gap-10 text-xs sm:gap-14 sm:text-sm min-[2200px]:gap-20 min-[2200px]:text-base">
+            <div className={styles.cardMeta}>
               <div>
-                <span
-                  className={`block text-[9px] sm:text-[10px] ${isLightCard ? "text-black/55" : "text-white/75"}`}
-                >
+                <span className={`${styles.cardMetaLabel} ${isLightCard ? "text-black/55" : "text-white/75"}`}>
                   Card holder
                 </span>
-                <span>{holder}</span>
+                <span className={styles.cardMetaValue}>{holder}</span>
               </div>
 
               <div>
-                <span
-                  className={`block text-[9px] sm:text-[10px] ${isLightCard ? "text-black/55" : "text-white/75"}`}
-                >
+                <span className={`${styles.cardMetaLabel} ${isLightCard ? "text-black/55" : "text-white/75"}`}>
                   Expire date
                 </span>
-                <span>{expiry}</span>
+                <span className={styles.cardMetaValue}>{expiry}</span>
               </div>
             </div>
           </div>

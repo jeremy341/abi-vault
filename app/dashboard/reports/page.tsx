@@ -12,6 +12,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useAuth } from "@clerk/nextjs";
 import {
   Area,
   AreaChart,
@@ -344,6 +345,8 @@ function PhoneReportsView({
 
 export default function ReportsPage() {
   const mode = usePresentationMode();
+  const { userId, orgId } = useAuth();
+  const cacheScope = `${orgId ?? "no-org"}:${userId ?? "anonymous"}`;
   const [period, setPeriod] = useState("6-monate");
   const [category, setCategory] = useState("alle-kategorien");
   const [exportMessage, setExportMessage] = useState("");
@@ -373,7 +376,7 @@ export default function ReportsPage() {
 
   useEffect(() => {
     let active = true;
-    cachedFinanceQuery("report-kpis", getReportKpisForCurrentOrganization)
+    cachedFinanceQuery("report-kpis", getReportKpisForCurrentOrganization, { scope: cacheScope })
       .then((result) => {
         if (!active) return;
         if (!result.ok) {
@@ -401,7 +404,7 @@ export default function ReportsPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [cacheScope]);
 
   async function prepareExport(format: string) {
     if (format === "PDF") {

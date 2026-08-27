@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useAuth } from "@clerk/nextjs";
 import { Banknote, Trash2, X } from "lucide-react";
 import AddCardModal from "@/components/dashboard/AddCardModal";
 import EditCardModal from "@/components/dashboard/EditCardModal";
@@ -11,8 +12,8 @@ import { LoadingStatus } from "@/components/ui/loading-state";
 import { usePresentationMode } from "@/hooks/use-presentation-mode";
 import adaptiveStyles from "./funds-adaptive.module.css";
 import styles from "./funds.module.css";
-import { listWalletsForCurrentOrganization } from "@/features/finance/actions/queries";
-import { cachedFinanceQuery } from "@/lib/finance/client-cache";
+import { getDashboardSnapshot } from "@/features/finance/actions/queries";
+import { cachedFinanceQuery, getFinanceCacheState } from "@/lib/finance/client-cache";
 import { invalidateFinanceQuery } from "@/lib/finance/client-cache";
 import { archiveWallet, createWallet, updateWallet } from "@/features/finance/actions/wallets";
 import { recordCashCount } from "@/features/finance/actions/cash-counts";
@@ -54,13 +55,36 @@ const euro = (value: number) => money.format(value);
 
 export default function FundsPage() {
   const mode = usePresentationMode();
-  const [cards, setCards] = useState<DashboardCard[]>([]);
+  const { userId, orgId } = useAuth();
+  const cacheScope = `${orgId ?? "no-org"}:${userId ?? "anonymous"}`;
+  type DashboardResult = Awaited<ReturnType<typeof getDashboardSnapshot>>;
+  const initialSnapshot = getFinanceCacheState<DashboardResult>("dashboard-snapshot", cacheScope);
+  const initialWallets = initialSnapshot.data?.ok ? initialSnapshot.data.wallets : [];
+  const [cards, setCards] = useState<DashboardCard[]>(() => initialWallets.map((wallet) => ({
+    id: wallet.id,
+    details: {
+      accountName: wallet.name,
+      cardNumber: wallet.cardNumberVisual ?? undefined,
+      holder: wallet.cardHolderVisual ?? undefined,
+      expiry: wallet.cardExpiryVisual ?? undefined,
+      color: wallet.cardColorVisual ?? "#111114",
+    },
+    balance: Number(wallet.balanceMinor) / 100,
+  })));
   const [activeCardIndex, setActiveCardIndex] = useState(0);
-  const [cashBoxes, setCashBoxes] = useState<Record<string, CashBox>>({});
+  const [cashBoxes, setCashBoxes] = useState<Record<string, CashBox>>(() => Object.fromEntries(initialWallets.map((wallet) => [wallet.id, {
+    id: wallet.id,
+    name: wallet.name,
+    balance: Number(wallet.balanceMinor) / 100,
+    responsible: "",
+    lastCountDate: "",
+    countStatus: "matched",
+    difference: 0,
+  }])));
   const [auditLogs, setAuditLogs] =
     useState<CashAuditEntry[]>([]);
   const [notice, setNotice] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialSnapshot.data?.ok);
   const [loadError, setLoadError] = useState("");
 
   const [isAddCardOpen, setIsAddCardOpen] = useState(false);
@@ -90,14 +114,14 @@ export default function FundsPage() {
 
   const loadWallets = useCallback(async () => {
     try {
-      const result = await cachedFinanceQuery("wallets", listWalletsForCurrentOrganization);
+      const result = await cachedFinanceQuery("dashboard-snapshot", getDashboardSnapshot, { scope: cacheScope });
       if (!result.ok) {
         setLoadError("Die Kassen konnten nicht geladen werden.");
         return;
       }
 
       setLoadError("");
-      const cashWallets = result.items.filter((item) => item.type === "cash");
+      const cashWallets = result.wallets.filter((item) => item.type === "cash");
       setCards(cashWallets.map((wallet) => ({
         id: wallet.id,
         details: {
@@ -124,7 +148,7 @@ export default function FundsPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [cacheScope]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -134,7 +158,7 @@ export default function FundsPage() {
   }, [loadWallets]);
 
   const retryWallets = useCallback(() => {
-    invalidateFinanceQuery("wallets");
+    invalidateFinanceQuery("wallets", "dashboard-snapshot", "transactions", "report-snapshot", "report-kpis");
     setLoadError("");
     setLoading(true);
     void loadWallets();
@@ -240,7 +264,7 @@ export default function FundsPage() {
     }));
     setActiveCardIndex(cards.length);
     setIsAddCardOpen(false);
-    invalidateFinanceQuery("wallets", "dashboard-snapshot", "report-snapshot");
+    invalidateFinanceQuery("wallets", "dashboard-snapshot", "transactions", "report-snapshot", "report-kpis");
     setNotice("Kasse hinzugefügt.");
     return true;
   }
@@ -270,7 +294,7 @@ export default function FundsPage() {
       [activeCard.id]: { ...cashBox, name: details.accountName },
     }));
     setIsEditCardOpen(false);
-    invalidateFinanceQuery("wallets", "dashboard-snapshot", "report-snapshot");
+    invalidateFinanceQuery("wallets", "dashboard-snapshot", "transactions", "report-snapshot", "report-kpis");
     setNotice("Kartendaten gespeichert.");
     return true;
   }
@@ -343,7 +367,7 @@ export default function FundsPage() {
       });
       setActiveCardIndex((current) => Math.max(0, current - 1));
       setIsDeleteOpen(false);
-      invalidateFinanceQuery("wallets", "dashboard-snapshot", "report-snapshot", "report-kpis");
+      invalidateFinanceQuery("wallets", "dashboard-snapshot", "transactions", "report-snapshot", "report-kpis");
       setNotice("Kasse archiviert.");
     } catch {
       setNotice("Kasse konnte nicht archiviert werden.");
@@ -410,6 +434,7 @@ export default function FundsPage() {
     ]);
     setCountError("");
     setIsCountOpen(false);
+    invalidateFinanceQuery("wallets", "dashboard-snapshot", "transactions", "report-snapshot", "report-kpis");
     setNotice("Kassensturz gespeichert.");
     } catch {
       setCountError("Der Kassensturz konnte nicht gespeichert werden.");

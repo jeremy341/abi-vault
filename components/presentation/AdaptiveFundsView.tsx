@@ -141,7 +141,9 @@ function FundsTabs({
           key={tab.value}
           type="button"
           role="tab"
+          id={`funds-tab-${tab.value}`}
           aria-selected={active === tab.value}
+          aria-controls={`funds-panel-${tab.value}`}
           tabIndex={active === tab.value ? 0 : -1}
           className={active === tab.value ? styles.activeTab : ""}
           onKeyDown={(event) => handleKeyDown(event, index)}
@@ -169,23 +171,23 @@ function SummaryRail({
     <section className={styles.summaryRail} aria-label="Finanzübersicht">
       <div>
         <span>Gesamt verfügbar</span>
-        <strong>{loading ? <InlineLoading label="Bestand wird geladen…" /> : euro(total)}</strong>
+        <strong>{loading ? <InlineLoading label="" className={styles.compactInlineLoading} /> : euro(total)}</strong>
         <small>{loading ? "Kassen werden geladen…" : `${cards.length} Kassen insgesamt`}</small>
       </div>
       <div>
         <span>Kassenbestand</span>
-        <strong>{loading ? <InlineLoading label="Bestand wird geladen…" /> : euro(bankBalance)}</strong>
+        <strong>{loading ? <InlineLoading label="" className={styles.compactInlineLoading} /> : euro(bankBalance)}</strong>
         <small>{loading ? "Bestand wird geladen…" : cards.length ? "Alle aktiven Kassen" : "Keine Kassen angelegt"}</small>
       </div>
       <div>
         <span>Ausgewählte Kasse</span>
-        <strong>{loading ? <InlineLoading label="Kasse wird geladen…" /> : hasCashBox ? euro(cashBox.balance) : "Keine Kasse"}</strong>
+        <strong>{loading ? <InlineLoading label="" className={styles.compactInlineLoading} /> : hasCashBox ? euro(cashBox.balance) : "Keine Kasse"}</strong>
         <small>{loading ? "Kasse wird geladen…" : hasCashBox && cashBox.lastCountDate ? `Gezählt am ${cashBox.lastCountDate}` : "Noch nicht geprüft"}</small>
       </div>
       <div>
         <span>Kassenstatus</span>
         <strong className={hasCashBox && matched ? styles.positive : hasCashBox ? styles.negative : ""}>
-          {loading ? <InlineLoading label="Status wird geladen…" /> : !hasCashBox ? "Keine Kasse" : !cashBox.lastCountDate ? "Noch nicht geprüft" : matched ? "Stimmt" : "Prüfen"}
+          {loading ? <InlineLoading label="" className={styles.compactInlineLoading} /> : !hasCashBox ? "Keine Kasse" : !cashBox.lastCountDate ? "Noch nicht geprüft" : matched ? "Stimmt" : "Prüfen"}
         </strong>
         <small>
           {loading ? "Status wird geladen…" : !hasCashBox ? "Lege eine Kasse an" : !cashBox.lastCountDate ? "Noch keine Zählung" : matched
@@ -267,7 +269,7 @@ function AccountList({
       </div>
       <div className={styles.accountListFooter}>
         <span>Alle Kassen</span>
-        <strong>{loading ? <InlineLoading label="Bestand wird geladen…" /> : euro(totalBankBalance(cards))}</strong>
+        <strong>{loading ? <InlineLoading label="" className={styles.compactInlineLoading} /> : euro(totalBankBalance(cards))}</strong>
       </div>
     </section>
   );
@@ -301,7 +303,7 @@ function CardStage({
           <PanelLoading label="Kasse wird geladen…" />
         </div>
         <span aria-hidden="true" />
-        <div className={styles.cardPosition}>Kassendarstellung wird geladen…</div>
+        <div className={styles.cardPosition} aria-hidden="true" />
       </div>
     );
   }
@@ -711,6 +713,8 @@ function DesktopFunds(props: AdaptiveFundsViewProps) {
         <div
           className={styles.desktopOverview}
           role="tabpanel"
+          id="funds-panel-overview"
+          aria-labelledby="funds-tab-overview"
           aria-label="Übersicht"
         >
           <AccountList
@@ -732,6 +736,8 @@ function DesktopFunds(props: AdaptiveFundsViewProps) {
         <div
           className={styles.desktopAccounts}
           role="tabpanel"
+          id="funds-panel-accounts"
+          aria-labelledby="funds-tab-accounts"
           aria-label="Kassen"
         >
           <AccountList
@@ -749,6 +755,8 @@ function DesktopFunds(props: AdaptiveFundsViewProps) {
         <div
           className={styles.desktopAudit}
           role="tabpanel"
+          id="funds-panel-audit"
+          aria-labelledby="funds-tab-audit"
           aria-label="Prüfung"
         >
           <AuditPanel props={props} />
@@ -819,6 +827,8 @@ function TabletFunds(props: AdaptiveFundsViewProps) {
         <div
           className={styles.tabletOverview}
           role="tabpanel"
+          id="funds-panel-overview"
+          aria-labelledby="funds-tab-overview"
           aria-label="Übersicht"
         >
           <TabletAccountSelector
@@ -839,6 +849,8 @@ function TabletFunds(props: AdaptiveFundsViewProps) {
         <div
           className={styles.tabletAccounts}
           role="tabpanel"
+          id="funds-panel-accounts"
+          aria-labelledby="funds-tab-accounts"
           aria-label="Kassen"
         >
           <AccountList
@@ -856,6 +868,8 @@ function TabletFunds(props: AdaptiveFundsViewProps) {
         <div
           className={styles.tabletAudit}
           role="tabpanel"
+          id="funds-panel-audit"
+          aria-labelledby="funds-tab-audit"
           aria-label="Prüfung"
         >
           <AuditPanel props={props} />
@@ -906,12 +920,13 @@ function PhoneFunds(props: AdaptiveFundsViewProps) {
   const [section, setSection] = useState<FundsSection>("overview");
   const bankBalance = totalBankBalance(props.cards);
   const hasCashBox = Boolean(props.cashBox.id);
+  const totalBalance = bankBalance + (hasCashBox && !props.cards.length ? props.cashBox.balance : 0);
 
   return (
     <div className={`${styles.root} ${styles.phoneRoot}`}>
       <section className={styles.phoneBalanceHero} aria-label="Gesamtguthaben">
         <span>Gesamt verfügbar</span>
-        <strong>{props.loading ? <InlineLoading label="Bestand wird geladen…" /> : props.euro(bankBalance + props.cashBox.balance)}</strong>
+        <strong>{props.loading ? <InlineLoading label="" className={styles.compactInlineLoading} /> : props.euro(totalBalance)}</strong>
         <div>
           {props.loading ? <span>Kassen werden geladen…</span> : hasCashBox ? <span>{props.euro(props.cashBox.balance)} Kasse</span> : <span>Keine Kasse angelegt</span>}
         </div>
@@ -921,6 +936,8 @@ function PhoneFunds(props: AdaptiveFundsViewProps) {
         <div
           className={styles.phonePanel}
           role="tabpanel"
+          id="funds-panel-overview"
+          aria-labelledby="funds-tab-overview"
           aria-label="Übersicht"
         >
           <PhoneAccountCard {...props} />
@@ -936,15 +953,16 @@ function PhoneFunds(props: AdaptiveFundsViewProps) {
             <button
               type="button"
               className={styles.secondaryAction}
+              aria-label="Kasse hinzufügen"
               onClick={props.onAddCard}
               disabled={props.loading || Boolean(props.error)}
             >
-              <Plus aria-hidden="true" /> Kasse
+              <Plus aria-hidden="true" /> Hinzufügen
             </button>
           </div>
           {hasCashBox ? <section className={styles.phoneSection}>
             <header>
-              <h2>{props.cashBox.name}</h2>
+              <h2>Kassenstatus</h2>
               <b>{props.euro(props.cashBox.balance)}</b>
             </header>
             <button
@@ -954,16 +972,18 @@ function PhoneFunds(props: AdaptiveFundsViewProps) {
             >
               <span>
                 <strong>Kassenabgleich</strong>
-                <small>{props.cashBox.lastCountDate ? `Gezählt am ${props.cashBox.lastCountDate}` : "Noch nicht geprüft"}</small>
+                <small>{props.cashBox.lastCountDate ? `Gezählt am ${props.cashBox.lastCountDate}` : "Noch keine Zählung"}</small>
               </span>
               <b
                 className={
-                  props.cashBox.countStatus === "matched"
+                  !props.cashBox.lastCountDate
+                    ? styles.statusPending
+                    : props.cashBox.countStatus === "matched"
                     ? styles.positive
                     : styles.negative
                 }
               >
-                {!props.cashBox.lastCountDate ? "Noch nicht geprüft" : props.cashBox.countStatus === "matched" ? "Stimmt" : "Prüfen"}
+                {!props.cashBox.lastCountDate ? "Ausstehend" : props.cashBox.countStatus === "matched" ? "Stimmt" : "Prüfen"}
               </b>
             </button>
           </section> : null}
@@ -978,6 +998,8 @@ function PhoneFunds(props: AdaptiveFundsViewProps) {
         <section
           className={styles.phoneSection}
           role="tabpanel"
+          id="funds-panel-accounts"
+          aria-labelledby="funds-tab-accounts"
           aria-label="Kassen"
         >
           <header>
@@ -1034,6 +1056,8 @@ function PhoneFunds(props: AdaptiveFundsViewProps) {
         <section
           className={styles.phoneSection}
           role="tabpanel"
+          id="funds-panel-audit"
+          aria-labelledby="funds-tab-audit"
           aria-label="Prüfung"
         >
           <header>

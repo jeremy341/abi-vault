@@ -149,7 +149,7 @@
 .row {
   display: grid;
   min-height: 4.75rem;
-  grid-template-columns: 1.5rem minmax(0, 1fr) auto;
+  grid-template-columns: 1.5rem minmax(0, 1fr) auto 2.75rem;
   align-items: center;
   gap: 0.7rem;
   border-bottom: 1px solid var(--ui-border-subtle);
@@ -183,13 +183,14 @@
 
 .rowSide {
   display: grid;
-  grid-template-columns: auto auto auto;
   justify-items: end;
   gap: 0.18rem;
 }
 
-.rowSide > :global([data-slot="dropdown-menu"]) {
-  align-self: center;
+.row > :global([data-slot="dropdown-menu-trigger"]) {
+  width: 2.75rem;
+  height: 2.75rem;
+  justify-self: end;
 }
 
 .rowSide b {

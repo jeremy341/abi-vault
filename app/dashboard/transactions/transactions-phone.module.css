@@ -52,6 +52,13 @@
   color: var(--ui-negative);
 }
 
+.summaryEmpty {
+  max-width: 7rem;
+  color: var(--ui-muted-ink);
+  font-weight: 500;
+  line-height: 1.2;
+}
+
 .toolbar {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 3rem;
@@ -151,15 +158,38 @@
 .row {
   display: grid;
   min-height: 4.5rem;
+  grid-template-columns: minmax(0, 1fr) 2.75rem;
+  align-items: center;
+  gap: 0.35rem;
+  border-bottom: 1px solid var(--ui-border-subtle);
+}
+
+.rowOpen {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  min-height: 4.5rem;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.75rem;
   border: 0;
-  border-bottom: 1px solid var(--ui-border-subtle);
   background: transparent;
   padding: 0.6rem 0;
   color: var(--ui-ink);
+  font: inherit;
   text-align: left;
+}
+
+.rowOpen:focus-visible {
+  border-radius: var(--ui-control-radius);
+  outline: 2px solid var(--ui-border-focus);
+  outline-offset: 2px;
+}
+
+.row > :global([data-slot="dropdown-menu-trigger"]) {
+  width: 2.75rem;
+  height: 2.75rem;
+  justify-self: end;
 }
 
 .rowMain {
@@ -192,13 +222,8 @@
 
 .rowSide {
   display: grid;
-  grid-template-columns: auto auto auto;
   justify-items: end;
   gap: 0.2rem;
-}
-
-.rowSide > :global([data-slot="dropdown-menu"]) {
-  align-self: center;
 }
 
 .rowSide b {

@@ -1,7 +1,11 @@
 .root {
   display: grid;
+  width: 100%;
+  max-width: 100%;
   min-width: 0;
   grid-template-columns: minmax(0, 1fr);
+  grid-auto-rows: max-content;
+  align-content: start;
   overflow: hidden;
   color: var(--ui-ink);
   padding: 0 1rem 1rem;
@@ -18,7 +22,9 @@
 }
 
 .tabs button {
+  height: 3rem;
   min-height: 3rem;
+  align-self: start;
   border: 0;
   border-bottom: 2px solid transparent;
   background: transparent;
@@ -33,6 +39,10 @@
   color: var(--ui-ink);
 }
 
+.tabPanel {
+  min-width: 0;
+}
+
 .hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -40,8 +50,9 @@
   padding: 1.2rem 0 1rem;
 }
 
-.hero span,
-.hero p {
+.hero > span,
+.hero > p,
+.heroSide > span {
   color: var(--ui-muted-ink);
   font-size: 0.7rem;
 }
@@ -118,8 +129,30 @@
 }
 
 .chart {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   height: 15rem;
+  aspect-ratio: auto;
   margin-top: 0.7rem;
+}
+
+.chartEmpty {
+  height: 8rem;
+}
+
+.emptyState {
+  display: grid;
+  width: 100%;
+  min-height: 6rem;
+  place-items: center;
+  color: var(--ui-muted-ink);
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.chart .emptyState {
+  min-height: 100%;
 }
 
 .rows {
@@ -163,7 +196,7 @@
   height: 0.35rem;
   overflow: hidden;
   border-radius: 999px;
-  background: rgb(0 0 0 / 0.07);
+  background: var(--ui-border);
 }
 
 .progress i {

@@ -4,6 +4,116 @@
   color: var(--ui-ink);
 }
 
+.presentationFallback {
+  display: grid;
+  min-height: 100dvh;
+  grid-template-columns: 5.5rem minmax(0, 1fr);
+  overflow: hidden;
+  background: var(--ui-canvas);
+  padding: 0.625rem;
+}
+
+.presentationFallbackRail,
+.presentationFallbackWorkspace {
+  min-height: 0;
+  border: 1px solid var(--ui-border-subtle);
+  background: var(--ui-surface);
+}
+
+.presentationFallbackRail {
+  display: grid;
+  align-content: start;
+  justify-items: center;
+  gap: 1.15rem;
+  border-radius: 1.25rem 0 0 1.25rem;
+  padding: 1rem 0.75rem;
+}
+
+.presentationFallbackRail > span:not(.presentationFallbackLogo) {
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 0.45rem;
+  background: var(--ui-border-subtle);
+}
+
+.presentationFallbackLogo {
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 0.65rem;
+  background: var(--ui-ink);
+}
+
+.presentationFallbackWorkspace {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 0 1.25rem 1.25rem 0;
+}
+
+.presentationFallbackTopbar {
+  display: flex;
+  min-height: 4.25rem;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  border-bottom: 1px solid var(--ui-border-subtle);
+  padding: 0 1.25rem;
+}
+
+.presentationFallbackTopbar span {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid var(--ui-border-subtle);
+  border-radius: 0.75rem;
+  background: var(--ui-canvas);
+}
+
+.presentationFallbackContent {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  padding: 1.25rem;
+}
+
+.presentationFallbackContent span {
+  width: 100%;
+  height: 4rem;
+  border: 1px solid var(--ui-border-subtle);
+  border-radius: 0.9rem;
+  background: var(--ui-canvas);
+}
+
+@media (min-width: 1400px) {
+  .presentationFallback {
+    grid-template-columns: 15.5rem minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 767px) {
+  .presentationFallback {
+    grid-template-columns: 1fr;
+    padding: 0;
+  }
+
+  .presentationFallbackRail {
+    display: none;
+  }
+
+  .presentationFallbackWorkspace {
+    border: 0;
+    border-radius: 0;
+  }
+
+  .presentationFallbackTopbar {
+    min-height: 4.25rem;
+    padding-inline: 1rem;
+  }
+
+  .presentationFallbackContent {
+    padding: 1rem;
+  }
+}
+
 .skipLink {
   position: fixed;
   z-index: 100;
@@ -574,8 +684,20 @@
   background: transparent;
 }
 
+.phoneActions :global(.cl-userButtonTrigger) {
+  width: 2.75rem;
+  height: 2.75rem;
+}
+
+.phoneActions :global(.cl-avatarBox) {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
 .phoneContent {
   display: flex;
+  width: 100%;
+  min-width: 0;
   min-height: 0;
   flex: 1 1 auto;
   flex-direction: column;
@@ -586,6 +708,8 @@
 }
 
 .phoneContent > * {
+  width: 100%;
+  max-width: 100%;
   min-height: 0;
   flex: 1 1 auto;
 }
@@ -632,6 +756,10 @@
 .phoneNavLinkActive {
   background: rgb(0 0 0 / 0.055);
   color: var(--ui-ink);
+}
+
+:global(.dark) .phoneNavLinkActive {
+  background: rgb(255 255 255 / 0.1);
 }
 
 .phoneNavLink:active,

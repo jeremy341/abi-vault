@@ -243,7 +243,7 @@ function AccountList({
         </button>
       </header>
       <div className={styles.accountList}>
-        {error ? <PanelError message={error} onRetry={onRetry} /> : loading ? <PanelLoading label="Kassen werden geladen…" /> : cards.length ? cards.map((card, index) => (
+        {error ? <PanelError message={error} onRetry={onRetry} /> : loading ? <PanelLoading label="" /> : cards.length ? cards.map((card, index) => (
           <button
             key={card.id}
             type="button"
@@ -300,7 +300,7 @@ function CardStage({
       <div className={styles.cardStage} aria-busy="true">
         <span aria-hidden="true" />
         <div className={styles.cardSlot}>
-          <PanelLoading label="Kasse wird geladen…" />
+          <PanelLoading label="" />
         </div>
         <span aria-hidden="true" />
         <div className={styles.cardPosition} aria-hidden="true" />
@@ -386,7 +386,7 @@ function BankDetail({
           </div>
           <WalletCards aria-hidden="true" />
         </header>
-        <PanelLoading label="Kasse wird geladen…" />
+        <PanelLoading label="" />
       </section>
     );
   }
@@ -457,7 +457,7 @@ function CashDetail({ props }: { props: AdaptiveFundsViewProps }) {
           </div>
           <Banknote aria-hidden="true" />
         </header>
-        <PanelLoading label="Kasse wird geladen…" />
+        <PanelLoading label="" />
       </section>
     );
   }
@@ -516,7 +516,7 @@ function Reconciliation({ props }: { props: AdaptiveFundsViewProps }) {
           </div>
           <ShieldCheck aria-hidden="true" />
         </header>
-        <PanelLoading label="Abgleich wird geladen…" />
+        <PanelLoading label="" />
       </section>
     );
   }

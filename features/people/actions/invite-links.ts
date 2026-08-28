@@ -82,15 +82,17 @@ export async function acceptRoleInviteLink(token: string) {
 
   const clerkRole = invite.role === "admin" ? "org:admin" : "org:member";
 
-  const { data: existingMembership } = await admin
+  const { data: existingMembership, error: existingMembershipError } = await admin
     .from("committee_memberships")
     .select("role, clerk_role")
     .eq("organization_id", invite.organization_id)
     .eq("clerk_user_id", session.userId)
     .eq("status", "active")
     .maybeSingle();
+  if (existingMembershipError) return { ok: false as const, error: "MEMBERSHIP_SYNC_FAILED" };
 
   const client = await clerkClient();
+  let createdClerkMembership = false;
   try {
     if (!existingMembership) {
       await client.organizations.createOrganizationMembership({
@@ -98,6 +100,7 @@ export async function acceptRoleInviteLink(token: string) {
         userId: session.userId,
         role: clerkRole,
       });
+      createdClerkMembership = true;
     }
   } catch {
     return { ok: false as const, error: "MEMBERSHIP_CREATE_FAILED" };
@@ -112,18 +115,55 @@ export async function acceptRoleInviteLink(token: string) {
     .select("id")
     .maybeSingle();
 
-  if (consumeError || !consumed) return { ok: false as const, error: "LINK_ALREADY_USED" };
+  if (consumeError || !consumed) {
+    if (createdClerkMembership) {
+      try {
+        await client.organizations.deleteOrganizationMembership({
+          organizationId: invite.organization_id,
+          userId: session.userId,
+        });
+      } catch {
+        // The failed link claim must not block the response. The membership
+        // webhook remains the final reconciliation path if cleanup fails.
+      }
+    }
+    return { ok: false as const, error: "LINK_ALREADY_USED" };
+  }
+
+  const applicationRole = existingMembership?.role === "admin"
+    ? "admin"
+    : invite.role === "admin"
+      ? "admin"
+      : "supervisor";
+  const applicationClerkRole = applicationRole === "admin" ? "org:admin" : "org:member";
 
   const { error: membershipError } = await admin
     .from("committee_memberships")
     .upsert({
       organization_id: invite.organization_id,
       clerk_user_id: session.userId,
-      role: existingMembership?.role ?? invite.role,
-      clerk_role: existingMembership?.clerk_role ?? clerkRole,
+      role: applicationRole,
+      clerk_role: applicationClerkRole,
       status: "active",
     }, { onConflict: "organization_id,clerk_user_id" });
 
-  if (membershipError) return { ok: false as const, error: "MEMBERSHIP_SYNC_FAILED" };
-  return { ok: true as const, organizationId: invite.organization_id, role: existingMembership?.role ?? invite.role };
+  if (membershipError) {
+    await admin
+      .from("organization_invite_links")
+      .update({ uses: invite.uses })
+      .eq("id", invite.id)
+      .eq("uses", invite.uses + 1);
+    if (createdClerkMembership) {
+      try {
+        await client.organizations.deleteOrganizationMembership({
+          organizationId: invite.organization_id,
+          userId: session.userId,
+        });
+      } catch {
+        // The membership webhook remains the final reconciliation path.
+      }
+    }
+    return { ok: false as const, error: "MEMBERSHIP_SYNC_FAILED" };
+  }
+  return { ok: true as const, organizationId: invite.organization_id, role: applicationRole };
 }

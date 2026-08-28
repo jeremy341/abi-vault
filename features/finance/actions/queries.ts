@@ -21,6 +21,17 @@ export type TransactionListItem = {
   canDelete: boolean;
 };
 
+export type CashCountListItem = {
+  id: string;
+  walletId: string;
+  countedAmountMinor: string;
+  bookAmountMinor: string;
+  differenceMinor: string;
+  countedByName: string | null;
+  createdAt: string;
+  note: string | null;
+};
+
 export async function listTransactionsForCurrentOrganization() {
   const context = await requireClerkContext();
   const supabase = await createSupabaseServerClient();
@@ -65,7 +76,8 @@ export async function listTransactionsForCurrentOrganization() {
     .from("wallets")
     .select("id")
     .eq("organization_id", context.organizationId)
-    .eq("type", "cash");
+    .eq("type", "cash")
+    .eq("status", "active");
   if (cashWalletError) return { ok: false as const, error: "DATABASE_ERROR" as const };
   const cashWalletIds = new Set((cashWallets ?? []).map((wallet) => wallet.id));
   if (!cashWalletIds.size) return { ok: true as const, items: [] };
@@ -81,7 +93,9 @@ export async function listTransactionsForCurrentOrganization() {
     .order("booked_at", { ascending: false });
   if (error) return { ok: false as const, error: "DATABASE_ERROR" as const };
 
-  const cashTransactions = (data ?? []).filter((item) => cashWalletIds.has(item.from_wallet_id ?? item.to_wallet_id ?? ""));
+  const cashTransactions = (data ?? []).filter((item) =>
+    cashWalletIds.has(item.from_wallet_id ?? "") || cashWalletIds.has(item.to_wallet_id ?? ""),
+  );
   const categoryIds = [...new Set(cashTransactions.map((item) => item.category_id).filter(Boolean))];
   const walletIds = [...new Set(cashTransactions.flatMap((item) => [item.from_wallet_id, item.to_wallet_id]).filter(Boolean))];
   const [
@@ -195,14 +209,41 @@ export async function listWalletsForCurrentOrganization(options?: { includeBalan
       .or("correction_role.is.null,correction_role.neq.reversal");
   if (transactions.error) return { ok: false as const, error: "DATABASE_ERROR" as const };
   const transactionRows = transactions.data ?? [];
+  const activeWalletIds = new Set((wallets ?? []).map((wallet) => wallet.id));
+  const effectiveTransactions = transactionRows.filter((transaction) =>
+    activeWalletIds.has(transaction.from_wallet_id ?? "") || activeWalletIds.has(transaction.to_wallet_id ?? ""),
+  );
   const balances = new Map((wallets ?? []).map((wallet) => [wallet.id, BigInt(String(wallet.opening_balance_minor ?? 0))]));
-  for (const transaction of transactionRows) {
+  for (const transaction of effectiveTransactions) {
     const amount = BigInt(String(transaction.amount_minor));
     if (transaction.type === "income" && transaction.to_wallet_id) balances.set(transaction.to_wallet_id, (balances.get(transaction.to_wallet_id) ?? BigInt(0)) + amount);
     if (transaction.type === "expense" && transaction.from_wallet_id) balances.set(transaction.from_wallet_id, (balances.get(transaction.from_wallet_id) ?? BigInt(0)) - amount);
     if (transaction.type === "transfer") {
       if (transaction.from_wallet_id) balances.set(transaction.from_wallet_id, (balances.get(transaction.from_wallet_id) ?? BigInt(0)) - amount);
       if (transaction.to_wallet_id) balances.set(transaction.to_wallet_id, (balances.get(transaction.to_wallet_id) ?? BigInt(0)) + amount);
+    }
+  }
+
+  const { data: cashCounts, error: cashCountError } = await supabase
+    .from("cash_counts")
+    .select("wallet_id, counted_amount_minor, difference_minor, counted_by_name, created_at")
+    .eq("organization_id", context.organizationId)
+    .order("created_at", { ascending: false });
+  if (cashCountError) return { ok: false as const, error: "DATABASE_ERROR" as const };
+  const latestCounts = new Map<string, {
+    countedAmountMinor: string;
+    differenceMinor: string;
+    countedByName: string | null;
+    createdAt: string;
+  }>();
+  for (const cashCount of cashCounts ?? []) {
+    if (!latestCounts.has(cashCount.wallet_id)) {
+      latestCounts.set(cashCount.wallet_id, {
+        countedAmountMinor: String(cashCount.counted_amount_minor),
+        differenceMinor: String(cashCount.difference_minor),
+        countedByName: cashCount.counted_by_name,
+        createdAt: cashCount.created_at,
+      });
     }
   }
 
@@ -218,6 +259,10 @@ export async function listWalletsForCurrentOrganization(options?: { includeBalan
       cardHolderVisual: wallet.card_holder_visual,
       cardExpiryVisual: wallet.card_expiry_visual,
       cardColorVisual: wallet.card_color_visual,
+      lastCountAt: latestCounts.get(wallet.id)?.createdAt ?? null,
+      lastCountedAmountMinor: latestCounts.get(wallet.id)?.countedAmountMinor ?? null,
+      lastCountDifferenceMinor: latestCounts.get(wallet.id)?.differenceMinor ?? null,
+      lastCountedByName: latestCounts.get(wallet.id)?.countedByName ?? null,
       connected: {
         display_name: null,
         iban_last4: null,
@@ -322,9 +367,13 @@ export async function getReportKpisForCurrentOrganization() {
   if (transactionError || walletError || receiptError || cashCountError) {
     return { ok: false as const, error: "DATABASE_ERROR" as const };
   }
+  const activeWalletIds = new Set((wallets ?? []).map((wallet) => wallet.id));
+  const effectiveTransactions = (transactions ?? []).filter((transaction) =>
+    activeWalletIds.has(transaction.from_wallet_id ?? "") || activeWalletIds.has(transaction.to_wallet_id ?? ""),
+  );
   let income = BigInt(0);
   let expenses = BigInt(0);
-  for (const transaction of transactions ?? []) {
+  for (const transaction of effectiveTransactions) {
     const amount = BigInt(String(transaction.amount_minor));
     if (transaction.type === "income") income += amount;
     if (transaction.type === "expense") expenses += amount;
@@ -332,9 +381,8 @@ export async function getReportKpisForCurrentOrganization() {
   const pendingReceipts = (receipts ?? []).filter((receipt) => receipt.review_status === "pending").length;
   const reviewedReceiptCount = (receipts ?? []).filter((receipt) => receipt.review_status === "approved").length;
   const unassignedReceiptCount = (receipts ?? []).filter((receipt) => !receipt.transaction_id).length;
-  const activeWalletIds = new Set((wallets ?? []).map((wallet) => wallet.id));
   const balances = new Map((wallets ?? []).map((wallet) => [wallet.id, BigInt(String(wallet.opening_balance_minor ?? 0))]));
-  for (const transaction of transactions ?? []) {
+  for (const transaction of effectiveTransactions) {
     const amount = BigInt(String(transaction.amount_minor));
     if (transaction.type === "income" && transaction.to_wallet_id) balances.set(transaction.to_wallet_id, (balances.get(transaction.to_wallet_id) ?? BigInt(0)) + amount);
     if (transaction.type === "expense" && transaction.from_wallet_id) balances.set(transaction.from_wallet_id, (balances.get(transaction.from_wallet_id) ?? BigInt(0)) - amount);
@@ -360,6 +408,30 @@ export async function getReportKpisForCurrentOrganization() {
     reviewedReceiptCount,
     unassignedReceiptCount,
     reconciliationPercent,
+  };
+}
+
+export async function listCashCountsForCurrentOrganization() {
+  const context = await requireClerkContext();
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("cash_counts")
+    .select("id, wallet_id, counted_amount_minor, book_amount_minor, difference_minor, counted_by_name, created_at, note")
+    .eq("organization_id", context.organizationId)
+    .order("created_at", { ascending: false });
+  if (error) return { ok: false as const, error: "DATABASE_ERROR" as const };
+  return {
+    ok: true as const,
+    items: (data ?? []).map((item): CashCountListItem => ({
+      id: item.id,
+      walletId: item.wallet_id,
+      countedAmountMinor: String(item.counted_amount_minor),
+      bookAmountMinor: String(item.book_amount_minor),
+      differenceMinor: String(item.difference_minor),
+      countedByName: item.counted_by_name,
+      createdAt: item.created_at,
+      note: item.note,
+    })),
   };
 }
 
@@ -407,11 +479,12 @@ export async function getDashboardSnapshot() {
 }
 
 export async function getReportSnapshot() {
-  const [transactions, goals] = await Promise.all([
+  const [transactions, goals, wallets] = await Promise.all([
     listTransactionsForCurrentOrganization(),
     listGoalsForCurrentOrganization(),
+    listWalletsForCurrentOrganization({ includeBalances: false }),
   ]);
-  if (!transactions.ok || !goals.ok) return { ok: false as const };
+  if (!transactions.ok || !goals.ok || !wallets.ok) return { ok: false as const };
 
   const now = new Date();
   const months = Array.from({ length: 6 }, (_, index) => {
@@ -454,7 +527,13 @@ export async function getReportSnapshot() {
     amount,
     share: totalExpenses ? Math.round((amount / totalExpenses) * 100) : 0,
   }));
-  let balance = 0;
+  let balance = wallets.items.reduce((sum, wallet) => sum + Number(wallet.openingBalanceMinor) / 100, 0);
+  for (const transaction of transactions.items) {
+    if (transaction.date && transaction.date.slice(0, 7) >= months[0].key) continue;
+    const amount = Math.abs(Number(transaction.amountMinor)) / 100;
+    if (transaction.type === "income") balance += amount;
+    if (transaction.type === "expense") balance -= amount;
+  }
   const analysisBalance = cashflow.map((month, index) => {
     balance += month.income - month.expenses;
     return { month: `${month.month} ${months[index]?.year ?? now.getFullYear()}`, balance };

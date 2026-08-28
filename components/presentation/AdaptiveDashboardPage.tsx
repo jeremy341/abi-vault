@@ -25,7 +25,7 @@ import styles from "@/app/dashboard/dashboard-adaptive.module.css";
 import desktopStyles from "@/app/dashboard/dashboard-desktop.module.css";
 import { useDashboardSnapshot, type DashboardSnapshot } from "@/hooks/use-dashboard-snapshot";
 import { InlineLoading, LoadingCollection, LoadingStatus, LoadingText } from "@/components/ui/loading-state";
-import { mapWalletToCashRegisterCard } from "@/lib/finance/cash-register-card";
+import { mapWalletToCashRegisterCard, type CashRegisterWallet } from "@/lib/finance/cash-register-card";
 
 function displayMinor(value: string) {
   return (Number(value) / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
@@ -90,15 +90,18 @@ function DashboardCashCarousel({
   snapshot,
   loading,
   error,
+  selectedWalletId,
+  onSelectWallet,
   onPreview,
 }: {
   snapshot: DashboardSnapshot | null;
   loading: boolean;
   error: string | null;
-  onPreview: () => void;
+  selectedWalletId: string | null;
+  onSelectWallet: (walletId: string) => void;
+  onPreview: (wallet: CashRegisterWallet) => void;
 }) {
   const wallets = snapshot?.wallets.filter((wallet) => wallet.type === "cash") ?? [];
-  const [index, setIndex] = useState(0);
   if (loading) {
     return (
       <div className={desktopStyles.cashCardCarousel} aria-busy="true">
@@ -110,14 +113,15 @@ function DashboardCashCarousel({
   }
   if (error) return <div className={desktopStyles.cashCardCarousel} aria-hidden="true" />;
   if (!wallets.length) return <Link href="/dashboard/funds" className={desktopStyles.accountCard} aria-label="Kasse anlegen"><AccountCard variant="add" /></Link>;
-  const safeIndex = Math.min(index, wallets.length - 1);
+  const selectedIndex = wallets.findIndex((wallet) => wallet.id === selectedWalletId);
+  const safeIndex = selectedIndex >= 0 ? selectedIndex : 0;
   const wallet = wallets[safeIndex];
   const card = mapWalletToCashRegisterCard(wallet);
   return (
     <div className={desktopStyles.cashCardCarousel}>
-      {wallets.length > 1 ? <button type="button" aria-label="Vorherige Kasse" onClick={() => setIndex((current) => (current - 1 + wallets.length) % wallets.length)}><ChevronLeft aria-hidden="true" /></button> : null}
-      <button type="button" className={desktopStyles.cashCardCarouselCard} aria-label={`${wallet.name} anzeigen`} onClick={onPreview}><AccountCard cardColor={card.details.color} details={card.details} /></button>
-      {wallets.length > 1 ? <button type="button" aria-label="Nächste Kasse" onClick={() => setIndex((current) => (current + 1) % wallets.length)}><ChevronRight aria-hidden="true" /></button> : null}
+      {wallets.length > 1 ? <button type="button" aria-label="Vorherige Kasse" onClick={() => onSelectWallet(wallets[(safeIndex - 1 + wallets.length) % wallets.length].id)}><ChevronLeft aria-hidden="true" /></button> : null}
+      <button type="button" className={desktopStyles.cashCardCarouselCard} aria-label={`${wallet.name} anzeigen`} onClick={() => onPreview(wallet)}><AccountCard cardColor={card.details.color} details={card.details} /></button>
+      {wallets.length > 1 ? <button type="button" aria-label="Nächste Kasse" onClick={() => onSelectWallet(wallets[(safeIndex + 1) % wallets.length].id)}><ChevronRight aria-hidden="true" /></button> : null}
     </div>
   );
 }
@@ -135,11 +139,14 @@ function displayDashboardReviews(snapshot: DashboardSnapshot | null) {
 
 function DesktopDashboard({ snapshot, loading, error }: { snapshot: DashboardSnapshot | null; loading: boolean; error: string | null }) {
   const [cardPreviewOpen, setCardPreviewOpen] = useState(false);
+  const [selectedCashWalletId, setSelectedCashWalletId] = useState<string | null>(null);
   const transactionItems = displayDashboardTransactions(snapshot);
   const goalItems = displayDashboardGoals(snapshot);
   const categoryItems = displayDashboardCategories(snapshot);
   const reviewItems = displayDashboardReviews(snapshot);
-  const cashWallet = primaryCashWallet(snapshot);
+  const cashWallets = snapshot?.wallets.filter((wallet) => wallet.type === "cash") ?? [];
+  const cashWallet = cashWallets.find((wallet) => wallet.id === selectedCashWalletId) ?? cashWallets[0] ?? null;
+  const cashCard = cashWallet ? mapWalletToCashRegisterCard(cashWallet) : null;
   const cashBalance = cashWallet ? Number(cashWallet.balanceMinor) : 0;
   const incomeTotal = snapshot ? snapshot.transactions.filter((item) => Number(item.amountMinor) >= 0).reduce((sum, item) => sum + Number(item.amountMinor), 0) : 0;
   const expenseTotal = snapshot ? snapshot.transactions.filter((item) => Number(item.amountMinor) < 0).reduce((sum, item) => sum + Math.abs(Number(item.amountMinor)), 0) : 0;
@@ -175,7 +182,7 @@ function DesktopDashboard({ snapshot, loading, error }: { snapshot: DashboardSna
       <div className={desktopStyles.workspace} data-ui-slot="content">
         <div className={desktopStyles.primaryColumn}>
           <article className={desktopStyles.accountPanel} data-ui-slot="primary-panel">
-            <DashboardCashCarousel snapshot={snapshot} loading={loading} error={error} onPreview={() => setCardPreviewOpen(true)} />
+            <DashboardCashCarousel snapshot={snapshot} loading={loading} error={error} selectedWalletId={cashWallet?.id ?? null} onSelectWallet={setSelectedCashWalletId} onPreview={() => setCardPreviewOpen(true)} />
             <div className={desktopStyles.accountSummary}>
               <div>
                 <span className={desktopStyles.eyebrow}>{loading ? "Kasse wird geladen…" : cashWallet?.name ?? "Keine Kasse angelegt"}</span>
@@ -337,7 +344,10 @@ function DesktopDashboard({ snapshot, loading, error }: { snapshot: DashboardSna
             </button>
           </header>
           <div className={desktopStyles.accountDialogCard}>
-            <AccountCard details={{ accountName: cashWallet?.name ?? "Kasse" }} />
+            <AccountCard
+              details={cashCard?.details ?? { accountName: cashWallet?.name ?? "Kasse" }}
+              cardColor={cashCard?.details.color}
+            />
           </div>
         </Dialog>
       ) : null}
@@ -506,6 +516,8 @@ function PhoneDashboard({ snapshot, loading, error }: { snapshot: DashboardSnaps
   const reviewItems = displayDashboardReviews(snapshot);
   const cashWallet = primaryCashWallet(snapshot);
   const cashBalance = cashWallet ? Number(cashWallet.balanceMinor) : 0;
+  const cashHasCount = Boolean(cashWallet?.lastCountAt);
+  const cashCountMatches = cashHasCount && Math.abs(Number(cashWallet?.lastCountDifferenceMinor ?? 0)) < 0.01;
   const lastTransaction = formatLastTransaction(snapshot?.transactions[0]?.date);
   return (
     <section className={styles.phonePage} aria-busy={loading}>
@@ -516,7 +528,7 @@ function PhoneDashboard({ snapshot, loading, error }: { snapshot: DashboardSnaps
         <strong><LoadingText loading={loading}>{displayMinor(String(cashBalance))}</LoadingText></strong>
         <div className={styles.phoneBalanceMeta}>
           <span>{loading ? "Kasse wird geladen…" : cashWallet?.name ?? "Keine Kasse angelegt"}</span>
-          {cashWallet ? <b>Abgleich stimmt</b> : null}
+          {cashWallet ? <b>{!cashHasCount ? "Noch nicht geprüft" : cashCountMatches ? "Abgleich stimmt" : "Abweichung prüfen"}</b> : null}
         </div>
       </div>
 

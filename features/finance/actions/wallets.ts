@@ -30,29 +30,17 @@ export async function createWallet(
 
   const context = await requirePermission("manageWallets");
   const supabase = await createSupabaseServerClient();
-  const { data: walletId, error: insertError } = await supabase.rpc("create_wallet", {
+  const { data: walletId, error: insertError } = await supabase.rpc("create_cash_wallet", {
     p_organization_id: context.organizationId,
     p_name: parsed.data.name,
-    p_type: "cash",
     p_responsible_clerk_user_id: parsed.data.responsibleClerkUserId ?? null,
-    p_bank_connection_id: null,
     p_idempotency_key: parsed.data.idempotencyKey,
+    p_card_number_visual: parsed.data.cardNumberVisual ?? null,
+    p_card_holder_visual: parsed.data.cardHolderVisual ?? null,
+    p_card_expiry_visual: parsed.data.cardExpiryVisual ?? null,
+    p_card_color_visual: parsed.data.cardColorVisual ?? null,
   });
   if (insertError || !walletId) return mapWalletError(insertError?.code);
-
-  const { error: visualError } = await supabase
-    .from("wallets")
-    .update({
-      card_number_visual: parsed.data.cardNumberVisual ?? null,
-      card_holder_visual: parsed.data.cardHolderVisual ?? null,
-      card_expiry_visual: parsed.data.cardExpiryVisual ?? null,
-      card_color_visual: parsed.data.cardColorVisual ?? null,
-    })
-    .eq("id", String(walletId))
-    .eq("organization_id", context.organizationId)
-    .eq("type", "cash")
-    .eq("status", "active");
-  if (visualError) return mapWalletError(visualError.code);
   return actionSuccess({ id: String(walletId) });
 }
 
@@ -61,23 +49,20 @@ export async function updateWallet(input: unknown) {
   if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "Die Kassendaten sind ungültig.");
   const context = await requirePermission("manageWallets");
   const supabase = await createSupabaseServerClient();
-  const { data: wallet, error } = await supabase
-    .from("wallets")
-    .update({
-      name: parsed.data.name,
-      card_number_visual: parsed.data.cardNumberVisual ?? null,
-      card_holder_visual: parsed.data.cardHolderVisual ?? null,
-      card_expiry_visual: parsed.data.cardExpiryVisual ?? null,
-      card_color_visual: parsed.data.cardColorVisual ?? null,
-    })
-    .eq("id", parsed.data.walletId)
-    .eq("organization_id", context.organizationId)
-    .eq("type", "cash")
-    .eq("status", "active")
-    .select("id")
-    .maybeSingle();
-  if (error) return mapWalletError(error.code);
-  if (!wallet) return actionFailure("NOT_FOUND", "Die Kasse ist nicht mehr aktiv.");
+  const { error } = await supabase.rpc("update_cash_wallet", {
+    p_organization_id: context.organizationId,
+    p_wallet_id: parsed.data.walletId,
+    p_name: parsed.data.name,
+    p_reason: parsed.data.reason,
+    p_card_number_visual: parsed.data.cardNumberVisual ?? null,
+    p_card_holder_visual: parsed.data.cardHolderVisual ?? null,
+    p_card_expiry_visual: parsed.data.cardExpiryVisual ?? null,
+    p_card_color_visual: parsed.data.cardColorVisual ?? null,
+  });
+  if (error) {
+    if (error.code === "23503") return actionFailure("NOT_FOUND", "Die Kasse ist nicht mehr aktiv.");
+    return mapWalletError(error.code);
+  }
   return actionSuccess(null);
 }
 
@@ -86,17 +71,15 @@ export async function archiveWallet(input: unknown) {
   if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "Die Kassendaten sind ungültig.");
   const context = await requirePermission("manageWallets");
   const supabase = await createSupabaseServerClient();
-  const { data: wallet, error } = await supabase
-    .from("wallets")
-    .update({ status: "archived" })
-    .eq("id", parsed.data.walletId)
-    .eq("organization_id", context.organizationId)
-    .eq("type", "cash")
-    .eq("status", "active")
-    .select("id")
-    .maybeSingle();
-  if (error) return mapWalletError(error.code);
-  if (!wallet) return actionFailure("NOT_FOUND", "Die Kasse ist nicht mehr aktiv.");
+  const { error } = await supabase.rpc("archive_cash_wallet", {
+    p_organization_id: context.organizationId,
+    p_wallet_id: parsed.data.walletId,
+    p_reason: parsed.data.reason,
+  });
+  if (error) {
+    if (error.code === "23503") return actionFailure("NOT_FOUND", "Die Kasse ist nicht mehr aktiv.");
+    return mapWalletError(error.code);
+  }
   return actionSuccess(null);
 }
 

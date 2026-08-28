@@ -495,6 +495,12 @@
   outline: 2px solid var(--ui-border-focus);
   outline-offset: 2px;
 }
+.formMessage {
+  margin: 0;
+  color: var(--ui-muted-ink);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
 .inviteLinkBox {
   display: grid;
   gap: 0.5rem;

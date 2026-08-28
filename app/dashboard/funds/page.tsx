@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { Banknote, Trash2, X } from "lucide-react";
 import AddCardModal from "@/components/dashboard/AddCardModal";
@@ -12,11 +12,13 @@ import { LoadingStatus } from "@/components/ui/loading-state";
 import { usePresentationMode } from "@/hooks/use-presentation-mode";
 import adaptiveStyles from "./funds-adaptive.module.css";
 import styles from "./funds.module.css";
-import { getDashboardSnapshot } from "@/features/finance/actions/queries";
+import { getDashboardSnapshot, listCashCountsForCurrentOrganization, type CashCountListItem } from "@/features/finance/actions/queries";
 import { cachedFinanceQuery, getFinanceCacheState } from "@/lib/finance/client-cache";
 import { invalidateFinanceQuery } from "@/lib/finance/client-cache";
 import { archiveWallet, createWallet, updateWallet } from "@/features/finance/actions/wallets";
 import { recordCashCount } from "@/features/finance/actions/cash-counts";
+import { parseEuroToMinor } from "@/lib/finance/money";
+import { calculateCashDenominationMinor } from "@/lib/finance/cash-count";
 import {
   mapWalletToCashRegisterCard,
   type CashRegisterCard,
@@ -44,6 +46,50 @@ type CashAuditEntry = {
   note?: string;
 };
 
+type WalletWithCount = {
+  id: string;
+  name: string;
+  balanceMinor: string | number;
+  lastCountAt?: string | null;
+  lastCountDifferenceMinor?: string | number | null;
+  lastCountedByName?: string | null;
+};
+
+function formatCountDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value.slice(0, 10);
+  const today = new Date();
+  return date.toDateString() === today.toDateString()
+    ? "Heute"
+    : date.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
+function mapWalletToCashBox(wallet: WalletWithCount): CashBox {
+  const difference = Number(String(wallet.lastCountDifferenceMinor ?? 0)) / 100;
+  const hasCount = Boolean(wallet.lastCountAt);
+  return {
+    id: wallet.id,
+    name: wallet.name,
+    balance: Number(wallet.balanceMinor) / 100,
+    responsible: wallet.lastCountedByName ?? "",
+    lastCountDate: hasCount ? formatCountDate(wallet.lastCountAt!) : "",
+    countStatus: Math.abs(difference) < 0.01 ? "matched" : "discrepancy",
+    difference: hasCount ? difference : 0,
+  };
+}
+
+function mapCashCountToAuditEntry(item: CashCountListItem): CashAuditEntry {
+  return {
+    id: item.id,
+    date: formatCountDate(item.createdAt),
+    auditor: item.countedByName ?? "Unbekannt",
+    countedAmount: Number(item.countedAmountMinor) / 100,
+    bookBalance: Number(item.bookAmountMinor) / 100,
+    difference: Number(item.differenceMinor) / 100,
+    note: item.note ?? undefined,
+  };
+}
+
 const money = new Intl.NumberFormat("de-DE", {
   style: "currency",
   currency: "EUR",
@@ -59,20 +105,13 @@ export default function FundsPage() {
   const cacheScope = `${orgId ?? "no-org"}:${userId ?? "anonymous"}`;
   type DashboardResult = Awaited<ReturnType<typeof getDashboardSnapshot>>;
   const initialSnapshot = getFinanceCacheState<DashboardResult>("dashboard-snapshot", cacheScope);
+  type CashCountResult = Awaited<ReturnType<typeof listCashCountsForCurrentOrganization>>;
+  const initialCashCounts = getFinanceCacheState<CashCountResult>("cash-counts", cacheScope);
   const initialWallets = initialSnapshot.data?.ok ? initialSnapshot.data.wallets : [];
   const [cards, setCards] = useState<DashboardCard[]>(() => initialWallets.map(mapWalletToCashRegisterCard));
   const [activeCardIndex, setActiveCardIndex] = useState(0);
-  const [cashBoxes, setCashBoxes] = useState<Record<string, CashBox>>(() => Object.fromEntries(initialWallets.map((wallet) => [wallet.id, {
-    id: wallet.id,
-    name: wallet.name,
-    balance: Number(wallet.balanceMinor) / 100,
-    responsible: "",
-    lastCountDate: "",
-    countStatus: "matched",
-    difference: 0,
-  }])));
-  const [auditLogs, setAuditLogs] =
-    useState<CashAuditEntry[]>([]);
+  const [cashBoxes, setCashBoxes] = useState<Record<string, CashBox>>(() => Object.fromEntries(initialWallets.map((wallet) => [wallet.id, mapWalletToCashBox(wallet)])));
+  const [auditLogs, setAuditLogs] = useState<CashAuditEntry[]>(() => initialCashCounts.data?.ok ? initialCashCounts.data.items.map(mapCashCountToAuditEntry) : []);
   const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(!initialSnapshot.data?.ok);
   const [loadError, setLoadError] = useState("");
@@ -90,6 +129,7 @@ export default function FundsPage() {
   const [countNote, setCountNote] = useState("");
   const [countError, setCountError] = useState("");
   const [countSaving, setCountSaving] = useState(false);
+  const countIdempotencyKey = useRef<string | null>(null);
   const [denomCounts, setDenomCounts] = useState<Record<string, number>>({
     "50": 0,
     "20": 0,
@@ -113,20 +153,21 @@ export default function FundsPage() {
       setLoadError("");
       const cashWallets = result.wallets.filter((item) => item.type === "cash");
       setCards(cashWallets.map(mapWalletToCashRegisterCard));
-      setCashBoxes(Object.fromEntries(cashWallets.map((wallet) => [wallet.id, {
-        id: wallet.id,
-        name: wallet.name,
-        balance: Number(wallet.balanceMinor) / 100,
-        responsible: "",
-        lastCountDate: "",
-        countStatus: "matched",
-        difference: 0,
-      }])));
+      setCashBoxes(Object.fromEntries(cashWallets.map((wallet) => [wallet.id, mapWalletToCashBox(wallet)])));
       setActiveCardIndex((current) => Math.min(current, Math.max(0, cashWallets.length - 1)));
     } catch {
       setLoadError("Die Kassen konnten nicht geladen werden.");
     } finally {
       setLoading(false);
+    }
+  }, [cacheScope]);
+
+  const loadCashCounts = useCallback(async () => {
+    try {
+      const result = await cachedFinanceQuery("cash-counts", listCashCountsForCurrentOrganization, { scope: cacheScope });
+      if (result.ok) setAuditLogs(result.items.map(mapCashCountToAuditEntry));
+    } catch {
+      // The Kasse data remains usable when the optional audit history is unavailable.
     }
   }, [cacheScope]);
 
@@ -137,8 +178,15 @@ export default function FundsPage() {
     return () => window.clearTimeout(timer);
   }, [loadWallets]);
 
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void loadCashCounts();
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [loadCashCounts]);
+
   const retryWallets = useCallback(() => {
-    invalidateFinanceQuery("wallets", "dashboard-snapshot", "transactions", "report-snapshot", "report-kpis");
+    invalidateFinanceQuery("wallets", "cash-counts", "dashboard-snapshot", "transactions", "report-snapshot", "report-kpis");
     setLoadError("");
     setLoading(true);
     void loadWallets();
@@ -180,20 +228,23 @@ export default function FundsPage() {
       difference: 0,
     };
 
-  const calculatedDenomSum = useMemo(
-    () =>
-      Object.entries(denomCounts).reduce(
-        (sum, [denomination, count]) =>
-          sum + Number.parseFloat(denomination) * (count || 0),
-        0,
-      ),
+  const calculatedDenomMinor = useMemo(
+    () => calculateCashDenominationMinor(denomCounts),
     [denomCounts],
   );
+  const directCountedMinor = useMemo(() => {
+    try {
+      return parseEuroToMinor(countedAmountInput);
+    } catch {
+      return null;
+    }
+  }, [countedAmountInput]);
 
   const activeCountedAmount =
     countMode === "calculator"
-      ? calculatedDenomSum
-      : Number.parseFloat(countedAmountInput.replace(",", ".")) || 0;
+      ? calculatedDenomMinor / 100
+      : directCountedMinor === null ? 0 : Number(directCountedMinor) / 100;
+  const activeCountedAmountValid = countMode === "calculator" || directCountedMinor !== null;
   const currentDiffPreview = activeCountedAmount - cashBox.balance;
 
   function switchCard(direction: -1 | 1) {
@@ -301,6 +352,7 @@ export default function FundsPage() {
       "0.2": 0,
       "0.1": 0,
     });
+    countIdempotencyKey.current = `count-${activeCard?.id ?? "new"}-${crypto.randomUUID()}`;
     setIsCountOpen(true);
   }
 
@@ -362,7 +414,7 @@ export default function FundsPage() {
     setCountSaving(true);
     try {
     const form = event.currentTarget;
-    if (activeCountedAmount < 0) {
+    if (!activeCountedAmountValid || activeCountedAmount < 0) {
       setCountError("Bitte einen gültigen Zählbetrag eingeben.");
       window.requestAnimationFrame(() => {
         (
@@ -382,7 +434,9 @@ export default function FundsPage() {
       const persisted = await recordCashCount({
         walletId: cashBox.id,
         countedAmount: String(activeCountedAmount).replace(".", ","),
+        auditor: countPerson.trim(),
         note: countNote.trim(),
+        idempotencyKey: countIdempotencyKey.current ?? `count-${cashBox.id}-${crypto.randomUUID()}`,
       });
       if (!persisted.ok) {
         setCountError("Der Kassensturz konnte nicht gespeichert werden.");
@@ -414,7 +468,10 @@ export default function FundsPage() {
     ]);
     setCountError("");
     setIsCountOpen(false);
-    invalidateFinanceQuery("wallets", "dashboard-snapshot", "transactions", "report-snapshot", "report-kpis");
+    countIdempotencyKey.current = null;
+    invalidateFinanceQuery("wallets", "cash-counts", "dashboard-snapshot", "transactions", "report-snapshot", "report-kpis");
+    void loadWallets();
+    void loadCashCounts();
     setNotice("Kassensturz gespeichert.");
     } catch {
       setCountError("Der Kassensturz konnte nicht gespeichert werden.");

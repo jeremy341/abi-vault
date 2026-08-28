@@ -11,6 +11,10 @@ export type CashRegisterWallet = {
   id: string;
   name: string;
   balanceMinor: string | number;
+  lastCountAt?: string | null;
+  lastCountedAmountMinor?: string | number | null;
+  lastCountDifferenceMinor?: string | number | null;
+  lastCountedByName?: string | null;
   cardNumberVisual?: string | null;
   cardHolderVisual?: string | null;
   cardExpiryVisual?: string | null;

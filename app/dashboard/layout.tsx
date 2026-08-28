@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import ResponsiveDashboardShell from "@/components/presentation/ResponsiveDashboardShell";
 import { FinanceCacheLifecycle } from "@/components/finance-cache-lifecycle";
+import { ensureCurrentOrganizationData } from "@/lib/auth/bootstrap";
 
 export default async function DashboardLayout({
   children,
@@ -13,6 +14,7 @@ export default async function DashboardLayout({
   if (!isAuthenticated) {
     redirect("/sign-in");
   }
+  if (orgId) await ensureCurrentOrganizationData();
 
   return (
     <ResponsiveDashboardShell>

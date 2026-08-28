@@ -23,7 +23,7 @@ export default function SignUpPage() {
 
       <section className="flex flex-1 items-center justify-center px-5 pb-24 pt-8 sm:px-8">
         <div className="w-full max-w-md">
-          <SignUp />
+          <SignUp fallbackRedirectUrl="/dashboard" />
         </div>
       </section>
     </main>

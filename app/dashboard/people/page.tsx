@@ -17,7 +17,7 @@ import styles from "./people.module.css";
 import phoneStyles from "./people-phone.module.css";
 import { usePresentationMode } from "@/hooks/use-presentation-mode";
 import { listMembersForCurrentOrganization } from "@/features/finance/actions/queries";
-import { createRoleInviteLink } from "@/features/people/actions/invite-links";
+import { inviteMember } from "@/features/people/actions/invitations";
 import { removeMember, updateMemberRole } from "@/features/people/actions/memberships";
 
 type Person = {
@@ -49,6 +49,7 @@ function PhonePeopleView({
   const supervisors = people.filter((person) =>
     person.role === "Supervisor",
   ).length;
+  const students = people.filter((person) => person.role === "Mitglied").length;
 
   return (
     <div className={phoneStyles.root} aria-busy={loading}>
@@ -125,6 +126,11 @@ function PhonePeopleView({
           <b><LoadingText loading={loading}>{supervisors}</LoadingText></b>
           <span>Finanzen</span>
         </div>
+        <div className={phoneStyles.role}>
+          <strong>Mitglied</strong>
+          <b><LoadingText loading={loading}>{students}</LoadingText></b>
+          <span>Transparenz</span>
+        </div>
       </section>
     </div>
   );
@@ -137,7 +143,7 @@ export default function PeoplePage() {
   const [query, setQuery] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [newRole, setNewRole] = useState("Supervisor");
-  const [inviteLink, setInviteLink] = useState("");
+  const [inviteEmail, setInviteEmail] = useState("");
   const [message, setMessage] = useState("");
   const [loadError, setLoadError] = useState("");
   const [openMenuId, setOpenMenuId] = useState<number | string | null>(null);
@@ -155,8 +161,8 @@ export default function PeoplePage() {
         setPeople(result.items.map((member) => ({
           id: member.id,
           name: member.name,
-          role: member.role === "admin" ? "Administrator" : "Supervisor",
-          access: member.role === "admin" ? "Vollzugriff" : "Finanzen verwalten",
+          role: member.role === "admin" ? "Administrator" : member.role === "supervisor" ? "Supervisor" : "Mitglied",
+          access: member.role === "admin" ? "Vollzugriff" : member.role === "supervisor" ? "Finanzen verwalten" : "Transparenz",
           status: member.status === "active" ? "Aktiv" : member.status === "invited" ? "Einladung offen" : "Nicht aktiv",
           initials: member.name.split(/\s+/).map((part: string) => part[0]).join("").slice(0, 2).toUpperCase(),
         })));
@@ -181,10 +187,18 @@ export default function PeoplePage() {
     [people, query],
   );
 
+  function openInviteModal() {
+    setInviteEmail("");
+    setNewRole("Supervisor");
+    setMessage("");
+    setModalOpen(true);
+  }
+
   function closeModal() {
     setModalOpen(false);
     setNewRole("Supervisor");
-    setInviteLink("");
+    setInviteEmail("");
+    setMessage("");
   }
 
   useEffect(() => {
@@ -249,6 +263,10 @@ export default function PeoplePage() {
   async function addPerson(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (inviteSaving) return;
+    if (!inviteEmail.trim()) {
+      setMessage("Bitte eine E-Mail-Adresse eingeben.");
+      return;
+    }
     setInviteSaving(true);
     const role =
       newRole === "Administrator"
@@ -257,23 +275,21 @@ export default function PeoplePage() {
           ? "supervisor"
         : "supervisor";
     try {
-      const invitation = await createRoleInviteLink({ role });
+      const invitation = await inviteMember({ email: inviteEmail.trim(), role });
       if (!invitation.ok) {
         setMessage(
           invitation.error === "INVALID_INPUT"
-            ? "Bitte eine gültige Rolle auswählen."
-            : "Der Einladungslink konnte nicht erstellt werden.",
+            ? "Bitte eine gültige E-Mail-Adresse und Rolle auswählen."
+            : "Die Einladung konnte nicht gesendet werden.",
         );
         return;
       }
-      setInviteLink(invitation.url);
+      setInviteEmail("");
       setMessage(
-        newRole === "Supervisor"
-          ? "Supervisor-Link erstellt: 30 Verwendungen, 30 Tage gültig."
-          : "Administrator-Link erstellt: einmalig, 7 Tage gültig.",
+        `Einladung an ${inviteEmail.trim()} gesendet.`,
       );
     } catch {
-      setMessage("Der Einladungslink konnte nicht erstellt werden.");
+      setMessage("Die Einladung konnte nicht gesendet werden.");
     } finally {
       setInviteSaving(false);
     }
@@ -307,12 +323,6 @@ export default function PeoplePage() {
     }
   }
 
-  async function copyInviteLink() {
-    if (!inviteLink) return;
-    await navigator.clipboard.writeText(inviteLink);
-    setMessage("Einladungslink kopiert.");
-  }
-
   return (
     <section className={mode === "phone" ? phoneStyles.pageShell : styles.page} aria-busy={loading}>
       <LoadingStatus loading={loading} label="Mitglieder werden geladen…" />
@@ -323,7 +333,7 @@ export default function PeoplePage() {
           people={filteredPeople}
           query={query}
           onQueryChange={setQuery}
-          onAdd={() => setModalOpen(true)}
+          onAdd={openInviteModal}
         />
       ) : (
         <>
@@ -374,7 +384,7 @@ export default function PeoplePage() {
                 <button
                   type="button"
                   className={styles.primaryButton}
-                  onClick={() => setModalOpen(true)}
+                  onClick={openInviteModal}
                   disabled={loading}
                   data-ui-slot="primary-action"
                 >
@@ -509,6 +519,20 @@ export default function PeoplePage() {
                       }
                     </b>
                   </div>
+                  <div>
+                    <span className={styles.roleIcon}>
+                      <Users aria-hidden="true" />
+                    </span>
+                    <span>
+                      <strong>Mitglied</strong>
+                      <small>Transparenz</small>
+                    </span>
+                    <b>
+                      {
+                        people.filter((person) => person.role === "Mitglied").length
+                      }
+                    </b>
+                  </div>
                 </div>
               </article>
               <article className={styles.activityPanel}>
@@ -548,8 +572,8 @@ export default function PeoplePage() {
           <form onSubmit={addPerson}>
             <header className={styles.modalHeader}>
               <div>
-              <h2>Einladungslink erstellen</h2>
-              <p>Teile den Link, damit ein Mitglied eurem Abi-Arbeitsbereich beitritt.</p>
+              <h2>Mitglied einladen</h2>
+              <p>Die Person erhält eine sichere Clerk-Einladung per E-Mail und wird direkt eurem Abi-Arbeitsbereich zugeordnet.</p>
               </div>
               <button
                 type="button"
@@ -563,6 +587,18 @@ export default function PeoplePage() {
             </header>
             <div className={styles.modalBody}>
               <label className={styles.formField}>
+                <span>E-Mail-Adresse</span>
+                <input
+                  name="inviteEmail"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={inviteEmail}
+                  onChange={(event) => setInviteEmail(event.target.value)}
+                  placeholder="name@beispiel.de"
+                />
+              </label>
+              <label className={styles.formField}>
                 <span>Rolle</span>
                 <select
                   name="personRole"
@@ -573,15 +609,7 @@ export default function PeoplePage() {
                   <option>Administrator</option>
                 </select>
               </label>
-              {inviteLink ? (
-                <div className={styles.inviteLinkBox}>
-                  <span>Link für {newRole}</span>
-                  <input readOnly value={inviteLink} aria-label="Einladungslink" />
-                  <button type="button" className={styles.secondaryButton} onClick={copyInviteLink}>
-                    Link kopieren
-                  </button>
-                </div>
-              ) : null}
+              {message ? <p className={styles.formMessage} role="status">{message}</p> : null}
             </div>
             <footer className={styles.modalFooter}>
               <button
@@ -593,7 +621,7 @@ export default function PeoplePage() {
                 Abbrechen
               </button>
               <button type="submit" className={styles.primaryButton} disabled={inviteSaving} aria-busy={inviteSaving}>
-                {inviteSaving ? "Wird erstellt …" : inviteLink ? "Neuen Link erstellen" : "Link erstellen"}
+                {inviteSaving ? "Wird gesendet …" : "Einladung senden"}
               </button>
             </footer>
           </form>

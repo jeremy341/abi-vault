@@ -16,6 +16,9 @@ export async function inviteMember(input: unknown) {
       role: parsed.data.role === "admin" ? "org:admin" : "org:member",
       inviterUserId: context.clerkUserId,
       expiresInDays: 30,
+      publicMetadata: {
+        abiVaultRole: parsed.data.role,
+      },
     });
     return { ok: true as const, id: invitation.id };
   } catch {

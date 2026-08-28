@@ -18,10 +18,25 @@ function primaryEmail(data: {
   return data.email_addresses?.[0]?.email_address ?? "";
 }
 
-function applicationRoleFromClerkRole(role: string | null | undefined) {
+function applicationRoleFromMetadata(metadata: unknown) {
+  if (metadata && typeof metadata === "object") {
+    const appRole = (metadata as { abiVaultRole?: unknown }).abiVaultRole;
+    if (appRole === "admin" || appRole === "supervisor" || appRole === "student") {
+      return appRole;
+    }
+  }
+  return null;
+}
+
+function applicationRoleFromClerkRole(
+  role: string | null | undefined,
+  metadata?: unknown,
+) {
+  const metadataRole = applicationRoleFromMetadata(metadata);
+  if (metadataRole) return metadataRole;
   if (role === "org:admin" || role === "admin") return "admin" as const;
   if (role === "org:supervisor" || role === "supervisor") return "supervisor" as const;
-  return "supervisor" as const;
+  return "student" as const;
 }
 
 async function recordWebhook(
@@ -138,6 +153,8 @@ export async function POST(request: NextRequest) {
       const membership = event.data;
       const organizationId = membership.organization.id;
       const clerkUserId = membership.public_user_data.user_id;
+      const membershipMetadata = (membership as { public_metadata?: unknown }).public_metadata;
+      const invitedApplicationRole = applicationRoleFromMetadata(membershipMetadata);
       const userName = [
         membership.public_user_data.first_name,
         membership.public_user_data.last_name,
@@ -177,7 +194,9 @@ export async function POST(request: NextRequest) {
           {
             organization_id: organizationId,
             clerk_user_id: clerkUserId,
-            role: existing?.role ?? applicationRoleFromClerkRole(membership.role),
+            role: event.type === "organizationMembership.created" && invitedApplicationRole
+              ? invitedApplicationRole
+              : existing?.role ?? applicationRoleFromClerkRole(membership.role, membershipMetadata),
             clerk_role: membership.role,
             status: "active",
           },

@@ -10,6 +10,15 @@ export async function updateMemberRole(input: unknown) {
   if (!parsed.success) return { ok: false as const, error: "INVALID_INPUT" };
   const context = await requirePermission("manageMemberships");
   const supabase = await createSupabaseServerClient();
+  const { data: target, error: targetError } = await supabase
+    .from("committee_memberships")
+    .select("role")
+    .eq("organization_id", context.organizationId)
+    .eq("clerk_user_id", parsed.data.clerkUserId)
+    .eq("status", "active")
+    .maybeSingle();
+  if (targetError || !target) return { ok: false as const, error: "ROLE_UPDATE_FAILED" };
+
   const { error } = await supabase.rpc("update_member_role", {
     p_organization_id: context.organizationId,
     p_clerk_user_id: parsed.data.clerkUserId,
@@ -17,6 +26,23 @@ export async function updateMemberRole(input: unknown) {
     p_reason: parsed.data.reason,
   });
   if (error) return { ok: false as const, error: error.code === "55000" ? "LAST_ADMIN_REQUIRED" : "ROLE_UPDATE_FAILED" };
+
+  try {
+    const clerk = await clerkClient();
+    await clerk.organizations.updateOrganizationMembership({
+      organizationId: context.organizationId,
+      userId: parsed.data.clerkUserId,
+      role: parsed.data.role === "admin" ? "org:admin" : "org:member",
+    });
+  } catch {
+    await supabase.rpc("update_member_role", {
+      p_organization_id: context.organizationId,
+      p_clerk_user_id: parsed.data.clerkUserId,
+      p_role: target.role,
+      p_reason: "Rollenänderung wegen fehlgeschlagener Clerk-Synchronisierung zurückgesetzt",
+    });
+    return { ok: false as const, error: "ROLE_UPDATE_FAILED" };
+  }
   return { ok: true as const };
 }
 
@@ -29,22 +55,15 @@ export async function removeMember(input: unknown) {
   }
 
   const supabase = await createSupabaseServerClient();
-  const { data: target } = await supabase
-    .from("committee_memberships")
-    .select("role, status")
-    .eq("organization_id", context.organizationId)
-    .eq("clerk_user_id", parsed.data.clerkUserId)
-    .maybeSingle();
-  if (!target) return { ok: false as const, error: "MEMBER_NOT_FOUND" };
-
-  if (target.role === "admin") {
-    const { count } = await supabase
-      .from("committee_memberships")
-      .select("clerk_user_id", { count: "exact", head: true })
-      .eq("organization_id", context.organizationId)
-      .eq("role", "admin")
-      .eq("status", "active");
-    if ((count ?? 0) <= 1) return { ok: false as const, error: "LAST_ADMIN_REQUIRED" };
+  const { error: removeError } = await supabase.rpc("remove_member", {
+    p_organization_id: context.organizationId,
+    p_clerk_user_id: parsed.data.clerkUserId,
+    p_reason: parsed.data.reason,
+  });
+  if (removeError) {
+    if (removeError.code === "55000") return { ok: false as const, error: "LAST_ADMIN_REQUIRED" };
+    if (removeError.code === "23503") return { ok: false as const, error: "MEMBER_NOT_FOUND" };
+    return { ok: false as const, error: "MEMBER_REMOVAL_FAILED" };
   }
 
   try {
@@ -56,13 +75,5 @@ export async function removeMember(input: unknown) {
   } catch {
     return { ok: false as const, error: "MEMBER_REMOVAL_FAILED" };
   }
-
-  const { error } = await supabase
-    .from("committee_memberships")
-    .delete()
-    .eq("organization_id", context.organizationId)
-    .eq("clerk_user_id", parsed.data.clerkUserId);
-  return error
-    ? { ok: false as const, error: "MEMBER_REMOVAL_FAILED" }
-    : { ok: true as const };
+  return { ok: true as const };
 }

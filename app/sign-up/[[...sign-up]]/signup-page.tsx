@@ -9,7 +9,7 @@ export default function SignUpPage() {
           <Link
             href="/"
             className="flex items-center gap-2.5"
-            aria-label="Abi Manager home"
+            aria-label="Abi Manager Startseite"
           >
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-ink text-sm font-semibold text-white">
               A

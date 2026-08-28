@@ -9,13 +9,13 @@ import {
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 function mapDatabaseError(code?: string) {
-  if (code === "42501") return actionFailure("FORBIDDEN", "You are not allowed to perform this action.");
-  if (code === "55000") return actionFailure("PERIOD_LOCKED", "The accounting period is locked.");
+  if (code === "42501") return actionFailure("FORBIDDEN", "Du hast keine Berechtigung für diese Aktion.");
+  if (code === "55000") return actionFailure("PERIOD_LOCKED", "Der Buchungszeitraum ist gesperrt.");
   if (code === "23503" || code === "23514" || code === "22023" || code === "22003") {
-    return actionFailure("INVALID_PAYLOAD", "The transaction data is invalid.");
+    return actionFailure("INVALID_PAYLOAD", "Die Transaktionsdaten sind ungültig.");
   }
-  if (code === "23505") return actionFailure("CONFLICT", "This transaction was already submitted.");
-  return actionFailure("DATABASE_ERROR", "The transaction could not be saved.");
+  if (code === "23505") return actionFailure("CONFLICT", "Diese Transaktion wurde bereits übermittelt.");
+  return actionFailure("DATABASE_ERROR", "Die Transaktion konnte nicht gespeichert werden.");
 }
 
 export async function createManualTransaction(
@@ -23,7 +23,7 @@ export async function createManualTransaction(
 ): Promise<ActionResult<{ id: string }>> {
   const parsed = transactionCreateSchema.safeParse(input);
   if (!parsed.success) {
-    return actionFailure("INVALID_PAYLOAD", "The transaction data is invalid.");
+    return actionFailure("INVALID_PAYLOAD", "Die Transaktionsdaten sind ungültig.");
   }
 
   let context;
@@ -32,14 +32,14 @@ export async function createManualTransaction(
   } catch (error) {
     if (error instanceof Error && "code" in error) {
       const code = error.code === "UNAUTHENTICATED" ? "UNAUTHENTICATED" : "FORBIDDEN";
-      return actionFailure(code, code === "UNAUTHENTICATED" ? "Authentication is required." : "An active committee is required.");
+      return actionFailure(code, code === "UNAUTHENTICATED" ? "Eine Anmeldung ist erforderlich." : "Ein aktiver Abi-Arbeitsbereich ist erforderlich.");
     }
-    return actionFailure("UNAUTHENTICATED", "Authentication is required.");
+    return actionFailure("UNAUTHENTICATED", "Eine Anmeldung ist erforderlich.");
   }
 
   const command = parsed.data;
   if (command.type === "transfer") {
-    return actionFailure("INVALID_PAYLOAD", "Transfers are not supported in this workflow.");
+    return actionFailure("INVALID_PAYLOAD", "Überweisungen werden in diesem Ablauf nicht unterstützt.");
   }
   const supabase = await createSupabaseServerClient();
   const walletId = command.type === "income" ? command.toWalletId : command.fromWalletId;
@@ -52,7 +52,7 @@ export async function createManualTransaction(
     .eq("status", "active")
     .maybeSingle();
   if (!wallet) {
-    return actionFailure("INVALID_PAYLOAD", "Only an active cash register can receive transactions.");
+    return actionFailure("INVALID_PAYLOAD", "Nur eine aktive Kasse kann Transaktionen aufnehmen.");
   }
   const { data, error } = await supabase.rpc("create_manual_transaction", {
     p_organization_id: context.organizationId,

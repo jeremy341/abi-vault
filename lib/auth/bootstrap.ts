@@ -16,7 +16,7 @@ export async function ensureCurrentOrganizationData() {
   const admin = createSupabaseAdminClient();
   const user = await currentUser();
   const organization = await (await clerkClient()).organizations.getOrganization({ organizationId: session.orgId });
-  const displayName = [user?.firstName, user?.lastName].filter(Boolean).join(" ").trim() || user?.primaryEmailAddress?.emailAddress || "Clerk user";
+  const displayName = [user?.firstName, user?.lastName].filter(Boolean).join(" ").trim() || user?.primaryEmailAddress?.emailAddress || "Clerk-Nutzer";
 
   await admin.from("committees").upsert({
     organization_id: session.orgId,

@@ -6,7 +6,7 @@ export class AuthenticationRequiredError extends Error {
   readonly code = "UNAUTHENTICATED" as const;
 
   constructor() {
-    super("Authentication is required.");
+    super("Eine Anmeldung ist erforderlich.");
   }
 }
 
@@ -14,7 +14,7 @@ export class OrganizationRequiredError extends Error {
   readonly code = "ORGANIZATION_REQUIRED" as const;
 
   constructor() {
-    super("An active committee organization is required.");
+    super("Ein aktiver Abi-Arbeitsbereich ist erforderlich.");
   }
 }
 
@@ -22,7 +22,7 @@ export class AuthorizationError extends Error {
   readonly code = "FORBIDDEN" as const;
 
   constructor() {
-    super("You do not have permission to perform this action.");
+    super("Du hast keine Berechtigung für diese Aktion.");
   }
 }
 

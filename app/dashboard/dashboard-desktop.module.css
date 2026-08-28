@@ -120,6 +120,8 @@
 }
 
 .cashCardCarouselCard {
+  display: block;
+  width: min(100%, 21.25rem);
   min-width: 0;
   border: 0;
   background: transparent;
@@ -502,6 +504,9 @@
   }
   .accountCard {
     width: min(100% - 2rem, 27.5rem);
+  }
+  .cashCardCarouselCard {
+    width: min(100%, 27.5rem);
   }
   .transactionRow,
   .goalRow,

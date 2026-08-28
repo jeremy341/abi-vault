@@ -25,6 +25,7 @@ import styles from "@/app/dashboard/dashboard-adaptive.module.css";
 import desktopStyles from "@/app/dashboard/dashboard-desktop.module.css";
 import { useDashboardSnapshot, type DashboardSnapshot } from "@/hooks/use-dashboard-snapshot";
 import { InlineLoading, LoadingCollection, LoadingStatus, LoadingText } from "@/components/ui/loading-state";
+import { mapWalletToCashRegisterCard } from "@/lib/finance/cash-register-card";
 
 function displayMinor(value: string) {
   return (Number(value) / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
@@ -111,10 +112,11 @@ function DashboardCashCarousel({
   if (!wallets.length) return <Link href="/dashboard/funds" className={desktopStyles.accountCard} aria-label="Kasse anlegen"><AccountCard variant="add" /></Link>;
   const safeIndex = Math.min(index, wallets.length - 1);
   const wallet = wallets[safeIndex];
+  const card = mapWalletToCashRegisterCard(wallet);
   return (
     <div className={desktopStyles.cashCardCarousel}>
       {wallets.length > 1 ? <button type="button" aria-label="Vorherige Kasse" onClick={() => setIndex((current) => (current - 1 + wallets.length) % wallets.length)}><ChevronLeft aria-hidden="true" /></button> : null}
-      <button type="button" className={desktopStyles.cashCardCarouselCard} aria-label={`${wallet.name} anzeigen`} onClick={onPreview}><AccountCard cardColor={wallet.cardColorVisual ?? undefined} details={{ accountName: wallet.name, cardNumber: wallet.cardNumberVisual ?? undefined, holder: wallet.cardHolderVisual ?? undefined, expiry: wallet.cardExpiryVisual ?? undefined }} /></button>
+      <button type="button" className={desktopStyles.cashCardCarouselCard} aria-label={`${wallet.name} anzeigen`} onClick={onPreview}><AccountCard cardColor={card.details.color} details={card.details} /></button>
       {wallets.length > 1 ? <button type="button" aria-label="Nächste Kasse" onClick={() => setIndex((current) => (current + 1) % wallets.length)}><ChevronRight aria-hidden="true" /></button> : null}
     </div>
   );

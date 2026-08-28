@@ -17,12 +17,12 @@ import { cachedFinanceQuery, getFinanceCacheState } from "@/lib/finance/client-c
 import { invalidateFinanceQuery } from "@/lib/finance/client-cache";
 import { archiveWallet, createWallet, updateWallet } from "@/features/finance/actions/wallets";
 import { recordCashCount } from "@/features/finance/actions/cash-counts";
+import {
+  mapWalletToCashRegisterCard,
+  type CashRegisterCard,
+} from "@/lib/finance/cash-register-card";
 
-type DashboardCard = {
-  id: string;
-  details: Pick<AccountCardDetails, "accountName"> & Partial<Omit<AccountCardDetails, "accountName">>;
-  balance: number;
-};
+type DashboardCard = CashRegisterCard;
 
 type CashBox = {
   id: string;
@@ -60,17 +60,7 @@ export default function FundsPage() {
   type DashboardResult = Awaited<ReturnType<typeof getDashboardSnapshot>>;
   const initialSnapshot = getFinanceCacheState<DashboardResult>("dashboard-snapshot", cacheScope);
   const initialWallets = initialSnapshot.data?.ok ? initialSnapshot.data.wallets : [];
-  const [cards, setCards] = useState<DashboardCard[]>(() => initialWallets.map((wallet) => ({
-    id: wallet.id,
-    details: {
-      accountName: wallet.name,
-      cardNumber: wallet.cardNumberVisual ?? undefined,
-      holder: wallet.cardHolderVisual ?? undefined,
-      expiry: wallet.cardExpiryVisual ?? undefined,
-      color: wallet.cardColorVisual ?? "#111114",
-    },
-    balance: Number(wallet.balanceMinor) / 100,
-  })));
+  const [cards, setCards] = useState<DashboardCard[]>(() => initialWallets.map(mapWalletToCashRegisterCard));
   const [activeCardIndex, setActiveCardIndex] = useState(0);
   const [cashBoxes, setCashBoxes] = useState<Record<string, CashBox>>(() => Object.fromEntries(initialWallets.map((wallet) => [wallet.id, {
     id: wallet.id,
@@ -122,17 +112,7 @@ export default function FundsPage() {
 
       setLoadError("");
       const cashWallets = result.wallets.filter((item) => item.type === "cash");
-      setCards(cashWallets.map((wallet) => ({
-        id: wallet.id,
-        details: {
-          accountName: wallet.name,
-          cardNumber: wallet.cardNumberVisual ?? undefined,
-          holder: wallet.cardHolderVisual ?? undefined,
-          expiry: wallet.cardExpiryVisual ?? undefined,
-          color: wallet.cardColorVisual ?? "#111114",
-        },
-        balance: Number(wallet.balanceMinor) / 100,
-      })));
+      setCards(cashWallets.map(mapWalletToCashRegisterCard));
       setCashBoxes(Object.fromEntries(cashWallets.map((wallet) => [wallet.id, {
         id: wallet.id,
         name: wallet.name,

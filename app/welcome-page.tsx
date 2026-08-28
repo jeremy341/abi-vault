@@ -24,16 +24,16 @@ export default function StartPage() {
           <div className="mt-9 flex justify-center gap-3">
             <Show when="signed-out">
               <Link href="/sign-in" className="action-link">
-                Login
+                Anmelden
               </Link>
               <Link href="/sign-up" className="action-link">
-                SignUp
+                Registrieren
               </Link>
             </Show>
 
             <Show when="signed-in">
               <Link href="/dashboard" className="action-link">
-                Dashboard
+                Übersicht
               </Link>
             </Show>
           </div>

@@ -22,7 +22,7 @@ const MIME_EXTENSIONS = {
   "image/png": "png",
 } as const;
 
-function invalidReceipt(message = "The receipt data is invalid.") {
+function invalidReceipt(message = "Die Belegdaten sind ungültig.") {
   return actionFailure("INVALID_PAYLOAD", message);
 }
 
@@ -33,8 +33,8 @@ export async function uploadReceipt(
   const file = formData.get("file");
   const transactionValue = formData.get("transactionId");
 
-  if (!(file instanceof File)) return invalidReceipt("A receipt file is required.");
-  if (file.size > 5 * 1024 * 1024) return invalidReceipt("The receipt must not exceed 5 MB.");
+  if (!(file instanceof File)) return invalidReceipt("Eine Belegdatei ist erforderlich.");
+  if (file.size > 5 * 1024 * 1024) return invalidReceipt("Der Beleg darf höchstens 5 MB groß sein.");
 
   const parsed = receiptMetadataSchema.safeParse({
     transactionId: transactionValue ? String(transactionValue) : null,
@@ -42,7 +42,7 @@ export async function uploadReceipt(
     mimeType: file.type,
     fileSizeBytes: file.size,
   });
-  if (!parsed.success) return invalidReceipt("The receipt file type or size is invalid.");
+  if (!parsed.success) return invalidReceipt("Dateityp oder Größe des Belegs sind ungültig.");
 
   const supabase = await createSupabaseServerClient();
   if (parsed.data.transactionId) {
@@ -52,12 +52,12 @@ export async function uploadReceipt(
       .eq("id", parsed.data.transactionId)
       .eq("organization_id", context.organizationId)
       .maybeSingle();
-    if (error || !transaction) return actionFailure("NOT_FOUND", "The transaction was not found.");
+    if (error || !transaction) return actionFailure("NOT_FOUND", "Die Transaktion wurde nicht gefunden.");
     const period = Array.isArray(transaction.accounting_periods)
       ? transaction.accounting_periods[0]
       : transaction.accounting_periods;
     if (transaction.status === "soft_deleted" || period?.status === "locked") {
-      return actionFailure("PERIOD_LOCKED", "Receipts cannot be changed for a locked transaction.");
+      return actionFailure("PERIOD_LOCKED", "Belege können für eine gesperrte Transaktion nicht geändert werden.");
     }
   }
 
@@ -71,7 +71,7 @@ export async function uploadReceipt(
       contentType: parsed.data.mimeType,
       upsert: false,
     });
-  if (uploadError) return actionFailure("DATABASE_ERROR", "The receipt could not be uploaded.");
+  if (uploadError) return actionFailure("DATABASE_ERROR", "Der Beleg konnte nicht hochgeladen werden.");
 
   const { error: metadataError } = await supabase.from("receipts").insert({
     id: receiptId,
@@ -86,7 +86,7 @@ export async function uploadReceipt(
 
   if (metadataError) {
     await supabase.storage.from("receipts").remove([storagePath]);
-    return actionFailure("DATABASE_ERROR", "The receipt metadata could not be saved.");
+    return actionFailure("DATABASE_ERROR", "Die Belegdaten konnten nicht gespeichert werden.");
   }
 
   return actionSuccess({ id: receiptId });
@@ -113,7 +113,7 @@ export async function reviewReceipt(
     .select("id")
     .maybeSingle();
 
-  if (error) return actionFailure("DATABASE_ERROR", "The receipt review could not be saved.");
+  if (error) return actionFailure("DATABASE_ERROR", "Die Belegprüfung konnte nicht gespeichert werden.");
   if (!reviewed) return actionFailure("NOT_FOUND", "Der Beleg ist nicht mehr verfügbar.");
   return actionSuccess(null);
 }
@@ -205,13 +205,13 @@ export async function createReceiptDownloadUrl(
     .eq("id", id)
     .eq("organization_id", context.organizationId)
     .maybeSingle();
-  if (error || !receipt) return actionFailure("NOT_FOUND", "The receipt was not found.");
+  if (error || !receipt) return actionFailure("NOT_FOUND", "Der Beleg wurde nicht gefunden.");
 
   const { data: signed, error: signedError } = await supabase.storage
     .from("receipts")
     .createSignedUrl(receipt.storage_path, 300);
   if (signedError || !signed?.signedUrl) {
-    return actionFailure("DATABASE_ERROR", "The receipt URL could not be created.");
+    return actionFailure("DATABASE_ERROR", "Die Beleg-URL konnte nicht erstellt werden.");
   }
 
   return actionSuccess({ url: signed.signedUrl });

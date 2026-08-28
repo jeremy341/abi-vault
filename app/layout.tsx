@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Abi Manager",
-  description: "Transparent Abi committee finances",
+  description: "Klassenfinanzen, Kassen, Belege und Sparziele gemeinsam verwalten.",
 };
 
 export default function RootLayout({

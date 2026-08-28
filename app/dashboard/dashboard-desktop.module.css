@@ -125,6 +125,7 @@
   min-width: 0;
   border: 0;
   background: transparent;
+  text-align: left;
 }
 
 .accountCard:focus-visible {

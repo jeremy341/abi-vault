@@ -204,6 +204,17 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.createdBy {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--ui-muted-ink);
+  font-size: 0.64rem;
+}
+.createdBy svg {
+  width: 0.75rem;
+  height: 0.75rem;
+}
 
 .rowMeta {
   display: flex;
@@ -218,6 +229,21 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.receiptStatus {
+  border-radius: 999px;
+  padding: 0.18rem 0.42rem;
+  background: #fff5e5;
+  color: #b45309;
+  font-weight: 650;
+}
+.receiptStatusApproved {
+  background: #eaf8ee;
+  color: #15803d;
+}
+.receiptStatusRejected {
+  background: #fff0f0;
+  color: #b91c1c;
 }
 
 .rowSide {

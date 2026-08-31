@@ -3,12 +3,22 @@ import { redirect } from "next/navigation";
 import ResponsiveDashboardShell from "@/components/presentation/ResponsiveDashboardShell";
 import { FinanceCacheLifecycle } from "@/components/finance-cache-lifecycle";
 import { ensureCurrentOrganizationData } from "@/lib/auth/bootstrap";
+import { isLocalMode } from "@/lib/auth/local";
 
 export default async function DashboardLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  if (isLocalMode()) {
+    return (
+      <ResponsiveDashboardShell>
+        <FinanceCacheLifecycle />
+        {children}
+      </ResponsiveDashboardShell>
+    );
+  }
+
   const { isAuthenticated, orgId } = await auth();
 
   if (!isAuthenticated) {

@@ -15,6 +15,7 @@ import {
   Search,
   TrendingDown,
   TrendingUp,
+  UserRound,
   X,
 } from "lucide-react";
 import styles from "./transactions.module.css";
@@ -38,11 +39,13 @@ import { createManualTransactionFromUi } from "@/features/finance/actions/manual
 import { archiveTransaction as archiveTransactionAction, correctTransactionFromUi } from "@/features/finance/actions/corrections";
 import { cachedFinanceQuery, getFinanceCacheState, invalidateFinanceQuery, subscribeFinanceQuery } from "@/lib/finance/client-cache";
 import { RowActionMenu } from "@/components/ui/row-actions";
+import { createReceiptDownloadUrl, reviewReceipt } from "@/features/receipts/actions/receipts";
+import { ReceiptReviewDialog, type ReceiptReviewDecision, type ReceiptReviewDialogReceipt } from "@/components/receipts/ReceiptReviewDialog";
 
 type Category = "Material" | "Sonstiges" | "Veranstaltung";
 type FilterType = "Einnahmen" | "Ausgaben";
 type ReceiptFilter = "Alle" | "Vorhanden" | "Fehlt";
-type ReviewFilter = "Alle" | "Geprüft" | "Zu prüfen";
+type ReviewFilter = "Alle" | "Geprüft" | "Zu prüfen" | "Ungültig";
 type AccountFilter = string;
 type Transaction = {
   id: number | string;
@@ -51,7 +54,11 @@ type Transaction = {
   date: string;
   amount: number;
   receipt?: string;
+  receiptId: string | null;
+  receiptType: string | null;
   reviewStatus: string;
+  createdByName: string | null;
+  createdAt: string;
   account: AccountFilter;
   walletId: string | null;
   tone: "violet" | "green" | "orange";
@@ -70,7 +77,12 @@ type ServerTransaction = {
   amountMinor: string;
   type: "income" | "expense" | "transfer";
   receipt: boolean;
+  receiptFile: string | null;
+  receiptId: string | null;
+  receiptType: string | null;
   reviewStatus: string;
+  createdByName: string | null;
+  createdAt: string;
   account: string;
   walletId: string | null;
   createdBy: string | null;
@@ -85,8 +97,12 @@ function mapTransaction(item: ServerTransaction): Transaction {
     category: item.category as Category,
     date: item.date ? displayDate(fromIso(item.date)) : displayDate(new Date()),
     amount: Number(item.amountMinor) / 100,
-    receipt: item.receipt ? "receipt" : undefined,
+    receipt: item.receiptFile ?? (item.receipt ? "receipt" : undefined),
+    receiptId: item.receiptId,
+    receiptType: item.receiptType,
     reviewStatus: item.reviewStatus as Transaction["reviewStatus"],
+    createdByName: item.createdByName,
+    createdAt: item.createdAt,
     account: item.account,
     walletId: item.walletId,
     tone: item.type === "income" ? "green" : item.type === "expense" ? "violet" : "orange",
@@ -294,6 +310,7 @@ function PhoneTransactionsView({
   onSelect,
   onEdit,
   onDelete,
+  onReceipt,
   canCreate,
 }: {
   loading: boolean;
@@ -315,6 +332,7 @@ function PhoneTransactionsView({
   onSelect: (transaction: Transaction) => void;
   onEdit: (transaction: Transaction) => void;
   onDelete: (transaction: Transaction) => void;
+  onReceipt: (transaction: Transaction) => void;
   canCreate: boolean;
 }) {
   return (
@@ -387,12 +405,13 @@ function PhoneTransactionsView({
                   className={phoneStyles.rowOpen}
                   onClick={() => onSelect(transaction)}
                 >
-                  <span className={phoneStyles.rowMain}>
-                    <strong>{transaction.title}</strong>
+                      <span className={phoneStyles.rowMain}>
+                        <strong>{transaction.title}</strong>
+                        {transaction.createdByName ? <small className={phoneStyles.createdBy}><UserRound aria-hidden="true" /> Erstellt von {transaction.createdByName}</small> : null}
                     <span className={phoneStyles.rowMeta}>
                       <span>{transaction.category}</span>
-                      <span>
-                        {transaction.receipt ? "Beleg vorhanden" : "Ohne Beleg"}
+                      <span className={transaction.receipt ? `${phoneStyles.receiptStatus} ${transaction.reviewStatus === "Geprüft" ? phoneStyles.receiptStatusApproved : transaction.reviewStatus === "Ungültig" ? phoneStyles.receiptStatusRejected : ""}` : undefined}>
+                        {transaction.receipt ? transaction.reviewStatus : "Ohne Beleg"}
                       </span>
                     </span>
                   </span>
@@ -415,6 +434,8 @@ function PhoneTransactionsView({
                   canDelete={transaction.canDelete}
                   onEdit={() => onEdit(transaction)}
                   onDelete={() => onDelete(transaction)}
+                  onReceipt={transaction.receiptId ? () => onReceipt(transaction) : undefined}
+                  receiptLabel={transaction.receiptId ? transaction.reviewStatus === "Zu prüfen" ? "Beleg prüfen" : "Beleg ansehen" : undefined}
                 />
               </article>
             ))}
@@ -539,6 +560,11 @@ export default function TransactionsPage() {
   const [newCategory, setNewCategory] = useState<Category>("Sonstiges");
   const [newType, setNewType] = useState<"Einnahme" | "Ausgabe">("Einnahme");
   const [correctionReason, setCorrectionReason] = useState("");
+  const [receiptReviewTarget, setReceiptReviewTarget] = useState<{ id: string; receipt: ReceiptReviewDialogReceipt } | null>(null);
+  const [receiptPreviewUrl, setReceiptPreviewUrl] = useState<string | null>(null);
+  const [receiptPreviewLoading, setReceiptPreviewLoading] = useState(false);
+  const [receiptPreviewError, setReceiptPreviewError] = useState("");
+  const [receiptReviewError, setReceiptReviewError] = useState("");
 
   const results = useMemo(
     () =>
@@ -751,6 +777,10 @@ export default function TransactionsPage() {
         date: displayDate(new Date()),
         amount: newType === "Ausgabe" ? -Math.abs(amount) : Math.abs(amount),
         reviewStatus: "Zu prüfen",
+        receiptId: null,
+        receiptType: null,
+        createdByName: null,
+        createdAt: new Date().toISOString(),
         account: selectedCashRegister?.name ?? "Nicht zugeordnet",
         walletId: selectedCashRegisterId,
         tone: newType === "Einnahme" ? "green" : "violet",
@@ -799,6 +829,50 @@ export default function TransactionsPage() {
     setArchiveReason("");
     setActionError("");
     archiveIdempotencyKey.current = `archive-${transaction.id}-${crypto.randomUUID()}`;
+  }
+
+  async function openReceiptReview(transaction: Transaction) {
+    if (!transaction.receiptId) return;
+    setReceiptReviewTarget({
+      id: transaction.receiptId,
+        receipt: {
+        file: transaction.receipt ?? "Beleg",
+        type: transaction.receiptType === "application/pdf" ? "PDF" : "Bild",
+        transaction: transaction.title,
+        date: transaction.date,
+        amount: transaction.amount,
+          status: transaction.reviewStatus,
+          createdByName: transaction.createdByName,
+          createdAt: transaction.createdAt,
+      },
+    });
+    setReceiptPreviewUrl(null);
+    setReceiptPreviewError("");
+    setReceiptReviewError("");
+    setReceiptPreviewLoading(true);
+    const result = await createReceiptDownloadUrl(transaction.receiptId);
+    if (result.success) setReceiptPreviewUrl(result.data.url);
+    else setReceiptPreviewError(result.error.message);
+    setReceiptPreviewLoading(false);
+  }
+
+  async function decideReceiptReview(decision: ReceiptReviewDecision) {
+    if (!receiptReviewTarget || saving) return;
+    setSaving(true);
+    setReceiptReviewError("");
+    try {
+      const result = await reviewReceipt({ receiptId: receiptReviewTarget.id, status: decision });
+      if (!result.success) {
+        setReceiptReviewError(result.error.message);
+        return;
+      }
+      const nextStatus = decision === "approved" ? "Geprüft" : decision === "rejected" ? "Ungültig" : "Zu prüfen";
+      setItems((current) => current.map((item) => item.receiptId === receiptReviewTarget.id ? { ...item, reviewStatus: nextStatus } : item));
+      setReceiptReviewTarget(null);
+      invalidateFinanceQuery("transactions", "receipts", "dashboard-snapshot", "report-snapshot", "report-kpis");
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function confirmArchiveTransaction() {
@@ -868,6 +942,7 @@ export default function TransactionsPage() {
           onSelect={setSelected}
           onEdit={openEdit}
           onDelete={openArchive}
+          onReceipt={(transaction) => { void openReceiptReview(transaction); }}
           canCreate={Boolean(selectedCashRegisterId) && !loadError}
         />
       ) : (
@@ -999,6 +1074,7 @@ export default function TransactionsPage() {
                 <span>Datum</span>
                 <span>Betrag</span>
                 <span>Beleg</span>
+                <span>Status</span>
                 <span aria-hidden="true" />
               </div>
               <div className={styles.rows}>
@@ -1035,7 +1111,10 @@ export default function TransactionsPage() {
                         >
                           <Icon />
                         </span>
-                        <span>{transaction.title}</span>
+                        <span className={styles.transactionIdentity}>
+                          <span>{transaction.title}</span>
+                          {transaction.createdByName ? <small><UserRound aria-hidden="true" /> Erstellt von {transaction.createdByName}</small> : null}
+                        </span>
                       </span>
                       <span data-label="Kategorie">
                         <span
@@ -1066,12 +1145,23 @@ export default function TransactionsPage() {
                           <span>—</span>
                         )}
                       </span>
+                      <span data-label="Status" className={styles.receiptStatusCell}>
+                        {transaction.receipt ? (
+                          <span className={`${styles.receiptStatusTag} ${transaction.reviewStatus === "Geprüft" ? styles.receiptStatusApproved : transaction.reviewStatus === "Ungültig" ? styles.receiptStatusRejected : styles.receiptStatusPending}`}>
+                            {transaction.reviewStatus}
+                          </span>
+                        ) : (
+                          <span>—</span>
+                        )}
+                      </span>
                       <RowActionMenu
                         label={transaction.title}
                         canEdit={transaction.canEdit}
                         canDelete={transaction.canDelete}
                         onEdit={() => openEdit(transaction)}
                         onDelete={() => openArchive(transaction)}
+                        onReceipt={transaction.receiptId ? () => { void openReceiptReview(transaction); } : undefined}
+                        receiptLabel={transaction.receiptId ? transaction.reviewStatus === "Zu prüfen" ? "Beleg prüfen" : "Beleg ansehen" : undefined}
                       />
                     </div>
                   );
@@ -1270,7 +1360,7 @@ export default function TransactionsPage() {
               <fieldset className={styles.filterGroup}>
                 <legend>Prüfstatus</legend>
                 <div className={styles.segmented}>
-                  {(["Alle", "Geprüft", "Zu prüfen"] as ReviewFilter[]).map(
+                  {(["Alle", "Geprüft", "Zu prüfen", "Ungültig"] as ReviewFilter[]).map(
                     (value) => (
                       <button
                         type="button"
@@ -1466,6 +1556,19 @@ export default function TransactionsPage() {
             <strong>{selected.receipt ?? "Kein Beleg"}</strong>
           </div>
         </Overlay>
+      ) : null}
+
+      {receiptReviewTarget ? (
+        <ReceiptReviewDialog
+          receipt={receiptReviewTarget.receipt}
+          previewUrl={receiptPreviewUrl}
+          previewLoading={receiptPreviewLoading}
+          previewError={receiptPreviewError}
+          saving={saving}
+          error={receiptReviewError}
+          onClose={() => setReceiptReviewTarget(null)}
+          onDecision={(decision) => { void decideReceiptReview(decision); }}
+        />
       ) : null}
 
       {archiveTarget ? (

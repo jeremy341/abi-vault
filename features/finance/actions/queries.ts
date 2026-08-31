@@ -2,6 +2,7 @@
 
 import { requireClerkContext } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { requirePermission } from "@/lib/auth/permissions-server";
 
 export type TransactionListItem = {
   id: string;
@@ -11,7 +12,12 @@ export type TransactionListItem = {
   amountMinor: string;
   type: "income" | "expense" | "transfer";
   receipt: boolean;
-  reviewStatus: "Geprüft" | "Zu prüfen";
+  receiptId: string | null;
+  receiptFile: string | null;
+  receiptType: string | null;
+  reviewStatus: "Geprüft" | "Zu prüfen" | "Ungültig";
+  createdByName: string | null;
+  createdAt: string;
   account: string;
   walletId: string | null;
   fromWalletId?: string | null;
@@ -30,6 +36,16 @@ export type CashCountListItem = {
   countedByName: string | null;
   createdAt: string;
   note: string | null;
+};
+
+export type AccountingPeriodListItem = {
+  id: string;
+  year: number;
+  month: number;
+  status: "open" | "locked";
+  lockedAt: string | null;
+  lockedByName: string | null;
+  lockReason: string | null;
 };
 
 export async function listTransactionsForCurrentOrganization() {
@@ -60,7 +76,12 @@ export async function listTransactionsForCurrentOrganization() {
         amountMinor: String(item.public_type === "expense" ? -item.amount_minor : item.amount_minor),
         type: item.public_type,
         receipt: false,
+        receiptId: null,
+        receiptFile: null,
+        receiptType: null,
         reviewStatus: "Geprüft",
+        createdByName: null,
+        createdAt: "",
         account: item.wallet_label ?? "Nicht zugeordnet",
         walletId: null,
         fromWalletId: null,
@@ -84,7 +105,7 @@ export async function listTransactionsForCurrentOrganization() {
 
   const { data, error } = await supabase
     .from("transactions")
-    .select("id, title, type, booked_at, amount_minor, category_id, from_wallet_id, to_wallet_id, created_by, correction_role, superseded_at")
+    .select("id, title, type, booked_at, amount_minor, category_id, from_wallet_id, to_wallet_id, created_by, created_at, correction_role, superseded_at")
     .eq("organization_id", context.organizationId)
     .eq("status", "posted")
     .is("deleted_at", null)
@@ -105,15 +126,21 @@ export async function listTransactionsForCurrentOrganization() {
   ] = await Promise.all([
     categoryIds.length ? supabase.from("categories").select("id, name").in("id", categoryIds) : Promise.resolve({ data: [] as { id: string; name: string }[], error: null }),
     walletIds.length ? supabase.from("wallets").select("id, name").in("id", walletIds) : Promise.resolve({ data: [] as { id: string; name: string }[], error: null }),
-    supabase.from("receipts").select("transaction_id, review_status").eq("organization_id", context.organizationId).is("archived_at", null),
+    supabase.from("receipts").select("id, file_name, mime_type, transaction_id, review_status").eq("organization_id", context.organizationId).is("archived_at", null),
   ]);
   if (categoryError || walletError || receiptError) return { ok: false as const, error: "DATABASE_ERROR" as const };
   const categoryMap = new Map((categories ?? []).map((item) => [item.id, item.name]));
   const walletMap = new Map((wallets ?? []).map((item) => [item.id, item.name]));
-  const receiptMap = new Map(
+  const creatorIds = [...new Set(cashTransactions.map((item) => item.created_by).filter(Boolean))];
+  const { data: creators, error: creatorError } = creatorIds.length
+    ? await supabase.from("profiles").select("clerk_user_id, display_name, email").in("clerk_user_id", creatorIds)
+    : { data: [] as { clerk_user_id: string; display_name: string; email: string }[], error: null };
+  if (creatorError) return { ok: false as const, error: "DATABASE_ERROR" as const };
+  const creatorMap = new Map((creators ?? []).map((item) => [item.clerk_user_id, item.display_name || item.email || "Unbekannt"]));
+  const receiptMap = new Map<string, { id: string; fileName: string; type: string; status: string }>(
     (receipts ?? [])
       .filter((item) => item.transaction_id)
-      .map((item) => [item.transaction_id as string, item.review_status]),
+      .map((item) => [item.transaction_id as string, { id: item.id, fileName: item.file_name, type: item.mime_type, status: item.review_status }]),
   );
 
   return {
@@ -126,7 +153,12 @@ export async function listTransactionsForCurrentOrganization() {
       amountMinor: String(item.type === "expense" ? -item.amount_minor : item.amount_minor),
       type: item.type,
       receipt: receiptMap.has(item.id),
-      reviewStatus: receiptMap.get(item.id) === "approved" ? "Geprüft" : "Zu prüfen",
+      reviewStatus: receiptMap.get(item.id)?.status === "approved" ? "Geprüft" : receiptMap.get(item.id)?.status === "rejected" ? "Ungültig" : "Zu prüfen",
+      createdByName: creatorMap.get(item.created_by) ?? null,
+      createdAt: item.created_at,
+      receiptId: receiptMap.get(item.id)?.id ?? null,
+      receiptFile: receiptMap.get(item.id)?.fileName ?? null,
+      receiptType: receiptMap.get(item.id)?.type ?? null,
       account: walletMap.get(item.type === "income" ? item.to_wallet_id : item.from_wallet_id) ?? "Nicht zugeordnet",
       walletId: item.type === "income" ? item.to_wallet_id : item.from_wallet_id,
       fromWalletId: item.from_wallet_id,
@@ -151,7 +183,7 @@ export async function listReceiptsForCurrentOrganization() {
   if (membershipError || !membership) return { ok: false as const, error: "FORBIDDEN" as const };
   const { data, error } = await supabase
     .from("receipts")
-    .select("id, file_name, mime_type, file_size_bytes, transaction_id, review_status, created_at, uploaded_by")
+    .select("id, file_name, mime_type, file_size_bytes, transaction_id, review_status, created_at, uploaded_by, reviewed_by, reviewed_at")
     .eq("organization_id", context.organizationId)
     .is("archived_at", null)
     .order("created_at", { ascending: false });
@@ -163,6 +195,12 @@ export async function listReceiptsForCurrentOrganization() {
     : { data: [] as { id: string; title: string; type: string; booked_at: string | null; amount_minor: number }[] };
   if (transactionError) return { ok: false as const, error: "DATABASE_ERROR" as const };
   const transactionMap = new Map((transactions ?? []).map((item) => [item.id, item]));
+  const profileIds = [...new Set((data ?? []).flatMap((item) => [item.uploaded_by, item.reviewed_by]).filter(Boolean))];
+  const { data: receiptProfiles, error: receiptProfileError } = profileIds.length
+    ? await supabase.from("profiles").select("clerk_user_id, display_name, email").in("clerk_user_id", profileIds)
+    : { data: [] as { clerk_user_id: string; display_name: string; email: string }[], error: null };
+  if (receiptProfileError) return { ok: false as const, error: "DATABASE_ERROR" as const };
+  const receiptProfileMap = new Map((receiptProfiles ?? []).map((item) => [item.clerk_user_id, item.display_name || item.email || "Unbekannt"]));
   return {
     ok: true as const,
     items: (data ?? []).map((item) => {
@@ -178,6 +216,10 @@ export async function listReceiptsForCurrentOrganization() {
         date: transaction?.booked_at ?? item.created_at.slice(0, 10),
         amountMinor: transaction ? String(transaction.type === "expense" ? -transaction.amount_minor : transaction.amount_minor) : "0",
         status: item.review_status,
+        uploadedByName: receiptProfileMap.get(item.uploaded_by) ?? "Unbekannt",
+        uploadedAt: item.created_at,
+        reviewedByName: item.reviewed_by ? receiptProfileMap.get(item.reviewed_by) ?? "Unbekannt" : null,
+        reviewedAt: item.reviewed_at,
         canEdit: membership.role === "admin" || item.uploaded_by === context.clerkUserId,
         canDelete: membership.role === "admin",
       };
@@ -431,6 +473,38 @@ export async function listCashCountsForCurrentOrganization() {
       countedByName: item.counted_by_name,
       createdAt: item.created_at,
       note: item.note,
+    })),
+  };
+}
+
+export async function listAccountingPeriodsForCurrentOrganization() {
+  const context = await requirePermission("lockPeriods");
+  const supabase = await createSupabaseServerClient();
+  const { data: periods, error } = await supabase
+    .from("accounting_periods")
+    .select("id, year, month, status, locked_at, locked_by, lock_reason")
+    .eq("organization_id", context.organizationId)
+    .order("year", { ascending: false })
+    .order("month", { ascending: false });
+  if (error) return { ok: false as const, error: "DATABASE_ERROR" as const };
+
+  const lockedByIds = [...new Set((periods ?? []).map((period) => period.locked_by).filter(Boolean))];
+  const { data: profiles, error: profileError } = lockedByIds.length
+    ? await supabase.from("profiles").select("clerk_user_id, display_name, email").in("clerk_user_id", lockedByIds)
+    : { data: [] as { clerk_user_id: string; display_name: string; email: string }[], error: null };
+  if (profileError) return { ok: false as const, error: "DATABASE_ERROR" as const };
+  const profileMap = new Map((profiles ?? []).map((profile) => [profile.clerk_user_id, profile.display_name || profile.email || "Unbekannt"]));
+
+  return {
+    ok: true as const,
+    items: (periods ?? []).map((period): AccountingPeriodListItem => ({
+      id: period.id,
+      year: period.year,
+      month: period.month,
+      status: period.status,
+      lockedAt: period.locked_at,
+      lockedByName: period.locked_by ? profileMap.get(period.locked_by) ?? "Unbekannt" : null,
+      lockReason: period.lock_reason,
     })),
   };
 }

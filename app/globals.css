@@ -560,6 +560,10 @@ body {
   }
 }
 
+.nonAdminNavigation a[href="/dashboard/periods"] {
+  display: none;
+}
+
 .ui-skeleton {
   position: relative;
   isolation: isolate;

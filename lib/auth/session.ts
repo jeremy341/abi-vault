@@ -1,6 +1,7 @@
 import "server-only";
 
 import { auth } from "@clerk/nextjs/server";
+import { isLocalMode, LOCAL_ORGANIZATION_ID, LOCAL_USER_ID } from "@/lib/auth/local";
 
 export class AuthenticationRequiredError extends Error {
   readonly code = "UNAUTHENTICATED" as const;
@@ -27,6 +28,14 @@ export class AuthorizationError extends Error {
 }
 
 export async function requireClerkContext() {
+  if (isLocalMode()) {
+    return {
+      clerkUserId: LOCAL_USER_ID,
+      organizationId: LOCAL_ORGANIZATION_ID,
+      getToken: async () => null,
+    };
+  }
+
   const context = await auth();
 
   if (!context.userId) {

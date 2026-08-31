@@ -1,17 +1,19 @@
 import Link from "next/link";
-import { Show } from "@clerk/nextjs";
 import AbiLogo from "@/components/AbiLogo";
+import { isLocalMode } from "@/lib/auth/local";
+import styles from "./welcome-page.module.css";
 
 export default function StartPage() {
+  const localMode = isLocalMode();
   return (
-    <main className="soft-grid flex min-h-[100dvh] flex-col overflow-hidden">
+    <main className={`${styles.page} soft-grid flex min-h-[100dvh] flex-col overflow-hidden`}>
       {/* Header: the logo links back to the welcome screen. */}
-      <header className="px-6 py-8 sm:px-8 sm:py-10">
+      <header className={`${styles.header} px-6 py-8 sm:px-8 sm:py-10`}>
         <AbiLogo />
       </header>
 
       {/* Main content: this is the centered welcome area. */}
-      <section className="flex min-h-[75vh] items-center justify-center px-6 py-20 text-center">
+      <section className={`${styles.hero} flex min-h-[75vh] items-center justify-center px-6 py-20 text-center`}>
         <div className="max-w-2xl">
           <h1 className="text-balance text-5xl font-semibold leading-tight tracking-tight sm:text-7xl">
             Klassenfinanzen, klar im Blick.
@@ -21,21 +23,10 @@ export default function StartPage() {
             Einnahmen, Ausgaben, Belege und Spendenziele an einem Ort.
           </p>
 
-          <div className="mt-9 flex justify-center gap-3">
-            <Show when="signed-out">
-              <Link href="/sign-in" className="action-link">
-                Anmelden
-              </Link>
-              <Link href="/sign-up" className="action-link">
-                Registrieren
-              </Link>
-            </Show>
-
-            <Show when="signed-in">
-              <Link href="/dashboard" className="action-link">
-                Übersicht
-              </Link>
-            </Show>
+          <div className={styles.actions}>
+            <Link href="/sign-in" className="action-link">Anmelden</Link>
+            <Link href="/sign-up" className="action-link">Registrieren</Link>
+            {localMode ? <Link href="/dashboard" className="action-link">Übersicht</Link> : null}
           </div>
         </div>
       </section>

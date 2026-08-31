@@ -35,6 +35,14 @@ values
   ('org_local_demo', 'Verkäufe', 'income', 50)
 on conflict (organization_id, name, kind) do nothing;
 
+insert into public.accounting_periods (organization_id, year, month)
+values ('org_local_demo', 2026, 8)
+on conflict (organization_id, year, month) do nothing;
+
+insert into public.wallets (organization_id, name, type, created_by, idempotency_key)
+values ('org_local_demo', 'Klassenkasse', 'cash', 'user_local_admin', 'seed-local-cash')
+on conflict (organization_id, idempotency_key) do nothing;
+
 insert into public.ledger_accounts (organization_id, type, name, wallet_id)
 select wallet.organization_id, 'wallet', wallet.name, wallet.id
 from public.wallets wallet
@@ -50,3 +58,36 @@ select
 from public.categories category
 where category.organization_id = 'org_local_demo'
 on conflict (category_id) do nothing;
+
+insert into public.transactions (
+  organization_id, amount_minor, currency, title, description, type, status,
+  origin, category_id, from_wallet_id, period_id, booked_at, created_by,
+  idempotency_key
+)
+select
+  'org_local_demo', 32000, 'EUR', 'Druck Abizeitung', 'Lokaler Beispieldatensatz',
+  'expense', 'posted', 'manual', category.id, wallet.id, period.id,
+  '2026-08-15', 'user_local_admin', 'seed-local-transaction'
+from public.categories category
+join public.wallets wallet
+  on wallet.organization_id = 'org_local_demo' and wallet.name = 'Klassenkasse'
+join public.accounting_periods period
+  on period.organization_id = 'org_local_demo' and period.year = 2026 and period.month = 8
+where category.organization_id = 'org_local_demo'
+  and category.name = 'Material'
+  and category.kind = 'expense'
+on conflict (organization_id, idempotency_key) do nothing;
+
+insert into public.ledger_entries (organization_id, transaction_id, ledger_account_id, debit_minor)
+select transaction_item.organization_id, transaction_item.id, ledger_account.id, transaction_item.amount_minor
+from public.transactions transaction_item
+join public.ledger_accounts ledger_account on ledger_account.category_id = transaction_item.category_id
+where transaction_item.idempotency_key = 'seed-local-transaction'
+on conflict do nothing;
+
+insert into public.ledger_entries (organization_id, transaction_id, ledger_account_id, credit_minor)
+select transaction_item.organization_id, transaction_item.id, ledger_account.id, transaction_item.amount_minor
+from public.transactions transaction_item
+join public.ledger_accounts ledger_account on ledger_account.wallet_id = transaction_item.from_wallet_id
+where transaction_item.idempotency_key = 'seed-local-transaction'
+on conflict do nothing;

@@ -1,6 +1,12 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
-export default clerkMiddleware();
+const middleware = clerkMiddleware();
+
+export default function proxy(...args: Parameters<typeof middleware>) {
+    if (process.env.ABI_VAULT_LOCAL_MODE === "true") return NextResponse.next();
+    return middleware(...args);
+}
 
 export const config = {
     matcher: [

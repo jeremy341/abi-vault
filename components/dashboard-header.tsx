@@ -45,6 +45,10 @@ const pageInformation: Record<string, { title: string; description: string }> =
       title: "Einstellungen",
       description: "Arbeitsbereich und Zugriffe konfigurieren.",
     },
+    "/dashboard/periods": {
+      title: "Zeiträume",
+      description: "Buchungszeiträume öffnen und sicher abschließen.",
+    },
   };
 
 export default function DashboardHeader() {

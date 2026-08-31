@@ -34,12 +34,13 @@ import {
   getDashboardSnapshot,
   listReceiptsForCurrentOrganization,
 } from "@/features/finance/actions/queries";
-import { uploadReceipt } from "@/features/receipts/actions/receipts";
+import { createReceiptDownloadUrl, reviewReceipt, uploadReceipt } from "@/features/receipts/actions/receipts";
 import { archiveReceipt, updateReceiptMetadata } from "@/features/receipts/actions/receipts";
 import { cachedFinanceQuery, getFinanceCacheState, invalidateFinanceQuery, subscribeFinanceQuery } from "@/lib/finance/client-cache";
 import { RowActionMenu } from "@/components/ui/row-actions";
+import { ReceiptReviewDialog, type ReceiptReviewDecision } from "@/components/receipts/ReceiptReviewDialog";
 
-type ReceiptStatus = "Geprüft" | "Zu prüfen" | "Ohne Zuordnung";
+type ReceiptStatus = "Geprüft" | "Zu prüfen" | "Ungültig" | "Ohne Zuordnung";
 type Receipt = {
   id: number | string;
   file: string;
@@ -53,6 +54,10 @@ type Receipt = {
   transactionId: string | null;
   canEdit: boolean;
   canDelete: boolean;
+  uploadedByName: string;
+  uploadedAt: string;
+  reviewedByName: string | null;
+  reviewedAt: string | null;
 };
 
 function formatReceiptDate(value: string) {
@@ -75,6 +80,10 @@ type ServerReceipt = {
   status: string;
   canEdit: boolean;
   canDelete: boolean;
+  uploadedByName: string;
+  uploadedAt: string;
+  reviewedByName: string | null;
+  reviewedAt: string | null;
 };
 
 function mapReceipt(item: ServerReceipt): Receipt {
@@ -88,9 +97,13 @@ function mapReceipt(item: ServerReceipt): Receipt {
     kind: "",
     date: item.date ? formatReceiptDate(item.date) : formatReceiptDate(new Date().toISOString()),
     amount: Number(item.amountMinor) / 100,
-    status: item.status === "approved" ? "Geprüft" : item.status === "rejected" || !item.assigned ? "Ohne Zuordnung" : "Zu prüfen",
+    status: item.status === "approved" ? "Geprüft" : item.status === "rejected" ? "Ungültig" : !item.assigned ? "Ohne Zuordnung" : "Zu prüfen",
     canEdit: item.canEdit,
     canDelete: item.canDelete,
+    uploadedByName: item.uploadedByName,
+    uploadedAt: item.uploadedAt,
+    reviewedByName: item.reviewedByName,
+    reviewedAt: item.reviewedAt,
   };
 }
 
@@ -290,6 +303,7 @@ const statusOptions = [
   "Alle",
   "Geprüft",
   "Zu prüfen",
+  "Ungültig",
   "Ohne Zuordnung",
 ] as const;
 const periodOptions = [
@@ -510,6 +524,7 @@ function PhoneReceiptsView({
   onAdd,
   onEdit,
   onDelete,
+  onReview,
 }: {
   loading: boolean;
   receipts: Receipt[];
@@ -530,6 +545,7 @@ function PhoneReceiptsView({
   onAdd: () => void;
   onEdit: (receipt: Receipt) => void;
   onDelete: (receipt: Receipt) => void;
+  onReview: (receipt: Receipt) => void;
 }) {
   return (
     <div className={phoneStyles.root} aria-busy={loading}>
@@ -596,6 +612,7 @@ function PhoneReceiptsView({
             <FileText aria-hidden="true" />
             <span className={phoneStyles.rowMain}>
               <strong>{receipt.file}</strong>
+              <small>Hochgeladen von {receipt.uploadedByName}</small>
               <span>
                 {receipt.transaction === "—"
                   ? "Nicht zugeordnet"
@@ -626,6 +643,8 @@ function PhoneReceiptsView({
               canDelete={receipt.canDelete}
               onEdit={() => onEdit(receipt)}
               onDelete={() => onDelete(receipt)}
+              onReceipt={() => onReview(receipt)}
+              receiptLabel={receipt.status === "Zu prüfen" ? "Beleg prüfen" : "Beleg ansehen"}
             />
           </article>
           )) : <div className={phoneStyles.empty}>Keine Belege gefunden.</div>}
@@ -671,6 +690,11 @@ export default function ReceiptsPage() {
   const [transactionsLoading, setTransactionsLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadError, setUploadError] = useState("");
+  const [reviewTarget, setReviewTarget] = useState<Receipt | null>(null);
+  const [reviewPreviewUrl, setReviewPreviewUrl] = useState<string | null>(null);
+  const [reviewPreviewLoading, setReviewPreviewLoading] = useState(false);
+  const [reviewPreviewError, setReviewPreviewError] = useState("");
+  const [reviewError, setReviewError] = useState("");
   const fileInput = useRef<HTMLInputElement>(null);
   const archiveIdempotencyKey = useRef<string | null>(null);
   useEffect(() => {
@@ -777,6 +801,40 @@ export default function ReceiptsPage() {
     setArchiveReason("");
     setActionError("");
     archiveIdempotencyKey.current = `archive-receipt-${receipt.id}-${crypto.randomUUID()}`;
+  }
+
+  async function openReviewReceipt(receipt: Receipt) {
+    setReviewTarget(receipt);
+    setReviewError("");
+    setReviewPreviewUrl(null);
+    setReviewPreviewError("");
+    setReviewPreviewLoading(true);
+    const result = await createReceiptDownloadUrl(receipt.id.toString());
+    if (result.success) setReviewPreviewUrl(result.data.url);
+    else setReviewPreviewError(result.error.message);
+    setReviewPreviewLoading(false);
+  }
+
+  async function confirmReviewReceipt(decision: ReceiptReviewDecision) {
+    if (!reviewTarget || saving) return;
+    setSaving(true);
+    setReviewError("");
+    try {
+      const result = await reviewReceipt({
+        receiptId: reviewTarget.id.toString(),
+        status: decision,
+      });
+      if (!result.success) {
+        setReviewError(result.error.message);
+        return;
+      }
+      const nextStatus: ReceiptStatus = decision === "approved" ? "Geprüft" : decision === "rejected" ? "Ungültig" : "Zu prüfen";
+      setItems((current) => current.map((item) => item.id === reviewTarget.id ? { ...item, status: nextStatus } : item));
+      setReviewTarget(null);
+      invalidateFinanceQuery("receipts", "transactions", "dashboard-snapshot", "report-snapshot", "report-kpis");
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function submitReceipt() {
@@ -907,6 +965,7 @@ export default function ReceiptsPage() {
           onAdd={() => setModalOpen(true)}
           onEdit={openEditReceipt}
           onDelete={openArchiveReceipt}
+          onReview={openReviewReceipt}
         />
       ) : (
         <>
@@ -1011,6 +1070,7 @@ export default function ReceiptsPage() {
                       </span>
                       <span>
                         <strong>{receipt.file}</strong>
+                        <small>Hochgeladen von {receipt.uploadedByName}</small>
                       </span>
                     </span>
                     <span
@@ -1033,12 +1093,14 @@ export default function ReceiptsPage() {
                     </span>
                     <span
                       data-label="Status"
-                      className={`ui-badge ${styles.statusTag} ${receipt.status === "Geprüft" ? styles.checked : receipt.status === "Zu prüfen" ? styles.review : styles.unassigned}`}
+                      className={`ui-badge ${styles.statusTag} ${receipt.status === "Geprüft" ? styles.checked : receipt.status === "Zu prüfen" ? styles.review : receipt.status === "Ungültig" ? styles.rejected : styles.unassigned}`}
                     >
                       {receipt.status === "Geprüft" ? (
                         <Check />
                       ) : receipt.status === "Zu prüfen" ? (
                         <Clock3 />
+                      ) : receipt.status === "Ungültig" ? (
+                        <X />
                       ) : (
                         <Link2 />
                       )}
@@ -1050,6 +1112,8 @@ export default function ReceiptsPage() {
                       canDelete={receipt.canDelete}
                       onEdit={() => openEditReceipt(receipt)}
                       onDelete={() => openArchiveReceipt(receipt)}
+                      onReceipt={() => { void openReviewReceipt(receipt); }}
+                      receiptLabel={receipt.status === "Zu prüfen" ? "Beleg prüfen" : "Beleg ansehen"}
                     />
                   </div>
                 ))}
@@ -1187,6 +1251,19 @@ export default function ReceiptsPage() {
             <button type="button" className={styles.primaryButton} onClick={confirmArchiveReceipt} disabled={saving || !archiveReason.trim()} aria-busy={saving}>{saving ? "Wird archiviert …" : "Archivieren"}</button>
           </footer>
         </Dialog>
+      ) : null}
+
+      {reviewTarget ? (
+        <ReceiptReviewDialog
+          receipt={reviewTarget}
+          previewUrl={reviewPreviewUrl}
+          previewLoading={reviewPreviewLoading}
+          previewError={reviewPreviewError}
+          saving={saving}
+          error={reviewError}
+          onClose={() => setReviewTarget(null)}
+          onDecision={(decision) => { void confirmReviewReceipt(decision); }}
+        />
       ) : null}
     </section>
   );

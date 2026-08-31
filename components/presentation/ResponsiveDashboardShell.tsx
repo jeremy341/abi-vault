@@ -7,6 +7,7 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import {
   BarChart3,
   Bell,
+  CalendarClock,
   CalendarDays,
   ChevronDown,
   FileText,
@@ -30,6 +31,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { usePresentationMode } from "@/hooks/use-presentation-mode";
+import { useAuth } from "@clerk/nextjs";
 import styles from "./presentation.module.css";
 
 const subscribeToHydration = () => () => {};
@@ -90,6 +92,12 @@ const navigationItems = [
     href: "/dashboard/settings",
     icon: Settings,
   },
+  {
+    label: "Zeiträume",
+    shortLabel: "Zeiträume",
+    href: "/dashboard/periods",
+    icon: CalendarClock,
+  },
 ];
 
 const pageInformation: Record<string, { title: string; description: string }> =
@@ -126,15 +134,19 @@ const pageInformation: Record<string, { title: string; description: string }> =
       title: "Einstellungen",
       description: "Arbeitsbereich und Zugriffe konfigurieren.",
     },
+    "/dashboard/periods": {
+      title: "Zeiträume",
+      description: "Buchungszeiträume öffnen und sicher abschließen.",
+    },
   };
 
 function isCurrentRoute(pathname: string, href: string) {
   return pathname === href;
 }
 
-function TabletRail({ pathname }: { pathname: string }) {
+function TabletRail({ pathname, isAdmin }: { pathname: string; isAdmin: boolean }) {
   return (
-    <aside className={styles.tabletRail} aria-label="Hauptnavigation">
+    <aside className={`${styles.tabletRail} ${isAdmin ? "" : styles.nonAdminNavigation}`} aria-label="Hauptnavigation">
       <div className={styles.tabletBrand}>
         <AbiLogo compact />
       </div>
@@ -218,13 +230,13 @@ function PhoneTopbar({ pathname }: { pathname: string }) {
   );
 }
 
-function PhoneNavigation({ pathname }: { pathname: string }) {
+function PhoneNavigation({ pathname, isAdmin }: { pathname: string; isAdmin: boolean }) {
   const primary = navigationItems.slice(0, 3).concat(navigationItems[4]);
   const secondary = [navigationItems[3], ...navigationItems.slice(5)];
   const secondaryActive = secondary.some((item) => item.href === pathname);
 
   return (
-    <nav className={styles.phoneNav} aria-label="Hauptnavigation">
+    <nav className={`${styles.phoneNav} ${isAdmin ? "" : styles.nonAdminNavigation}`} aria-label="Hauptnavigation">
       {primary.map((item) => {
         const Icon = item.icon;
         const active = isCurrentRoute(pathname, item.href);
@@ -317,9 +329,11 @@ function DesktopNavGroup({
 function DesktopShell({
   children,
   pathname,
+  isAdmin,
 }: {
   children: React.ReactNode;
   pathname: string;
+  isAdmin: boolean;
 }) {
   const page = pageInformation[pathname] ?? pageInformation["/dashboard"];
   const [openMenu, setOpenMenu] = useState<"cohort" | "notifications" | null>(
@@ -343,7 +357,7 @@ function DesktopShell({
   }, [openMenu]);
 
   return (
-    <div className={styles.desktopShell} data-presentation="desktop">
+    <div className={`${styles.desktopShell} ${isAdmin ? "" : styles.nonAdminNavigation}`} data-presentation="desktop">
       <a className={styles.skipLink} href="#dashboard-content">
         Zum Inhalt springen
       </a>
@@ -464,6 +478,8 @@ export default function ResponsiveDashboardShell({
 }) {
   const mode = usePresentationMode();
   const pathname = usePathname();
+  const { orgRole } = useAuth();
+  const isAdmin = process.env.NEXT_PUBLIC_ABI_VAULT_LOCAL_MODE === "true" || orgRole === "org:admin";
   const shellReady = useSyncExternalStore(
     subscribeToHydration,
     getClientHydrationState,
@@ -498,7 +514,7 @@ export default function ResponsiveDashboardShell({
   }
 
   if (mode === "desktop") {
-    return <DesktopShell pathname={pathname}>{children}</DesktopShell>;
+    return <DesktopShell pathname={pathname} isAdmin={isAdmin}>{children}</DesktopShell>;
   }
 
   if (mode === "tablet") {
@@ -507,7 +523,7 @@ export default function ResponsiveDashboardShell({
         <a className={styles.skipLink} href="#dashboard-content">
           Zum Inhalt springen
         </a>
-        <TabletRail pathname={pathname} />
+        <TabletRail pathname={pathname} isAdmin={isAdmin} />
         <section className={styles.tabletWorkspace}>
           <TabletTopbar pathname={pathname} />
           <main id="dashboard-content" className={styles.tabletContent}>
@@ -527,7 +543,7 @@ export default function ResponsiveDashboardShell({
       <main id="dashboard-content" className={styles.phoneContent}>
         {children}
       </main>
-      <PhoneNavigation pathname={pathname} />
+      <PhoneNavigation pathname={pathname} isAdmin={isAdmin} />
     </div>
   );
 }

@@ -3,6 +3,8 @@
 import {
   Check,
   CircleUserRound,
+  Copy,
+  Link2,
   MoreHorizontal,
   Plus,
   Search,
@@ -18,6 +20,7 @@ import phoneStyles from "./people-phone.module.css";
 import { usePresentationMode } from "@/hooks/use-presentation-mode";
 import { listMembersForCurrentOrganization } from "@/features/finance/actions/queries";
 import { inviteMember } from "@/features/people/actions/invitations";
+import { createRoleInviteLink } from "@/features/people/actions/invite-links";
 import { removeMember, updateMemberRole } from "@/features/people/actions/memberships";
 
 type Person = {
@@ -27,6 +30,12 @@ type Person = {
   access: string;
   status: "Aktiv" | "Einladung offen" | "Nicht aktiv";
   initials: string;
+};
+
+type RoleInviteLink = {
+  role: "admin" | "supervisor";
+  url: string;
+  expiresAt: string;
 };
 
 function PhonePeopleView({
@@ -149,6 +158,8 @@ export default function PeoplePage() {
   const [openMenuId, setOpenMenuId] = useState<number | string | null>(null);
   const [busyPersonId, setBusyPersonId] = useState<number | string | null>(null);
   const [inviteSaving, setInviteSaving] = useState(false);
+  const [linkSaving, setLinkSaving] = useState<"admin" | "supervisor" | null>(null);
+  const [roleLinks, setRoleLinks] = useState<Partial<Record<RoleInviteLink["role"], RoleInviteLink>>>({});
   useEffect(() => {
     let active = true;
     listMembersForCurrentOrganization()
@@ -321,6 +332,32 @@ export default function PeoplePage() {
     } finally {
       setBusyPersonId(null);
     }
+  }
+
+  async function generateRoleLink(role: RoleInviteLink["role"]) {
+    if (linkSaving) return;
+    setLinkSaving(role);
+    setMessage("");
+    try {
+      const result = await createRoleInviteLink({ role });
+      if (!result.ok) {
+        setMessage("Der Einladungslink konnte nicht erstellt werden.");
+        return;
+      }
+      setRoleLinks((current) => ({ ...current, [role]: result }));
+      setMessage(`${role === "admin" ? "Admin" : "Supervisor"}-Link erstellt.`);
+    } catch {
+      setMessage("Der Einladungslink konnte nicht erstellt werden.");
+    } finally {
+      setLinkSaving(null);
+    }
+  }
+
+  async function copyRoleLink(role: RoleInviteLink["role"]) {
+    const link = roleLinks[role];
+    if (!link) return;
+    await navigator.clipboard.writeText(link.url);
+    setMessage("Einladungslink kopiert.");
   }
 
   return (
@@ -533,6 +570,39 @@ export default function PeoplePage() {
                       }
                     </b>
                   </div>
+                </div>
+              </article>
+              <article className={styles.inviteLinksPanel}>
+                <header className={styles.panelHeader}>
+                  <div>
+                    <h2>Einladungslinks</h2>
+                    <p>Teile einen Link, ohne E-Mail-Adressen zu sammeln.</p>
+                  </div>
+                  <Link2 aria-hidden="true" />
+                </header>
+                <div className={styles.inviteLinkList}>
+                  {(["supervisor", "admin"] as const).map((role) => {
+                    const link = roleLinks[role];
+                    return (
+                      <div className={styles.inviteLinkCard} key={role}>
+                        <span className={styles.inviteLinkIcon}><Link2 aria-hidden="true" /></span>
+                        <div>
+                          <strong>{role === "admin" ? "Admin-Link" : "Supervisor-Link"}</strong>
+                          <small>{role === "admin" ? "Vollzugriff auf Arbeitsbereich und Einstellungen." : "Finanzen verwalten und Berichte prüfen."}</small>
+                          {link ? <code>{link.url}</code> : null}
+                        </div>
+                        <div className={styles.inviteLinkActions}>
+                          {link ? (
+                            <button type="button" onClick={() => void copyRoleLink(role)} aria-label={`${role} Link kopieren`}><Copy aria-hidden="true" /> Kopieren</button>
+                          ) : (
+                            <button type="button" onClick={() => void generateRoleLink(role)} disabled={linkSaving !== null} aria-busy={linkSaving === role}>
+                              {linkSaving === role ? "Erstelle …" : "Link erstellen"}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </article>
               <article className={styles.activityPanel}>

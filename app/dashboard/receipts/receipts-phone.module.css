@@ -206,7 +206,6 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
 .positive {
   color: var(--ui-positive);
 }

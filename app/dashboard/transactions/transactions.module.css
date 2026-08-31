@@ -32,11 +32,6 @@
     min-height: 2.5rem;
   }
 
-  .tabletPage .tableHeader > :nth-child(5),
-  .tabletPage .row > [data-label="Beleg"] {
-    display: none;
-  }
-
   .tabletPage .rows {
     gap: 0;
   }
@@ -473,8 +468,9 @@
   .tableHeader,
   .row {
     grid-template-columns:
-      minmax(220px, 1.45fr) minmax(130px, 0.8fr)
-      120px 130px minmax(150px, 0.9fr) 2.5rem;
+      minmax(0, 1.55fr) minmax(0, 1.25fr)
+      minmax(0, 0.8fr) minmax(0, 0.8fr)
+      minmax(180px, 1.15fr) minmax(0, 0.8fr) 2.5rem;
   }
 
   .row > :global([data-slot="dropdown-menu"]) {
@@ -493,6 +489,28 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.transactionIdentity {
+  display: grid;
+  min-width: 0;
+  gap: 0.18rem;
+}
+.transactionIdentity small {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.25rem;
+  overflow: hidden;
+  color: var(--ui-muted-ink);
+  font-size: 0.68rem;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.transactionIdentity small svg {
+  width: 0.75rem;
+  height: 0.75rem;
+  flex: none;
 }
 .iconBubble {
   display: inline-flex;
@@ -535,14 +553,62 @@
   display: flex;
   min-width: 0;
   align-items: center;
+  justify-content: center;
   gap: 0.55rem;
   color: var(--muted-foreground);
+}
+.tableHeader > span:nth-child(2),
+.tableHeader > span:nth-child(3),
+.tableHeader > span:nth-child(4),
+.tableHeader > span:nth-child(5),
+.tableHeader > span:nth-child(6),
+.row > [data-label="Kategorie"],
+.row > [data-label="Datum"],
+.row > [data-label="Betrag"],
+.row > [data-label="Status"] {
+  text-align: center;
+}
+.row > [data-label="Kategorie"],
+.row > [data-label="Datum"],
+.row > [data-label="Betrag"],
+.row > [data-label="Status"] {
+  justify-self: center;
+}
+.receiptStatusCell {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
 }
 .receipt svg {
   width: 1.05rem;
   height: 1.05rem;
   flex: none;
   color: var(--ink);
+}
+.receiptStatusTag {
+  display: inline-flex;
+  flex: none;
+  width: fit-content;
+  overflow: visible;
+  border-radius: 999px;
+  padding: 0.22rem 0.5rem;
+  font-size: 0.68rem;
+  font-weight: 650;
+  line-height: 1;
+  white-space: nowrap;
+}
+.receiptStatusPending {
+  background: #fff5e5;
+  color: #b45309;
+}
+.receiptStatusApproved {
+  background: #eaf8ee;
+  color: #15803d;
+}
+.receiptStatusRejected {
+  background: #fff0f0;
+  color: #b91c1c;
 }
 
 .pagination {
@@ -1507,8 +1573,9 @@
   .tabletPage .tableHeader,
   .tabletPage .row {
     grid-template-columns:
-      minmax(0, 1.35fr) minmax(7rem, 0.72fr)
-      5.5rem 6.5rem 2.5rem;
+      minmax(0, 1.25fr) minmax(0, 1.1fr)
+      minmax(0, 0.8fr) minmax(0, 0.8fr)
+      minmax(0, 1fr) minmax(0, 0.8fr) 2.5rem;
   }
 
   .tabletPage .row > :global([data-slot="dropdown-menu"]) {

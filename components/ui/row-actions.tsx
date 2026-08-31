@@ -2,8 +2,10 @@
 
 import {
   Archive,
+  Eye,
   MoreVertical,
   Pencil,
+  ShieldCheck,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -19,6 +21,8 @@ type RowActionMenuProps = {
   canDelete: boolean;
   onEdit: () => void;
   onDelete: () => void;
+  onReceipt?: () => void;
+  receiptLabel?: string;
   editDisabledLabel?: string;
   deleteDisabledLabel?: string;
 };
@@ -29,6 +33,8 @@ export function RowActionMenu({
   canDelete,
   onEdit,
   onDelete,
+  onReceipt,
+  receiptLabel = "Beleg prüfen",
   editDisabledLabel = "Nur der Ersteller oder ein Admin kann bearbeiten.",
   deleteDisabledLabel = "Nur Admins können archivieren.",
 }: RowActionMenuProps) {
@@ -53,6 +59,13 @@ export function RowActionMenu({
         className="w-52"
         onClick={(event) => event.stopPropagation()}
       >
+        {onReceipt ? (
+          <DropdownMenuItem onClick={onReceipt}>
+            {receiptLabel === "Beleg prüfen" ? <ShieldCheck aria-hidden="true" /> : <Eye aria-hidden="true" />}
+            {receiptLabel}
+          </DropdownMenuItem>
+        ) : null}
+        {onReceipt ? <DropdownMenuSeparator /> : null}
         <DropdownMenuItem
           disabled={!canEdit}
           aria-label={canEdit ? "Bearbeiten" : editDisabledLabel}

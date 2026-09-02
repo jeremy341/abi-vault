@@ -17,8 +17,8 @@ import styles from "./AccountCardModal.module.css";
 const cardColors = [
   { name: "Schwarz", value: "#111114" },
   { name: "Graphit", value: "#3b3b40" },
-  { name: "Weiß", value: "#e9e9e7" },
-  { name: "Waldgrün", value: "#25453b" },
+  { name: "White", value: "#e9e9e7" },
+  { name: "Forest green", value: "#25453b" },
   { name: "Burgunder", value: "#542f38" },
   { name: "Navy", value: "#26364d" },
   { name: "Sand", value: "#9a8d78" },
@@ -122,7 +122,7 @@ export default function AddCardModal({
     if (invalidMonth || (next.length === 5 && !isValidFutureExpiry(next))) {
       setErrors((current) => ({
         ...current,
-        expiry: "Ungültiges Ablaufdatum.",
+        expiry: "Invalides Expiry date.",
       }));
     }
   }
@@ -131,16 +131,16 @@ export default function AddCardModal({
     const nextErrors: FormErrors = {};
 
     if (!values.accountName.trim()) {
-      nextErrors.accountName = "Bitte einen Kassennamen eingeben.";
+      nextErrors.accountName = "Bitte einen Cash registersnamen eingeben.";
     }
     if (values.cardNumber.replace(/\D/g, "").length !== 16) {
       nextErrors.cardNumber = "Die Kartennummer muss 16 Ziffern enthalten.";
     }
     if (!values.holder.trim()) {
-      nextErrors.holder = "Bitte den Karteninhaber eingeben.";
+      nextErrors.holder = "Bitte den Card holder eingeben.";
     }
     if (!isValidFutureExpiry(values.expiry)) {
-      nextErrors.expiry = "Ungültiges Ablaufdatum.";
+      nextErrors.expiry = "Invalides Expiry date.";
     }
 
     setErrors(nextErrors);
@@ -172,10 +172,10 @@ export default function AddCardModal({
         setErrors({});
         idempotencyKey.current = null;
       } else {
-        setSubmitError("Die Kasse konnte nicht gespeichert werden.");
+        setSubmitError("Die Cash register konnte nicht gespeichert werden.");
       }
     } catch {
-      setSubmitError("Die Kasse konnte nicht gespeichert werden.");
+      setSubmitError("Die Cash register konnte nicht gespeichert werden.");
     } finally {
       setSaving(false);
     }
@@ -200,13 +200,13 @@ export default function AddCardModal({
       >
         <header className={styles.header}>
           <div className={styles.heading}>
-            <h2 id="add-card-title">Kasse hinzufügen</h2>
-            <p>Lege eine weitere Kasse mit eigener Kartendarstellung an.</p>
+            <h2 id="add-card-title">Add cash register</h2>
+            <p>Lege eine weitere Cash register mit eigener Kartendarstellung an.</p>
           </div>
           <button
             type="button"
             className={styles.closeButton}
-            aria-label="Dialog schließen"
+            aria-label="Close dialog"
             onClick={onClose}
             disabled={saving}
           >
@@ -220,7 +220,7 @@ export default function AddCardModal({
               cardColor={selectedColor}
               details={{
                 ...values,
-                accountName: values.accountName || "Neue Kasse",
+                accountName: values.accountName || "New Cash register",
                 cardNumber: values.cardNumber || previewCardNumber,
                 holder: values.holder || "Mike Smith",
                 expiry: values.expiry || "06/21",
@@ -258,7 +258,7 @@ export default function AddCardModal({
             </h3>
             <div className={styles.formGrid}>
               <Field
-                label="Kassenname"
+                label="Cash registersname"
                 error={errors.accountName}
                 errorId="add-account-name-error"
               >
@@ -277,7 +277,7 @@ export default function AddCardModal({
                       filterLetters(event.target.value, 26),
                     )
                   }
-                  placeholder="Zum Beispiel Getränkekasse"
+                  placeholder="For example, drinks cash register"
                 />
               </Field>
               <Field
@@ -305,7 +305,7 @@ export default function AddCardModal({
                 />
               </Field>
               <Field
-                label="Karteninhaber"
+                label="Card holder"
                 error={errors.holder}
                 errorId="add-holder-error"
               >
@@ -328,7 +328,7 @@ export default function AddCardModal({
                 />
               </Field>
               <Field
-                label="Ablaufdatum"
+                label="Expiry date"
                 error={errors.expiry}
                 errorId="add-expiry-error"
               >
@@ -359,10 +359,10 @@ export default function AddCardModal({
             onClick={onClose}
             disabled={saving}
           >
-            Abbrechen
+            Cancel
           </button>
           <button type="submit" className={styles.primaryButton} disabled={saving} aria-busy={saving}>
-            {saving ? "Kasse wird gespeichert …" : "Kasse hinzufügen"}
+            {saving ? "Saving cash register …" : "Add cash register"}
           </button>
         </footer>
       </form>

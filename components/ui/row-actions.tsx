@@ -34,9 +34,9 @@ export function RowActionMenu({
   onEdit,
   onDelete,
   onReceipt,
-  receiptLabel = "Beleg prüfen",
+  receiptLabel = "Review receipt",
   editDisabledLabel = "Nur der Ersteller oder ein Admin kann bearbeiten.",
-  deleteDisabledLabel = "Nur Admins können archivieren.",
+  deleteDisabledLabel = "Only admins can archive.",
 }: RowActionMenuProps) {
   return (
     <DropdownMenu>
@@ -61,30 +61,30 @@ export function RowActionMenu({
       >
         {onReceipt ? (
           <DropdownMenuItem onClick={onReceipt}>
-            {receiptLabel === "Beleg prüfen" ? <ShieldCheck aria-hidden="true" /> : <Eye aria-hidden="true" />}
+            {receiptLabel === "Review receipt" ? <ShieldCheck aria-hidden="true" /> : <Eye aria-hidden="true" />}
             {receiptLabel}
           </DropdownMenuItem>
         ) : null}
         {onReceipt ? <DropdownMenuSeparator /> : null}
         <DropdownMenuItem
           disabled={!canEdit}
-          aria-label={canEdit ? "Bearbeiten" : editDisabledLabel}
+          aria-label={canEdit ? "Edit" : editDisabledLabel}
           title={canEdit ? undefined : editDisabledLabel}
           onClick={canEdit ? onEdit : undefined}
         >
           <Pencil aria-hidden="true" />
-          Bearbeiten
+          Edit
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           disabled={!canDelete}
-          aria-label={canDelete ? "Löschen" : deleteDisabledLabel}
+          aria-label={canDelete ? "Delete" : deleteDisabledLabel}
           variant="destructive"
           title={canDelete ? undefined : deleteDisabledLabel}
           onClick={canDelete ? onDelete : undefined}
         >
           <Archive aria-hidden="true" />
-          Löschen
+          Delete
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

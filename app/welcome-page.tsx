@@ -20,13 +20,13 @@ export default function StartPage() {
           </h1>
 
           <p className="mx-auto mt-6 max-w-xl text-base leading-7 text-muted sm:text-lg">
-            Einnahmen, Ausgaben, Belege und Spendenziele an einem Ort.
+            Income, Expenses, Receipts und Spendenziele an einem Ort.
           </p>
 
           <div className={styles.actions}>
-            <Link href="/sign-in" className="action-link">Anmelden</Link>
+            <Link href="/sign-in" className="action-link">Sign in</Link>
             <Link href="/sign-up" className="action-link">Registrieren</Link>
-            {localMode ? <Link href="/dashboard" className="action-link">Übersicht</Link> : null}
+            {localMode ? <Link href="/dashboard" className="action-link">Overview</Link> : null}
           </div>
         </div>
       </section>

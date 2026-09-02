@@ -77,7 +77,7 @@ function PhoneGoalsView({
         <span><LoadingText loading={loading}>{goals.length} aktiv</LoadingText></span>
       </header>
       <div className={phoneStyles.goals} data-ui-slot="list-body">
-        <LoadingCollection loading={loading} knownItemCount={goals.length} emptyHeight="12rem" label="Ziele werden geladen…">
+        <LoadingCollection loading={loading} knownItemCount={goals.length} emptyHeight="12rem" label="Goals werden geladen…">
           {goals.length ? goals.map((goal, index) => (
             <button
               type="button"
@@ -95,7 +95,7 @@ function PhoneGoalsView({
                 <i style={{ width: `${goal.progress}%` }} />
               </div>
               <span className={phoneStyles.goalFooter}>
-                <span>Ziel: {goal.date}</span>
+                <span>Goal: {goal.date}</span>
                 <span>{euroPrecise.format(goal.target - goal.saved)} offen</span>
               </span>
             </button>
@@ -103,7 +103,7 @@ function PhoneGoalsView({
         </LoadingCollection>
       </div>
       <button type="button" className={phoneStyles.addButton} onClick={onAdd} disabled={loading} data-ui-slot="primary-action">
-        <Plus aria-hidden="true" /> Ziel hinzufügen
+        <Plus aria-hidden="true" /> Add goal
       </button>
     </div>
   );
@@ -146,7 +146,7 @@ export default function GoalsPage() {
       .then((result) => {
         if (!active) return;
         if (!result.ok) {
-          setLoadError("Die Ziele konnten nicht geladen werden.");
+          setLoadError("Die Goals konnten nicht geladen werden.");
           return;
         }
         setGoals(result.goals.map((goal) => {
@@ -163,7 +163,7 @@ export default function GoalsPage() {
         }));
       })
       .catch(() => {
-        if (active) setLoadError("Die Ziele konnten nicht geladen werden.");
+        if (active) setLoadError("Die Goals konnten nicht geladen werden.");
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -245,13 +245,13 @@ export default function GoalsPage() {
 
     if (!submittedName || !target || target <= 0 || !submittedDeadline) {
       setFormError(
-        "Bitte Name, Zielbetrag und Zieldatum vollständig ausfüllen.",
+        "Please complete the name, target amount, and target date.",
       );
       return;
     }
     if (saved < 0 || saved > target) {
       setFormError(
-        "Der bereits gesparte Betrag muss zwischen 0 € und dem Zielbetrag liegen.",
+        "Der bereits gesparte Amount muss zwischen 0 € und dem Target amount liegen.",
       );
       return;
     }
@@ -269,10 +269,10 @@ export default function GoalsPage() {
           description: null,
           targetAmount: submittedTargetAmount,
           deadline: submittedDeadline,
-          reason: "Ziel im Ziel-Dialog aktualisiert",
+          reason: "Goal im Goal-Dialog aktualisiert",
         });
         if (!result.ok) {
-          setFormError("Das Ziel konnte nicht gespeichert werden.");
+          setFormError("Das Goal konnte nicht gespeichert werden.");
           return;
         }
       }
@@ -301,7 +301,7 @@ export default function GoalsPage() {
         idempotencyKey: idempotencyKey.current,
       });
       if (!result.success) {
-        setFormError("Das Ziel konnte nicht gespeichert werden.");
+        setFormError("Das Goal konnte nicht gespeichert werden.");
         return;
       }
       // Add new goal
@@ -321,7 +321,7 @@ export default function GoalsPage() {
     idempotencyKey.current = null;
     closeModal();
     } catch {
-      setFormError("Das Ziel konnte nicht gespeichert werden.");
+      setFormError("Das Goal konnte nicht gespeichert werden.");
     } finally {
       setSaving(false);
     }
@@ -335,10 +335,10 @@ export default function GoalsPage() {
       if (/^[0-9a-f-]{36}$/i.test(currentGoal.id)) {
         const result = await archiveGoal({
           goalId: currentGoal.id,
-          reason: "Ziel im Ziel-Dialog archiviert",
+          reason: "Goal im Goal-Dialog archiviert",
         });
         if (!result.ok) {
-          setFormError("Das Ziel konnte nicht archiviert werden.");
+          setFormError("Das Goal konnte nicht archiviert werden.");
           return;
         }
       }
@@ -352,7 +352,7 @@ export default function GoalsPage() {
 
   return (
     <section className={mode === "phone" ? phoneStyles.pageShell : styles.page} aria-busy={loading}>
-      <LoadingStatus loading={loading} label="Ziele werden geladen…" />
+      <LoadingStatus loading={loading} label="Goals werden geladen…" />
       {loadError ? <p className={styles.formError} role="alert">{loadError}</p> : null}
       {mode === "phone" ? (
         <PhoneGoalsView
@@ -373,7 +373,7 @@ export default function GoalsPage() {
                   <Target aria-hidden="true" />
                 </span>
                 <div>
-                  <span>Aktive Ziele</span>
+                  <span>Activee Goals</span>
                   <strong><LoadingText loading={loading}>{goals.length}</LoadingText></strong>
                 </div>
               </article>
@@ -402,9 +402,9 @@ export default function GoalsPage() {
             <article className={styles.goalsPanel} data-ui-slot="primary-panel">
               <header className={styles.panelHeader}>
                 <div>
-                  <h2>Meine Ziele</h2>
+                  <h2>Meine Goals</h2>
                   <p>
-                    Klicke auf ein Ziel, um Beträge oder Fristen anzupassen.
+                    Select a goal to adjust amounts or deadlines.
                   </p>
                 </div>
                 <button
@@ -415,11 +415,11 @@ export default function GoalsPage() {
                   data-ui-slot="primary-action"
                 >
                   <Plus aria-hidden="true" />
-                  Ziel hinzufügen
+                  Add goal
                 </button>
               </header>
               <div className={styles.goalGrid} data-ui-slot="list-body">
-                <LoadingCollection loading={loading} knownItemCount={goals.length} emptyHeight="14rem" label="Ziele werden geladen…">
+                <LoadingCollection loading={loading} knownItemCount={goals.length} emptyHeight="14rem" label="Goals werden geladen…">
                   {goals.map((goal, idx) => (
                     <article
                       className={styles.goalCard}
@@ -433,7 +433,7 @@ export default function GoalsPage() {
                           openEditModal(goal, idx);
                         }
                       }}
-                      title="Klicken zum Anpassen"
+                      title="Click to edit"
                     >
                       <div className={styles.goalCardHeader}>
                         <h3>{goal.title}</h3>
@@ -454,7 +454,7 @@ export default function GoalsPage() {
                       <div className={styles.goalFooter}>
                         <span>
                           <CalendarDays aria-hidden="true" />
-                          Ziel: {goal.date}
+                          Goal: {goal.date}
                         </span>
                         <span>
                           {euroPrecise.format(goal.target - goal.saved)} offen
@@ -471,7 +471,7 @@ export default function GoalsPage() {
                 <header className={styles.panelHeader}>
                   <div>
                     <h2>Gesamtfortschritt</h2>
-                    <p>Über alle aktiven Ziele</p>
+                    <p>Across all active goals</p>
                   </div>
                   <span className={styles.progressPercent}>
                     <LoadingText loading={loading}>{overallProgress}%</LoadingText>
@@ -489,7 +489,7 @@ export default function GoalsPage() {
               <article className={styles.upcomingPanel}>
                 <header className={styles.panelHeader}>
                   <div>
-                    <h2>Nächste Ziele</h2>
+                    <h2>Upcoming goals</h2>
                     <p>Bevorstehende Fristen</p>
                   </div>
                   <CalendarDays aria-hidden="true" />
@@ -541,7 +541,7 @@ export default function GoalsPage() {
       {modalOpen && (
         <Dialog
           label={
-            editingGoalIndex !== null ? "Ziel anpassen" : "Ziel hinzufügen"
+            editingGoalIndex !== null ? "Edit goal" : "Add goal"
           }
           onClose={closeModal}
           overlayClassName={styles.overlay}
@@ -560,12 +560,12 @@ export default function GoalsPage() {
                 <div>
                   <h2>
                     {editingGoalIndex !== null
-                      ? "Ziel anpassen"
-                      : "Ziel hinzufügen"}
+                      ? "Edit goal"
+                      : "Add goal"}
                   </h2>
                   <p>
                     {editingGoalIndex !== null
-                      ? "Details, Beträge und Fortschritt dieses Sparziels bearbeiten."
+                      ? "Edit the details, amounts, and progress of this savings goal."
                       : "Lege ein neues gemeinsames Sparziel fest."}
                   </p>
                 </div>
@@ -574,7 +574,7 @@ export default function GoalsPage() {
                 type="button"
                 className={styles.closeButton}
                 onClick={closeModal}
-                aria-label="Dialog schließen"
+                aria-label="Close dialog"
               >
                 <X aria-hidden="true" />
               </button>
@@ -583,12 +583,12 @@ export default function GoalsPage() {
             <div className={styles.modalBody}>
               <section
                 className={styles.goalPreview}
-                aria-label="Vorschau des Ziels"
+                aria-label="Vorschau des Goals"
               >
                 <div className={styles.goalCardHeader}>
                   <h3>
                     {goalName.trim() ||
-                      (editingGoalIndex !== null ? "Zielname" : "Neues Ziel")}
+                      (editingGoalIndex !== null ? "Goalname" : "News Goal")}
                   </h3>
                   <Target aria-hidden="true" />
                 </div>
@@ -606,7 +606,7 @@ export default function GoalsPage() {
 
               <div className={styles.formGrid}>
                 <label className={styles.formField}>
-                  <span>Zielname</span>
+                  <span>Goalname</span>
                   <input
                     name="goalName"
                     autoComplete="off"
@@ -621,7 +621,7 @@ export default function GoalsPage() {
                 </label>
 
                 <label className={styles.formField}>
-                  <span>Zieldatum</span>
+                  <span>Goaldatum</span>
                   <input
                     name="deadline"
                     type="date"
@@ -634,7 +634,7 @@ export default function GoalsPage() {
                 </label>
 
                 <label className={styles.formField}>
-                  <span>Zielbetrag</span>
+                  <span>Target amount</span>
                   <div className={styles.amountField}>
                     <input
                       name="targetAmount"
@@ -684,7 +684,7 @@ export default function GoalsPage() {
                   disabled={saving}
                 >
                   <Trash2 className="inline-block size-4 mr-1.5" />
-                  Ziel löschen
+                  Delete goal
                 </button>
               ) : (
                 <div />
@@ -697,12 +697,12 @@ export default function GoalsPage() {
                   onClick={closeModal}
                   disabled={saving}
                 >
-                  Abbrechen
+                  Cancel
                 </button>
                 <button type="submit" className={styles.primaryButton} disabled={saving} aria-busy={saving}>
-                  {saving ? "Wird gespeichert …" : editingGoalIndex !== null
-                    ? "Änderungen speichern"
-                    : "Ziel hinzufügen"}
+                  {saving ? "Saving …" : editingGoalIndex !== null
+                    ? "Save changes"
+                    : "Add goal"}
                 </button>
               </div>
             </footer>

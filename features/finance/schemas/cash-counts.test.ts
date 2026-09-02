@@ -5,7 +5,7 @@ const base = {
   walletId: "00000000-0000-4000-8000-000000000001",
   countedAmount: "12,50",
   auditor: "Alex",
-  note: "Kassensturz",
+  note: "Cash registerssturz",
   idempotencyKey: "cash-count-test-key-001",
 };
 

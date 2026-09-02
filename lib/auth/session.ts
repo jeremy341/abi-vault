@@ -16,7 +16,7 @@ export class OrganizationRequiredError extends Error {
   readonly code = "ORGANIZATION_REQUIRED" as const;
 
   constructor() {
-    super("Ein aktiver Abi-Arbeitsbereich ist erforderlich.");
+    super("Ein aktiver Abi-Workspace ist erforderlich.");
   }
 }
 
@@ -24,7 +24,7 @@ export class AuthorizationError extends Error {
   readonly code = "FORBIDDEN" as const;
 
   constructor() {
-    super("Du hast keine Berechtigung für diese Aktion.");
+    super("You do not have permission for this action.");
   }
 }
 

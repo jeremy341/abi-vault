@@ -43,9 +43,9 @@ import { createReceiptDownloadUrl, reviewReceipt } from "@/features/receipts/act
 import { ReceiptReviewDialog, type ReceiptReviewDecision, type ReceiptReviewDialogReceipt } from "@/components/receipts/ReceiptReviewDialog";
 
 type Category = "Material" | "Sonstiges" | "Veranstaltung";
-type FilterType = "Einnahmen" | "Ausgaben";
-type ReceiptFilter = "Alle" | "Vorhanden" | "Fehlt";
-type ReviewFilter = "Alle" | "Geprüft" | "Zu prüfen" | "Ungültig";
+type FilterType = "Income" | "Expenses";
+type ReceiptFilter = "All" | "Vorhanden" | "Fehlt";
+type ReviewFilter = "All" | "Approved" | "Pending review" | "Invalid";
 type AccountFilter = string;
 type Transaction = {
   id: number | string;
@@ -138,7 +138,7 @@ type Trend = { label: string; direction: TrendDirection };
 
 function trendFor(current: number, previous: number, increaseIsPositive = true): Trend {
   if (current === 0 && previous === 0) return { label: "—", direction: "neutral" };
-  if (previous === 0) return { label: "Neu", direction: current > 0 === increaseIsPositive ? "positive" : "negative" };
+  if (previous === 0) return { label: "New", direction: current > 0 === increaseIsPositive ? "positive" : "negative" };
 
   const change = ((current - previous) / Math.abs(previous)) * 100;
   const direction = change === 0
@@ -267,21 +267,21 @@ function CashRegisterCombobox({
   const filtered = options.filter((option) => option.name.toLowerCase().includes(query.trim().toLowerCase()));
   return (
     <div className={styles.formField}>
-      <span>Kasse</span>
+      <span>Cash register</span>
       <div className={styles.cashRegisterCombobox}>
         <button type="button" className={styles.cashRegisterTrigger} aria-haspopup="listbox" aria-expanded={open} onClick={() => setOpen((current) => !current)}>
-          <span>{selected?.name ?? "Kasse auswählen"}</span>
+          <span>{selected?.name ?? "Select cash register"}</span>
           <span aria-hidden="true">⌄</span>
         </button>
         {open ? (
           <div className={styles.cashRegisterMenu}>
-            <input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Kasse suchen …" aria-label="Kassen suchen" />
-            <div role="listbox" aria-label="Kassen">
+            <input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search cash registers …" aria-label="Search cash registers" />
+            <div role="listbox" aria-label="Cash registers">
               {filtered.length ? filtered.map((option) => (
                 <button type="button" role="option" aria-selected={option.id === value} key={option.id} onClick={() => { onChange(option.id); setOpen(false); setQuery(""); }}>
                   {option.name}
                 </button>
-              )) : <span className={styles.cashRegisterEmpty}>Keine Kasse gefunden.</span>}
+              )) : <span className={styles.cashRegisterEmpty}>No cash registers found.</span>}
             </div>
           </div>
         ) : null}
@@ -339,10 +339,10 @@ function PhoneTransactionsView({
     <div className={phoneStyles.root} aria-busy={loading}>
       <section
         className={phoneStyles.summary}
-        aria-label="Transaktionsübersicht"
+        aria-label="Transaction overview"
         data-ui-slot="summary"
       >
-        <span>Netto</span>
+        <span>Net</span>
         <strong><LoadingText loading={loading}>{displayAmount(netBalance)}</LoadingText></strong>
         <div className={phoneStyles.summaryBreakdown}>
           {totalIncome || totalExpense ? (
@@ -353,7 +353,7 @@ function PhoneTransactionsView({
               </b>
             </>
           ) : (
-            <span className={phoneStyles.summaryEmpty}>Keine Bewegungen</span>
+            <span className={phoneStyles.summaryEmpty}>No Bewegungen</span>
           )}
         </div>
       </section>
@@ -361,12 +361,12 @@ function PhoneTransactionsView({
       <div className={phoneStyles.toolbar} data-ui-slot="toolbar">
         <label className={phoneStyles.search}>
           <Search aria-hidden="true" />
-          <span className="sr-only">Transaktionen durchsuchen</span>
+          <span className="sr-only">Transactions durchsuchen</span>
           <input
             value={query}
             disabled={loading}
             onChange={(event) => onQueryChange(event.target.value)}
-            placeholder="Transaktionen durchsuchen …"
+            placeholder="Transactions durchsuchen …"
           />
         </label>
         <button
@@ -374,7 +374,7 @@ function PhoneTransactionsView({
           className={phoneStyles.filterButton}
           onClick={onOpenFilters}
           disabled={loading}
-          aria-label="Transaktionen filtern"
+          aria-label="Transactions filtern"
         >
           <Filter aria-hidden="true" />
           {activeFilterCount ? (
@@ -384,13 +384,13 @@ function PhoneTransactionsView({
       </div>
 
       <header className={phoneStyles.listHeader} data-ui-slot="list-header">
-        <h2>Transaktionen</h2>
-        <span><LoadingText loading={loading}>{totalResults} Einträge</LoadingText></span>
+        <h2>Transactions</h2>
+        <span><LoadingText loading={loading}>{totalResults} entries</LoadingText></span>
       </header>
 
       <div data-ui-slot="list-body">
         {loading ? (
-          <LoadingCollection loading knownItemCount={transactions.length} emptyHeight="12rem" label="Transaktionen werden geladen…">
+          <LoadingCollection loading knownItemCount={transactions.length} emptyHeight="12rem" label="Transactions werden geladen…">
             <div className={phoneStyles.rows} />
           </LoadingCollection>
         ) : transactions.length ? (
@@ -407,11 +407,11 @@ function PhoneTransactionsView({
                 >
                       <span className={phoneStyles.rowMain}>
                         <strong>{transaction.title}</strong>
-                        {transaction.createdByName ? <small className={phoneStyles.createdBy}><UserRound aria-hidden="true" /> Erstellt von {transaction.createdByName}</small> : null}
+                        {transaction.createdByName ? <small className={phoneStyles.createdBy}><UserRound aria-hidden="true" /> Created by {transaction.createdByName}</small> : null}
                     <span className={phoneStyles.rowMeta}>
                       <span>{transaction.category}</span>
-                      <span className={transaction.receipt ? `${phoneStyles.receiptStatus} ${transaction.reviewStatus === "Geprüft" ? phoneStyles.receiptStatusApproved : transaction.reviewStatus === "Ungültig" ? phoneStyles.receiptStatusRejected : ""}` : undefined}>
-                        {transaction.receipt ? transaction.reviewStatus : "Ohne Beleg"}
+                      <span className={transaction.receipt ? `${phoneStyles.receiptStatus} ${transaction.reviewStatus === "Approved" ? phoneStyles.receiptStatusApproved : transaction.reviewStatus === "Invalid" ? phoneStyles.receiptStatusRejected : ""}` : undefined}>
+                        {transaction.receipt ? transaction.reviewStatus : "Ohne Receipt"}
                       </span>
                     </span>
                   </span>
@@ -435,13 +435,13 @@ function PhoneTransactionsView({
                   onEdit={() => onEdit(transaction)}
                   onDelete={() => onDelete(transaction)}
                   onReceipt={transaction.receiptId ? () => onReceipt(transaction) : undefined}
-                  receiptLabel={transaction.receiptId ? transaction.reviewStatus === "Zu prüfen" ? "Beleg prüfen" : "Beleg ansehen" : undefined}
+                  receiptLabel={transaction.receiptId ? transaction.reviewStatus === "Pending review" ? "Review receipt" : "View receipt" : undefined}
                 />
               </article>
             ))}
           </div>
         ) : (
-          <div className={phoneStyles.empty}>Keine Transaktionen gefunden.</div>
+          <div className={phoneStyles.empty}>No Transactions gefunden.</div>
         )}
       </div>
 
@@ -463,7 +463,7 @@ function PhoneTransactionsView({
         disabled={loading || !canCreate}
         data-ui-slot="primary-action"
       >
-        <Plus aria-hidden="true" /> Transaktion hinzufügen
+        <Plus aria-hidden="true" /> Add transaction
       </button>
     </div>
   );
@@ -491,7 +491,7 @@ export default function TransactionsPage() {
     const applyResult = (result: DashboardResult) => {
       if (!active) return;
       if (!result.ok) {
-        setLoadError("Die Transaktionen konnten nicht geladen werden.");
+        setLoadError("Transactions could not be loaded.");
         return;
       }
       setItems(result.transactions.map(mapTransaction));
@@ -506,7 +506,7 @@ export default function TransactionsPage() {
     cachedFinanceQuery("dashboard-snapshot", getDashboardSnapshot, { scope: cacheScope })
       .then(applyResult)
       .catch(() => {
-        if (active) setLoadError("Die Transaktionen konnten nicht geladen werden.");
+        if (active) setLoadError("Transactions could not be loaded.");
       })
       .finally(() => {
         if (active) { setTransactionsLoading(false); setRefreshing(false); }
@@ -517,13 +517,13 @@ export default function TransactionsPage() {
     };
   }, [cacheScope]);
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState<"Alle" | Category>("Alle");
-  const [type, setType] = useState<"Alle" | "Einnahmen" | "Ausgaben">("Alle");
+  const [category, setCategory] = useState<"All" | Category>("All");
+  const [type, setType] = useState<"All" | "Income" | "Expenses">("All");
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
-  const [draftCategory, setDraftCategory] = useState<"Alle" | Category>("Alle");
-  const [draftType, setDraftType] = useState<"Alle" | "Einnahmen" | "Ausgaben">(
-    "Alle",
+  const [draftCategory, setDraftCategory] = useState<"All" | Category>("All");
+  const [draftType, setDraftType] = useState<"All" | "Income" | "Expenses">(
+    "All",
   );
   const [draftStart, setDraftStart] = useState("");
   const [draftEnd, setDraftEnd] = useState("");
@@ -531,16 +531,16 @@ export default function TransactionsPage() {
   const [selectedTypes, setSelectedTypes] = useState<FilterType[]>([]);
   const [minAmount, setMinAmount] = useState("");
   const [maxAmount, setMaxAmount] = useState("");
-  const [receiptFilter, setReceiptFilter] = useState<ReceiptFilter>("Alle");
-  const [reviewFilter, setReviewFilter] = useState<ReviewFilter>("Alle");
+  const [receiptFilter, setReceiptFilter] = useState<ReceiptFilter>("All");
+  const [reviewFilter, setReviewFilter] = useState<ReviewFilter>("All");
   const [draftCategories, setDraftCategories] = useState<Category[]>([]);
   const [draftTypes, setDraftTypes] = useState<FilterType[]>([]);
   const [draftMinAmount, setDraftMinAmount] = useState("");
   const [draftMaxAmount, setDraftMaxAmount] = useState("");
   const [draftReceiptFilter, setDraftReceiptFilter] =
-    useState<ReceiptFilter>("Alle");
+    useState<ReceiptFilter>("All");
   const [draftReviewFilter, setDraftReviewFilter] =
-    useState<ReviewFilter>("Alle");
+    useState<ReviewFilter>("All");
   const [filterOpen, setFilterOpen] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
@@ -577,14 +577,14 @@ export default function TransactionsPage() {
               `${item.title} ${item.category} ${item.date}`
                 .toLowerCase()
                 .includes(search)) &&
-            (category === "Alle" || item.category === category) &&
-            (type === "Alle" ||
-              (type === "Einnahmen" ? item.amount >= 0 : item.amount < 0)) &&
+            (category === "All" || item.category === category) &&
+            (type === "All" ||
+              (type === "Income" ? item.amount >= 0 : item.amount < 0)) &&
             (!selectedCategories.length ||
               selectedCategories.includes(item.category)) &&
             (!selectedTypes.length ||
               selectedTypes.includes(
-                item.amount >= 0 ? "Einnahmen" : "Ausgaben",
+                item.amount >= 0 ? "Income" : "Expenses",
               )) &&
             (!start || date >= fromIso(start)) &&
             (!end || date <= fromIso(end)) &&
@@ -592,11 +592,11 @@ export default function TransactionsPage() {
               Math.abs(item.amount) >= Number(minAmount.replace(",", "."))) &&
             (!maxAmount ||
               Math.abs(item.amount) <= Number(maxAmount.replace(",", "."))) &&
-            (receiptFilter === "Alle" ||
+            (receiptFilter === "All" ||
               (receiptFilter === "Vorhanden"
                 ? Boolean(item.receipt)
                 : !item.receipt)) &&
-            (reviewFilter === "Alle" || item.reviewStatus === reviewFilter)
+            (reviewFilter === "All" || item.reviewStatus === reviewFilter)
           );
         })
         .sort(
@@ -636,38 +636,38 @@ export default function TransactionsPage() {
   const trends = useMemo(() => calculateTrends(items), [items]);
   const activeFilterCount = [
     query.trim() ? 1 : 0,
-    category !== "Alle" ? 1 : 0,
-    type !== "Alle" ? 1 : 0,
+    category !== "All" ? 1 : 0,
+    type !== "All" ? 1 : 0,
     selectedCategories.length ? 1 : 0,
     selectedTypes.length ? 1 : 0,
     start || end ? 1 : 0,
     minAmount || maxAmount ? 1 : 0,
-    receiptFilter !== "Alle" ? 1 : 0,
-    reviewFilter !== "Alle" ? 1 : 0,
+    receiptFilter !== "All" ? 1 : 0,
+    reviewFilter !== "All" ? 1 : 0,
   ].reduce((sum, value) => sum + value, 0);
 
   function resetFilters() {
     setQuery("");
-    setCategory("Alle");
-    setType("Alle");
+    setCategory("All");
+    setType("All");
     setStart("");
     setEnd("");
-    setDraftCategory("Alle");
-    setDraftType("Alle");
+    setDraftCategory("All");
+    setDraftType("All");
     setDraftStart("");
     setDraftEnd("");
     setSelectedCategories([]);
     setSelectedTypes([]);
     setMinAmount("");
     setMaxAmount("");
-    setReceiptFilter("Alle");
-    setReviewFilter("Alle");
+    setReceiptFilter("All");
+    setReviewFilter("All");
     setDraftCategories([]);
     setDraftTypes([]);
     setDraftMinAmount("");
     setDraftMaxAmount("");
-    setDraftReceiptFilter("Alle");
-    setDraftReviewFilter("Alle");
+    setDraftReceiptFilter("All");
+    setDraftReviewFilter("All");
     setPage(1);
   }
   function openFilters() {
@@ -719,7 +719,7 @@ export default function TransactionsPage() {
     if (saving) return;
     const amount = Number(newAmount.replace(",", "."));
     if (!newTitle.trim() || !Number.isFinite(amount) || (!editing && !selectedCashRegisterId) || (editing && !correctionReason.trim())) {
-      setFormError(editing ? "Bitte Bezeichnung, Betrag und Korrekturgrund ausfüllen." : "Bitte Kasse, Bezeichnung und Betrag vollständig ausfüllen.");
+      setFormError(editing ? "Please complete the description, amount, and correction reason." : "Please complete the cash register, description, and amount.");
       return;
     }
     setSaving(true);
@@ -732,7 +732,7 @@ export default function TransactionsPage() {
           title: newTitle.trim(),
           amount: newAmount,
           direction: newType === "Einnahme" ? "income" : "expense",
-          categoryName: newType === "Einnahme" ? "Verkäufe" : newCategory,
+          categoryName: newType === "Einnahme" ? "Sales" : newCategory,
           reason: correctionReason,
           idempotencyKey: idempotencyKey.current,
         });
@@ -760,12 +760,12 @@ export default function TransactionsPage() {
         title: newTitle.trim(),
         amount: newAmount,
         direction: newType === "Einnahme" ? "income" : "expense",
-        categoryName: newType === "Einnahme" ? "Verkäufe" : newCategory,
+        categoryName: newType === "Einnahme" ? "Sales" : newCategory,
         walletId: selectedCashRegisterId,
         idempotencyKey: idempotencyKey.current,
       });
       if (!persisted.ok) {
-        setFormError("Die Transaktion konnte nicht gespeichert werden.");
+        setFormError("Die Transaction konnte nicht gespeichert werden.");
         return;
       }
       const selectedCashRegister = cashRegisters.find((item) => item.id === selectedCashRegisterId);
@@ -776,7 +776,7 @@ export default function TransactionsPage() {
         category: newCategory,
         date: displayDate(new Date()),
         amount: newType === "Ausgabe" ? -Math.abs(amount) : Math.abs(amount),
-        reviewStatus: "Zu prüfen",
+        reviewStatus: "Pending review",
         receiptId: null,
         receiptType: null,
         createdByName: null,
@@ -836,7 +836,7 @@ export default function TransactionsPage() {
     setReceiptReviewTarget({
       id: transaction.receiptId,
         receipt: {
-        file: transaction.receipt ?? "Beleg",
+        file: transaction.receipt ?? "Receipt",
         type: transaction.receiptType === "application/pdf" ? "PDF" : "Bild",
         transaction: transaction.title,
         date: transaction.date,
@@ -866,7 +866,7 @@ export default function TransactionsPage() {
         setReceiptReviewError(result.error.message);
         return;
       }
-      const nextStatus = decision === "approved" ? "Geprüft" : decision === "rejected" ? "Ungültig" : "Zu prüfen";
+      const nextStatus = decision === "approved" ? "Approved" : decision === "rejected" ? "Invalid" : "Pending review";
       setItems((current) => current.map((item) => item.receiptId === receiptReviewTarget.id ? { ...item, reviewStatus: nextStatus } : item));
       setReceiptReviewTarget(null);
       invalidateFinanceQuery("transactions", "receipts", "dashboard-snapshot", "report-snapshot", "report-kpis");
@@ -901,8 +901,8 @@ export default function TransactionsPage() {
 
   const dateLabel =
     start || end
-      ? `${start ? displayDate(fromIso(start)) : "Offen"} – ${end ? displayDate(fromIso(end)) : "Heute"}`
-      : "Zeitraum auswählen";
+      ? `${start ? displayDate(fromIso(start)) : "Open"} – ${end ? displayDate(fromIso(end)) : "Heute"}`
+      : "Select period";
 
   return (
     <section
@@ -915,8 +915,8 @@ export default function TransactionsPage() {
       }
       aria-busy={loading}
     >
-      <LoadingStatus loading={loading} label="Transaktionen werden geladen…" />
-      {refreshing && !loading ? <span className="sr-only" role="status">Transaktionen werden aktualisiert…</span> : null}
+      <LoadingStatus loading={loading} label="Transactions werden geladen…" />
+      {refreshing && !loading ? <span className="sr-only" role="status">Transactions werden aktualisiert…</span> : null}
       {loadError ? <p className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{loadError}</p> : null}
       {mode === "phone" ? (
         <PhoneTransactionsView
@@ -953,7 +953,7 @@ export default function TransactionsPage() {
                 <ArrowDown />
               </span>
               <div>
-                <span className={styles.kpiLabel}>Einnahmen</span>
+                <span className={styles.kpiLabel}>Income</span>
                 <strong className={styles.incomeValue}>
                   <LoadingText loading={loading}>{displayAmount(totalIncome).replace("+", "")}</LoadingText>
                 </strong>
@@ -965,7 +965,7 @@ export default function TransactionsPage() {
                 <ArrowUp />
               </span>
               <div>
-                <span className={styles.kpiLabel}>Ausgaben</span>
+                <span className={styles.kpiLabel}>Expenses</span>
                 <strong className={styles.expenseValue}>
                   <LoadingText loading={loading}>{displayAmount(totalExpense).replace("+", "")}</LoadingText>
                 </strong>
@@ -977,7 +977,7 @@ export default function TransactionsPage() {
                 <Equal />
               </span>
               <div>
-                <span className={styles.kpiLabel}>Netto</span>
+                <span className={styles.kpiLabel}>Net</span>
                 <strong><LoadingText loading={loading}>{displayAmount(netBalance)}</LoadingText></strong>
               </div>
               <TrendIndicator trend={trends.net} loading={loading} />
@@ -987,7 +987,7 @@ export default function TransactionsPage() {
           <article className={styles.listCard} data-ui-slot="content">
             <header className={styles.listHeader}>
               <div className={styles.headingGroup}>
-                <h2>Alle Transaktionen</h2>
+                <h2>All Transactions</h2>
                 <span><LoadingText loading={loading}>{activeFilterCount} aktive Filter</LoadingText></span>
               </div>
               <button
@@ -998,14 +998,14 @@ export default function TransactionsPage() {
                 data-ui-slot="primary-action"
               >
                 <Plus />
-                Transaktion hinzufügen
+                Add transaction
               </button>
             </header>
 
             <div className={styles.filters} data-ui-slot="toolbar">
               <label className={styles.searchField}>
                 <Search />
-                <span className="sr-only">Transaktionen durchsuchen</span>
+                <span className="sr-only">Transactions durchsuchen</span>
                 <input
                   value={query}
                   disabled={loading}
@@ -1013,11 +1013,11 @@ export default function TransactionsPage() {
                     setQuery(event.target.value);
                     setPage(1);
                   }}
-                  placeholder="Transaktionen durchsuchen …"
+                  placeholder="Transactions durchsuchen …"
                 />
               </label>
               <StyledDropdown
-                ariaLabel="Kategorie auswählen"
+                ariaLabel="Select category"
                 value={category}
                 onChange={(value) => {
                   setCategory(value as typeof category);
@@ -1025,14 +1025,14 @@ export default function TransactionsPage() {
                 }}
                 className={styles.filterDropdown}
                 options={[
-                  { value: "Alle", label: "Alle Kategorien" },
+                  { value: "All", label: "All categories" },
                   { value: "Material", label: "Material" },
                   { value: "Sonstiges", label: "Sonstiges" },
                   { value: "Veranstaltung", label: "Veranstaltung" },
                 ]}
               />
               <StyledDropdown
-                ariaLabel="Typ auswählen"
+                ariaLabel="Select type"
                 value={type}
                 onChange={(value) => {
                   setType(value as typeof type);
@@ -1040,9 +1040,9 @@ export default function TransactionsPage() {
                 }}
                 className={styles.filterDropdown}
                 options={[
-                  { value: "Alle", label: "Alle Typen" },
-                  { value: "Einnahmen", label: "Einnahmen" },
-                  { value: "Ausgaben", label: "Ausgaben" },
+                  { value: "All", label: "All types" },
+                  { value: "Income", label: "Income" },
+                  { value: "Expenses", label: "Expenses" },
                 ]}
               />
               <button
@@ -1069,25 +1069,25 @@ export default function TransactionsPage() {
 
             <div className={`${styles.tableWrap} ui-data-table`} data-ui-slot="list-body">
               <div className={styles.tableHeader}>
-                <span>Transaktion</span>
-                <span>Kategorie</span>
-                <span>Datum</span>
-                <span>Betrag</span>
-                <span>Beleg</span>
+                <span>Transaction</span>
+                <span>Category</span>
+                <span>Date</span>
+                <span>Amount</span>
+                <span>Receipt</span>
                 <span>Status</span>
                 <span aria-hidden="true" />
               </div>
               <div className={styles.rows}>
                 {loading ? (
-                  <LoadingCollection loading knownItemCount={items.length} emptyHeight="100%" label="Transaktionen werden geladen…">
+                  <LoadingCollection loading knownItemCount={items.length} emptyHeight="100%" label="Transactions werden geladen…">
                     <div />
                   </LoadingCollection>
                 ) : !visible.length ? (
                   <EmptyState
                     icon={<Search aria-hidden="true" />}
-                    title="Keine Transaktionen gefunden"
-                    description="Ändere die Suche oder setze die Filter zurück."
-                    action={<button type="button" onClick={resetFilters}>Filter zurücksetzen</button>}
+                    title="No Transactions gefunden"
+                    description="Change the search or reset the filters."
+                    action={<button type="button" onClick={resetFilters}>Reset filters</button>}
                   />
                 ) : visible.map((transaction) => {
                   const Icon = transaction.icon;
@@ -1113,10 +1113,10 @@ export default function TransactionsPage() {
                         </span>
                         <span className={styles.transactionIdentity}>
                           <span>{transaction.title}</span>
-                          {transaction.createdByName ? <small><UserRound aria-hidden="true" /> Erstellt von {transaction.createdByName}</small> : null}
+                          {transaction.createdByName ? <small><UserRound aria-hidden="true" /> Created by {transaction.createdByName}</small> : null}
                         </span>
                       </span>
-                      <span data-label="Kategorie">
+                      <span data-label="Category">
                         <span
                           className={`ui-badge ${styles.categoryTag} ${toneClasses[transaction.tone]}`}
                         >
@@ -1124,18 +1124,18 @@ export default function TransactionsPage() {
                         </span>
                       </span>
                       <span
-                        data-label="Datum"
+                        data-label="Date"
                         className={`ui-tabular ${styles.muted}`}
                       >
                         {transaction.date}
                       </span>
                       <span
-                        data-label="Betrag"
+                        data-label="Amount"
                         className={`ui-tabular ${transaction.amount >= 0 ? styles.positive : styles.negative}`}
                       >
                         {displayAmount(transaction.amount)}
                       </span>
-                      <span data-label="Beleg" className={styles.receipt}>
+                      <span data-label="Receipt" className={styles.receipt}>
                         {transaction.receipt ? (
                           <>
                             <Paperclip />
@@ -1147,7 +1147,7 @@ export default function TransactionsPage() {
                       </span>
                       <span data-label="Status" className={styles.receiptStatusCell}>
                         {transaction.receipt ? (
-                          <span className={`${styles.receiptStatusTag} ${transaction.reviewStatus === "Geprüft" ? styles.receiptStatusApproved : transaction.reviewStatus === "Ungültig" ? styles.receiptStatusRejected : styles.receiptStatusPending}`}>
+                          <span className={`${styles.receiptStatusTag} ${transaction.reviewStatus === "Approved" ? styles.receiptStatusApproved : transaction.reviewStatus === "Invalid" ? styles.receiptStatusRejected : styles.receiptStatusPending}`}>
                             {transaction.reviewStatus}
                           </span>
                         ) : (
@@ -1161,7 +1161,7 @@ export default function TransactionsPage() {
                         onEdit={() => openEdit(transaction)}
                         onDelete={() => openArchive(transaction)}
                         onReceipt={transaction.receiptId ? () => { void openReceiptReview(transaction); } : undefined}
-                        receiptLabel={transaction.receiptId ? transaction.reviewStatus === "Zu prüfen" ? "Beleg prüfen" : "Beleg ansehen" : undefined}
+                        receiptLabel={transaction.receiptId ? transaction.reviewStatus === "Pending review" ? "Review receipt" : "View receipt" : undefined}
                       />
                     </div>
                   );
@@ -1186,20 +1186,20 @@ export default function TransactionsPage() {
 
       {dateOpen ? (
         <Overlay
-          label="Zeitraum auswählen"
+          label="Select period"
           onClose={() => setDateOpen(false)}
           className={mode === "phone" ? phoneStyles.phoneDialog : undefined}
         >
           <div className={styles.modalHeader}>
             <div>
-              <h2>Zeitraum auswählen</h2>
-              <p>Lege den Zeitraum für die Transaktionsliste fest.</p>
+              <h2>Select period</h2>
+              <p>Set the period for the transaction list.</p>
             </div>
             <button
               type="button"
               className={styles.iconButton}
               onClick={() => setDateOpen(false)}
-              aria-label="Dialog schließen"
+              aria-label="Close dialog"
             >
               <X />
             </button>
@@ -1234,7 +1234,7 @@ export default function TransactionsPage() {
                 setDraftEnd("");
               }}
             >
-              Zurücksetzen
+              Reset
             </button>
             <div>
               <button
@@ -1242,14 +1242,14 @@ export default function TransactionsPage() {
                 className={styles.secondaryButton}
                 onClick={() => setDateOpen(false)}
               >
-                Abbrechen
+                Cancel
               </button>
               <button
                 type="button"
                 className={styles.primaryButton}
                 onClick={applyFilters}
               >
-                Übernehmen
+                Apply
               </button>
             </div>
           </div>
@@ -1259,22 +1259,22 @@ export default function TransactionsPage() {
       {filterOpen ? (
         <Overlay
           className={`${styles.filterModal} ${mode === "phone" ? phoneStyles.phoneDialog : ""}`}
-          label="Transaktionen filtern"
+          label="Transactions filtern"
           onClose={() => setFilterOpen(false)}
         >
           <div className={styles.modalHeader}>
             <div>
-              <h2>Transaktionen filtern</h2>
+              <h2>Transactions filtern</h2>
               <p>
-                Wähle die Kriterien aus, nach denen du die Transaktionen
-                anzeigen möchtest.
+                Choose die Kriterien aus, nach denen du die Transactions
+                you want to view.
               </p>
             </div>
             <button
               type="button"
               className={styles.iconButton}
               onClick={() => setFilterOpen(false)}
-              aria-label="Filter schließen"
+              aria-label="Close filters"
             >
               <X />
             </button>
@@ -1282,7 +1282,7 @@ export default function TransactionsPage() {
           <div className={`${styles.modalBody} ${styles.filterModalBody}`}>
             <div className={styles.filterColumns}>
               <fieldset className={styles.filterGroup}>
-                <legend>Kategorie</legend>
+                <legend>Category</legend>
                 {(["Material", "Sonstiges", "Veranstaltung"] as Category[]).map(
                   (value) => (
                     <label className={styles.checkRow} key={value}>
@@ -1298,7 +1298,7 @@ export default function TransactionsPage() {
               </fieldset>
               <fieldset className={styles.filterGroup}>
                 <legend>Typ</legend>
-                {(["Einnahmen", "Ausgaben"] as FilterType[]).map((value) => (
+                {(["Income", "Expenses"] as FilterType[]).map((value) => (
                   <label className={styles.checkRow} key={value}>
                     <input
                       type="checkbox"
@@ -1311,12 +1311,12 @@ export default function TransactionsPage() {
               </fieldset>
             </div>
             <div className={styles.modalSection}>
-              <span className={styles.modalSectionLabel}>Betrag</span>
+              <span className={styles.modalSectionLabel}>Amount</span>
               <div className={styles.amountFields}>
                 <label className={styles.inlineField}>
                   <span>Von</span>
                   <input
-                    aria-label="Betrag von"
+                    aria-label="Amount von"
                     inputMode="decimal"
                     value={draftMinAmount}
                     onChange={(event) => setDraftMinAmount(event.target.value)}
@@ -1326,7 +1326,7 @@ export default function TransactionsPage() {
                 <label className={styles.inlineField}>
                   <span>Bis</span>
                   <input
-                    aria-label="Betrag bis"
+                    aria-label="Amount bis"
                     inputMode="decimal"
                     value={draftMaxAmount}
                     onChange={(event) => setDraftMaxAmount(event.target.value)}
@@ -1337,9 +1337,9 @@ export default function TransactionsPage() {
             </div>
             <div className={styles.filterColumns}>
               <fieldset className={styles.filterGroup}>
-                <legend>Belegstatus</legend>
+                <legend>Receiptstatus</legend>
                 <div className={styles.segmented}>
-                  {(["Alle", "Vorhanden", "Fehlt"] as ReceiptFilter[]).map(
+                  {(["All", "Vorhanden", "Fehlt"] as ReceiptFilter[]).map(
                     (value) => (
                       <button
                         type="button"
@@ -1358,9 +1358,9 @@ export default function TransactionsPage() {
                 </div>
               </fieldset>
               <fieldset className={styles.filterGroup}>
-                <legend>Prüfstatus</legend>
+                <legend>Review status</legend>
                 <div className={styles.segmented}>
-                  {(["Alle", "Geprüft", "Zu prüfen", "Ungültig"] as ReviewFilter[]).map(
+                  {(["All", "Approved", "Pending review", "Invalid"] as ReviewFilter[]).map(
                     (value) => (
                       <button
                         type="button"
@@ -1390,7 +1390,7 @@ export default function TransactionsPage() {
                 setFilterOpen(false);
               }}
             >
-              Zurücksetzen
+              Reset
             </button>
             <div>
               <button
@@ -1398,7 +1398,7 @@ export default function TransactionsPage() {
                 className={styles.secondaryButton}
                 onClick={() => setFilterOpen(false)}
               >
-                Abbrechen
+                Cancel
               </button>
               <button
                 type="button"
@@ -1414,21 +1414,21 @@ export default function TransactionsPage() {
 
       {addOpen ? (
         <Overlay
-          label={editing ? "Transaktion bearbeiten" : "Transaktion hinzufügen"}
+          label={editing ? "Transaction bearbeiten" : "Add transaction"}
           onClose={closeTransactionModal}
           className={mode === "phone" ? phoneStyles.phoneDialog : undefined}
         >
           <div className={styles.modalHeader}>
             <div>
-              <h2>{editing ? "Transaktion bearbeiten" : "Transaktion hinzufügen"}</h2>
-              <p>{editing ? "Die Änderung wird als Korrektur im Kassenbuch festgehalten." : "Erfasse eine neue Einnahme oder Ausgabe."}</p>
+              <h2>{editing ? "Transaction bearbeiten" : "Add transaction"}</h2>
+              <p>{editing ? "The change will be recorded as a correction in the cash book." : "Record a new income or expense."}</p>
             </div>
             <button
               type="button"
               className={styles.iconButton}
               onClick={closeTransactionModal}
               disabled={saving}
-              aria-label="Dialog schließen"
+              aria-label="Close dialog"
             >
               <X />
             </button>
@@ -1440,16 +1440,16 @@ export default function TransactionsPage() {
                 autoFocus={mode !== "phone"}
                 value={newTitle}
                 onChange={(event) => setNewTitle(event.target.value)}
-                placeholder="z. B. Sponsoring Schule"
+                placeholder="z. B. Sponsoring School"
               />
             </label>
             <div className={editing ? styles.editWalletNote : undefined}>
               <CashRegisterCombobox value={editing?.walletId ?? selectedCashRegisterId} options={cashRegisters} onChange={setSelectedCashRegisterId} />
-              {editing ? <small>Die Kasse einer gebuchten Transaktion kann nicht geändert werden.</small> : null}
+              {editing ? <small>The cash register of a posted transaction cannot be changed.</small> : null}
             </div>
             <div className={styles.dateFields}>
               <StyledDropdown
-                ariaLabel="Typ auswählen"
+                ariaLabel="Select type"
                 label="Typ"
                 value={newType}
                 onChange={(value) => setNewType(value as typeof newType)}
@@ -1460,8 +1460,8 @@ export default function TransactionsPage() {
                 ]}
               />
               <StyledDropdown
-                ariaLabel="Kategorie auswählen"
-                label="Kategorie"
+                ariaLabel="Select category"
+                label="Category"
                 value={newCategory}
                 onChange={(value) => setNewCategory(value as Category)}
                 className={styles.formDropdown}
@@ -1473,7 +1473,7 @@ export default function TransactionsPage() {
               />
             </div>
             <label className={styles.formField}>
-              <span>Betrag</span>
+              <span>Amount</span>
               <input
                 inputMode="decimal"
                 value={newAmount}
@@ -1483,11 +1483,11 @@ export default function TransactionsPage() {
             </label>
             {editing ? (
               <label className={styles.formField}>
-                <span>Grund der Korrektur</span>
+                <span>Reason der Korrektur</span>
                 <textarea
                   value={correctionReason}
                   onChange={(event) => setCorrectionReason(event.target.value)}
-                  placeholder="z. B. Betrag auf dem Beleg war falsch"
+                  placeholder="z. B. Amount auf dem Receipt war falsch"
                   rows={3}
                 />
               </label>
@@ -1503,7 +1503,7 @@ export default function TransactionsPage() {
                 onClick={closeTransactionModal}
                 disabled={saving}
               >
-                Abbrechen
+                Cancel
               </button>
               <button
                 type="button"
@@ -1512,7 +1512,7 @@ export default function TransactionsPage() {
                 disabled={saving}
                 aria-busy={saving}
               >
-                {saving ? "Wird gespeichert …" : editing ? "Korrektur speichern" : "Hinzufügen"}
+                {saving ? "Saving …" : editing ? "Save correction" : "Add"}
               </button>
             </div>
           </div>
@@ -1521,30 +1521,30 @@ export default function TransactionsPage() {
 
       {selected ? (
         <Overlay
-          label="Transaktionsdetails"
+          label="Transactionsdetails"
           onClose={() => setSelected(null)}
           className={mode === "phone" ? phoneStyles.phoneDialog : undefined}
         >
           <div className={styles.modalHeader}>
             <div>
               <h2>{selected.title}</h2>
-              <p>Transaktionsdetails</p>
+              <p>Transactionsdetails</p>
             </div>
             <button
               type="button"
               className={styles.iconButton}
               onClick={() => setSelected(null)}
-              aria-label="Details schließen"
+              aria-label="Close details"
             >
               <X />
             </button>
           </div>
           <div className={styles.detailGrid}>
-            <span>Kategorie</span>
+            <span>Category</span>
             <strong>{selected.category}</strong>
-            <span>Datum</span>
+            <span>Date</span>
             <strong>{selected.date}</strong>
-            <span>Betrag</span>
+            <span>Amount</span>
             <strong
               className={
                 selected.amount >= 0 ? styles.positive : styles.negative
@@ -1552,8 +1552,8 @@ export default function TransactionsPage() {
             >
               {displayAmount(selected.amount)}
             </strong>
-            <span>Beleg</span>
-            <strong>{selected.receipt ?? "Kein Beleg"}</strong>
+            <span>Receipt</span>
+            <strong>{selected.receipt ?? "Kein Receipt"}</strong>
           </div>
         </Overlay>
       ) : null}
@@ -1573,28 +1573,28 @@ export default function TransactionsPage() {
 
       {archiveTarget ? (
         <Overlay
-          label="Transaktion archivieren"
+          label="Transaction archivieren"
           onClose={() => { if (!saving) setArchiveTarget(null); }}
           className={mode === "phone" ? phoneStyles.phoneDialog : undefined}
         >
           <div className={styles.modalHeader}>
             <div>
-              <h2>Transaktion archivieren?</h2>
-              <p>Die Buchung bleibt im Prüfprotokoll erhalten und wird aus den aktiven Summen entfernt.</p>
+              <h2>Transaction archivieren?</h2>
+              <p>Die Entry bleibt im Review log erhalten und wird aus den aktiven Summen entfernt.</p>
             </div>
-            <button type="button" className={styles.iconButton} onClick={() => setArchiveTarget(null)} disabled={saving} aria-label="Dialog schließen"><X /></button>
+            <button type="button" className={styles.iconButton} onClick={() => setArchiveTarget(null)} disabled={saving} aria-label="Close dialog"><X /></button>
           </div>
           <div className={styles.modalBody}>
             <label className={styles.formField}>
-              <span>Grund</span>
-              <textarea value={archiveReason} onChange={(event) => setArchiveReason(event.target.value)} placeholder="Warum soll die Transaktion archiviert werden?" rows={3} autoFocus />
+              <span>Reason</span>
+              <textarea value={archiveReason} onChange={(event) => setArchiveReason(event.target.value)} placeholder="Warum soll die Transaction archiviert werden?" rows={3} autoFocus />
             </label>
             {actionError ? <p className="rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{actionError}</p> : null}
           </div>
           <div className={styles.modalFooter}>
             <span />
             <div>
-              <button type="button" className={styles.secondaryButton} onClick={() => setArchiveTarget(null)} disabled={saving}>Abbrechen</button>
+              <button type="button" className={styles.secondaryButton} onClick={() => setArchiveTarget(null)} disabled={saving}>Cancel</button>
               <button type="button" className={styles.primaryButton} onClick={confirmArchiveTransaction} disabled={saving || !archiveReason.trim()} aria-busy={saving}>{saving ? "Wird archiviert …" : "Archivieren"}</button>
             </div>
           </div>

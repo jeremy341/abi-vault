@@ -26,12 +26,12 @@ export function useReportSnapshot() {
         setSnapshot(result);
         setError(null);
       } else {
-        setError("Die Berichte konnten nicht geladen werden.");
+        setError("Reports could not be loaded.");
       }
     };
     const unsubscribe = subscribeFinanceQuery("report-snapshot", (value) => applyResult(value as Awaited<ReturnType<typeof getReportSnapshot>>), scope);
     cachedFinanceQuery("report-snapshot", getReportSnapshot, { scope }).then(applyResult).catch(() => {
-      if (active) setError("Die Berichte konnten nicht geladen werden.");
+      if (active) setError("Reports could not be loaded.");
     }).finally(() => {
       if (active) { setLoading(false); setRefreshing(false); }
     });

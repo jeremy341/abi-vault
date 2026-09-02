@@ -11,7 +11,7 @@ export default function JoinPage({ params }: { params: Promise<{ token: string }
   const { isLoaded, isSignedIn } = useAuth();
   const { setActive } = useOrganizationList();
   const [token, setToken] = useState("");
-  const [message, setMessage] = useState("Einladung wird geprüft …");
+  const [message, setMessage] = useState("Checking invitation …");
 
   useEffect(() => {
     let active = true;
@@ -36,7 +36,7 @@ export default function JoinPage({ params }: { params: Promise<{ token: string }
         if (!result.ok) {
           setMessage(
             result.error === "LINK_EXPIRED" || result.error === "LINK_ALREADY_USED"
-              ? "Dieser Einladungslink ist nicht mehr gültig."
+              ? "This invitation link is no longer valid."
               : "Der Einladungslink konnte nicht angenommen werden.",
           );
           return;
@@ -45,7 +45,7 @@ export default function JoinPage({ params }: { params: Promise<{ token: string }
           await setActive({ organization: result.organizationId });
           router.replace("/dashboard");
         } catch {
-          if (active) setMessage("Der Arbeitsbereich konnte nicht aktiviert werden.");
+          if (active) setMessage("Der Workspace konnte nicht aktiviert werden.");
         }
       })
       .catch(() => {
@@ -57,7 +57,7 @@ export default function JoinPage({ params }: { params: Promise<{ token: string }
   }, [isLoaded, isSignedIn, router, setActive, token]);
 
   if (!isLoaded || !token) {
-    return <main className="flex min-h-[100dvh] items-center justify-center p-6 text-sm text-muted-foreground">Einladung wird geladen …</main>;
+    return <main className="flex min-h-[100dvh] items-center justify-center p-6 text-sm text-muted-foreground">Loading invitation …</main>;
   }
 
   if (!isSignedIn) {
@@ -65,9 +65,9 @@ export default function JoinPage({ params }: { params: Promise<{ token: string }
       <main className="soft-grid flex min-h-[100dvh] items-center justify-center overflow-y-auto p-5 text-ink sm:p-8">
         <div className="w-full max-w-md">
           <div className="rounded-2xl border border-black/10 bg-white p-6 text-center shadow-sm dark:border-white/10 dark:bg-card">
-            <h1 className="text-lg font-semibold tracking-tight">Neue Einladung erforderlich</h1>
+            <h1 className="text-lg font-semibold tracking-tight">New invitation required</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Dieser ältere Einladungslink kann nicht mehr zur Kontoerstellung verwendet werden. Bitte lasse dir eine neue Einladung per E-Mail senden.
+              This older invitation link can no longer be used to create an account. Please request a new invitation by email.
             </p>
             <Link
               href={`/sign-in?redirect_url=${encodeURIComponent(`/join/${token}`)}`}

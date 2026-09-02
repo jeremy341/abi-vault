@@ -24,26 +24,26 @@ type Section = "general" | "notifications" | "permissions" | "data";
 const sections = [
   {
     id: "general" as const,
-    label: "Allgemein",
-    description: "Arbeitsbereich und Jahrgang",
+    label: "General",
+    description: "Workspace und Cohort",
     icon: Building2,
   },
   {
     id: "notifications" as const,
-    label: "Benachrichtigungen",
-    description: "Hinweise und Erinnerungen",
+    label: "Notifications",
+    description: "Notifications and reminders",
     icon: Bell,
   },
   {
     id: "permissions" as const,
-    label: "Berechtigungen",
-    description: "Mitglieder und Rollen",
+    label: "Permissions",
+    description: "Memberer und Rollen",
     icon: ShieldCheck,
   },
   {
     id: "data" as const,
-    label: "Daten & Export",
-    description: "Sicherung und Datenschutz",
+    label: "Data & export",
+    description: "Backup and privacy",
     icon: Database,
   },
 ];
@@ -118,12 +118,12 @@ function PhoneSettingsView({
         <>
           <section className={phoneStyles.section} data-ui-slot="primary-panel">
             <div className={phoneStyles.sectionTitle}>
-              <h3>Arbeitsbereich</h3>
-              <p>Grundlegende Angaben für euren Abi-Jahrgang.</p>
+              <h3>Workspace</h3>
+              <p>Basic details for your cohort.</p>
             </div>
             <div className={phoneStyles.fields}>
               <label>
-                <span>Name des Arbeitsbereichs</span>
+                <span>Name des Workspaces</span>
                 <input
                   name="workspaceName"
                   autoComplete="off"
@@ -135,7 +135,7 @@ function PhoneSettingsView({
                 />
               </label>
               <label>
-                <span>Schule</span>
+                <span>School</span>
                 <input
                   name="school"
                   autoComplete="organization"
@@ -154,15 +154,15 @@ function PhoneSettingsView({
                 />
               </label>
               <label>
-                <span>Währung</span>
+                <span>Currency</span>
                 <span className={phoneStyles.readonly}>Euro (EUR)</span>
               </label>
             </div>
           </section>
           <section className={phoneStyles.section} data-ui-slot="secondary-panel">
             <div className={phoneStyles.sectionTitle}>
-              <h3>Verantwortliche Person</h3>
-              <p>Primärer Kontakt für Finanzfragen.</p>
+              <h3>Responsible person</h3>
+              <p>Primary contact for finance questions.</p>
             </div>
             <div className={phoneStyles.member}>
               <span className={phoneStyles.avatar}>J</span>
@@ -170,7 +170,7 @@ function PhoneSettingsView({
                 <strong>Jeremy</strong>
                 <small>Administrator</small>
               </span>
-              <b>Aktiv</b>
+              <b>Active</b>
             </div>
           </section>
         </>
@@ -179,18 +179,18 @@ function PhoneSettingsView({
       {activeSection === "notifications" ? (
         <section className={phoneStyles.section}>
           <div className={phoneStyles.sectionTitle}>
-            <h3>Benachrichtigungen</h3>
-            <p>Wähle, welche Ereignisse euch informieren.</p>
+            <h3>Notifications</h3>
+            <p>Choose which events should notify you.</p>
           </div>
           <div className={phoneStyles.switches}>
             {[
-              ["receipts", "Neue Belege", "Uploads und offene Prüfungen"],
+              ["receipts", "New Receipts", "Uploads und offene Reviewen"],
               [
                 "payments",
                 "Fehlende Zahlungen",
-                "Offene Bargeld- oder Kontozahlungen",
+                "Opene Bargeld- oder Kontozahlungen",
               ],
-              ["goals", "Ziel-Fortschritt", "Wichtige Fortschrittsmarken"],
+              ["goals", "Goal-Progress", "Wichtige Progresssmarken"],
             ].map(([key, label, description]) => {
               const checked = notifications[key as keyof typeof notifications];
               return (
@@ -229,24 +229,24 @@ function PhoneSettingsView({
           <div className={phoneStyles.permissionList}>
             <div className={phoneStyles.permission}>
               <span>
-                <strong>Administratoren</strong>
-                <small>Vollständiger Zugriff</small>
+                <strong>Administrators</strong>
+                <small>Full access</small>
               </span>
-              <b>2 Personen</b>
+              <b>2 People</b>
             </div>
             <div className={phoneStyles.permission}>
               <span>
-                <strong>Kassenwarte</strong>
-                <small>Finanzen verwalten</small>
+                <strong>Cash register status</strong>
+                <small>Finance verwalten</small>
               </span>
-              <b>3 Personen</b>
+              <b>3 People</b>
             </div>
             <div className={phoneStyles.permission}>
               <span>
-                <strong>Mitglieder</strong>
+                <strong>Memberer</strong>
                 <small>Nur ansehen</small>
               </span>
-              <b>18 Personen</b>
+              <b>18 People</b>
             </div>
           </div>
         </section>
@@ -265,19 +265,19 @@ function PhoneSettingsView({
               onClick={() => onStatusMessage("Datenexport vorbereitet.")}
             >
               <span>
-                <strong>Alle Daten exportieren</strong>
-                <small>Transaktionen, Belege und Ziele</small>
+                <strong>Export all data</strong>
+                <small>Transactions, receipts, and goals</small>
               </span>
               <Download aria-hidden="true" />
             </button>
             <button
               type="button"
               className={phoneStyles.dataButton}
-              onClick={() => onStatusMessage("Belegarchiv vorbereitet.")}
+              onClick={() => onStatusMessage("Receiptarchiv vorbereitet.")}
             >
               <span>
-                <strong>Belegarchiv exportieren</strong>
-                <small>Alle hochgeladenen Dateien</small>
+                <strong>Receiptarchiv exportieren</strong>
+                <small>All uploaded files</small>
               </span>
               <Download aria-hidden="true" />
             </button>
@@ -294,7 +294,7 @@ function PhoneSettingsView({
           disabled={loading || saving}
           data-ui-slot="primary-action"
         >
-          <Save aria-hidden="true" /> {saving ? "Wird gespeichert …" : "Änderungen speichern"}
+          <Save aria-hidden="true" /> {saving ? "Saving …" : "Save changes"}
         </button>
       </footer>
     </section>
@@ -305,7 +305,7 @@ export default function SettingsPage() {
   const mode = usePresentationMode();
   const [activeSection, setActiveSection] = useState<Section>("general");
   const [workspaceName, setWorkspaceName] = useState("Abi 2026");
-  const [school, setSchool] = useState("Musterschule Berlin");
+  const [school, setSchool] = useState("Example School Berlin");
   const [notifications, setNotifications] = useState({
     receipts: true,
     payments: true,
@@ -322,7 +322,7 @@ export default function SettingsPage() {
       .then((result) => {
         if (!active) return;
         if (!result.ok || !result.data) {
-          setLoadError("Die Einstellungen konnten nicht geladen werden.");
+          setLoadError("Settings could not be loaded.");
           return;
         }
         setSchool(result.data.school_name);
@@ -337,7 +337,7 @@ export default function SettingsPage() {
         }
       })
       .catch(() => {
-        if (active) setLoadError("Die Einstellungen konnten nicht geladen werden.");
+        if (active) setLoadError("Settings could not be loaded.");
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -356,9 +356,9 @@ export default function SettingsPage() {
         graduationYear: Number(workspaceName.replace(/\D/g, "")) || 2026,
         notifications,
       });
-      setStatusMessage(result.ok ? "Änderungen gespeichert." : "Änderungen konnten nicht gespeichert werden.");
+      setStatusMessage(result.ok ? "Changes saved." : "Changes could not be saved.");
     } catch {
-      setStatusMessage("Änderungen konnten nicht gespeichert werden.");
+      setStatusMessage("Changes could not be saved.");
     } finally {
       setSaving(false);
     }
@@ -398,14 +398,14 @@ export default function SettingsPage() {
 
   return (
     <section className={styles.page} aria-busy={loading}>
-      <LoadingStatus loading={loading} label="Einstellungen werden geladen…" />
+      <LoadingStatus loading={loading} label="Settings werden geladen…" />
       {loadError ? <p className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{loadError}</p> : null}
       <aside className={styles.settingsNav} data-ui-slot="toolbar">
         <div className={styles.workspaceCard}>
           <span className={styles.workspaceMark}>A</span>
           <div>
             <strong>Abi 2026</strong>
-            <span>Finanz-Arbeitsbereich</span>
+            <span>Finance workspace</span>
           </div>
         </div>
         <nav aria-label="Einstellungsbereiche">
@@ -438,8 +438,8 @@ export default function SettingsPage() {
         <div className={styles.navInfo}>
           <ShieldCheck aria-hidden="true" />
           <span>
-            <strong>Sicher verwaltet</strong>
-            <small>Änderungen gelten für den gesamten Arbeitsbereich.</small>
+            <strong>Securely managed</strong>
+            <small>Changes apply to the entire workspace.</small>
           </span>
         </div>
       </aside>
@@ -459,13 +459,13 @@ export default function SettingsPage() {
               <div className={styles.sectionTitle}>
                 <Building2 aria-hidden="true" />
                 <div>
-                  <h3>Arbeitsbereich</h3>
-                  <p>Grundlegende Angaben für euren Abi-Jahrgang.</p>
+                  <h3>Workspace</h3>
+                  <p>Basic details for your cohort.</p>
                 </div>
               </div>
               <div className={styles.formGrid}>
                 <label>
-                  <span>Name des Arbeitsbereichs</span>
+                  <span>Name des Workspaces</span>
                   <input
                     name="workspaceName"
                     value={workspaceName}
@@ -475,7 +475,7 @@ export default function SettingsPage() {
                   />
                 </label>
                 <label>
-                  <span>Schule</span>
+                  <span>School</span>
                   <input
                     name="school"
                     value={school}
@@ -494,7 +494,7 @@ export default function SettingsPage() {
                   />
                 </label>
                 <label>
-                  <span>Währung</span>
+                  <span>Currency</span>
                   <div className={styles.readonlyField}>
                     <Coins aria-hidden="true" />
                     Euro (EUR)
@@ -506,8 +506,8 @@ export default function SettingsPage() {
               <div className={styles.sectionTitle}>
                 <Users aria-hidden="true" />
                 <div>
-                  <h3>Verantwortliche Person</h3>
-                  <p>Primärer Kontakt für Finanzfragen.</p>
+                  <h3>Responsible person</h3>
+                  <p>Primary contact for finance questions.</p>
                 </div>
               </div>
               <div className={styles.memberRow}>
@@ -518,7 +518,7 @@ export default function SettingsPage() {
                 </div>
                 <span className={styles.roleBadge}>
                   <Check aria-hidden="true" />
-                  Aktiv
+                  Active
                 </span>
               </div>
             </section>
@@ -531,14 +531,14 @@ export default function SettingsPage() {
               <div className={styles.sectionTitle}>
                 <Bell aria-hidden="true" />
                 <div>
-                  <h3>Benachrichtigungen</h3>
-                  <p>Wähle, welche Ereignisse euch automatisch informieren.</p>
+                  <h3>Notifications</h3>
+                  <p>Choose, welche Ereignisse euch automatisch informieren.</p>
                 </div>
               </div>
               <div className={styles.switchList}>
                 <SwitchRow
-                  label="Neue Belege"
-                  description="Hinweis, wenn ein Beleg hochgeladen oder geprüft werden muss."
+                  label="New Receipts"
+                  description="Notice when a receipt needs to be uploaded or reviewed."
                   checked={notifications.receipts}
                   onChange={() => toggleNotification("receipts")}
                 />
@@ -549,8 +549,8 @@ export default function SettingsPage() {
                   onChange={() => toggleNotification("payments")}
                 />
                 <SwitchRow
-                  label="Ziel-Fortschritt"
-                  description="Benachrichtigung bei wichtigen Fortschrittsmarken."
+                  label="Goal-Progress"
+                  description="Benachrichtigung bei wichtigen Progresssmarken."
                   checked={notifications.goals}
                   onChange={() => toggleNotification("goals")}
                 />
@@ -573,21 +573,21 @@ export default function SettingsPage() {
               </div>
               <div className={styles.permissionGrid}>
                 <article>
-                  <strong>Administratoren</strong>
+                  <strong>Administrators</strong>
                   <span>
-                    Vollständiger Zugriff auf Daten und Einstellungen.
+                    Full access auf Daten und Settings.
                   </span>
-                  <b>2 Personen</b>
+                  <b>2 People</b>
                 </article>
                 <article>
-                  <strong>Kassenwarte</strong>
-                  <span>Transaktionen, Belege und Konten verwalten.</span>
-                  <b>3 Personen</b>
+                  <strong>Cash register status</strong>
+                  <span>Manage transactions, receipts, and accounts.</span>
+                  <b>3 People</b>
                 </article>
                 <article>
-                  <strong>Mitglieder</strong>
-                  <span>Finanzübersichten und Berichte ansehen.</span>
-                  <b>18 Personen</b>
+                  <strong>Memberer</strong>
+                  <span>View financial overviews and reports.</span>
+                  <b>18 People</b>
                 </article>
               </div>
             </section>
@@ -611,19 +611,19 @@ export default function SettingsPage() {
                 >
                   <Download aria-hidden="true" />
                   <span>
-                    <strong>Alle Daten exportieren</strong>
-                    <small>Transaktionen, Belege und Ziele als ZIP-Datei</small>
+                    <strong>Export all data</strong>
+                    <small>Transactions, receipts, and goals als ZIP-File</small>
                   </span>
                 </button>
                 <button
                   type="button"
-                  onClick={() => setStatusMessage("Belegarchiv vorbereitet.")}
+                  onClick={() => setStatusMessage("Receiptarchiv vorbereitet.")}
                 >
                   <Download aria-hidden="true" />
                   <span>
-                    <strong>Belegarchiv exportieren</strong>
+                    <strong>Receiptarchiv exportieren</strong>
                     <small>
-                      Alle hochgeladenen Dateien gesammelt herunterladen
+                      All uploaded files gesammelt herunterladen
                     </small>
                   </span>
                 </button>
@@ -642,7 +642,7 @@ export default function SettingsPage() {
             data-ui-slot="primary-action"
           >
             <Save aria-hidden="true" />
-            {saving ? "Wird gespeichert …" : "Änderungen speichern"}
+            {saving ? "Saving …" : "Save changes"}
           </button>
         </footer>
       </article>

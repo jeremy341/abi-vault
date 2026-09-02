@@ -5,7 +5,7 @@ const validInput = {
   title: "Kuchenverkauf",
   amount: "12,50",
   direction: "income" as const,
-  categoryName: "Verkäufe",
+  categoryName: "Sales",
   walletId: "00000000-0000-4000-8000-000000000002",
   idempotencyKey: "ui-transaction-test-001",
 };

@@ -33,9 +33,9 @@ type ReceiptReviewDialogProps = {
 };
 
 function decisionLabel(decision: ReceiptReviewDecision) {
-  if (decision === "approved") return "Geprüft";
-  if (decision === "rejected") return "Ungültig";
-  return "Zu prüfen";
+  if (decision === "approved") return "Approved";
+  if (decision === "rejected") return "Invalid";
+  return "Pending review";
 }
 
 function formatTimestamp(value: string | null | undefined) {
@@ -59,25 +59,25 @@ export function ReceiptReviewDialog({
   const isPdf = receipt.type === "PDF";
   return (
     <Dialog
-      label="Beleg prüfen"
+      label="Review receipt"
       onClose={() => { if (!saving) onClose(); }}
       overlayClassName={styles.overlay}
       dialogClassName={styles.dialog}
     >
       <header className={styles.header}>
         <div>
-          <span className={styles.eyebrow}>Belegprüfung</span>
-          <h2>Beleg prüfen</h2>
+          <span className={styles.eyebrow}>Receipt review</span>
+          <h2>Review receipt</h2>
           <p>{receipt.file}</p>
         </div>
-        <button type="button" className={styles.closeButton} onClick={onClose} disabled={saving} aria-label="Dialog schließen">
+        <button type="button" className={styles.closeButton} onClick={onClose} disabled={saving} aria-label="Close dialog">
           <X aria-hidden="true" />
         </button>
       </header>
 
       <div className={styles.previewFrame}>
         {previewLoading ? (
-          <div className={styles.previewState} role="status">Beleg wird geladen…</div>
+          <div className={styles.previewState} role="status">Receipt wird geladen…</div>
         ) : previewUrl ? (
           isPdf ? (
             <iframe title={`Vorschau von ${receipt.file}`} src={previewUrl} />
@@ -85,7 +85,7 @@ export function ReceiptReviewDialog({
             <>
               {/* Signed storage URLs are runtime-specific, so this preview remains a native image. */}
               {/* eslint-disable-next-line @next/next/no-img-element -- signed storage URLs are not known to next/image at build time. */}
-              <img width="1200" height="900" src={previewUrl} alt={`Vorschau des Belegs ${receipt.file}`} />
+              <img width="1200" height="900" src={previewUrl} alt={`Vorschau des Receipts ${receipt.file}`} />
             </>
           )
         ) : (
@@ -97,19 +97,19 @@ export function ReceiptReviewDialog({
       </div>
 
       <div className={styles.meta}>
-        <div><span>Transaktion</span><strong>{receipt.transaction}</strong></div>
-        <div><span>Datum</span><strong>{receipt.date}</strong></div>
-        <div><span>Betrag</span><strong>{receipt.amount.toLocaleString("de-DE", { style: "currency", currency: "EUR" })}</strong></div>
-        <div><span>Aktueller Status</span><strong>{receipt.status}</strong></div>
-        {receipt.createdByName ? <div><span>Erstellt von</span><strong>{receipt.createdByName}</strong><small>{formatTimestamp(receipt.createdAt)}</small></div> : null}
-        {receipt.uploadedByName ? <div><span>Hochgeladen von</span><strong>{receipt.uploadedByName}</strong><small>{formatTimestamp(receipt.uploadedAt)}</small></div> : null}
-        {receipt.reviewedByName ? <div><span>Geprüft von</span><strong>{receipt.reviewedByName}</strong><small>{formatTimestamp(receipt.reviewedAt)}</small></div> : null}
+        <div><span>Transaction</span><strong>{receipt.transaction}</strong></div>
+        <div><span>Date</span><strong>{receipt.date}</strong></div>
+        <div><span>Amount</span><strong>{receipt.amount.toLocaleString("de-DE", { style: "currency", currency: "EUR" })}</strong></div>
+        <div><span>Current status</span><strong>{receipt.status}</strong></div>
+        {receipt.createdByName ? <div><span>Created by</span><strong>{receipt.createdByName}</strong><small>{formatTimestamp(receipt.createdAt)}</small></div> : null}
+        {receipt.uploadedByName ? <div><span>Uploaded von</span><strong>{receipt.uploadedByName}</strong><small>{formatTimestamp(receipt.uploadedAt)}</small></div> : null}
+        {receipt.reviewedByName ? <div><span>Reviewed by</span><strong>{receipt.reviewedByName}</strong><small>{formatTimestamp(receipt.reviewedAt)}</small></div> : null}
       </div>
 
       {previewUrl ? (
         <a className={styles.downloadLink} href={previewUrl} target="_blank" rel="noreferrer" download={receipt.file}>
           <Download aria-hidden="true" />
-          Beleg herunterladen
+          Receipt herunterladen
         </a>
       ) : null}
 
@@ -128,7 +128,7 @@ export function ReceiptReviewDialog({
               aria-busy={saving}
             >
               {decision === "approved" ? <Check aria-hidden="true" /> : decision === "rejected" ? <X aria-hidden="true" /> : <Eye aria-hidden="true" />}
-              {saving ? "Speichern …" : decisionLabel(decision)}
+              {saving ? "Save …" : decisionLabel(decision)}
             </button>
           ))}
         </div>

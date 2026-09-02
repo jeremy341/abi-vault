@@ -36,7 +36,7 @@ values
   ('org_local_demo', 'Material', 'expense', 20),
   ('org_local_demo', 'Sonstiges', 'expense', 30),
   ('org_local_demo', 'Spenden', 'income', 40),
-  ('org_local_demo', 'Verkäufe', 'income', 50)
+  ('org_local_demo', 'Sales', 'income', 50)
 on conflict (organization_id, name, kind) do nothing;
 
 insert into public.accounting_periods (organization_id, year, month)

@@ -15,7 +15,7 @@ export type TransactionListItem = {
   receiptId: string | null;
   receiptFile: string | null;
   receiptType: string | null;
-  reviewStatus: "Geprüft" | "Zu prüfen" | "Ungültig";
+  reviewStatus: "Approved" | "Pending review" | "Invalid";
   createdByName: string | null;
   createdAt: string;
   account: string;
@@ -79,7 +79,7 @@ export async function listTransactionsForCurrentOrganization() {
         receiptId: null,
         receiptFile: null,
         receiptType: null,
-        reviewStatus: "Geprüft",
+        reviewStatus: "Approved",
         createdByName: null,
         createdAt: "",
         account: item.wallet_label ?? "Nicht zugeordnet",
@@ -153,7 +153,7 @@ export async function listTransactionsForCurrentOrganization() {
       amountMinor: String(item.type === "expense" ? -item.amount_minor : item.amount_minor),
       type: item.type,
       receipt: receiptMap.has(item.id),
-      reviewStatus: receiptMap.get(item.id)?.status === "approved" ? "Geprüft" : receiptMap.get(item.id)?.status === "rejected" ? "Ungültig" : "Zu prüfen",
+      reviewStatus: receiptMap.get(item.id)?.status === "approved" ? "Approved" : receiptMap.get(item.id)?.status === "rejected" ? "Invalid" : "Pending review",
       createdByName: creatorMap.get(item.created_by) ?? null,
       createdAt: item.created_at,
       receiptId: receiptMap.get(item.id)?.id ?? null,

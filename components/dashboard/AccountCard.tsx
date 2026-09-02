@@ -24,7 +24,7 @@ export default function AccountCard({
   cardColor,
   details,
 }: AccountCardProps) {
-  const accountName = details?.accountName || "Kasse";
+  const accountName = details?.accountName || "Cash register";
   const cardNumber = details?.cardNumber
     ? maskCardNumber(details.cardNumber)
     : "•••• •••• •••• ••••";
@@ -63,7 +63,7 @@ export default function AccountCard({
       {variant === "add" ? (
         <Image
           src="/cards/add-card.svg"
-          alt="Karte hinzufügen"
+          alt="Add card"
           fill
           loading="eager"
           sizes="(min-width: 2200px) 440px, (min-width: 1024px) 340px, min(340px, 100vw)"
@@ -120,7 +120,7 @@ export default function AccountCard({
 
               <div>
                 <span className={`${styles.cardMetaLabel} ${isLightCard ? "text-black/55" : "text-white/75"}`}>
-                  Gültig bis
+                  Valid until
                 </span>
                 <span className={styles.cardMetaValue}>{expiry}</span>
               </div>

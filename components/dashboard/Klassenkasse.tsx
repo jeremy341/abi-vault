@@ -83,7 +83,7 @@ export default function Klassenkasse() {
                   type="button"
                   className={dashboardStyles.cashCardButton}
                   onClick={() => setPreviewOpen(true)}
-                  aria-label={`${currentCard.details?.accountName ?? "Kasse"} anzeigen`}
+                  aria-label={`${currentCard.details?.accountName ?? "Cash register"} anzeigen`}
                 >
                   <AccountCard
                     variant="bank"
@@ -116,7 +116,7 @@ export default function Klassenkasse() {
           {hasMultipleCards ? (
             <button
               type="button"
-              aria-label="Nächste Karte"
+              aria-label="Next card"
               onClick={() => moveCard(1)}
               className={`${dashboardStyles.cashCarouselButton} ${dashboardStyles.cashNextButton}`}
             >
@@ -137,7 +137,7 @@ export default function Klassenkasse() {
             {hasCards ? (
               <>
                 <span className={dashboardStyles.cashBalanceLabel}>
-                  Gesamt verfügbar
+                  Total available
                 </span>
                 <strong className={dashboardStyles.cashBalanceAmount}>
                   2.850,75 €
@@ -149,10 +149,10 @@ export default function Klassenkasse() {
             ) : (
               <>
                 <span className={dashboardStyles.cashBalanceLabel}>
-                  Keine Karte verbunden
+                  No card connected
                 </span>
                 <p className={dashboardStyles.cashBalanceMeta}>
-                  Füge eine Karte hinzu, um Kontodaten zu sehen.
+                  Add a card to see account details.
                 </p>
               </>
             )}
@@ -210,14 +210,14 @@ function CardPreviewDialog({
               id="dashboard-card-preview-title"
               className="text-lg font-semibold tracking-tight"
             >
-              {card.details?.accountName ?? "Kasse"}
+              {card.details?.accountName ?? "Cash register"}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">Kartenvorschau</p>
           </div>
           <button
             type="button"
             className="inline-flex size-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-black/[0.04] hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink dark:hover:bg-white/[0.06]"
-            aria-label="Vorschau schließen"
+            aria-label="Close preview"
             onClick={onClose}
           >
             <X className="size-5" />

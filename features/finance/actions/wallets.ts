@@ -13,19 +13,19 @@ import {
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 function mapWalletError(code?: string) {
-  if (code === "42501") return actionFailure("FORBIDDEN", "Du hast keine Berechtigung für diese Aktion.");
-  if (code === "23503" || code === "22023") return actionFailure("INVALID_PAYLOAD", "Die Kassendaten sind ungültig.");
-  if (code === "23505") return actionFailure("CONFLICT", "Diese Kassenänderung wurde bereits übermittelt.");
-  return actionFailure("DATABASE_ERROR", "Die Kasse konnte nicht gespeichert werden.");
+  if (code === "42501") return actionFailure("FORBIDDEN", "You do not have permission for this action.");
+  if (code === "23503" || code === "22023") return actionFailure("INVALID_PAYLOAD", "The cash register data is invalid.");
+  if (code === "23505") return actionFailure("CONFLICT", "This cash register change was already submitted.");
+  return actionFailure("DATABASE_ERROR", "Die Cash register konnte nicht gespeichert werden.");
 }
 
 export async function createWallet(
   input: WalletCreateInput,
 ): Promise<ActionResult<{ id: string }>> {
   const parsed = walletCreateSchema.safeParse(input);
-  if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "Die Kassendaten sind ungültig.");
+  if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "The cash register data is invalid.");
   if (parsed.data.type !== "cash") {
-    return actionFailure("INVALID_PAYLOAD", "Es werden nur Kassen unterstützt.");
+    return actionFailure("INVALID_PAYLOAD", "Only cash registers are supported.");
   }
 
   const context = await requirePermission("manageWallets");
@@ -46,7 +46,7 @@ export async function createWallet(
 
 export async function updateWallet(input: unknown) {
   const parsed = walletUpdateSchema.safeParse(input);
-  if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "Die Kassendaten sind ungültig.");
+  if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "The cash register data is invalid.");
   const context = await requirePermission("manageWallets");
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.rpc("update_cash_wallet", {
@@ -60,7 +60,7 @@ export async function updateWallet(input: unknown) {
     p_card_color_visual: parsed.data.cardColorVisual ?? null,
   });
   if (error) {
-    if (error.code === "23503") return actionFailure("NOT_FOUND", "Die Kasse ist nicht mehr aktiv.");
+    if (error.code === "23503") return actionFailure("NOT_FOUND", "Die Cash register ist nicht mehr aktiv.");
     return mapWalletError(error.code);
   }
   return actionSuccess(null);
@@ -68,7 +68,7 @@ export async function updateWallet(input: unknown) {
 
 export async function archiveWallet(input: unknown) {
   const parsed = walletArchiveSchema.safeParse(input);
-  if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "Die Kassendaten sind ungültig.");
+  if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "The cash register data is invalid.");
   const context = await requirePermission("manageWallets");
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.rpc("archive_cash_wallet", {
@@ -77,7 +77,7 @@ export async function archiveWallet(input: unknown) {
     p_reason: parsed.data.reason,
   });
   if (error) {
-    if (error.code === "23503") return actionFailure("NOT_FOUND", "Die Kasse ist nicht mehr aktiv.");
+    if (error.code === "23503") return actionFailure("NOT_FOUND", "Die Cash register ist nicht mehr aktiv.");
     return mapWalletError(error.code);
   }
   return actionSuccess(null);
@@ -88,7 +88,7 @@ async function changePeriod(
   operation: "lock_accounting_period" | "unlock_accounting_period",
 ): Promise<ActionResult<null>> {
   const parsed = periodActionSchema.safeParse(input);
-  if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "Die Aktion für den Buchungszeitraum ist ungültig.");
+  if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "The accounting period action is invalid.");
 
   const context = await requirePermission("lockPeriods");
   const supabase = await createSupabaseServerClient();
@@ -99,9 +99,9 @@ async function changePeriod(
   });
 
   if (error) {
-    if (error.code === "42501") return actionFailure("FORBIDDEN", "Du hast keine Berechtigung, Buchungszeiträume zu verwalten.");
-    if (error.code === "55000") return actionFailure("PERIOD_LOCKED", "Der Buchungszeitraum befindet sich bereits im gewünschten Zustand.");
-    return actionFailure("DATABASE_ERROR", "Der Buchungszeitraum konnte nicht geändert werden.");
+    if (error.code === "42501") return actionFailure("FORBIDDEN", "Du hast keine Berechtigung, Accounting periods zu verwalten.");
+    if (error.code === "55000") return actionFailure("PERIOD_LOCKED", "The accounting period is already in the requested state.");
+    return actionFailure("DATABASE_ERROR", "The accounting period could not be changed.");
   }
 
   return actionSuccess(null);

@@ -11,18 +11,18 @@ import {
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 function mapGoalError(code?: string) {
-  if (code === "42501") return actionFailure("FORBIDDEN", "Du hast keine Berechtigung, Ziele zu verwalten.");
-  if (code === "55000") return actionFailure("CONFLICT", "Das Ziel oder der Buchungszeitraum ist nicht verfügbar.");
-  if (code === "23514" || code === "22023") return actionFailure("INVALID_PAYLOAD", "Die Zieldaten sind ungültig.");
-  if (code === "23505") return actionFailure("CONFLICT", "Diese Zieländerung wurde bereits übermittelt.");
-  return actionFailure("DATABASE_ERROR", "Das Ziel konnte nicht gespeichert werden.");
+  if (code === "42501") return actionFailure("FORBIDDEN", "Du hast keine Berechtigung, Goals zu verwalten.");
+  if (code === "55000") return actionFailure("CONFLICT", "The goal or accounting period is unavailable.");
+  if (code === "23514" || code === "22023") return actionFailure("INVALID_PAYLOAD", "The goal data is invalid.");
+  if (code === "23505") return actionFailure("CONFLICT", "This goal change was already submitted.");
+  return actionFailure("DATABASE_ERROR", "Das Goal konnte nicht gespeichert werden.");
 }
 
 export async function createGoal(
   input: GoalCreateInput,
 ): Promise<ActionResult<{ id: string }>> {
   const parsed = goalCreateSchema.safeParse(input);
-  if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "Die Zieldaten sind ungültig.");
+  if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "The goal data is invalid.");
 
   const context = await requirePermission("manageGoals");
   const supabase = await createSupabaseServerClient();
@@ -44,7 +44,7 @@ export async function createGoalContribution(
   input: GoalContributionInput,
 ): Promise<ActionResult<{ id: string }>> {
   const parsed = goalContributionSchema.safeParse(input);
-  if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "Die Beitragsdaten sind ungültig.");
+  if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "The contribution data is invalid.");
 
   const context = await requirePermission("manageGoals");
   const supabase = await createSupabaseServerClient();

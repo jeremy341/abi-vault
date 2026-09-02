@@ -39,7 +39,7 @@ export async function updateMemberRole(input: unknown) {
       p_organization_id: context.organizationId,
       p_clerk_user_id: parsed.data.clerkUserId,
       p_role: target.role,
-      p_reason: "Rollenänderung wegen fehlgeschlagener Clerk-Synchronisierung zurückgesetzt",
+      p_reason: "Role change reset after failed Clerk synchronization",
     });
     return { ok: false as const, error: "ROLE_UPDATE_FAILED" };
   }

@@ -31,7 +31,7 @@ export const transactionCreateSchema = z
     periodId: uuid,
     bookedAt: z
       .string()
-      .regex(/^\d{4}-\d{2}-\d{2}$/, "Das Buchungsdatum ist ungültig.")
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "The entry date is invalid.")
       .nullable()
       .optional(),
     idempotencyKey: z.string().trim().min(16).max(128),
@@ -44,7 +44,7 @@ export const transactionCreateSchema = z
       context.addIssue({
         code: "custom",
         path: ["toWalletId"],
-        message: "Einnahmen benötigen ausschließlich eine Zielkasse.",
+        message: "Income requires a destination cash register only.",
       });
     }
 
@@ -52,7 +52,7 @@ export const transactionCreateSchema = z
       context.addIssue({
         code: "custom",
         path: ["fromWalletId"],
-        message: "Ausgaben benötigen ausschließlich eine Quellkasse.",
+        message: "Expenses require a source cash register only.",
       });
     }
 
@@ -60,7 +60,7 @@ export const transactionCreateSchema = z
       context.addIssue({
         code: "custom",
         path: ["fromWalletId"],
-        message: "Eine Übertragung benötigt zwei unterschiedliche Kassen.",
+        message: "A transfer requires two different cash registers.",
       });
     }
 
@@ -68,7 +68,7 @@ export const transactionCreateSchema = z
       context.addIssue({
         code: "custom",
         path: ["categoryId"],
-        message: "Einnahmen und Ausgaben benötigen eine Kategorie.",
+        message: "Income and expenses require a category.",
       });
     }
   });

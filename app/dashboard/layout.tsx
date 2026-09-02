@@ -12,14 +12,14 @@ export default async function DashboardLayout({
 }>) {
   if (isLocalMode()) {
     return (
-      <ResponsiveDashboardShell>
+      <ResponsiveDashboardShell isAdmin localMode>
         <FinanceCacheLifecycle />
         {children}
       </ResponsiveDashboardShell>
     );
   }
 
-  const { isAuthenticated, orgId } = await auth();
+  const { isAuthenticated, orgId, orgRole } = await auth();
 
   if (!isAuthenticated) {
     redirect("/sign-in");
@@ -27,7 +27,7 @@ export default async function DashboardLayout({
   if (orgId) await ensureCurrentOrganizationData();
 
   return (
-    <ResponsiveDashboardShell>
+    <ResponsiveDashboardShell isAdmin={orgRole === "org:admin"}>
       <FinanceCacheLifecycle />
       {orgId ? children : (
         <main className="flex min-h-full items-center justify-center p-6">

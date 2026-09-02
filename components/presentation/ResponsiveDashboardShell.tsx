@@ -31,7 +31,6 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { usePresentationMode } from "@/hooks/use-presentation-mode";
-import { useAuth } from "@clerk/nextjs";
 import styles from "./presentation.module.css";
 
 const subscribeToHydration = () => () => {};
@@ -42,6 +41,18 @@ const ClerkUserButton = dynamic(
   () => import("@clerk/nextjs").then((module) => module.UserButton),
   { ssr: false },
 );
+
+function ShellUserButton({ localMode }: { localMode: boolean }) {
+  if (localMode) {
+    return (
+      <span className={styles.localUserButton} aria-label="Demo-Benutzer">
+        A
+      </span>
+    );
+  }
+
+  return <ClerkUserButton />;
+}
 
 const navigationItems = [
   {
@@ -174,7 +185,7 @@ function TabletRail({ pathname, isAdmin }: { pathname: string; isAdmin: boolean 
   );
 }
 
-function TabletTopbar({ pathname }: { pathname: string }) {
+function TabletTopbar({ pathname, localMode }: { pathname: string; localMode: boolean }) {
   const page = pageInformation[pathname] ?? pageInformation["/dashboard"];
   return (
     <header className={styles.tabletTopbar}>
@@ -194,13 +205,13 @@ function TabletTopbar({ pathname }: { pathname: string }) {
         >
           <Bell aria-hidden="true" />
         </button>
-        <ClerkUserButton />
+        <ShellUserButton localMode={localMode} />
       </div>
     </header>
   );
 }
 
-function PhoneTopbar({ pathname }: { pathname: string }) {
+function PhoneTopbar({ pathname, localMode }: { pathname: string; localMode: boolean }) {
   const page = pageInformation[pathname] ?? pageInformation["/dashboard"];
   return (
     <header className={styles.phoneTopbar}>
@@ -224,7 +235,7 @@ function PhoneTopbar({ pathname }: { pathname: string }) {
             </SheetHeader>
           </SheetContent>
         </Sheet>
-        <ClerkUserButton />
+        <ShellUserButton localMode={localMode} />
       </div>
     </header>
   );
@@ -330,10 +341,12 @@ function DesktopShell({
   children,
   pathname,
   isAdmin,
+  localMode,
 }: {
   children: React.ReactNode;
   pathname: string;
   isAdmin: boolean;
+  localMode: boolean;
 }) {
   const page = pageInformation[pathname] ?? pageInformation["/dashboard"];
   const [openMenu, setOpenMenu] = useState<"cohort" | "notifications" | null>(
@@ -460,7 +473,7 @@ function DesktopShell({
                 </div>
               ) : null}
             </div>
-            <ClerkUserButton />
+            <ShellUserButton localMode={localMode} />
           </div>
         </header>
         <main id="dashboard-content" className={styles.desktopContent}>
@@ -473,13 +486,15 @@ function DesktopShell({
 
 export default function ResponsiveDashboardShell({
   children,
+  isAdmin = false,
+  localMode = false,
 }: {
   children: React.ReactNode;
+  isAdmin?: boolean;
+  localMode?: boolean;
 }) {
   const mode = usePresentationMode();
   const pathname = usePathname();
-  const { orgRole } = useAuth();
-  const isAdmin = process.env.NEXT_PUBLIC_ABI_VAULT_LOCAL_MODE === "true" || orgRole === "org:admin";
   const shellReady = useSyncExternalStore(
     subscribeToHydration,
     getClientHydrationState,
@@ -514,7 +529,7 @@ export default function ResponsiveDashboardShell({
   }
 
   if (mode === "desktop") {
-    return <DesktopShell pathname={pathname} isAdmin={isAdmin}>{children}</DesktopShell>;
+    return <DesktopShell pathname={pathname} isAdmin={isAdmin} localMode={localMode}>{children}</DesktopShell>;
   }
 
   if (mode === "tablet") {
@@ -525,7 +540,7 @@ export default function ResponsiveDashboardShell({
         </a>
         <TabletRail pathname={pathname} isAdmin={isAdmin} />
         <section className={styles.tabletWorkspace}>
-          <TabletTopbar pathname={pathname} />
+          <TabletTopbar pathname={pathname} localMode={localMode} />
           <main id="dashboard-content" className={styles.tabletContent}>
             {children}
           </main>
@@ -539,7 +554,7 @@ export default function ResponsiveDashboardShell({
       <a className={styles.skipLink} href="#dashboard-content">
         Zum Inhalt springen
       </a>
-      <PhoneTopbar pathname={pathname} />
+      <PhoneTopbar pathname={pathname} localMode={localMode} />
       <main id="dashboard-content" className={styles.phoneContent}>
         {children}
       </main>

@@ -620,6 +620,19 @@
   height: 1rem;
 }
 
+.localUserButton {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
+}
+
 .tabletContent {
   display: flex;
   min-height: 0;

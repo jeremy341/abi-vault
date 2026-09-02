@@ -1,7 +1,7 @@
 "use client";
 
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useAppAuth } from "@/components/auth/app-auth";
 import {
   Check,
   ChevronsUpDown,
@@ -667,7 +667,7 @@ function PhoneReceiptsView({
 
 export default function ReceiptsPage() {
   const mode = usePresentationMode();
-  const { userId, orgId } = useAuth();
+  const { userId, orgId } = useAppAuth();
   const cacheScope = `${orgId ?? "no-org"}:${userId ?? "anonymous"}`;
   const initialReceipts = getFinanceCacheState<Awaited<ReturnType<typeof listReceiptsForCurrentOrganization>>>("receipts", cacheScope);
   const [items, setItems] = useState<Receipt[]>(() => initialReceipts.data?.ok ? initialReceipts.data.items.map(mapReceipt) : []);

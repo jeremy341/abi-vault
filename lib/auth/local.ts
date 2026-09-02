@@ -1,9 +1,7 @@
 import "server-only";
 
 import { createHmac } from "node:crypto";
-
-export const LOCAL_USER_ID = "user_local_admin";
-export const LOCAL_ORGANIZATION_ID = "org_local_demo";
+import { LOCAL_ORGANIZATION_ID, LOCAL_USER_ID } from "@/lib/auth/constants";
 
 export function isLocalMode() {
   return process.env.ABI_VAULT_LOCAL_MODE === "true";

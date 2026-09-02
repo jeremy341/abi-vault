@@ -12,7 +12,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useAppAuth } from "@/components/auth/app-auth";
 import {
   Area,
   AreaChart,
@@ -376,7 +376,7 @@ function PhoneReportsView({
 
 export default function ReportsPage() {
   const mode = usePresentationMode();
-  const { userId, orgId } = useAuth();
+  const { userId, orgId } = useAppAuth();
   const cacheScope = `${orgId ?? "no-org"}:${userId ?? "anonymous"}`;
   const [period, setPeriod] = useState("6-monate");
   const [category, setCategory] = useState("alle-kategorien");

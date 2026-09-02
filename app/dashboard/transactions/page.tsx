@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useAppAuth } from "@/components/auth/app-auth";
 import {
   ArrowDown,
   ArrowUp,
@@ -471,7 +471,7 @@ function PhoneTransactionsView({
 
 export default function TransactionsPage() {
   const mode = usePresentationMode();
-  const { userId, orgId } = useAuth();
+  const { userId, orgId } = useAppAuth();
   const cacheScope = `${orgId ?? "no-org"}:${userId ?? "anonymous"}`;
   type DashboardResult = Awaited<ReturnType<typeof getDashboardSnapshot>>;
   const initialSnapshot = getFinanceCacheState<DashboardResult>("dashboard-snapshot", cacheScope);

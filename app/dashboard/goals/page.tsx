@@ -12,7 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useAppAuth } from "@/components/auth/app-auth";
 import { Dialog } from "@/components/ui/dialog";
 import { LoadingCollection, LoadingStatus, LoadingText } from "@/components/ui/loading-state";
 import styles from "./goals.module.css";
@@ -111,7 +111,7 @@ function PhoneGoalsView({
 
 export default function GoalsPage() {
   const mode = usePresentationMode();
-  const { userId, orgId } = useAuth();
+  const { userId, orgId } = useAppAuth();
   const cacheScope = `${orgId ?? "no-org"}:${userId ?? "anonymous"}`;
   type DashboardResult = Awaited<ReturnType<typeof getDashboardSnapshot>>;
   const initialSnapshot = getFinanceCacheState<DashboardResult>("dashboard-snapshot", cacheScope);

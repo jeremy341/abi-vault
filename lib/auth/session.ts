@@ -1,7 +1,8 @@
 import "server-only";
 
 import { auth } from "@clerk/nextjs/server";
-import { isLocalMode, LOCAL_ORGANIZATION_ID, LOCAL_USER_ID } from "@/lib/auth/local";
+import { isLocalMode } from "@/lib/auth/local";
+import { LOCAL_ORGANIZATION_ID, LOCAL_USER_ID } from "@/lib/auth/constants";
 
 export class AuthenticationRequiredError extends Error {
   readonly code = "UNAUTHENTICATED" as const;

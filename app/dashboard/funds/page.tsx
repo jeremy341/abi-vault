@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useAppAuth } from "@/components/auth/app-auth";
 import { Banknote, Trash2, X } from "lucide-react";
 import AddCardModal from "@/components/dashboard/AddCardModal";
 import EditCardModal from "@/components/dashboard/EditCardModal";
@@ -101,7 +101,7 @@ const euro = (value: number) => money.format(value);
 
 export default function FundsPage() {
   const mode = usePresentationMode();
-  const { userId, orgId } = useAuth();
+  const { userId, orgId } = useAppAuth();
   const cacheScope = `${orgId ?? "no-org"}:${userId ?? "anonymous"}`;
   type DashboardResult = Awaited<ReturnType<typeof getDashboardSnapshot>>;
   const initialSnapshot = getFinanceCacheState<DashboardResult>("dashboard-snapshot", cacheScope);

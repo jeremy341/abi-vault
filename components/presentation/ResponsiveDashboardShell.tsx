@@ -216,8 +216,7 @@ function PhoneTopbar({ pathname }: { pathname: string }) {
           >
             <Bell aria-hidden="true" />
           </SheetTrigger>
-          <SheetContent side="bottom" className={styles.phoneSheet}>
-            <div className={styles.phoneSheetHandle} aria-hidden="true" />
+          <SheetContent side="bottom" className={styles.phoneSheet} dragDismiss dragHandleClassName={styles.phoneSheetHandle}>
             <SheetHeader>
               <SheetTitle>Benachrichtigungen</SheetTitle>
               <SheetDescription>Keine neuen Hinweise.</SheetDescription>
@@ -260,8 +259,7 @@ function PhoneNavigation({ pathname, isAdmin }: { pathname: string; isAdmin: boo
           <MoreHorizontal aria-hidden="true" />
           <span>Mehr</span>
         </SheetTrigger>
-        <SheetContent side="bottom" className={styles.phoneSheet}>
-          <div className={styles.phoneSheetHandle} aria-hidden="true" />
+        <SheetContent side="bottom" className={styles.phoneSheet} dragDismiss dragHandleClassName={styles.phoneSheetHandle}>
           <SheetHeader>
             <SheetTitle>Weitere Bereiche</SheetTitle>
             <SheetDescription>

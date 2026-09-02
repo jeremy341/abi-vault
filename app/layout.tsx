@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Abi Manager",
-  description: "Klassenfinanzen, Cash registers, Receipts und Sparziele gemeinsam verwalten.",
+  description: "Manage class finances, cash registers, receipts, and savings goals together.",
 };
 
 export default function RootLayout({

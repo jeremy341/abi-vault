@@ -353,7 +353,7 @@ function PhoneTransactionsView({
               </b>
             </>
           ) : (
-            <span className={phoneStyles.summaryEmpty}>No Bewegungen</span>
+            <span className={phoneStyles.summaryEmpty}>No activity</span>
           )}
         </div>
       </section>
@@ -1595,7 +1595,7 @@ export default function TransactionsPage() {
             <span />
             <div>
               <button type="button" className={styles.secondaryButton} onClick={() => setArchiveTarget(null)} disabled={saving}>Cancel</button>
-              <button type="button" className={styles.primaryButton} onClick={confirmArchiveTransaction} disabled={saving || !archiveReason.trim()} aria-busy={saving}>{saving ? "Wird archiviert …" : "Archivieren"}</button>
+              <button type="button" className={styles.primaryButton} onClick={confirmArchiveTransaction} disabled={saving || !archiveReason.trim()} aria-busy={saving}>{saving ? "Archiving …" : "Archive"}</button>
             </div>
           </div>
         </Overlay>

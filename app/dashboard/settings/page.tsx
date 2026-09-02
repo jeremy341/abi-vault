@@ -223,7 +223,7 @@ function PhoneSettingsView({
       {activeSection === "permissions" ? (
         <section className={phoneStyles.section}>
           <div className={phoneStyles.sectionTitle}>
-            <h3>Rollen & Zugriffe</h3>
+            <h3>Roles & access</h3>
             <p>Who can edit or view data.</p>
           </div>
           <div className={phoneStyles.permissionList}>
@@ -544,7 +544,7 @@ export default function SettingsPage() {
                 />
                 <SwitchRow
                   label="Fehlende Zahlungen"
-                  description="Erinnerung bei pending cash or account payments."
+                  description="Reminder for pending cash or account payments."
                   checked={notifications.payments}
                   onChange={() => toggleNotification("payments")}
                 />
@@ -565,7 +565,7 @@ export default function SettingsPage() {
               <div className={styles.sectionTitle}>
                 <ShieldCheck aria-hidden="true" />
                 <div>
-                  <h3>Rollen & Zugriffe</h3>
+                  <h3>Roles & access</h3>
                   <p>
                     Choose who can edit financial data or only view it.
                   </p>

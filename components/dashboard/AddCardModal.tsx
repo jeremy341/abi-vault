@@ -134,7 +134,7 @@ export default function AddCardModal({
       nextErrors.accountName = "Please enter a cash register name.";
     }
     if (values.cardNumber.replace(/\D/g, "").length !== 16) {
-      nextErrors.cardNumber = "Die Card number muss 16 Ziffern enthalten.";
+      nextErrors.cardNumber = "The card number must contain 16 digits.";
     }
     if (!values.holder.trim()) {
       nextErrors.holder = "Please enter the card holder.";
@@ -172,10 +172,10 @@ export default function AddCardModal({
         setErrors({});
         idempotencyKey.current = null;
       } else {
-        setSubmitError("Die The cash register could not be saved.");
+        setSubmitError("The cash register could not be saved.");
       }
     } catch {
-      setSubmitError("Die The cash register could not be saved.");
+      setSubmitError("The cash register could not be saved.");
     } finally {
       setSaving(false);
     }

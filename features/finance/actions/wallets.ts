@@ -16,7 +16,7 @@ function mapWalletError(code?: string) {
   if (code === "42501") return actionFailure("FORBIDDEN", "You do not have permission for this action.");
   if (code === "23503" || code === "22023") return actionFailure("INVALID_PAYLOAD", "The cash register data is invalid.");
   if (code === "23505") return actionFailure("CONFLICT", "This cash register change was already submitted.");
-  return actionFailure("DATABASE_ERROR", "Die The cash register could not be saved.");
+  return actionFailure("DATABASE_ERROR", "The cash register could not be saved.");
 }
 
 export async function createWallet(

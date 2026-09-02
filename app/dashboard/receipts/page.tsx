@@ -1219,7 +1219,7 @@ export default function ReceiptsPage() {
               disabled={saving}
               aria-busy={saving}
             >
-              {saving ? (editingReceipt ? "Saving …" : "Wird hochgeladen …") : editingReceipt ? "Save changes" : "Add receipt"}
+              {saving ? (editingReceipt ? "Saving …" : "Uploading …") : editingReceipt ? "Save changes" : "Add receipt"}
             </button>
           </footer>
         </Dialog>
@@ -1248,7 +1248,7 @@ export default function ReceiptsPage() {
           </div>
           <footer className={styles.modalFooter}>
             <button type="button" className={styles.secondaryButton} onClick={() => setArchiveTarget(null)} disabled={saving}>Cancel</button>
-            <button type="button" className={styles.primaryButton} onClick={confirmArchiveReceipt} disabled={saving || !archiveReason.trim()} aria-busy={saving}>{saving ? "Wird archiviert …" : "Archivieren"}</button>
+            <button type="button" className={styles.primaryButton} onClick={confirmArchiveReceipt} disabled={saving || !archiveReason.trim()} aria-busy={saving}>{saving ? "Archiving …" : "Archive"}</button>
           </footer>
         </Dialog>
       ) : null}

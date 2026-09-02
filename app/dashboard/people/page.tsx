@@ -267,7 +267,7 @@ export default function PeoplePage() {
         };
       }),
     );
-    setMessage("Rolle aktualisiert.");
+    setMessage("Role updated.");
     setOpenMenuId(null);
   }
 
@@ -345,7 +345,7 @@ export default function PeoplePage() {
         return;
       }
       setRoleLinks((current) => ({ ...current, [role]: result }));
-      setMessage(`${role === "admin" ? "Admin" : "Supervisor"}-Link erstellt.`);
+      setMessage(`${role === "admin" ? "Admin" : "Supervisor"} link created.`);
     } catch {
       setMessage("The invitation link could not be created.");
     } finally {
@@ -492,7 +492,7 @@ export default function PeoplePage() {
                           onClick={() => cycleRole(person.id)}
                           disabled={busyPersonId === person.id}
                           >
-                            Rolle wechseln
+                            Change role
                           </button>
                           <button
                             type="button"
@@ -520,7 +520,7 @@ export default function PeoplePage() {
               <article className={styles.rolePanel}>
                 <header className={styles.panelHeader}>
                   <div>
-                    <h2>Rollen</h2>
+                    <h2>Roles</h2>
                     <p>Overview of permissions.</p>
                   </div>
                   <ShieldCheck aria-hidden="true" />
@@ -669,7 +669,7 @@ export default function PeoplePage() {
                 />
               </label>
               <label className={styles.formField}>
-                <span>Rolle</span>
+                <span>Role</span>
                 <select
                   name="personRole"
                   value={newRole}

@@ -283,7 +283,7 @@ function DesktopDashboard({ snapshot, loading, error }: { snapshot: DashboardSna
             <header className={desktopStyles.panelHeader}>
               <div>
                 <h2>Expenses</h2>
-                <p>Nach Category</p>
+                <p>By category</p>
               </div>
               <span className={desktopStyles.panelValue}>{displayMinor(String(expenseTotal))}</span>
             </header>
@@ -471,7 +471,7 @@ function TabletDashboard({ snapshot, loading, error }: { snapshot: DashboardSnap
           <article className={styles.tabletSpending}>
             <header className={styles.tabletSectionHeader}>
               <h2>Expenses</h2>
-              <span className={styles.sectionMeta}>Nach Category</span>
+              <span className={styles.sectionMeta}>By category</span>
             </header>
             <div className={styles.tabletSpendingList}>
               {categoryItems.map((item) => (
@@ -593,7 +593,7 @@ function PhoneDashboard({ snapshot, loading, error }: { snapshot: DashboardSnaps
 
       <section className={styles.phoneSection}>
         <header className={styles.phoneSectionHeader}>
-          <h2>Sparziele</h2>
+          <h2>Savings goals</h2>
           <Link href="/dashboard/goals">
             Verwalten <ArrowRight aria-hidden="true" className="size-4" />
           </Link>

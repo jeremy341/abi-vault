@@ -17,7 +17,7 @@ The product uses Geist Sans from `next/font` through `--font-geist-sans`.
 | Role          | Token                     |                                Value | Intended use                                                            |
 | ------------- | ------------------------- | -----------------------------------: | ----------------------------------------------------------------------- |
 | Base UI font  | `--ui-font`               | `var(--font-geist-sans), sans-serif` | Body and controls                                                       |
-| Section title | `--ui-section-title-size` |                             `1.5rem` | “Alle Transaktionen”, “Belegübersicht”, and equivalent section headings |
+| Section title | `--ui-section-title-size` |                             `1.5rem` | “All transactions”, “Receipt overview”, and equivalent section headings |
 | Table header  | `--ui-table-header-size`  |                            `0.75rem` | Data-table column labels                                                |
 | Table row     | `--ui-table-row-size`     |                           `0.875rem` | Full data-table rows                                                    |
 | Metadata      | `--ui-meta-size`          |                            `0.75rem` | Supporting labels, file metadata, and secondary values                  |

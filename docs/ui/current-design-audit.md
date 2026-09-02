@@ -192,7 +192,7 @@ Common layout values:
 - Rounded left shell edge (`rounded-l-3xl`).
 - Width is 13rem by default, 14rem at 1280px, 16rem at 1600px, and 19rem at 2200px.
 - Header uses the AbiLogo with `px-6 py-7`, expanded to `2rem 2rem 1.75rem` at 2200px.
-- Navigation has 8 items: Übersicht, Transaktionen, Belege, Ziele, Kasse & Konten, Berichte, Personen, Einstellungen.
+- Navigation has 8 items: Overview, Transactions, Receipts, Goals, Cash registers, Reports, People, Settings.
 - Desktop menu buttons are 3.5rem high by default and 3.75rem at 2200px, with `rounded-xl`, 15px text, 20px icons, and muted black text.
 - Active state: very light black background (`black/[0.045]`) and main ink.
 - Hover: slight `translate-x(.125rem)`, light background, ink text.
@@ -204,7 +204,7 @@ Common layout values:
 - Shared across dashboard pages and driven by the pathname map.
 - Mobile: minimum height `3.5rem`, bottom divider, compact horizontal padding, sidebar trigger.
 - Desktop: minimum height `7rem`, top padding `1.75rem`, bottom padding `1rem`, no bottom divider.
-- Page title is left aligned; current titles include Finanzübersicht, Transaktionen, Belege, Ziele, Kasse & Konten, Berichte, Personen, Einstellungen.
+- Page title is left aligned; current titles include Financial overview, Transactions, Receipts, Goals, Cash registers, Reports, People, Settings.
 - Description sits below with a small top gap and muted text.
 - Right actions: Abi 2026 cohort button, notifications button, Clerk user button.
 - Cohort button: `3.5rem` high, rounded-xl, white/card background, subtle border and shadow, hover softens background.
@@ -218,7 +218,7 @@ Common layout values:
 Two columns at desktop:
 
 - Left: Klassenkasse above Transaktionsverlauf.
-- Right: Ziele above Ausgaben nach Kategorie above Zu prüfen.
+- Right: Goals above Expenses by category above Review needed.
 
 At widths below 1280px, columns collapse into ordered content sections. The desktop grid uses a 1.03fr/0.97fr split normally and 1.05fr/0.95fr at 2200px.
 
@@ -247,17 +247,17 @@ At widths below 1280px, columns collapse into ordered content sections. The desk
   - 2200px shows more rows.
 - Header columns: transaction, category, date, amount, receipt icon.
 - Rows use muted dividing lines, small icon bubbles, medium-weight names, muted metadata, and green/red amounts.
-- The “Alle Transaktionen anzeigen” link uses a small right translation on hover and a special vertical translation at 1280–2199px.
+- The “All transactions anzeigen” link uses a small right translation on hover and a special vertical translation at 1280–2199px.
 
-### Ziele
+### Goals
 
 - Three goal cards in a three-column inner grid.
 - Each nested card uses `rounded-xl`, thin border, `p-4` base spacing, and larger target amount typography.
 - Progress bars are black/white with a light neutral track, 2px-ish thickness, rounded ends.
-- The “Ziel hinzufügen” action is text-first and dims on hover.
+- The “Add goal” action is text-first and dims on hover.
 - Adding a fourth goal creates an overflowable minimum-width inner grid rather than changing the outer layout.
 
-### Ausgaben nach Kategorie
+### Expenses by category
 
 - Rows are icon bubble / category label / progress meter and detail / right-aligned percentage.
 - Base rows have `min-h-12`, 2px-ish bars, muted details, and 3rem-ish icon columns.
@@ -265,11 +265,11 @@ At widths below 1280px, columns collapse into ordered content sections. The desk
 - At 2200px rows become `min-h-20`, 40px icon bubbles, 3px bars, larger labels/details, and wider columns.
 - Veranstaltung is monochrome black, Material green, Sonstiges amber.
 
-### Zu prüfen
+### Review needed
 
 - Review links are horizontal bordered rows with icon, flexible text, and arrow.
 - Warning uses amber; informational and file items are neutral.
-- The third “1 Beleg ohne Kategorie” row is hidden below 2200px and shown at 2200px.
+- The third “1 Receipt without a category” row is hidden below 2200px and shown at 2200px.
 - Bottom action is black/white depending on theme, rounded-lg, and grows from 40px to 48px at 2200px.
 
 ## Transactions page
@@ -294,8 +294,8 @@ At widths below 1280px, columns collapse into ordered content sections. The desk
 
 - List card is a vertical flex surface with overflow hidden, 1.25rem radius, thin border, white/card background, and tiny shadow.
 - Header min-height 5.25rem, shrinking to 4rem at short height.
-- Header includes “Alle Transaktionen”, a dynamic `{activeFilterCount} Filter` badge, and “Transaktion hinzufügen”.
-- Filter bar contains search, category dropdown, type dropdown, date range trigger, and filter button.
+- Header includes “All transactions”, a dynamic `{activeFiltersCount} Filters` badge, and “Add transaction”.
+- Filters bar contains search, category dropdown, type dropdown, date range trigger, and filter button.
 - Search and controls are 3rem high, thin bordered, rounded `.75rem`, white surface, and muted placeholder text.
 - The filter modal supports category/type multi-selection, amount range, receipt status, review status, account selection, reset/cancel/apply, Escape close, and click-outside close.
 - Date selection is a separate modal with `Von` and `Bis` fields.
@@ -317,7 +317,7 @@ At widths below 1280px, columns collapse into ordered content sections. The desk
 - Menus have a thin border, white surface, `.75rem` radius, `.8rem–1.5rem` shadow, and small internal gap.
 - Options use compact padding and dark active/hover fill with white text.
 - Modal overlay is fixed, blurred, translucent black, centered, and animated with fade/pop.
-- Filter modal width is up to 43rem and intentionally does not scroll; standard modal width is up to 32rem.
+- Filters modal width is up to 43rem and intentionally does not scroll; standard modal width is up to 32rem.
 - Modal headers and footers use thin dividers; body uses compact grid spacing.
 
 ## Receipts page
@@ -331,19 +331,19 @@ At widths below 1280px, columns collapse into ordered content sections. The desk
 
 ### Summary cards
 
-- Alle Belege, Zu prüfen, Ohne Zuordnung.
+- All receipts, Review needed, Unassigned.
 - Flex layout with a neutral 3rem icon bubble and text stack.
 - Warning card uses amber icon/bubble treatment; others remain neutral.
 - Card radius is 1rem, not the 1.25rem used by Transactions.
 
 ### Receipt list
 
-- Heading: “Belegübersicht”. Add action: “Beleg hinzufügen”.
-- Filter bar: filename/transaction search, status dropdown, period dropdown.
-- Table columns: Beleg, Zugeordnete Transaktion, Datum, Betrag, Status, overflow action.
+- Heading: “Receipt overview”. Add action: “Add receipt”.
+- Filters bar: filename/transaction search, status dropdown, period dropdown.
+- Table columns: Beleg, Assigned transaction, Datum, Betrag, Status, overflow action.
 - Rows use file icon/name/type-size stack, transaction/kind stack, date, amount, semantic status pill, and three-dot action.
 - Page size is 9 receipts at the base/1920px layout and 10 receipts at `min-width: 2200px`, matching the wide Transactions density. Pagination is compact previous/current/next.
-- Status colors: green Geprüft, amber Zu prüfen, gray Ohne Zuordnung.
+- Status colors: green Reviewed, amber Review needed, gray Unassigned.
 
 ### Add-receipt modal
 
@@ -359,7 +359,7 @@ At widths below 1280px, columns collapse into ordered content sections. The desk
 ### Hover, focus, active, disabled
 
 - Primary dark buttons: opacity reduces to ~82% on hover; active state moves down 1px.
-- Filter buttons follow the same opacity treatment.
+- Filters buttons follow the same opacity treatment.
 - Inputs/selects/controls darken their border on hover and use a 2px ink outline on focus.
 - Sidebar links slightly translate right on hover and compress on active.
 - Dashboard action links translate right by roughly 2px on hover.
@@ -382,7 +382,7 @@ At widths below 1280px, columns collapse into ordered content sections. The desk
 
 | Breakpoint                  | Current behavior                                                                                                                               |
 | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `<600px`                    | Filter modal columns stack; segmented controls use slightly larger text                                                                        |
+| `<600px`                    | Filters modal columns stack; segmented controls use slightly larger text                                                                        |
 | `<760px`                    | Page padding becomes 1rem, KPI cards stack, list headers stack, filters stack, tables gain horizontal scrolling                                |
 | `<900px`                    | Receipt summaries stack; receipt filters stack; tables use a wide min-width                                                                    |
 | `<1150px`                   | Transaction KPI trend moves below content; filter grid becomes two columns                                                                     |

@@ -472,7 +472,7 @@ function CashDetail({ props }: { props: AdaptiveFundsViewProps }) {
         <Banknote aria-hidden="true" />
       </header>
       <div className={styles.cashHero}>
-        <span>Aktueller Bestand</span>
+        <span>Current balance</span>
         <strong>{euro(cashBox.balance)}</strong>
       </div>
       <dl className={styles.detailRows}>
@@ -591,7 +591,7 @@ function ActivityPanel({
         <span>Date</span>
         <span>Typ</span>
         <span>Beschreibung</span>
-        <span>Benutzer</span>
+        <span>User</span>
         <span>Amount</span>
       </div>
       <div className={styles.activityRows}>
@@ -673,7 +673,7 @@ function AccessPanel({ props }: { props: AdaptiveFundsViewProps }) {
         </div>
         <div>
           <dt>Vertretung</dt>
-          <dd>No Vertretung festgelegt</dd>
+          <dd>No responsible person set</dd>
         </div>
         <div>
           <dt>Letzte Review</dt>
@@ -1037,7 +1037,7 @@ function PhoneFunds(props: AdaptiveFundsViewProps) {
                 <dd>Cash registerskarte</dd>
               </div>
               <div>
-                <dt>Bestand</dt>
+                <dt>Balance</dt>
                 <dd>{props.euro(props.activeCard.balance)}</dd>
               </div>
               <div>

@@ -570,7 +570,7 @@ export default function FundsPage() {
               disabled={deleteSaving}
               aria-busy={deleteSaving}
             >
-              {deleteSaving ? "Wird archiviert …" : "Archive cash register"}
+              {deleteSaving ? "Archiving …" : "Archive cash register"}
             </button>
           </footer>
         </Dialog>
@@ -728,7 +728,7 @@ export default function FundsPage() {
                   autoComplete="off"
                   value={countNote}
                   onChange={(event) => setCountNote(event.target.value)}
-                  placeholder="Zum Beispiel Kuchenverkauf"
+                  placeholder="For example, cake sale"
                 />
               </label>
 

@@ -562,15 +562,15 @@
 .tableHeader > span:nth-child(4),
 .tableHeader > span:nth-child(5),
 .tableHeader > span:nth-child(6),
-.row > [data-label="Kategorie"],
-.row > [data-label="Datum"],
-.row > [data-label="Betrag"],
+.row > [data-label="Category"],
+.row > [data-label="Date"],
+.row > [data-label="Amount"],
 .row > [data-label="Status"] {
   text-align: center;
 }
-.row > [data-label="Kategorie"],
-.row > [data-label="Datum"],
-.row > [data-label="Betrag"],
+.row > [data-label="Category"],
+.row > [data-label="Date"],
+.row > [data-label="Amount"],
 .row > [data-label="Status"] {
   justify-self: center;
 }
@@ -1280,20 +1280,20 @@
   }
 
   .transactionName,
-  .row > [data-label="Kategorie"],
-  .row > [data-label="Beleg"] {
+  .row > [data-label="Category"],
+  .row > [data-label="Receipt"] {
     grid-column: 1 / -1;
   }
 
-  .row > [data-label="Datum"] {
+  .row > [data-label="Date"] {
     grid-column: 1;
   }
-  .row > [data-label="Betrag"] {
+  .row > [data-label="Amount"] {
     grid-column: 2;
     justify-self: end;
   }
-  .row > [data-label="Datum"]::before,
-  .row > [data-label="Betrag"]::before {
+  .row > [data-label="Date"]::before,
+  .row > [data-label="Amount"]::before {
     display: block;
     margin-bottom: 0.2rem;
     color: var(--ui-muted-ink);
@@ -1646,19 +1646,19 @@
     box-shadow: var(--ui-data-shadow);
   }
   .transactionName,
-  .row > [data-label="Kategorie"],
-  .row > [data-label="Beleg"] {
+  .row > [data-label="Category"],
+  .row > [data-label="Receipt"] {
     grid-column: 1 / -1;
   }
-  .row > [data-label="Datum"] {
+  .row > [data-label="Date"] {
     grid-column: 1;
   }
-  .row > [data-label="Betrag"] {
+  .row > [data-label="Amount"] {
     grid-column: 2;
     justify-self: end;
   }
-  .row > [data-label="Datum"]::before,
-  .row > [data-label="Betrag"]::before {
+  .row > [data-label="Date"]::before,
+  .row > [data-label="Amount"]::before {
     display: block;
     margin-bottom: 0.2rem;
     color: var(--ui-muted-ink);

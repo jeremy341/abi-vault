@@ -73,7 +73,7 @@ function PhoneGoalsView({
       </section>
 
       <header className={phoneStyles.sectionHeader} data-ui-slot="list-header">
-        <h2>Sparziele</h2>
+        <h2>Savings goals</h2>
         <span><LoadingText loading={loading}>{goals.length} aktiv</LoadingText></span>
       </header>
       <div className={phoneStyles.goals} data-ui-slot="list-body">
@@ -99,7 +99,7 @@ function PhoneGoalsView({
                 <span>{euroPrecise.format(goal.target - goal.saved)} pending</span>
               </span>
             </button>
-          )) : <div className={phoneStyles.empty}>Noch keine Sparziele vorhanden.</div>}
+          )) : <div className={phoneStyles.empty}>Noch keine Savings goals vorhanden.</div>}
         </LoadingCollection>
       </div>
       <button type="button" className={phoneStyles.addButton} onClick={onAdd} disabled={loading} data-ui-slot="primary-action">

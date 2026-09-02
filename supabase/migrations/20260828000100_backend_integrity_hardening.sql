@@ -314,7 +314,7 @@ begin
     raise exception 'INVALID_RECEIPT_STATUS' using errcode = '22023';
   end if;
 
-  perform set_config('app.audit_reason', 'Belegprüfung aktualisiert', true);
+  perform set_config('app.audit_reason', 'Receipt review updated', true);
   update public.receipts
   set review_status = p_status,
       reviewed_by = app_private.current_clerk_user_id(),

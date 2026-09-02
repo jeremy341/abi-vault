@@ -115,10 +115,10 @@ function PhoneReportsView({
 }) {
   const [tab, setTab] = useState<PhoneReportTab>("overview");
   const periodLabel = period === "3-monate"
-    ? "3 Monate"
+    ? "3 months"
     : period === "jahr"
       ? "This year"
-      : "6 Monate";
+      : "6 months";
 
   return (
     <section className={phoneStyles.root} aria-busy={loading}>
@@ -175,8 +175,8 @@ function PhoneReportsView({
               value={period}
               onChange={onPeriodChange}
               options={[
-                { value: "3-monate", label: "Letzte 3 Monate" },
-                { value: "6-monate", label: "Letzte 6 Monate" },
+                { value: "3-monate", label: "Letzte 3 months" },
+                { value: "6-monate", label: "Letzte 6 months" },
                 { value: "jahr", label: "This year" },
               ]}
             />
@@ -526,7 +526,7 @@ export default function ReportsPage() {
                 value={period}
                 onChange={setPeriod}
                 options={[
-                  { value: "6-monate", label: "Letzte 6 Monate" },
+                  { value: "6-monate", label: "Letzte 6 months" },
                   { value: "abi-jahr", label: "Abi year 2026" },
                   { value: "gesamt", label: "Gesamter Zeitraum" },
                 ]}
@@ -1064,7 +1064,7 @@ export default function ReportsPage() {
                   value={period}
                   onChange={setPeriod}
                   options={[
-                    { value: "6-monate", label: "Letzte 6 Monate" },
+                    { value: "6-monate", label: "Letzte 6 months" },
                     { value: "abi-jahr", label: "Abi year 2026" },
                     { value: "gesamt", label: "Gesamter Zeitraum" },
                   ]}

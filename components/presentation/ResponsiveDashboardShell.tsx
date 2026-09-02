@@ -45,7 +45,7 @@ const ClerkUserButton = dynamic(
 function ShellUserButton({ localMode }: { localMode: boolean }) {
   if (localMode) {
     return (
-      <span className={styles.localUserButton} aria-label="Demo-Benutzer">
+      <span className={styles.localUserButton} aria-label="Demo-User">
         A
       </span>
     );
@@ -372,7 +372,7 @@ function DesktopShell({
   return (
     <div className={`${styles.desktopShell} ${isAdmin ? "" : styles.nonAdminNavigation}`} data-presentation="desktop">
       <a className={styles.skipLink} href="#dashboard-content">
-        Zum Inhalt springen
+        Skip to content
       </a>
       <aside className={styles.desktopSidebar} aria-label="Hauptnavigation">
         <div className={styles.desktopBrand}>
@@ -536,7 +536,7 @@ export default function ResponsiveDashboardShell({
     return (
       <div className={`${styles.adaptiveShell} ${styles.tabletShell}`}>
         <a className={styles.skipLink} href="#dashboard-content">
-          Zum Inhalt springen
+          Skip to content
         </a>
         <TabletRail pathname={pathname} isAdmin={isAdmin} />
         <section className={styles.tabletWorkspace}>
@@ -552,7 +552,7 @@ export default function ResponsiveDashboardShell({
   return (
     <div className={`${styles.adaptiveShell} ${styles.phoneShell}`}>
       <a className={styles.skipLink} href="#dashboard-content">
-        Zum Inhalt springen
+        Skip to content
       </a>
       <PhoneTopbar pathname={pathname} localMode={localMode} />
       <main id="dashboard-content" className={styles.phoneContent}>

@@ -354,7 +354,7 @@ export function ReviewPanel() {
           className="flex items-center gap-3 rounded-lg border border-black/[0.08] px-3 py-2.5 text-sm transition-colors hover:bg-black/[0.03] dark:border-white/15 dark:hover:bg-white/[0.06]"
         >
           <Info className="size-5" />
-          <span className="flex-1">1 Bargeldzahlung fehlt</span>
+          <span className="flex-1">1 cash payment missing</span>
           <ArrowRight className="size-4" />
         </Link>
         <Link

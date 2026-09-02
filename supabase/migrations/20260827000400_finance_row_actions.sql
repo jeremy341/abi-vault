@@ -212,7 +212,7 @@ begin
     correction_role, correction_of_transaction_id, created_by, idempotency_key
   ) values (
     p_organization_id, original.amount_minor, original.currency,
-    'Storno: ' || original.title, 'Automatische Gegenbuchung für Korrektur',
+    'Reversal: ' || original.title, 'Automatic reversal entry for correction',
     reversal_type, 'posted', 'manual', original.category_id, reversal_from,
     reversal_to, original.period_id, original.booked_at, 'reversal', original.id,
     app_private.current_clerk_user_id(), left(p_idempotency_key, 110) || ':reversal'

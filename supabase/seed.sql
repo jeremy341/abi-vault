@@ -2,6 +2,10 @@ insert into public.committees (organization_id, name)
 values ('org_local_demo', 'Abi 2026')
 on conflict (organization_id) do nothing;
 
+insert into public.committee_settings (organization_id, school_name, graduation_year, notifications)
+values ('org_local_demo', 'Musterschule Berlin', 2026, '{"receipts": true, "payments": true, "goals": false}'::jsonb)
+on conflict (organization_id) do nothing;
+
 insert into public.profiles (clerk_user_id, display_name, email)
 values
   ('user_local_admin', 'Local Admin', 'admin@example.test'),

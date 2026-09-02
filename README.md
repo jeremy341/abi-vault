@@ -6,7 +6,7 @@ goals, reports, accounting periods, and member accountability in one place.
 
 ## Try it
 
-Try the [hosted demo](https://abi-vault-demo-jerry-team1.vercel.app). It uses
+Try the [hosted demo](https://abi-vault-demo.vercel.app). It uses
 sample data only and is completely separate from production.
 
 ## Features
@@ -23,7 +23,7 @@ sample data only and is completely separate from production.
 ## Run locally
 
 See [docs/self-hosting.md](docs/self-hosting.md) for the local demo, Supabase,
-and Docker setup. For a separate Vercel demo, see
+and Docker setup. For a separate Vercel deployment, see
 [docs/vercel-demo.md](docs/vercel-demo.md). The shortest local path is:
 
 ```text
@@ -39,6 +39,26 @@ Use fake data only. Never copy production credentials into `.env.local`.
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. For
 security issues, follow [SECURITY.md](SECURITY.md).
+
+## Docker Compose
+
+The Dockerfile builds the Next.js application as a standalone production image.
+Compose runs that app against the Supabase URL configured in `.env.local`:
+
+```bash
+cp .env.example .env.local
+docker compose -f docker-compose.yaml up --build -d
+```
+
+Open <http://localhost:3000>. To stop it:
+
+```bash
+docker compose -f docker-compose.yaml down
+```
+
+For an entirely local database, run `supabase start` and `supabase db reset`
+first, then use the local keys printed by `supabase status`. Never use official
+production credentials in the demo.
 
 ## Scope
 

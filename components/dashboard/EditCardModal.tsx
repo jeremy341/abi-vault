@@ -68,6 +68,8 @@ export default function EditCardModal({
   const [saving, setSaving] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!open) return;
@@ -86,7 +88,7 @@ export default function EditCardModal({
     window.requestAnimationFrame(() => (firstInput ?? first)?.focus());
 
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") onCloseRef.current();
       if (event.key !== "Tab" || !first || !last) return;
 
       if (event.shiftKey && document.activeElement === first) {
@@ -104,7 +106,7 @@ export default function EditCardModal({
       document.body.style.overflow = previousOverflow;
       previouslyFocused?.focus();
     };
-  }, [onClose, open]);
+  }, [open]);
 
   if (!open || !card || typeof document === "undefined") return null;
 

@@ -62,6 +62,27 @@ export async function createRoleInviteLink(input: unknown) {
   };
 }
 
+export async function revokeRoleInviteLink(input: unknown) {
+  if (typeof input !== "string" || !/^[0-9a-f-]{36}$/i.test(input)) {
+    return { ok: false as const, error: "INVALID_INPUT" };
+  }
+
+  const context = await requirePermission("manageMemberships");
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
+    .from("organization_invite_links")
+    .update({ revoked_at: new Date().toISOString() })
+    .eq("id", input)
+    .eq("organization_id", context.organizationId)
+    .is("revoked_at", null)
+    .select("id")
+    .maybeSingle();
+
+  return error || !data
+    ? { ok: false as const, error: "REVOKE_FAILED" }
+    : { ok: true as const };
+}
+
 export async function acceptRoleInviteLink(token: string) {
   const session = await auth();
   if (!session.userId) return { ok: false as const, error: "UNAUTHENTICATED" };

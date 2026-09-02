@@ -10,6 +10,7 @@ import {
   Search,
   Share2,
   ShieldCheck,
+  Trash2,
   Users,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -19,7 +20,7 @@ import styles from "./people.module.css";
 import phoneStyles from "./people-phone.module.css";
 import { usePresentationMode } from "@/hooks/use-presentation-mode";
 import { listMembersForCurrentOrganization } from "@/features/finance/actions/queries";
-import { createRoleInviteLink } from "@/features/people/actions/invite-links";
+import { createRoleInviteLink, revokeRoleInviteLink } from "@/features/people/actions/invite-links";
 import { removeMember, updateMemberRole } from "@/features/people/actions/memberships";
 
 type Person = {
@@ -32,6 +33,7 @@ type Person = {
 };
 
 type RoleInviteLink = {
+  id: string;
   role: "admin" | "supervisor";
   url: string;
   expiresAt: string;
@@ -333,6 +335,20 @@ export default function PeoplePage() {
     await copyRoleLink(role);
   }
 
+  async function revokeRoleLink(role: RoleInviteLink["role"]) {
+    const link = roleLinks[role];
+    if (!link || linkSaving) return;
+    setLinkSaving(role);
+    const result = await revokeRoleInviteLink(link.id);
+    if (!result.ok) {
+      setMessage("Der Einladungslink konnte nicht widerrufen werden.");
+    } else {
+      setRoleLinks((current) => ({ ...current, [role]: undefined }));
+      setMessage("Einladungslink widerrufen.");
+    }
+    setLinkSaving(null);
+  }
+
   return (
     <section className={mode === "phone" ? phoneStyles.pageShell : styles.page} aria-busy={loading}>
       <LoadingStatus loading={loading} label="Mitglieder werden geladen…" />
@@ -569,6 +585,7 @@ export default function PeoplePage() {
                             <>
                               <button type="button" onClick={() => void copyRoleLink(role)} aria-label={`${role} Link kopieren`}><Copy aria-hidden="true" /> Kopieren</button>
                               <button type="button" onClick={() => void shareRoleLink(role)} aria-label={`${role} Link teilen`}><Share2 aria-hidden="true" /> Teilen</button>
+                              <button type="button" onClick={() => void revokeRoleLink(role)} disabled={linkSaving !== null} aria-label={`${role} Link widerrufen`}><Trash2 aria-hidden="true" /> Widerrufen</button>
                             </>
                           ) : (
                             <button type="button" onClick={() => void generateRoleLink(role)} disabled={linkSaving !== null} aria-busy={linkSaving === role}>
@@ -658,7 +675,7 @@ export default function PeoplePage() {
               >
                 Abbrechen
               </button>
-              {roleLinks[linkRole] ? <button type="button" className={styles.primaryButton} onClick={() => void shareRoleLink(linkRole)}><Share2 aria-hidden="true" /> Share link</button> : <button type="button" className={styles.primaryButton} onClick={() => void generateRoleLink(linkRole)} disabled={linkSaving !== null} aria-busy={linkSaving === linkRole}>{linkSaving === linkRole ? "Creating …" : "Create link"}</button>}
+              {roleLinks[linkRole] ? <><button type="button" className={styles.secondaryButton} onClick={() => void revokeRoleLink(linkRole)} disabled={linkSaving !== null}><Trash2 aria-hidden="true" /> Revoke</button><button type="button" className={styles.primaryButton} onClick={() => void shareRoleLink(linkRole)}><Share2 aria-hidden="true" /> Share link</button></> : <button type="button" className={styles.primaryButton} onClick={() => void generateRoleLink(linkRole)} disabled={linkSaving !== null} aria-busy={linkSaving === linkRole}>{linkSaving === linkRole ? "Creating …" : "Create link"}</button>}
             </footer>
           </div>
         </Dialog>

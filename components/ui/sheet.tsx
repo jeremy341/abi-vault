@@ -139,7 +139,7 @@ function SheetContent({
           className,
         )}
         {...popupProps}
-        style={dragOffset ? { ...style, transform: `translateY(${dragOffset}px)`, transition: "none" } : style}
+        style={style}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={finishDrag}

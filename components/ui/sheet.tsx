@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { XIcon } from "lucide-react";
 
+type SheetPointerEvent = Parameters<NonNullable<SheetPrimitive.Popup.Props["onPointerDown"]>>[0];
+
 function Sheet({ ...props }: SheetPrimitive.Root.Props) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />;
 }
@@ -55,7 +57,7 @@ function SheetContent({
   const [dragOffset, setDragOffset] = React.useState(0);
   const { style, onPointerDown, onPointerMove, onPointerUp, onPointerCancel, ...popupProps } = props;
 
-  function handlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
+  function handlePointerDown(event: SheetPointerEvent) {
     onPointerDown?.(event);
     if (!dragDismiss || side !== "bottom" || !(event.target instanceof Element) || !event.target.closest("[data-sheet-drag-handle]")) return;
     if (event.pointerType === "mouse" && event.button !== 0) return;
@@ -63,7 +65,7 @@ function SheetContent({
     dragRef.current = { pointerId: event.pointerId, startY: event.clientY, lastY: event.clientY, lastTime: performance.now(), velocity: 0 };
   }
 
-  function handlePointerMove(event: React.PointerEvent<HTMLDivElement>) {
+  function handlePointerMove(event: SheetPointerEvent) {
     onPointerMove?.(event);
     const drag = dragRef.current;
     if (!drag || drag.pointerId !== event.pointerId) return;
@@ -74,7 +76,7 @@ function SheetContent({
     setDragOffset(Math.min(Math.max(0, event.clientY - drag.startY), window.innerHeight * 0.8));
   }
 
-  function finishDrag(event: React.PointerEvent<HTMLDivElement>) {
+  function finishDrag(event: SheetPointerEvent) {
     onPointerUp?.(event);
     const drag = dragRef.current;
     if (!drag || drag.pointerId !== event.pointerId) return;
@@ -88,7 +90,7 @@ function SheetContent({
     }
   }
 
-  function cancelDrag(event: React.PointerEvent<HTMLDivElement>) {
+  function cancelDrag(event: SheetPointerEvent) {
     onPointerCancel?.(event);
     dragRef.current = null;
     setDragOffset(0);

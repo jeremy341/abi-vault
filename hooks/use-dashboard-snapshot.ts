@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useAppAuth } from "@/components/auth/app-auth";
 import { getDashboardSnapshot } from "@/features/finance/actions/queries";
 import {
   cachedFinanceQuery,
@@ -12,7 +12,7 @@ import {
 export type DashboardSnapshot = Awaited<ReturnType<typeof getDashboardSnapshot>> & { ok: true };
 
 export function useDashboardSnapshot() {
-  const { userId, orgId } = useAuth();
+  const { userId, orgId } = useAppAuth();
   const scope = `${orgId ?? "no-org"}:${userId ?? "anonymous"}`;
   const cached = getFinanceCacheState<DashboardSnapshot>("dashboard-snapshot", scope);
   const [snapshot, setSnapshot] = useState<DashboardSnapshot | null>(cached.data ?? null);

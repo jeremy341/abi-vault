@@ -54,7 +54,9 @@ function SheetContent({
 }) {
   const closeRef = React.useRef<HTMLButtonElement>(null);
   const dragRef = React.useRef<{ pointerId: number; startY: number; lastY: number; lastTime: number; velocity: number } | null>(null);
-  const [dragOffset, setDragOffset] = React.useState(0);
+  const popupRef = React.useRef<HTMLDivElement>(null);
+  const frameRef = React.useRef<number | null>(null);
+  const dragOffsetRef = React.useRef(0);
   const { style, onPointerDown, onPointerMove, onPointerUp, onPointerCancel, ...popupProps } = props;
 
   function handlePointerDown(event: SheetPointerEvent) {
@@ -63,6 +65,8 @@ function SheetContent({
     if (event.pointerType === "mouse" && event.button !== 0) return;
     event.currentTarget.setPointerCapture(event.pointerId);
     dragRef.current = { pointerId: event.pointerId, startY: event.clientY, lastY: event.clientY, lastTime: performance.now(), velocity: 0 };
+    popupRef.current?.style.setProperty("transition", "none");
+    popupRef.current?.style.setProperty("will-change", "transform");
   }
 
   function handlePointerMove(event: SheetPointerEvent) {
@@ -73,7 +77,13 @@ function SheetContent({
     drag.velocity = Math.max(0, event.clientY - drag.lastY) / Math.max(1, now - drag.lastTime);
     drag.lastY = event.clientY;
     drag.lastTime = now;
-    setDragOffset(Math.min(Math.max(0, event.clientY - drag.startY), window.innerHeight * 0.8));
+    dragOffsetRef.current = Math.min(Math.max(0, event.clientY - drag.startY), window.innerHeight * 0.8);
+    if (frameRef.current === null) {
+      frameRef.current = requestAnimationFrame(() => {
+        frameRef.current = null;
+        popupRef.current?.style.setProperty("transform", `translate3d(0, ${dragOffsetRef.current}px, 0)`);
+      });
+    }
   }
 
   function finishDrag(event: SheetPointerEvent) {
@@ -83,23 +93,45 @@ function SheetContent({
     const distance = Math.max(0, event.clientY - drag.startY);
     dragRef.current = null;
     if (distance >= 72 || drag.velocity >= 0.11) {
-      setDragOffset(0);
+      resetDragStyles();
       closeRef.current?.click();
     } else {
-      setDragOffset(0);
+      settleDragStyles();
     }
   }
 
   function cancelDrag(event: SheetPointerEvent) {
     onPointerCancel?.(event);
     dragRef.current = null;
-    setDragOffset(0);
+    settleDragStyles();
+  }
+
+  function resetDragStyles() {
+    if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
+    frameRef.current = null;
+    dragOffsetRef.current = 0;
+    if (popupRef.current) {
+      popupRef.current.style.removeProperty("transform");
+      popupRef.current.style.removeProperty("transition");
+      popupRef.current.style.removeProperty("will-change");
+    }
+  }
+
+  function settleDragStyles() {
+    if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
+    frameRef.current = null;
+    dragOffsetRef.current = 0;
+    if (!popupRef.current) return;
+    popupRef.current.style.setProperty("transition", "transform 200ms cubic-bezier(0.32, 0.72, 0, 1)");
+    popupRef.current.style.setProperty("transform", "translate3d(0, 0, 0)");
+    window.setTimeout(resetDragStyles, 220);
   }
 
   return (
     <SheetPortal>
       <SheetOverlay />
       <SheetPrimitive.Popup
+        ref={popupRef}
         data-slot="sheet-content"
         data-side={side}
         className={cn(
@@ -114,16 +146,18 @@ function SheetContent({
         onPointerCancel={cancelDrag}
       >
         {dragDismiss && side === "bottom" ? (
-          <button
-            ref={closeRef}
-            type="button"
-            data-sheet-drag-handle
-            className={cn("mx-auto mt-2 h-1 w-10 cursor-grab rounded-full border-0 bg-border p-0 active:cursor-grabbing", dragHandleClassName)}
-            aria-label="Swipe down to close"
-            onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " ") closeRef.current?.click();
-            }}
-          />
+          <>
+            <SheetPrimitive.Close render={<button ref={closeRef} type="button" className="sr-only" tabIndex={-1} aria-hidden="true" />} />
+            <button
+              type="button"
+              data-sheet-drag-handle
+              className={cn("mx-auto mt-2 h-10 w-20 cursor-grab rounded-full border-0 bg-transparent p-0 active:cursor-grabbing", dragHandleClassName)}
+              aria-label="Swipe down to close"
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") closeRef.current?.click();
+              }}
+            />
+          </>
         ) : null}
         {children}
         {showCloseButton && (

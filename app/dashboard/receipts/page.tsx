@@ -436,7 +436,6 @@ function TransactionCombobox({
             <Search aria-hidden="true" />
             <span className="sr-only">Transactions durchsuchen</span>
             <input
-              autoFocus
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search name, date, or amount …"

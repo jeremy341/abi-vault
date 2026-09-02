@@ -8,7 +8,7 @@ export class AuthenticationRequiredError extends Error {
   readonly code = "UNAUTHENTICATED" as const;
 
   constructor() {
-    super("Eine Anmeldung ist erforderlich.");
+    super("Sign-in is required.");
   }
 }
 

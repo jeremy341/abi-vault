@@ -34,7 +34,7 @@ export async function createManualTransaction(
       const code = error.code === "UNAUTHENTICATED" ? "UNAUTHENTICATED" : "FORBIDDEN";
       return actionFailure(code, code === "UNAUTHENTICATED" ? "Eine Anmeldung ist erforderlich." : "Ein aktiver Abi-Workspace ist erforderlich.");
     }
-    return actionFailure("UNAUTHENTICATED", "Eine Anmeldung ist erforderlich.");
+    return actionFailure("UNAUTHENTICATED", "Sign-in is required.");
   }
 
   const command = parsed.data;

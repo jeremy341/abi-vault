@@ -196,7 +196,7 @@ function TabletTopbar({ pathname, localMode }: { pathname: string; localMode: bo
       <div className={styles.tabletActions}>
         <button type="button" className={styles.tabletCohort}>
           <CalendarDays aria-hidden="true" />
-          Abi 2026
+          Class of 2026
         </button>
         <button
           type="button"
@@ -418,7 +418,7 @@ function DesktopShell({
                 }
               >
                 <CalendarDays aria-hidden="true" />
-                Abi 2026
+                Class of 2026
                 <ChevronDown aria-hidden="true" />
               </button>
               {openMenu === "cohort" ? (

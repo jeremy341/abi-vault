@@ -13,8 +13,8 @@ describe("EUR minor-unit money", () => {
     expect(() => parseEuroToMinor("1.2.3")).toThrow("INVALID_AMOUNT");
   });
 
-  it("formats signed minor units for German EUR display", () => {
-    expect(formatMinorEuro(BigInt(139550))).toBe("1.395,50 €");
-    expect(formatMinorEuro(BigInt(-7500))).toBe("-75,00 €");
+  it("formats signed minor units for English EUR display", () => {
+    expect(formatMinorEuro(BigInt(139550))).toBe("€1,395.50");
+    expect(formatMinorEuro(BigInt(-7500))).toBe("-€75.00");
   });
 });

@@ -81,7 +81,7 @@ export default function DashboardHeader() {
           aria-label="Select graduation year"
         >
           <CalendarDays className="size-5" />
-          Abi 2026
+          Class of 2026
           <ChevronDown className="size-5 text-muted-foreground" />
         </button>
 

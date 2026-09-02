@@ -64,7 +64,7 @@ function formatReceiptDate(value: string) {
   const date = new Date(`${value.slice(0, 10)}T00:00:00`);
   return Number.isNaN(date.getTime())
     ? value
-    : date.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
+    : date.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
 type ServerReceipt = {
@@ -181,7 +181,7 @@ const receipts: Receipt[] = [];
     type: "JPG",
     size: "512 KB",
     transaction: "—",
-    kind: "Nicht zugeordnet",
+    kind: "Unassigned",
     date: "03.05.2026",
     amount: -54.2,
     status: "Ohne Zuordnung",
@@ -501,7 +501,7 @@ function TransactionCombobox({
 }
 
 function formatAmount(amount: number) {
-  return `${amount < 0 ? "-" : "+"}${Math.abs(amount).toLocaleString("de-DE", { minimumFractionDigits: 2 })} €`;
+  return `${amount < 0 ? "-" : "+"}${Math.abs(amount).toLocaleString("en-GB", { minimumFractionDigits: 2 })} €`;
 }
 
 function PhoneReceiptsView({
@@ -615,7 +615,7 @@ function PhoneReceiptsView({
               <small>Uploaded von {receipt.uploadedByName}</small>
               <span>
                 {receipt.transaction === "—"
-                  ? "Nicht zugeordnet"
+                  ? "Unassigned"
                   : receipt.transaction}
               </span>
             </span>
@@ -653,7 +653,7 @@ function PhoneReceiptsView({
 
       <footer className={phoneStyles.footer} data-ui-slot="footer">
         <span>
-          <LoadingText loading={loading}>{rangeStart}-{rangeEnd} von {total}</LoadingText>
+          <LoadingText loading={loading}>{rangeStart}-{rangeEnd} by {total}</LoadingText>
         </span>
         <Pagination
           page={page}
@@ -738,7 +738,7 @@ export default function ReceiptsPage() {
             value: item.id,
             label: item.title,
             date: item.date ? formatReceiptDate(item.date) : "",
-            amount: `${Number(item.amountMinor) >= 0 ? "+" : "-"}${Math.abs(Number(item.amountMinor) / 100).toLocaleString("de-DE", { minimumFractionDigits: 2 })} €`,
+            amount: `${Number(item.amountMinor) >= 0 ? "+" : "-"}${Math.abs(Number(item.amountMinor) / 100).toLocaleString("en-GB", { minimumFractionDigits: 2 })} €`,
           })),
         ]);
       })
@@ -860,7 +860,7 @@ export default function ReceiptsPage() {
           ...item,
           file: fileName.trim(),
           transactionId: /^[0-9a-f-]{36}$/i.test(transaction) ? transaction : null,
-          transaction: availableTransactions.find((option) => option.value === transaction)?.label ?? "Nicht zugeordnet",
+          transaction: availableTransactions.find((option) => option.value === transaction)?.label ?? "Unassigned",
           status: transaction ? item.status : "Ohne Zuordnung",
         } : item));
         invalidateFinanceQuery("receipts", "transactions", "dashboard-snapshot", "report-snapshot", "report-kpis");
@@ -1122,8 +1122,8 @@ export default function ReceiptsPage() {
             <footer className={styles.pagination} data-ui-slot="footer">
               <span>
                 <LoadingText loading={loading}>{filtered.length
-                  ? `${(currentPage - 1) * pageSize + 1}–${Math.min(currentPage * pageSize, filtered.length)} von ${filtered.length}`
-                  : "0 von 0"}</LoadingText>
+                  ? `${(currentPage - 1) * pageSize + 1}–${Math.min(currentPage * pageSize, filtered.length)} by ${filtered.length}`
+                  : "0 by 0"}</LoadingText>
               </span>
               <Pagination
                 page={currentPage}

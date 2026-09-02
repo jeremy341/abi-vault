@@ -131,7 +131,7 @@ const fromIso = (value: string) => {
 const displayDate = (date: Date) =>
   `${String(date.getDate()).padStart(2, "0")}.${String(date.getMonth() + 1).padStart(2, "0")}.${date.getFullYear()}`;
 const displayAmount = (amount: number) =>
-  `${amount >= 0 ? "+" : "-"}${Math.abs(amount).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
+  `${amount >= 0 ? "+" : "-"}${Math.abs(amount).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
 
 type TrendDirection = "positive" | "negative" | "neutral";
 type Trend = { label: string; direction: TrendDirection };
@@ -147,7 +147,7 @@ function trendFor(current: number, previous: number, increaseIsPositive = true):
       ? "positive"
       : "negative";
   return {
-    label: `${change >= 0 ? "+" : "−"}${Math.abs(change).toLocaleString("de-DE", { maximumFractionDigits: 1 })} %`,
+    label: `${change >= 0 ? "+" : "−"}${Math.abs(change).toLocaleString("en-GB", { maximumFractionDigits: 1 })} %`,
     direction,
   };
 }
@@ -447,7 +447,7 @@ function PhoneTransactionsView({
 
       <footer className={phoneStyles.footer} data-ui-slot="footer">
         <span>
-          <LoadingText loading={loading}>{rangeStart}-{rangeEnd} von {totalResults}</LoadingText>
+          <LoadingText loading={loading}>{rangeStart}-{rangeEnd} by {totalResults}</LoadingText>
         </span>
         <Pagination
           page={page}
@@ -781,7 +781,7 @@ export default function TransactionsPage() {
         receiptType: null,
         createdByName: null,
         createdAt: new Date().toISOString(),
-        account: selectedCashRegister?.name ?? "Nicht zugeordnet",
+        account: selectedCashRegister?.name ?? "Unassigned",
         walletId: selectedCashRegisterId,
         tone: newType === "Einnahme" ? "green" : "violet",
         icon: newType === "Einnahme" ? HandCoins : FileText,
@@ -1171,7 +1171,7 @@ export default function TransactionsPage() {
 
             <footer className={styles.pagination} data-ui-slot="footer">
               <span>
-                <LoadingText loading={loading}>{rangeStart}–{rangeEnd} von {results.length}</LoadingText>
+                <LoadingText loading={loading}>{rangeStart}–{rangeEnd} by {results.length}</LoadingText>
               </span>
               <Pagination
                 page={currentPage}

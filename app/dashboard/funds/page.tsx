@@ -61,7 +61,7 @@ function formatCountDate(value: string) {
   const today = new Date();
   return date.toDateString() === today.toDateString()
     ? "Heute"
-    : date.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
+    : date.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
 function mapWalletToCashBox(wallet: WalletWithCount): CashBox {
@@ -90,7 +90,7 @@ function mapCashCountToAuditEntry(item: CashCountListItem): CashAuditEntry {
   };
 }
 
-const money = new Intl.NumberFormat("de-DE", {
+const money = new Intl.NumberFormat("en-GB", {
   style: "currency",
   currency: "EUR",
   minimumFractionDigits: 2,
@@ -552,7 +552,7 @@ export default function FundsPage() {
           </header>
           <div className={styles.confirmationBody}>
             <strong>{activeCard?.details.accountName}</strong>
-            <span>Ledger-basiert · Kartendarstellung</span>
+            <span>Ledger-basiert · Card display</span>
           </div>
           <footer className={styles.modalFooter}>
             <button

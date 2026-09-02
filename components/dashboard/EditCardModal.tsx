@@ -139,7 +139,7 @@ export default function EditCardModal({
       nextErrors.accountName = "Bitte einen Cash registersnamen eingeben.";
     }
     if (values.cardNumber.replace(/\D/g, "").length !== 16) {
-      nextErrors.cardNumber = "Die Kartennummer muss 16 Ziffern enthalten.";
+      nextErrors.cardNumber = "Die Card number muss 16 Ziffern enthalten.";
     }
     if (!values.holder.trim()) {
       nextErrors.holder = "Bitte den Card holder eingeben.";
@@ -204,7 +204,7 @@ export default function EditCardModal({
         </header>
 
         <div className={styles.body}>
-          <div className={styles.preview} aria-label="Kartenvorschau">
+          <div className={styles.preview} aria-label="Card preview">
             <AccountCard
               cardColor={selectedColor}
               details={{
@@ -219,7 +219,7 @@ export default function EditCardModal({
 
           <section className={styles.section} aria-labelledby="edit-card-colors">
             <h3 id="edit-card-colors" className={styles.sectionTitle}>
-              Kartenfarbe
+              Card color
             </h3>
             <div className={styles.colorOptions}>
               {cardColors.map((color) => (
@@ -243,7 +243,7 @@ export default function EditCardModal({
             aria-labelledby="edit-card-information"
           >
             <h3 id="edit-card-information" className={styles.sectionTitle}>
-              Karteninformationen
+              Card information
             </h3>
             <div className={styles.formGrid}>
               <Field
@@ -270,7 +270,7 @@ export default function EditCardModal({
                 />
               </Field>
               <Field
-                label="Kartennummer"
+                label="Card number"
                 error={errors.cardNumber}
                 errorId="edit-card-number-error"
               >

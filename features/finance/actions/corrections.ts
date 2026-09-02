@@ -45,7 +45,7 @@ export async function correctTransactionFromUi(
   if (originalError) return mapCorrectionError(originalError.code);
   if (!original) return actionFailure("NOT_FOUND", "Die Transaction wurde nicht gefunden.");
   if (context.role !== "admin" && original.created_by !== context.clerkUserId) {
-    return actionFailure("FORBIDDEN", "Nur der Ersteller oder ein Admin kann bearbeiten.");
+    return actionFailure("FORBIDDEN", "Only the creator or an admin can edit.");
   }
   if (original.status !== "posted") return actionFailure("CONFLICT", "This transaction can no longer be changed.");
 
@@ -94,7 +94,7 @@ export async function archiveTransaction(
   input: TransactionArchiveInput,
 ): Promise<ActionResult<null>> {
   const parsed = transactionArchiveSchema.safeParse(input);
-  if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "Ein Archivierungsgrund ist erforderlich.");
+  if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "An archive reason is required.");
   const context = await requirePermission("archiveFinanceRecords");
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.rpc("archive_transaction", {

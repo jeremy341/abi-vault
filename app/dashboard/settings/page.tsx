@@ -224,7 +224,7 @@ function PhoneSettingsView({
         <section className={phoneStyles.section}>
           <div className={phoneStyles.sectionTitle}>
             <h3>Rollen & Zugriffe</h3>
-            <p>Wer Daten bearbeiten oder ansehen darf.</p>
+            <p>Who can edit or view data.</p>
           </div>
           <div className={phoneStyles.permissionList}>
             <div className={phoneStyles.permission}>

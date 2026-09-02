@@ -888,7 +888,7 @@ function PhoneAccountCard(props: AdaptiveFundsViewProps) {
         <div className={styles.phoneAccountSummary}>
           <span>
             <strong>{props.activeCard.details.accountName}</strong>
-            <small>Kartendarstellung</small>
+            <small>Card display</small>
           </span>
           <b>{props.euro(props.activeCard.balance)}</b>
         </div>

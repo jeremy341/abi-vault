@@ -43,7 +43,7 @@ function formatTimestamp(value: string | null | undefined) {
   const date = new Date(value);
   return Number.isNaN(date.getTime())
     ? value
-    : date.toLocaleString("de-DE", { dateStyle: "medium", timeStyle: "short" });
+    : date.toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" });
 }
 
 export function ReceiptReviewDialog({
@@ -80,7 +80,7 @@ export function ReceiptReviewDialog({
           <div className={styles.previewState} role="status">Receipt wird geladen…</div>
         ) : previewUrl ? (
           isPdf ? (
-            <iframe title={`Vorschau von ${receipt.file}`} src={previewUrl} />
+            <iframe title={`Vorschau by ${receipt.file}`} src={previewUrl} />
           ) : (
             <>
               {/* Signed storage URLs are runtime-specific, so this preview remains a native image. */}
@@ -116,7 +116,7 @@ export function ReceiptReviewDialog({
       {error ? <p className={styles.error} role="alert">{error}</p> : null}
 
       <footer className={styles.footer}>
-        <span className={styles.footerHint}>Entscheidung speichern</span>
+        <span className={styles.footerHint}>Save decision</span>
         <div className={styles.actions}>
           {(["pending", "rejected", "approved"] as const).map((decision) => (
             <button

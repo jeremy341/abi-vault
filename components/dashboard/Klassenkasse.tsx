@@ -143,7 +143,7 @@ export default function Klassenkasse() {
                   2.850,75 €
                 </strong>
                 <p className={dashboardStyles.cashBalanceMeta}>
-                  Kartendarstellung · Ledger-basiert
+                  Card display · Ledger-basiert
                 </p>
               </>
             ) : (
@@ -212,7 +212,7 @@ function CardPreviewDialog({
             >
               {card.details?.accountName ?? "Cash register"}
             </h2>
-            <p className="mt-1 text-sm text-muted-foreground">Kartenvorschau</p>
+            <p className="mt-1 text-sm text-muted-foreground">Card preview</p>
           </div>
           <button
             type="button"

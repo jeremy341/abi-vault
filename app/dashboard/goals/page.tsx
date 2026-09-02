@@ -32,12 +32,12 @@ type Goal = {
   date: string;
 };
 
-const euro = new Intl.NumberFormat("de-DE", {
+const euro = new Intl.NumberFormat("en-GB", {
   style: "currency",
   currency: "EUR",
   maximumFractionDigits: 0,
 });
-const euroPrecise = new Intl.NumberFormat("de-DE", {
+const euroPrecise = new Intl.NumberFormat("en-GB", {
   style: "currency",
   currency: "EUR",
   minimumFractionDigits: 2,
@@ -65,7 +65,7 @@ function PhoneGoalsView({
       <section className={phoneStyles.hero} aria-label="Gesamtfortschritt" data-ui-slot="summary">
         <span>Gesamt gespart</span>
         <strong><LoadingText loading={loading}>{euro.format(totalSaved)}</LoadingText></strong>
-        <p>von <LoadingText loading={loading}>{euro.format(totalTarget)}</LoadingText></p>
+        <p>by <LoadingText loading={loading}>{euro.format(totalTarget)}</LoadingText></p>
         <div className={phoneStyles.heroProgress}>
           <b><LoadingText loading={loading}>{progress}%</LoadingText></b>
           <span>erreicht</span>
@@ -125,7 +125,7 @@ export default function GoalsPage() {
       target,
       saved,
       progress: target ? Math.round((saved / target) * 100) : 0,
-      date: new Date(`${goal.deadline}T00:00:00`).toLocaleDateString("de-DE"),
+      date: new Date(`${goal.deadline}T00:00:00`).toLocaleDateString("en-GB"),
     };
   }));
   const [loading, setLoading] = useState(!initialSnapshot.data?.ok);
@@ -158,7 +158,7 @@ export default function GoalsPage() {
             target,
             saved,
             progress: target ? Math.round((saved / target) * 100) : 0,
-            date: new Date(`${goal.deadline}T00:00:00`).toLocaleDateString("de-DE"),
+            date: new Date(`${goal.deadline}T00:00:00`).toLocaleDateString("en-GB"),
           };
         }));
       })
@@ -482,7 +482,7 @@ export default function GoalsPage() {
                 </div>
                 <div className={styles.progressStats}>
                   <span><LoadingText loading={loading}>{euroPrecise.format(totalSaved)} gespart</LoadingText></span>
-                  <span>von <LoadingText loading={loading}>{euro.format(totalTarget)}</LoadingText></span>
+                  <span>by <LoadingText loading={loading}>{euro.format(totalTarget)}</LoadingText></span>
                 </div>
               </article>
 

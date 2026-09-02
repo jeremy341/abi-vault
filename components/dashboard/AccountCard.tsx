@@ -28,7 +28,7 @@ export default function AccountCard({
   const cardNumber = details?.cardNumber
     ? maskCardNumber(details.cardNumber)
     : "•••• •••• •••• ••••";
-  const holder = details?.holder || "Nicht festgelegt";
+  const holder = details?.holder || "Not set";
   const expiry = details?.expiry || "—";
   const isLightCard = cardColor === "#e9e9e7";
   function handlePointerMove(event: React.PointerEvent<HTMLDivElement>) {

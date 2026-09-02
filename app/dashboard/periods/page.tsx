@@ -8,7 +8,7 @@ import { listAccountingPeriodsForCurrentOrganization, type AccountingPeriodListI
 import { lockAccountingPeriod, unlockAccountingPeriod } from "@/features/finance/actions/wallets";
 import styles from "./periods.module.css";
 
-const monthFormatter = new Intl.DateTimeFormat("de-DE", { month: "long", year: "numeric" });
+const monthFormatter = new Intl.DateTimeFormat("en-GB", { month: "long", year: "numeric" });
 
 function periodLabel(period: AccountingPeriodListItem) {
   return monthFormatter.format(new Date(period.year, period.month - 1, 1));
@@ -54,7 +54,7 @@ export default function PeriodsPage() {
     else {
       setPeriods((current) => current.map((period) => period.id === target.id ? { ...period, status: target.status === "open" ? "locked" : "open" } : period));
       setTarget(null);
-      setMessage(`${periodLabel(target)} wurde ${target.status === "open" ? "gesperrt" : "entsperrt"}.`);
+      setMessage(`${periodLabel(target)} was ${target.status === "open" ? "locked" : "unlocked"}.`);
     }
     setSaving(false);
   }

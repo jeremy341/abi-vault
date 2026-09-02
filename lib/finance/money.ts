@@ -20,5 +20,5 @@ export function formatMinorEuro(amountMinor: bigint) {
   const whole = absolute / BigInt(100);
   const fraction = String(absolute % BigInt(100)).padStart(2, "0");
 
-  return `${sign}${whole.toLocaleString("de-DE")},${fraction} €`;
+  return `${sign}€${whole.toLocaleString("en-GB")}.${fraction}`;
 }

@@ -140,7 +140,7 @@ export async function archiveReceipt(
   input: ReceiptArchiveInput,
 ): Promise<ActionResult<null>> {
   const parsed = receiptArchiveSchema.safeParse(input);
-  if (!parsed.success) return invalidReceipt("Ein Archivierungsgrund ist erforderlich.");
+  if (!parsed.success) return invalidReceipt("An archive reason is required.");
   const context = await requirePermission("archiveFinanceRecords");
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.rpc("archive_receipt", {

@@ -1,9 +1,9 @@
 insert into public.committees (organization_id, name)
-values ('org_local_demo', 'Abi 2026')
+values ('org_local_demo', 'Class of 2026')
 on conflict (organization_id) do nothing;
 
 insert into public.committee_settings (organization_id, school_name, graduation_year, notifications)
-values ('org_local_demo', 'Musterschule Berlin', 2026, '{"receipts": true, "payments": true, "goals": false}'::jsonb)
+values ('org_local_demo', 'Example School Berlin', 2026, '{"receipts": true, "payments": true, "goals": false}'::jsonb)
 on conflict (organization_id) do nothing;
 
 insert into public.profiles (clerk_user_id, display_name, email)
@@ -78,7 +78,7 @@ join public.wallets wallet
 join public.accounting_periods period
   on period.organization_id = 'org_local_demo' and period.year = 2026 and period.month = 8
 where category.organization_id = 'org_local_demo'
-  and category.name = 'Material'
+  and category.name = 'Materials'
   and category.kind = 'expense'
 on conflict (organization_id, idempotency_key) do nothing;
 

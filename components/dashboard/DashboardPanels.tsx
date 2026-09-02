@@ -120,7 +120,7 @@ export const dashboardGoals = [
 export const dashboardCategories = [
   {
     title: "Veranstaltung",
-    amount: "1.740,00 € von 3.000,00 €",
+    amount: "1.740,00 € by 3.000,00 €",
     progress: 58,
     color: "bg-black dark:bg-white",
     bubble: "bg-black/[0.04] text-ink dark:bg-white/[0.08]",
@@ -128,7 +128,7 @@ export const dashboardCategories = [
   },
   {
     title: "Material",
-    amount: "384,90 € von 1.200,00 €",
+    amount: "384,90 € by 1.200,00 €",
     progress: 32,
     color: "bg-[var(--ui-positive)]",
     bubble:
@@ -137,7 +137,7 @@ export const dashboardCategories = [
   },
   {
     title: "Sonstiges",
-    amount: "185,50 € von 1.000,00 €",
+    amount: "185,50 € by 1.000,00 €",
     progress: 10,
     color: "bg-[var(--ui-warning)]",
     bubble:

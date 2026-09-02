@@ -28,7 +28,7 @@ import { InlineLoading, LoadingCollection, LoadingStatus, LoadingText } from "@/
 import { mapWalletToCashRegisterCard, type CashRegisterWallet } from "@/lib/finance/cash-register-card";
 
 function displayMinor(value: string) {
-  return (Number(value) / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
+  return (Number(value) / 100).toLocaleString("en-GB", { style: "currency", currency: "EUR" });
 }
 
 function formatLastTransaction(date: string | undefined) {
@@ -37,7 +37,7 @@ function formatLastTransaction(date: string | undefined) {
   if (Number.isNaN(parsed.getTime())) return "No transactions yet";
 
   const days = Math.max(0, Math.floor((Date.now() - parsed.getTime()) / 86_400_000));
-  const time = parsed.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+  const time = parsed.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
   if (days === 0) return `${time}, heute`;
   if (days === 1) return `${time}, vor 1 Tag`;
   return `${time}, vor ${days} Tagen`;
@@ -62,10 +62,10 @@ function displayDashboardGoals(snapshot: DashboardSnapshot | null) {
     const saved = Number(goal.saved_amount_minor) / 100;
     return {
       title: goal.title,
-      target: target.toLocaleString("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }),
-      saved: `${saved.toLocaleString("de-DE", { style: "currency", currency: "EUR" })} gesammelt`,
+      target: target.toLocaleString("en-GB", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }),
+      saved: `${saved.toLocaleString("en-GB", { style: "currency", currency: "EUR" })} gesammelt`,
       progress: target ? Math.round((saved / target) * 100) : 0,
-      date: new Date(`${goal.deadline}T00:00:00`).toLocaleDateString("de-DE"),
+      date: new Date(`${goal.deadline}T00:00:00`).toLocaleDateString("en-GB"),
     };
   });
 }
@@ -156,7 +156,7 @@ function DesktopDashboard({ snapshot, loading, error }: { snapshot: DashboardSna
     <section className={desktopStyles.page} aria-label="Financial overview" aria-busy={loading}>
       <LoadingStatus loading={loading} label="Financial overview wird geladen…" />
       {error ? <p className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{error}</p> : null}
-      <div className={desktopStyles.metrics} aria-label="Finanzkennzahlen" data-ui-slot="summary">
+      <div className={desktopStyles.metrics} aria-label="Financial metrics" data-ui-slot="summary">
         <div>
           <span>Total available</span>
           <strong><LoadingText loading={loading}>{displayMinor(String(cashBalance))}</LoadingText></strong>
@@ -369,7 +369,7 @@ function TabletDashboard({ snapshot, loading, error }: { snapshot: DashboardSnap
     <section className={styles.tabletPage} aria-busy={loading}>
       <LoadingStatus loading={loading} label="Financial overview wird geladen…" />
       {error ? <p className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{error}</p> : null}
-      <div className={styles.tabletMetricStrip} aria-label="Finanzkennzahlen" data-ui-slot="summary">
+      <div className={styles.tabletMetricStrip} aria-label="Financial metrics" data-ui-slot="summary">
         <div className={styles.tabletMetric}>
           <span>cash balance</span>
           <strong><LoadingText loading={loading}>{displayMinor(String(cashBalance))}</LoadingText></strong>

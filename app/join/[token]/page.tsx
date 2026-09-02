@@ -20,7 +20,7 @@ export default function JoinPage({ params }: { params: Promise<{ token: string }
         if (active) setToken(inviteToken);
       })
       .catch(() => {
-        if (active) setMessage("Der Einladungslink konnte nicht geladen werden.");
+        if (active) setMessage("The invitation link could not be loaded.");
       });
     return () => {
       active = false;
@@ -49,7 +49,7 @@ export default function JoinPage({ params }: { params: Promise<{ token: string }
         }
       })
       .catch(() => {
-        if (active) setMessage("Der Einladungslink konnte nicht angenommen werden.");
+        if (active) setMessage("The invitation link could not be accepted.");
       });
     return () => {
       active = false;

@@ -1,7 +1,7 @@
 "use client";
 
 import { ClerkProvider } from "@clerk/nextjs";
-import { deDE } from "@clerk/localizations/de-DE";
+import { enGB } from "@clerk/localizations/en-GB";
 import type { ReactNode } from "react";
 import { useTheme } from "@/components/theme-provider";
 import { ClerkAuthBridge, LocalAuthProvider } from "@/components/auth/app-auth";
@@ -22,7 +22,7 @@ export default function ClerkThemeProvider({
 
   return (
     <ClerkProvider
-      localization={deDE}
+      localization={enGB}
       appearance={getClerkAppearance(dark)}
     >
       <ClerkAuthBridge>{children}</ClerkAuthBridge>

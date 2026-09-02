@@ -82,7 +82,7 @@ const analysisChartConfig = {
   target: { label: "Goal", color: "#a1a1aa" },
 } satisfies ChartConfig;
 
-const money = new Intl.NumberFormat("de-DE", {
+const money = new Intl.NumberFormat("en-GB", {
   style: "currency",
   currency: "EUR",
   minimumFractionDigits: 2,
@@ -276,7 +276,7 @@ function PhoneReportsView({
           </section>
           <section className={phoneStyles.section}>
             <header className={phoneStyles.sectionHeader}>
-              <h2>Finanzprofil</h2>
+              <h2>Financial profile</h2>
               <span>Aktuell</span>
             </header>
             <div className={phoneStyles.rows}>
@@ -414,7 +414,7 @@ export default function ReportsPage() {
           setKpiError("Review data could not be loaded.");
           return;
         }
-        const format = (minor: string | number) => (Number(minor) / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
+        const format = (minor: string | number) => (Number(minor) / 100).toLocaleString("en-GB", { style: "currency", currency: "EUR" });
         const net = Number(result.netMinor) / 100;
         setReportKpis({
           income: format(result.liquidMinor),
@@ -454,7 +454,7 @@ export default function ReportsPage() {
     link.download = result.filename;
     link.click();
     URL.revokeObjectURL(url);
-    setExportMessage(`${format}-Export wurde heruntergeladen.`);
+    setExportMessage(`${format}-Export was heruntergeladen.`);
   }
 
   if (mode === "phone") {
@@ -599,8 +599,8 @@ export default function ReportsPage() {
                       tickFormatter={(value) => {
                         const numericValue = Number(value);
                         return numericValue >= 1000
-                          ? `${(numericValue / 1000).toLocaleString("de-DE", { maximumFractionDigits: 1 })}k €`
-                          : `${numericValue.toLocaleString("de-DE")} €`;
+                          ? `${(numericValue / 1000).toLocaleString("en-GB", { maximumFractionDigits: 1 })}k €`
+                          : `${numericValue.toLocaleString("en-GB")} €`;
                       }}
                     />
                     <ChartTooltip
@@ -684,7 +684,7 @@ export default function ReportsPage() {
                           <div>
                             <strong>{goal.name}</strong>
                             <span>
-                              {money.format(goal.saved)} von{" "}
+                              {money.format(goal.saved)} by{" "}
                               {money.format(goal.target)}
                             </span>
                           </div>
@@ -785,7 +785,7 @@ export default function ReportsPage() {
                       axisLine={false}
                       width={50}
                       tickFormatter={(value) =>
-                        `${(Number(value) / 1000).toLocaleString("de-DE", { maximumFractionDigits: 1 })}k €`
+                        `${(Number(value) / 1000).toLocaleString("en-GB", { maximumFractionDigits: 1 })}k €`
                       }
                     />
                     <ChartTooltip content={<ChartTooltipContent />} />
@@ -880,7 +880,7 @@ export default function ReportsPage() {
                       axisLine={false}
                       width={50}
                       tickFormatter={(value) =>
-                        `${(Number(value) / 1000).toLocaleString("de-DE", { maximumFractionDigits: 1 })}k €`
+                        `${(Number(value) / 1000).toLocaleString("en-GB", { maximumFractionDigits: 1 })}k €`
                       }
                     />
                     <ChartTooltip content={<ChartTooltipContent />} />

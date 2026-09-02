@@ -275,7 +275,7 @@ export default function PeoplePage() {
     event.preventDefault();
     if (inviteSaving) return;
     if (!inviteEmail.trim()) {
-      setMessage("Bitte eine E-Mail-Adresse eingeben.");
+      setMessage("Please eine E-Mail-Adresse eingeben.");
       return;
     }
     setInviteSaving(true);
@@ -341,13 +341,13 @@ export default function PeoplePage() {
     try {
       const result = await createRoleInviteLink({ role });
       if (!result.ok) {
-        setMessage("Der Einladungslink konnte nicht erstellt werden.");
+        setMessage("The invitation link could not be created.");
         return;
       }
       setRoleLinks((current) => ({ ...current, [role]: result }));
       setMessage(`${role === "admin" ? "Admin" : "Supervisor"}-Link erstellt.`);
     } catch {
-      setMessage("Der Einladungslink konnte nicht erstellt werden.");
+      setMessage("The invitation link could not be created.");
     } finally {
       setLinkSaving(null);
     }
@@ -439,7 +439,7 @@ export default function PeoplePage() {
                   value={query}
                   disabled={loading}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Nach Name oder Rolle suchen …"
+                  placeholder="Search by name or role …"
                 />
               </div>
               <div className={styles.peopleList} data-ui-slot="list-body">

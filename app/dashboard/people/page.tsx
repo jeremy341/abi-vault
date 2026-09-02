@@ -85,7 +85,7 @@ function PhonePeopleView({
             value={query}
             disabled={loading}
             onChange={(event) => onQueryChange(event.target.value)}
-            placeholder="Name oder Rolle …"
+            placeholder="Name or role …"
           />
         </label>
         <button
@@ -104,7 +104,7 @@ function PhonePeopleView({
         <span>Abi 2026</span>
       </header>
       <div className={phoneStyles.people} data-ui-slot="list-body">
-        <LoadingCollection loading={loading} knownItemCount={people.length} emptyHeight="12rem" label="Memberer werden geladen…">
+        <LoadingCollection loading={loading} knownItemCount={people.length} emptyHeight="12rem" label="Members are loading…">
           {people.length ? people.map((person) => (
             <article className={phoneStyles.person} key={person.id}>
               <span className={phoneStyles.avatar}>{person.initials}</span>
@@ -166,7 +166,7 @@ export default function PeoplePage() {
       .then((result) => {
         if (!active) return;
         if (!result.ok) {
-          setLoadError("Die Memberer konnten nicht geladen werden.");
+          setLoadError("The members could not be loaded.");
           return;
         }
         setPeople(result.items.map((member) => ({
@@ -179,7 +179,7 @@ export default function PeoplePage() {
         })));
       })
       .catch(() => {
-        if (active) setLoadError("Die Memberer konnten nicht geladen werden.");
+        if (active) setLoadError("The members could not be loaded.");
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -242,12 +242,12 @@ export default function PeoplePage() {
         reason: "Role changed through member management",
       });
       if (!result.ok) {
-        setMessage("Die Rolle konnte nicht aktualisiert werden.");
+        setMessage("The role could not be updated.");
         setOpenMenuId(null);
         return;
       }
       } catch {
-        setMessage("Die Rolle konnte nicht aktualisiert werden.");
+        setMessage("The role could not be updated.");
         setOpenMenuId(null);
       } finally {
         setBusyPersonId(null);
@@ -275,7 +275,7 @@ export default function PeoplePage() {
     event.preventDefault();
     if (inviteSaving) return;
     if (!inviteEmail.trim()) {
-      setMessage("Please eine E-Mail-Adresse eingeben.");
+      setMessage("Please enter an email address.");
       return;
     }
     setInviteSaving(true);
@@ -317,7 +317,7 @@ export default function PeoplePage() {
       if (!result.ok) {
         setMessage(
           result.error === "LAST_ADMIN_REQUIRED"
-            ? "Der letzte Administrator kann nicht entfernt werden."
+            ? "The last administrator cannot be removed."
             : "The person could not be removed.",
         );
         setOpenMenuId(null);
@@ -362,7 +362,7 @@ export default function PeoplePage() {
 
   return (
     <section className={mode === "phone" ? phoneStyles.pageShell : styles.page} aria-busy={loading}>
-      <LoadingStatus loading={loading} label="Memberer werden geladen…" />
+      <LoadingStatus loading={loading} label="Members are loading…" />
       {loadError ? <p className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{loadError}</p> : null}
       {mode === "phone" ? (
         <PhonePeopleView
@@ -416,7 +416,7 @@ export default function PeoplePage() {
               <header className={styles.panelHeader}>
                 <div>
                   <h2>Memberer</h2>
-                  <p>People und Rollen in eurem Workspace.</p>
+                  <p>People and roles in your workspace.</p>
                 </div>
                 <button
                   type="button"
@@ -443,7 +443,7 @@ export default function PeoplePage() {
                 />
               </div>
               <div className={styles.peopleList} data-ui-slot="list-body">
-                <LoadingCollection loading={loading} knownItemCount={people.length} emptyHeight="16rem" label="Memberer werden geladen…">
+                <LoadingCollection loading={loading} knownItemCount={people.length} emptyHeight="16rem" label="Members are loading…">
                   {filteredPeople.map((person) => (
                     <div className={styles.personRow} key={person.id}>
                       <span className={styles.avatar}>{person.initials}</span>
@@ -521,7 +521,7 @@ export default function PeoplePage() {
                 <header className={styles.panelHeader}>
                   <div>
                     <h2>Rollen</h2>
-                    <p>Overview der Permissions.</p>
+                    <p>Overview of permissions.</p>
                   </div>
                   <ShieldCheck aria-hidden="true" />
                 </header>
@@ -532,7 +532,7 @@ export default function PeoplePage() {
                     </span>
                     <span>
                       <strong>Administrator</strong>
-                      <small>Vollzugriff auf alles</small>
+                      <small>Full access to everything</small>
                     </span>
                     <b>
                       {
@@ -576,7 +576,7 @@ export default function PeoplePage() {
                 <header className={styles.panelHeader}>
                   <div>
                     <h2>Invitation links</h2>
-                    <p>Teile einen Link, ohne E-Mail-Adressen zu sammeln.</p>
+                    <p>Share a link without collecting email addresses.</p>
                   </div>
                   <Link2 aria-hidden="true" />
                 </header>
@@ -617,7 +617,7 @@ export default function PeoplePage() {
                   <div>
                     <strong>Gemeinsam organisiert</strong>
                     <span>
-                      All Memberer arbeiten im selben Finanzbereich.
+                      All members work in the same financial area.
                     </span>
                   </div>
                   <div className={styles.activityStat}>

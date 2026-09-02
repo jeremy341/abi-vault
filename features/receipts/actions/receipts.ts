@@ -34,7 +34,7 @@ export async function uploadReceipt(
   const file = formData.get("file");
   const transactionValue = formData.get("transactionId");
 
-  if (!(file instanceof File)) return invalidReceipt("Eine Receiptdatei ist erforderlich.");
+  if (!(file instanceof File)) return invalidReceipt("A receipt file is required.");
   if (file.size > 5 * 1024 * 1024) return invalidReceipt("The receipt must be no larger than 5 MB.");
 
   const parsed = receiptMetadataSchema.safeParse({
@@ -53,7 +53,7 @@ export async function uploadReceipt(
       .eq("id", parsed.data.transactionId)
       .eq("organization_id", context.organizationId)
       .maybeSingle();
-    if (error || !transaction) return actionFailure("NOT_FOUND", "Die Transaction wurde nicht gefunden.");
+    if (error || !transaction) return actionFailure("NOT_FOUND", "The transaction was not found.");
     const period = Array.isArray(transaction.accounting_periods)
       ? transaction.accounting_periods[0]
       : transaction.accounting_periods;
@@ -72,7 +72,7 @@ export async function uploadReceipt(
       contentType: parsed.data.mimeType,
       upsert: false,
     });
-  if (uploadError) return actionFailure("DATABASE_ERROR", "Der Receipt konnte nicht hochgeladen werden.");
+  if (uploadError) return actionFailure("DATABASE_ERROR", "The receipt could not be uploaded.");
 
   const { error: metadataError } = await supabase.rpc("create_receipt_metadata", {
     p_organization_id: context.organizationId,
@@ -86,7 +86,7 @@ export async function uploadReceipt(
 
   if (metadataError) {
     await createSupabaseAdminClient().storage.from("receipts").remove([storagePath]);
-    return actionFailure("DATABASE_ERROR", "Die Receiptdaten konnten nicht gespeichert werden.");
+    return actionFailure("DATABASE_ERROR", "The receipt data could not be saved.");
   }
 
   return actionSuccess({ id: receiptId });
@@ -128,10 +128,10 @@ export async function updateReceiptMetadata(
     p_transaction_id: parsed.data.transactionId,
   });
   if (error) {
-    if (error.code === "42501") return actionFailure("FORBIDDEN", "Nur der Uploader oder ein Admin kann den Edit receipt.");
+    if (error.code === "42501") return actionFailure("FORBIDDEN", "Only the uploader or an admin can edit the receipt.");
     if (error.code === "23503") return actionFailure("NOT_FOUND", "The receipt is no longer available.");
     if (error.code === "55000") return actionFailure("PERIOD_LOCKED", "The receipt cannot be changed for this transaction.");
-    return actionFailure("DATABASE_ERROR", "Der Receipt konnte nicht gespeichert werden.");
+    return actionFailure("DATABASE_ERROR", "The receipt could not be saved.");
   }
   return actionSuccess(null);
 }
@@ -152,7 +152,7 @@ export async function archiveReceipt(
   if (error) {
     if (error.code === "42501") return actionFailure("FORBIDDEN", "Only admins can archive receipts.");
     if (error.code === "23503") return actionFailure("NOT_FOUND", "The receipt is no longer available.");
-    return actionFailure("DATABASE_ERROR", "Der Receipt konnte nicht archiviert werden.");
+    return actionFailure("DATABASE_ERROR", "The receipt could not be archived.");
   }
   return actionSuccess(null);
 }
@@ -172,13 +172,13 @@ export async function createReceiptDownloadUrl(
     .eq("organization_id", context.organizationId)
     .is("archived_at", null)
     .maybeSingle();
-  if (error || !receipt) return actionFailure("NOT_FOUND", "Der Receipt wurde nicht gefunden.");
+  if (error || !receipt) return actionFailure("NOT_FOUND", "The receipt was not found.");
 
   const { data: signed, error: signedError } = await supabase.storage
     .from("receipts")
     .createSignedUrl(receipt.storage_path, 300);
   if (signedError || !signed?.signedUrl) {
-    return actionFailure("DATABASE_ERROR", "Die Receipt-URL konnte nicht erstellt werden.");
+    return actionFailure("DATABASE_ERROR", "The receipt URL could not be created.");
   }
 
   return actionSuccess({ url: signed.signedUrl });

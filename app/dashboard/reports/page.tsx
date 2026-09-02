@@ -117,7 +117,7 @@ function PhoneReportsView({
   const periodLabel = period === "3-monate"
     ? "3 Monate"
     : period === "jahr"
-      ? "Dieses Jahr"
+      ? "This year"
       : "6 Monate";
 
   return (
@@ -177,7 +177,7 @@ function PhoneReportsView({
               options={[
                 { value: "3-monate", label: "Letzte 3 Monate" },
                 { value: "6-monate", label: "Letzte 6 Monate" },
-                { value: "jahr", label: "Dieses Jahr" },
+                { value: "jahr", label: "This year" },
               ]}
             />
           </div>
@@ -333,7 +333,7 @@ function PhoneReportsView({
           </header>
           <div className={phoneStyles.exportGrid}>
             {[
-              ["PDF", "PDF-Bericht", "For filing and approval", FileText],
+              ["PDF", "PDF report", "For filing and approval", FileText],
               [
                 "Excel",
                 "Excel-File",
@@ -343,7 +343,7 @@ function PhoneReportsView({
               [
                 "Review log",
                 "Review log",
-                "Opene und erledigte items",
+                "Open and completed items",
                 ShieldCheck,
               ],
             ].map(([format, title, description, Icon]) => {
@@ -379,7 +379,7 @@ export default function ReportsPage() {
   const { userId, orgId } = useAppAuth();
   const cacheScope = `${orgId ?? "no-org"}:${userId ?? "anonymous"}`;
   const [period, setPeriod] = useState("6-monate");
-  const [category, setCategory] = useState("alle-kategorien");
+  const [category, setCategory] = useState("all-categories");
   const [exportMessage, setExportMessage] = useState("");
   const { snapshot: reportSnapshot, loading: snapshotLoading, error: snapshotError } = useReportSnapshot();
   const liveCashflowData = reportSnapshot?.cashflow ?? [];
@@ -439,7 +439,7 @@ export default function ReportsPage() {
 
   async function prepareExport(format: string) {
     if (format === "PDF") {
-      setExportMessage("PDF-Export ist noch nicht aktiviert.");
+      setExportMessage("PDF export is not enabled yet.");
       return;
     }
     const result = await exportReport(format === "Review log" ? "Review log" : "Excel");
@@ -479,7 +479,7 @@ export default function ReportsPage() {
   return (
     <TooltipProvider>
       <section className={styles.page} aria-busy={loading}>
-        <LoadingStatus loading={loading} label="Reports werden geladen…" />
+        <LoadingStatus loading={loading} label="Reports are loading…" />
         {reportError ? <p className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{reportError}</p> : null}
         <Tabs defaultValue="overview" className={styles.reportWorkspace}>
           <header className={styles.referenceTabsHeader}>
@@ -496,21 +496,21 @@ export default function ReportsPage() {
               <AnalysisKpi
                 label="Net"
                 value={reportKpis.net}
-                meta="Aus den aktuellen Ledger-Daten"
+                meta="From the current ledger data"
                 positive
                 loading={loading}
               />
               <AnalysisKpi
                 label="Liquidity"
                 value={reportKpis.income}
-                meta="Aus den aktuellen Ledger-Daten"
+                meta="From the current ledger data"
                 positive
                 loading={loading}
               />
               <AnalysisKpi
                 label="Expenses"
                 value={reportKpis.expenses}
-                meta="Aus den aktuellen Ledger-Daten"
+                meta="From the current ledger data"
                 loading={loading}
               />
               <AnalysisKpi
@@ -527,7 +527,7 @@ export default function ReportsPage() {
                 onChange={setPeriod}
                 options={[
                   { value: "6-monate", label: "Letzte 6 Monate" },
-                  { value: "abi-jahr", label: "Abi-Jahr 2026" },
+                  { value: "abi-jahr", label: "Abi year 2026" },
                   { value: "gesamt", label: "Gesamter Zeitraum" },
                 ]}
               />
@@ -536,7 +536,7 @@ export default function ReportsPage() {
                 value={category}
                 onChange={setCategory}
                 options={[
-                  { value: "alle-kategorien", label: "All categories" },
+                  { value: "all-categories", label: "All categories" },
                   { value: "veranstaltung", label: "Veranstaltung" },
                   { value: "material", label: "Material" },
                   { value: "sonstiges", label: "Sonstiges" },
@@ -557,7 +557,7 @@ export default function ReportsPage() {
                 <header className={styles.panelHeader}>
                   <div>
                     <h3>Cashflow</h3>
-                    <p>Monatliche Income und Expenses</p>
+                    <p>Monthly income and expenses</p>
                   </div>
                   <Tooltip>
                     <TooltipTrigger
@@ -642,7 +642,7 @@ export default function ReportsPage() {
                 <article className={styles.categoryPanel}>
                   <header className={styles.panelHeader}>
                     <div>
-                      <h3>Expenses nach Category</h3>
+                      <h3>Expenses by category</h3>
                       <p>Aktueller Zeitraum</p>
                     </div>
                   </header>
@@ -671,7 +671,7 @@ export default function ReportsPage() {
                   <header className={styles.panelHeader}>
                     <div>
                       <h3>Goal contributions</h3>
-                      <p>Finanzierung der aktuellen Sparziele</p>
+                      <p>Funding for current savings goals</p>
                     </div>
                   </header>
                   <div className={styles.goalList}>
@@ -706,19 +706,19 @@ export default function ReportsPage() {
               <AnalysisKpi
                 label="Net"
                 value={reportKpis.net}
-                meta="Aus den aktuellen Ledger-Daten"
+                meta="From the current ledger data"
                 positive
               />
               <AnalysisKpi
                 label="Liquidity"
                 value={reportKpis.income}
-                meta="Aus den aktuellen Ledger-Daten"
+                meta="From the current ledger data"
                 positive
               />
               <AnalysisKpi
                 label="Expenses"
                 value={reportKpis.expenses}
-                meta="Aus den aktuellen Ledger-Daten"
+                meta="From the current ledger data"
               />
               <AnalysisKpi
                 label="Review needed"
@@ -733,7 +733,7 @@ export default function ReportsPage() {
                 onChange={setPeriod}
                 options={[
                   { value: "6-monate", label: "Jan - Jun 2026" },
-                  { value: "abi-jahr", label: "Abi-Jahr 2026" },
+                  { value: "abi-jahr", label: "Abi year 2026" },
                   { value: "gesamt", label: "Gesamter Zeitraum" },
                 ]}
               />
@@ -742,7 +742,7 @@ export default function ReportsPage() {
                 value={category}
                 onChange={setCategory}
                 options={[
-                  { value: "alle-kategorien", label: "All categories" },
+                  { value: "all-categories", label: "All categories" },
                   { value: "veranstaltung", label: "All categories" },
                   { value: "material", label: "Material" },
                 ]}
@@ -752,7 +752,7 @@ export default function ReportsPage() {
                 className={styles.resetButton}
                 onClick={() => {
                   setPeriod("6-monate");
-                  setCategory("alle-kategorien");
+                  setCategory("all-categories");
                 }}
               >
                 Reset filters
@@ -803,8 +803,8 @@ export default function ReportsPage() {
               </ChartPanel>
 
               <ChartPanel
-                title="Expenses nach Category"
-                subtitle="Verteilung im Berichtszeitraum"
+                title="Expenses by category"
+                subtitle="Distribution during the reporting period"
               >
                 <div className={styles.donutLayout}>
                   <ChartContainer
@@ -905,7 +905,7 @@ export default function ReportsPage() {
 
               <ChartPanel
                 title="Finanzprofil"
-                subtitle="Aktuell im Vergleich zum Goal"
+                subtitle="Current compared with the goal"
               >
                 <ChartContainer
                   config={analysisChartConfig}
@@ -951,7 +951,7 @@ export default function ReportsPage() {
               <article>
                 <span>Opene Receipts</span>
                 <strong><LoadingText loading={loading}>{reportKpis.review}</LoadingText></strong>
-                <small>Warten auf Review</small>
+                <small>Waiting for review</small>
               </article>
               <article>
                 <span>Ohne Zuordnung</span>
@@ -969,7 +969,7 @@ export default function ReportsPage() {
                 <header className={styles.reviewSectionHeader}>
                   <div>
                     <h3>Opene items</h3>
-                    <p>Arbeite die wichtigsten Reviewen der Reihe nach ab.</p>
+                    <p>Work through the most important reviews in order.</p>
                   </div>
                   <span>{reportKpis.review} items</span>
                 </header>
@@ -1052,7 +1052,7 @@ export default function ReportsPage() {
                 <div>
                   <h3>Reports exportieren</h3>
                   <p>
-                    Choose einen Bericht und sichere die aktuellen Finanzdaten
+                    Choose a report and save the current financial data
                     for your records.
                   </p>
                 </div>
@@ -1065,7 +1065,7 @@ export default function ReportsPage() {
                   onChange={setPeriod}
                   options={[
                     { value: "6-monate", label: "Letzte 6 Monate" },
-                    { value: "abi-jahr", label: "Abi-Jahr 2026" },
+                    { value: "abi-jahr", label: "Abi year 2026" },
                     { value: "gesamt", label: "Gesamter Zeitraum" },
                   ]}
                 />
@@ -1074,7 +1074,7 @@ export default function ReportsPage() {
                   value={category}
                   onChange={setCategory}
                   options={[
-                    { value: "alle-kategorien", label: "All categories" },
+                    { value: "all-categories", label: "All categories" },
                     { value: "veranstaltung", label: "Veranstaltung" },
                     { value: "material", label: "Material" },
                   ]}
@@ -1083,7 +1083,7 @@ export default function ReportsPage() {
               <div className={styles.exportGrid}>
                 <ExportCard
                   icon={<FileText />}
-                  title="PDF-Bericht"
+                  title="PDF report"
                   description="Kompakte Overview zum Teilen"
                   onClick={() => prepareExport("PDF")}
                 />
@@ -1096,7 +1096,7 @@ export default function ReportsPage() {
                 <ExportCard
                   icon={<ReceiptText />}
                   title="Review log"
-                  description="Receipts und offene items"
+                  description="Receipts and pending items"
                   onClick={() => prepareExport("Review log")}
                 />
               </div>

@@ -16,7 +16,7 @@ export class OrganizationRequiredError extends Error {
   readonly code = "ORGANIZATION_REQUIRED" as const;
 
   constructor() {
-    super("Ein aktiver Abi-Workspace ist erforderlich.");
+    super("An active Abi workspace is required.");
   }
 }
 

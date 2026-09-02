@@ -136,13 +136,13 @@ export default function EditCardModal({
     const nextErrors: FormErrors = {};
 
     if (!values.accountName.trim()) {
-      nextErrors.accountName = "Bitte einen Cash registersnamen eingeben.";
+      nextErrors.accountName = "Please enter a cash register name.";
     }
     if (values.cardNumber.replace(/\D/g, "").length !== 16) {
       nextErrors.cardNumber = "Die Card number muss 16 Ziffern enthalten.";
     }
     if (!values.holder.trim()) {
-      nextErrors.holder = "Bitte den Card holder eingeben.";
+      nextErrors.holder = "Please enter the card holder.";
     }
     if (!isValidFutureExpiry(values.expiry)) {
       nextErrors.expiry = "Invalides Expiry date.";
@@ -162,9 +162,9 @@ export default function EditCardModal({
     setSubmitError("");
     try {
       const saved = await onSave({ ...values, color: selectedColor });
-      if (!saved) setSubmitError("Die Cash register konnte nicht gespeichert werden.");
+      if (!saved) setSubmitError("Die The cash register could not be saved.");
     } catch {
-      setSubmitError("Die Cash register konnte nicht gespeichert werden.");
+      setSubmitError("Die The cash register could not be saved.");
     } finally {
       setSaving(false);
     }
@@ -189,8 +189,8 @@ export default function EditCardModal({
       >
         <header className={styles.header}>
           <div className={styles.heading}>
-            <h2 id="edit-card-title">Kartendaten bearbeiten</h2>
-            <p>Name und Kartendarstellung dieser Cash register aktualisieren.</p>
+            <h2 id="edit-card-title">Kartendaten edit</h2>
+            <p>Update the name and card view for this cash register.</p>
           </div>
           <button
             type="button"
@@ -227,7 +227,7 @@ export default function EditCardModal({
                   key={color.value}
                   type="button"
                   className={styles.colorOption}
-                  aria-label={`${color.name} auswählen`}
+                  aria-label={`Select ${color.name}`}
                   aria-pressed={selectedColor === color.value}
                   style={
                     { "--swatch": color.value } as React.CSSProperties
@@ -313,7 +313,7 @@ export default function EditCardModal({
                       filterLetters(event.target.value, 20),
                     )
                   }
-                  placeholder="Vor- und Nachname"
+                  placeholder="First and last name"
                 />
               </Field>
               <Field

@@ -77,7 +77,7 @@ function PhoneGoalsView({
         <span><LoadingText loading={loading}>{goals.length} aktiv</LoadingText></span>
       </header>
       <div className={phoneStyles.goals} data-ui-slot="list-body">
-        <LoadingCollection loading={loading} knownItemCount={goals.length} emptyHeight="12rem" label="Goals werden geladen…">
+        <LoadingCollection loading={loading} knownItemCount={goals.length} emptyHeight="12rem" label="Goals are loading…">
           {goals.length ? goals.map((goal, index) => (
             <button
               type="button"
@@ -96,7 +96,7 @@ function PhoneGoalsView({
               </div>
               <span className={phoneStyles.goalFooter}>
                 <span>Goal: {goal.date}</span>
-                <span>{euroPrecise.format(goal.target - goal.saved)} offen</span>
+                <span>{euroPrecise.format(goal.target - goal.saved)} pending</span>
               </span>
             </button>
           )) : <div className={phoneStyles.empty}>Noch keine Sparziele vorhanden.</div>}
@@ -146,7 +146,7 @@ export default function GoalsPage() {
       .then((result) => {
         if (!active) return;
         if (!result.ok) {
-          setLoadError("Die Goals konnten nicht geladen werden.");
+          setLoadError("The goals could not be loaded.");
           return;
         }
         setGoals(result.goals.map((goal) => {
@@ -163,7 +163,7 @@ export default function GoalsPage() {
         }));
       })
       .catch(() => {
-        if (active) setLoadError("Die Goals konnten nicht geladen werden.");
+        if (active) setLoadError("The goals could not be loaded.");
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -251,7 +251,7 @@ export default function GoalsPage() {
     }
     if (saved < 0 || saved > target) {
       setFormError(
-        "Der bereits gesparte Amount muss zwischen 0 € und dem Target amount liegen.",
+        "The amount already saved must be between €0 and the target amount.",
       );
       return;
     }
@@ -269,10 +269,10 @@ export default function GoalsPage() {
           description: null,
           targetAmount: submittedTargetAmount,
           deadline: submittedDeadline,
-          reason: "Goal im Goal-Dialog aktualisiert",
+          reason: "Goal updated in the goal dialog",
         });
         if (!result.ok) {
-          setFormError("Das Goal konnte nicht gespeichert werden.");
+          setFormError("The goal could not be saved.");
           return;
         }
       }
@@ -301,7 +301,7 @@ export default function GoalsPage() {
         idempotencyKey: idempotencyKey.current,
       });
       if (!result.success) {
-        setFormError("Das Goal konnte nicht gespeichert werden.");
+        setFormError("The goal could not be saved.");
         return;
       }
       // Add new goal
@@ -321,7 +321,7 @@ export default function GoalsPage() {
     idempotencyKey.current = null;
     closeModal();
     } catch {
-      setFormError("Das Goal konnte nicht gespeichert werden.");
+      setFormError("The goal could not be saved.");
     } finally {
       setSaving(false);
     }
@@ -335,10 +335,10 @@ export default function GoalsPage() {
       if (/^[0-9a-f-]{36}$/i.test(currentGoal.id)) {
         const result = await archiveGoal({
           goalId: currentGoal.id,
-          reason: "Goal im Goal-Dialog archiviert",
+          reason: "Goal archived in the goal dialog",
         });
         if (!result.ok) {
-          setFormError("Das Goal konnte nicht archiviert werden.");
+          setFormError("The goal could not be archived.");
           return;
         }
       }
@@ -352,7 +352,7 @@ export default function GoalsPage() {
 
   return (
     <section className={mode === "phone" ? phoneStyles.pageShell : styles.page} aria-busy={loading}>
-      <LoadingStatus loading={loading} label="Goals werden geladen…" />
+      <LoadingStatus loading={loading} label="Goals are loading…" />
       {loadError ? <p className={styles.formError} role="alert">{loadError}</p> : null}
       {mode === "phone" ? (
         <PhoneGoalsView
@@ -419,7 +419,7 @@ export default function GoalsPage() {
                 </button>
               </header>
               <div className={styles.goalGrid} data-ui-slot="list-body">
-                <LoadingCollection loading={loading} knownItemCount={goals.length} emptyHeight="14rem" label="Goals werden geladen…">
+                <LoadingCollection loading={loading} knownItemCount={goals.length} emptyHeight="14rem" label="Goals are loading…">
                   {goals.map((goal, idx) => (
                     <article
                       className={styles.goalCard}
@@ -457,7 +457,7 @@ export default function GoalsPage() {
                           Goal: {goal.date}
                         </span>
                         <span>
-                          {euroPrecise.format(goal.target - goal.saved)} offen
+                          {euroPrecise.format(goal.target - goal.saved)} pending
                         </span>
                       </div>
                     </article>
@@ -495,7 +495,7 @@ export default function GoalsPage() {
                   <CalendarDays aria-hidden="true" />
                 </header>
                 <div className={styles.upcomingList}>
-                  <LoadingCollection loading={loading} knownItemCount={goals.length} emptyHeight="10rem" label="Fristen werden geladen…">
+                  <LoadingCollection loading={loading} knownItemCount={goals.length} emptyHeight="10rem" label="Deadlines are loading…">
                     {goals
                       .slice()
                       .sort((a, b) =>
@@ -566,7 +566,7 @@ export default function GoalsPage() {
                   <p>
                     {editingGoalIndex !== null
                       ? "Edit the details, amounts, and progress of this savings goal."
-                      : "Lege ein neues gemeinsames Sparziel fest."}
+                      : "Set a new shared savings goal."}
                   </p>
                 </div>
               </div>
@@ -583,7 +583,7 @@ export default function GoalsPage() {
             <div className={styles.modalBody}>
               <section
                 className={styles.goalPreview}
-                aria-label="Vorschau des Goals"
+                aria-label="Goal preview"
               >
                 <div className={styles.goalCardHeader}>
                   <h3>

@@ -177,7 +177,7 @@ function SummaryRail({
       <div>
         <span>cash balance</span>
         <strong>{loading ? <InlineLoading label="" className={styles.compactInlineLoading} /> : euro(bankBalance)}</strong>
-        <small>{loading ? "Bestand wird geladen…" : cards.length ? "All aktiven Cash registers" : "No Cash registers angelegt"}</small>
+        <small>{loading ? "Balance is loading…" : cards.length ? "All active cash registers" : "No cash registers created"}</small>
       </div>
       <div>
         <span>Selected cash register</span>
@@ -326,7 +326,7 @@ function CardStage({
         <button
           type="button"
           className={styles.cardSlot}
-          aria-label={`${activeCard.details.accountName} bearbeiten`}
+          aria-label={`${activeCard.details.accountName} edit`}
           onClick={onEditCard}
         >
           <AccountCard
@@ -359,7 +359,7 @@ function CardStage({
       <div className={styles.cardPosition}>
         <span>
           {cards.length
-            ? `Cash register ${activeCardIndex + 1} von ${cards.length}`
+            ? `Cash register ${activeCardIndex + 1} of ${cards.length}`
             : "No Cash register angelegt"}
         </span>
       </div>
@@ -382,7 +382,7 @@ function BankDetail({
         <header className={styles.panelHeader}>
           <div>
             <h2>Cash register</h2>
-            <p>Cash registersdaten werden geladen…</p>
+            <p>Cash register data is loading…</p>
           </div>
           <WalletCards aria-hidden="true" />
         </header>
@@ -397,7 +397,7 @@ function BankDetail({
         <WalletCards aria-hidden="true" />
         <h2>No Cash register angelegt</h2>
         <p>
-          Create a cash register, um Bestand und Kartendarstellung zu verwalten.
+          Create a cash register to manage the balance and card view.
         </p>
         <button
           type="button"
@@ -422,7 +422,7 @@ function BankDetail({
         <button
           type="button"
           className={styles.iconAction}
-          aria-label="Cash register bearbeiten"
+          aria-label="Edit cash register"
           onClick={props.onEditCard}
         >
           <Pencil aria-hidden="true" />
@@ -453,7 +453,7 @@ function CashDetail({ props }: { props: AdaptiveFundsViewProps }) {
         <header className={styles.panelHeader}>
           <div>
             <h2>Cash register</h2>
-            <p>Cash registersdaten werden geladen…</p>
+            <p>Cash register data is loading…</p>
           </div>
           <Banknote aria-hidden="true" />
         </header>
@@ -512,7 +512,7 @@ function Reconciliation({ props }: { props: AdaptiveFundsViewProps }) {
         <header className={styles.panelHeader}>
           <div>
             <h2>Cash registersabgleich</h2>
-            <p>Abgleich mit dem Buchbestand</p>
+            <p>Reconcile with the book balance</p>
           </div>
           <ShieldCheck aria-hidden="true" />
         </header>
@@ -529,7 +529,7 @@ function Reconciliation({ props }: { props: AdaptiveFundsViewProps }) {
       <header className={styles.panelHeader}>
         <div>
           <h2>Cash registersabgleich</h2>
-          <p>Abgleich mit dem Buchbestand</p>
+          <p>Reconcile with the book balance</p>
         </div>
         <ShieldCheck aria-hidden="true" />
       </header>
@@ -583,7 +583,7 @@ function ActivityPanel({
       <header className={styles.panelHeader}>
         <div>
           <h2>Recent activity</h2>
-          <p>Bewegungen und Cash counten</p>
+          <p>Movements and cash counts</p>
         </div>
         <Activity aria-hidden="true" />
       </header>
@@ -650,7 +650,7 @@ function AuditPanel({ props }: { props: AdaptiveFundsViewProps }) {
               {props.euro(entry.difference)}
             </b>
           </div>
-        )) : <p className={styles.panelEmpty}>Noch keine Cash counten vorhanden.</p>}
+        )) : <p className={styles.panelEmpty}>Noch keine Cash counts vorhanden.</p>}
       </div>
     </section>
   );
@@ -669,7 +669,7 @@ function AccessPanel({ props }: { props: AdaptiveFundsViewProps }) {
       <dl className={styles.detailRows}>
         <div>
           <dt>Verantwortlich</dt>
-          <dd>{props.cashBox.responsible || "Noch nicht festgelegt"}</dd>
+          <dd>{props.cashBox.responsible || "Not set yet"}</dd>
         </div>
         <div>
           <dt>Vertretung</dt>
@@ -1090,7 +1090,7 @@ function PhoneFunds(props: AdaptiveFundsViewProps) {
               </button>
             )) : (
               <div className={styles.auditEmpty}>
-                <p>Noch keine Cash counten vorhanden.</p>
+                <p>Noch keine Cash counts vorhanden.</p>
                 {props.cashBox.id ? <button type="button" className={styles.secondaryAction} onClick={props.onCountCash}>Count cash register</button> : null}
               </div>
             )}

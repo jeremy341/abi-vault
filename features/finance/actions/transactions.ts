@@ -10,12 +10,12 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 function mapDatabaseError(code?: string) {
   if (code === "42501") return actionFailure("FORBIDDEN", "You do not have permission for this action.");
-  if (code === "55000") return actionFailure("PERIOD_LOCKED", "Der Accounting period ist gesperrt.");
+  if (code === "55000") return actionFailure("PERIOD_LOCKED", "The accounting period is locked.");
   if (code === "23503" || code === "23514" || code === "22023" || code === "22003") {
     return actionFailure("INVALID_PAYLOAD", "The transaction data is invalid.");
   }
   if (code === "23505") return actionFailure("CONFLICT", "This transaction was already submitted.");
-  return actionFailure("DATABASE_ERROR", "Die Transaction konnte nicht gespeichert werden.");
+  return actionFailure("DATABASE_ERROR", "The transaction could not be saved.");
 }
 
 export async function createManualTransaction(
@@ -32,7 +32,7 @@ export async function createManualTransaction(
   } catch (error) {
     if (error instanceof Error && "code" in error) {
       const code = error.code === "UNAUTHENTICATED" ? "UNAUTHENTICATED" : "FORBIDDEN";
-      return actionFailure(code, code === "UNAUTHENTICATED" ? "Eine Anmeldung ist erforderlich." : "Ein aktiver Abi-Workspace ist erforderlich.");
+      return actionFailure(code, code === "UNAUTHENTICATED" ? "Sign-in is required." : "An active Abi workspace is required.");
     }
     return actionFailure("UNAUTHENTICATED", "Sign-in is required.");
   }
@@ -52,7 +52,7 @@ export async function createManualTransaction(
     .eq("status", "active")
     .maybeSingle();
   if (!wallet) {
-    return actionFailure("INVALID_PAYLOAD", "Nur eine aktive Cash register kann Transactions aufnehmen.");
+    return actionFailure("INVALID_PAYLOAD", "Only one active cash register can contain transactions.");
   }
   const { data, error } = await supabase.rpc("create_manual_transaction", {
     p_organization_id: context.organizationId,

@@ -31,10 +31,10 @@ export default function PeriodsPage() {
     listAccountingPeriodsForCurrentOrganization()
       .then((result) => {
         if (!active) return;
-        if (!result.ok) { setError("Die Accounting periods konnten nicht geladen werden."); return; }
+        if (!result.ok) { setError("The accounting periods could not be loaded."); return; }
         setPeriods(result.items);
       })
-      .catch(() => { if (active) setError("Die Accounting periods konnten nicht geladen werden."); })
+      .catch(() => { if (active) setError("The accounting periods could not be loaded."); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, []);
@@ -61,7 +61,7 @@ export default function PeriodsPage() {
 
   return (
     <section className={styles.page} aria-busy={loading}>
-      <LoadingStatus loading={loading} label="Accounting periods werden geladen…" />
+      <LoadingStatus loading={loading} label="Accounting periods are loading…" />
       {error ? <p className={styles.error} role="alert">{error}</p> : null}
       <article className={styles.summaryPanel}>
         <header className={styles.header}>
@@ -89,7 +89,7 @@ export default function PeriodsPage() {
               <span className={`${styles.status} ${period.status === "open" ? styles.open : styles.locked}`}>
                 {period.status === "open" ? <Check aria-hidden="true" /> : <Lock aria-hidden="true" />}
                 <span>{period.status === "open" ? "Open" : "Locked"}</span>
-                {period.lockedByName ? <small>von {period.lockedByName}</small> : null}
+                {period.lockedByName ? <small>by {period.lockedByName}</small> : null}
               </span>
               <button type="button" className={styles.actionButton} onClick={() => openPeriodAction(period)}>
                 {period.status === "open" ? <Lock aria-hidden="true" /> : <Unlock aria-hidden="true" />}

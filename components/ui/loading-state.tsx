@@ -24,7 +24,7 @@ export function useDelayedLoading(loading: boolean, delay = 160) {
   return loading && visible;
 }
 
-export function LoadingStatus({ loading, label = "Inhalte werden geladen…" }: { loading: boolean; label?: string }) {
+export function LoadingStatus({ loading, label = "Content is loading…" }: { loading: boolean; label?: string }) {
   if (!loading) return null;
   return <span className={styles.status} role="status" aria-live="polite">{label}</span>;
 }

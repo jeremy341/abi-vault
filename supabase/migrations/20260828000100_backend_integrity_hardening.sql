@@ -409,7 +409,7 @@ begin
     and idempotency_key = p_idempotency_key;
   if wallet_id is not null then return wallet_id; end if;
 
-  perform set_config('app.audit_reason', 'Kasse erstellt', true);
+  perform set_config('app.audit_reason', 'Cash register created', true);
   select public.create_wallet(
     p_organization_id,
     p_name,
@@ -848,7 +848,7 @@ begin
     and transaction_item.superseded_at is null
     and (transaction_item.correction_role is null or transaction_item.correction_role <> 'reversal');
 
-  perform set_config('app.audit_reason', coalesce(nullif(btrim(p_note), ''), 'Cash registerssturz erfasst'), true);
+  perform set_config('app.audit_reason', coalesce(nullif(btrim(p_note), ''), 'Cash count erfasst'), true);
   insert into public.cash_counts (
     organization_id, wallet_id, counted_amount_minor, book_amount_minor,
     difference_minor, counted_by, note
@@ -926,7 +926,7 @@ begin
     and transaction_item.superseded_at is null
     and (transaction_item.correction_role is null or transaction_item.correction_role <> 'reversal');
 
-  perform set_config('app.audit_reason', coalesce(nullif(btrim(p_note), ''), 'Cash registerssturz erfasst'), true);
+  perform set_config('app.audit_reason', coalesce(nullif(btrim(p_note), ''), 'Cash count erfasst'), true);
   insert into public.cash_counts (
     organization_id, wallet_id, counted_amount_minor, book_amount_minor,
     difference_minor, counted_by, counted_by_name, note, idempotency_key

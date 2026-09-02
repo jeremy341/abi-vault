@@ -35,7 +35,7 @@ export function RowActionMenu({
   onDelete,
   onReceipt,
   receiptLabel = "Review receipt",
-  editDisabledLabel = "Nur der Ersteller oder ein Admin kann bearbeiten.",
+  editDisabledLabel = "Only the creator or an admin can edit.",
   deleteDisabledLabel = "Only admins can archive.",
 }: RowActionMenuProps) {
   return (

@@ -131,13 +131,13 @@ export default function AddCardModal({
     const nextErrors: FormErrors = {};
 
     if (!values.accountName.trim()) {
-      nextErrors.accountName = "Bitte einen Cash registersnamen eingeben.";
+      nextErrors.accountName = "Please enter a cash register name.";
     }
     if (values.cardNumber.replace(/\D/g, "").length !== 16) {
       nextErrors.cardNumber = "Die Card number muss 16 Ziffern enthalten.";
     }
     if (!values.holder.trim()) {
-      nextErrors.holder = "Bitte den Card holder eingeben.";
+      nextErrors.holder = "Please enter the card holder.";
     }
     if (!isValidFutureExpiry(values.expiry)) {
       nextErrors.expiry = "Invalides Expiry date.";
@@ -172,10 +172,10 @@ export default function AddCardModal({
         setErrors({});
         idempotencyKey.current = null;
       } else {
-        setSubmitError("Die Cash register konnte nicht gespeichert werden.");
+        setSubmitError("Die The cash register could not be saved.");
       }
     } catch {
-      setSubmitError("Die Cash register konnte nicht gespeichert werden.");
+      setSubmitError("Die The cash register could not be saved.");
     } finally {
       setSaving(false);
     }
@@ -201,7 +201,7 @@ export default function AddCardModal({
         <header className={styles.header}>
           <div className={styles.heading}>
             <h2 id="add-card-title">Add cash register</h2>
-            <p>Lege eine weitere Cash register mit eigener Kartendarstellung an.</p>
+            <p>Create another cash register with its own card view.</p>
           </div>
           <button
             type="button"
@@ -238,7 +238,7 @@ export default function AddCardModal({
                   key={color.value}
                   type="button"
                   className={styles.colorOption}
-                  aria-label={`${color.name} auswählen`}
+                  aria-label={`Select ${color.name}`}
                   aria-pressed={selectedColor === color.value}
                   style={
                     { "--swatch": color.value } as React.CSSProperties
@@ -324,7 +324,7 @@ export default function AddCardModal({
                       filterLetters(event.target.value, 26),
                     )
                   }
-                  placeholder="Vor- und Nachname"
+                  placeholder="First and last name"
                 />
               </Field>
               <Field

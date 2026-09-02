@@ -25,7 +25,7 @@ const sections = [
   {
     id: "general" as const,
     label: "General",
-    description: "Workspace und Cohort",
+    description: "Workspace and cohort",
     icon: Building2,
   },
   {
@@ -37,7 +37,7 @@ const sections = [
   {
     id: "permissions" as const,
     label: "Permissions",
-    description: "Memberer und Rollen",
+    description: "Members and roles",
     icon: ShieldCheck,
   },
   {
@@ -123,7 +123,7 @@ function PhoneSettingsView({
             </div>
             <div className={phoneStyles.fields}>
               <label>
-                <span>Name des Workspaces</span>
+                <span>Workspace name</span>
                 <input
                   name="workspaceName"
                   autoComplete="off"
@@ -184,11 +184,11 @@ function PhoneSettingsView({
           </div>
           <div className={phoneStyles.switches}>
             {[
-              ["receipts", "New Receipts", "Uploads und offene Reviewen"],
+              ["receipts", "New Receipts", "Uploads and pending reviews"],
               [
                 "payments",
                 "Fehlende Zahlungen",
-                "Opene Bargeld- oder Kontozahlungen",
+                "Open cash or account payments",
               ],
               ["goals", "Goal-Progress", "Wichtige Progresssmarken"],
             ].map(([key, label, description]) => {
@@ -256,7 +256,7 @@ function PhoneSettingsView({
         <section className={phoneStyles.section}>
           <div className={phoneStyles.sectionTitle}>
             <h3>Daten & Sicherung</h3>
-            <p>Exportiere eine Kopie eurer Finanzdaten.</p>
+            <p>Export a copy of your financial data.</p>
           </div>
           <div className={phoneStyles.dataList}>
             <button
@@ -398,7 +398,7 @@ export default function SettingsPage() {
 
   return (
     <section className={styles.page} aria-busy={loading}>
-      <LoadingStatus loading={loading} label="Settings werden geladen…" />
+      <LoadingStatus loading={loading} label="Settings are loading…" />
       {loadError ? <p className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{loadError}</p> : null}
       <aside className={styles.settingsNav} data-ui-slot="toolbar">
         <div className={styles.workspaceCard}>
@@ -465,7 +465,7 @@ export default function SettingsPage() {
               </div>
               <div className={styles.formGrid}>
                 <label>
-                  <span>Name des Workspaces</span>
+                  <span>Workspace name</span>
                   <input
                     name="workspaceName"
                     value={workspaceName}
@@ -544,7 +544,7 @@ export default function SettingsPage() {
                 />
                 <SwitchRow
                   label="Fehlende Zahlungen"
-                  description="Erinnerung bei offenen Bargeld- oder Kontozahlungen."
+                  description="Erinnerung bei pending cash or account payments."
                   checked={notifications.payments}
                   onChange={() => toggleNotification("payments")}
                 />
@@ -567,7 +567,7 @@ export default function SettingsPage() {
                 <div>
                   <h3>Rollen & Zugriffe</h3>
                   <p>
-                    Lege fest, wer Finanzdaten bearbeiten oder nur ansehen darf.
+                    Choose who can edit financial data or only view it.
                   </p>
                 </div>
               </div>
@@ -575,7 +575,7 @@ export default function SettingsPage() {
                 <article>
                   <strong>Administrators</strong>
                   <span>
-                    Full access auf Daten und Settings.
+                    Full access to data and settings.
                   </span>
                   <b>2 People</b>
                 </article>
@@ -601,7 +601,7 @@ export default function SettingsPage() {
                 <Database aria-hidden="true" />
                 <div>
                   <h3>Daten & Sicherung</h3>
-                  <p>Exportiere eine Kopie eurer Finanzdaten.</p>
+                  <p>Export a copy of your financial data.</p>
                 </div>
               </div>
               <div className={styles.dataActions}>

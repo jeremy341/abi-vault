@@ -13,7 +13,7 @@ import {
 
 function mapCorrectionError(code?: string) {
   if (code === "42501") return actionFailure("FORBIDDEN", "You are not allowed to change this transaction.");
-  if (code === "55000") return actionFailure("PERIOD_LOCKED", "Der Accounting period ist gesperrt.");
+  if (code === "55000") return actionFailure("PERIOD_LOCKED", "The accounting period is locked.");
   if (code === "23505") return actionFailure("CONFLICT", "This change was already submitted.");
   if (code === "23503" || code === "23514" || code === "22023" || code === "22003") {
     return actionFailure("INVALID_PAYLOAD", "The transaction data is invalid.");
@@ -43,7 +43,7 @@ export async function correctTransactionFromUi(
     .eq("organization_id", context.organizationId)
     .maybeSingle();
   if (originalError) return mapCorrectionError(originalError.code);
-  if (!original) return actionFailure("NOT_FOUND", "Die Transaction wurde nicht gefunden.");
+  if (!original) return actionFailure("NOT_FOUND", "The transaction was not found.");
   if (context.role !== "admin" && original.created_by !== context.clerkUserId) {
     return actionFailure("FORBIDDEN", "Only the creator or an admin can edit.");
   }
@@ -67,10 +67,10 @@ export async function correctTransactionFromUi(
     ? original.type === "income" ? original.to_wallet_id : original.from_wallet_id
     : null;
   if (!fromWalletId && parsed.data.direction === "expense") {
-    return actionFailure("INVALID_PAYLOAD", "Der Quellbereich der Transaction fehlt.");
+    return actionFailure("INVALID_PAYLOAD", "The transaction source is missing.");
   }
   if (!toWalletId && parsed.data.direction === "income") {
-    return actionFailure("INVALID_PAYLOAD", "Der Goalbereich der Transaction fehlt.");
+    return actionFailure("INVALID_PAYLOAD", "The transaction goal is missing.");
   }
 
   const { data, error } = await supabase.rpc("correct_manual_transaction", {

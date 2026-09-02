@@ -37,7 +37,7 @@ export default function JoinPage({ params }: { params: Promise<{ token: string }
           setMessage(
             result.error === "LINK_EXPIRED" || result.error === "LINK_ALREADY_USED"
               ? "This invitation link is no longer valid."
-              : "Der Einladungslink konnte nicht angenommen werden.",
+              : "The invitation link could not be accepted.",
           );
           return;
         }
@@ -45,7 +45,7 @@ export default function JoinPage({ params }: { params: Promise<{ token: string }
           await setActive({ organization: result.organizationId });
           router.replace("/dashboard");
         } catch {
-          if (active) setMessage("Der Workspace konnte nicht aktiviert werden.");
+          if (active) setMessage("The workspace could not be activated.");
         }
       })
       .catch(() => {

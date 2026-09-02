@@ -16,7 +16,7 @@ function mapWalletError(code?: string) {
   if (code === "42501") return actionFailure("FORBIDDEN", "You do not have permission for this action.");
   if (code === "23503" || code === "22023") return actionFailure("INVALID_PAYLOAD", "The cash register data is invalid.");
   if (code === "23505") return actionFailure("CONFLICT", "This cash register change was already submitted.");
-  return actionFailure("DATABASE_ERROR", "Die Cash register konnte nicht gespeichert werden.");
+  return actionFailure("DATABASE_ERROR", "Die The cash register could not be saved.");
 }
 
 export async function createWallet(
@@ -60,7 +60,7 @@ export async function updateWallet(input: unknown) {
     p_card_color_visual: parsed.data.cardColorVisual ?? null,
   });
   if (error) {
-    if (error.code === "23503") return actionFailure("NOT_FOUND", "Die Cash register ist nicht mehr aktiv.");
+    if (error.code === "23503") return actionFailure("NOT_FOUND", "The cash register is no longer active.");
     return mapWalletError(error.code);
   }
   return actionSuccess(null);
@@ -77,7 +77,7 @@ export async function archiveWallet(input: unknown) {
     p_reason: parsed.data.reason,
   });
   if (error) {
-    if (error.code === "23503") return actionFailure("NOT_FOUND", "Die Cash register ist nicht mehr aktiv.");
+    if (error.code === "23503") return actionFailure("NOT_FOUND", "The cash register is no longer active.");
     return mapWalletError(error.code);
   }
   return actionSuccess(null);
@@ -99,7 +99,7 @@ async function changePeriod(
   });
 
   if (error) {
-    if (error.code === "42501") return actionFailure("FORBIDDEN", "Du hast keine Berechtigung, Accounting periods zu verwalten.");
+    if (error.code === "42501") return actionFailure("FORBIDDEN", "You do not have permission to manage accounting periods.");
     if (error.code === "55000") return actionFailure("PERIOD_LOCKED", "The accounting period is already in the requested state.");
     return actionFailure("DATABASE_ERROR", "The accounting period could not be changed.");
   }

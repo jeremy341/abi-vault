@@ -308,9 +308,9 @@ const statusOptions = [
 ] as const;
 const periodOptions = [
   "All",
-  "Dieser Monat",
-  "Letzter Monat",
-  "Dieses Jahr",
+  "This month",
+  "Last month",
+  "This year",
 ] as const;
 /*
 const transactionOptions = [
@@ -439,7 +439,7 @@ function TransactionCombobox({
               autoFocus
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Name, Date oder Amount suchen …"
+              placeholder="Search name, date, or amount …"
             />
           </label>
           <div
@@ -572,7 +572,7 @@ function PhoneReceiptsView({
             value={query}
             disabled={loading}
             onChange={(event) => onQueryChange(event.target.value)}
-            placeholder="Filename oder Transaction …"
+            placeholder="Filename or transaction …"
           />
         </label>
         <button
@@ -606,13 +606,13 @@ function PhoneReceiptsView({
       </header>
 
       <div className={phoneStyles.rows} data-ui-slot="list-body">
-        <LoadingCollection loading={loading} knownItemCount={receipts.length} emptyHeight="10rem" label="Receipts werden geladen…">
+        <LoadingCollection loading={loading} knownItemCount={receipts.length} emptyHeight="10rem" label="Receipts are loading…">
           {receipts.length ? receipts.map((receipt) => (
           <article className={phoneStyles.row} key={receipt.id}>
             <FileText aria-hidden="true" />
             <span className={phoneStyles.rowMain}>
               <strong>{receipt.file}</strong>
-              <small>Uploaded von {receipt.uploadedByName}</small>
+              <small>Uploaded by {receipt.uploadedByName}</small>
               <span>
                 {receipt.transaction === "—"
                   ? "Unassigned"
@@ -765,8 +765,8 @@ export default function ReceiptsPage() {
               .includes(needle)) &&
           (status === "All" || receipt.status === status) &&
           (period === "All" ||
-            period === "Dieses Jahr" ||
-            (period === "Dieser Monat" ? month === "05" : month === "04"))
+            period === "This year" ||
+            (period === "This month" ? month === "05" : month === "04"))
         );
       }),
     [items, period, query, status],
@@ -841,7 +841,7 @@ export default function ReceiptsPage() {
     if (saving) return;
     if (editingReceipt) {
       if (!fileName.trim()) {
-        setUploadError("Bitte einen Filenamen eingeben.");
+        setUploadError("Please enter a filename.");
         return;
       }
       setSaving(true);
@@ -883,7 +883,7 @@ export default function ReceiptsPage() {
         invalidateFinanceQuery("receipts", "transactions", "dashboard-snapshot", "report-snapshot", "report-kpis");
         closeModal();
       } else {
-        setUploadError("Der Receipt konnte nicht hochgeladen werden.");
+        setUploadError("The receipt could not be uploaded.");
       }
     } finally {
       setSaving(false);
@@ -932,8 +932,8 @@ export default function ReceiptsPage() {
       }
       aria-busy={loading}
     >
-      <LoadingStatus loading={loading} label="Receipts werden geladen…" />
-      {refreshing && !loading ? <span className="sr-only" role="status">Receipts werden aktualisiert…</span> : null}
+      <LoadingStatus loading={loading} label="Receipts are loading…" />
+      {refreshing && !loading ? <span className="sr-only" role="status">Receipts are updating…</span> : null}
       {loadError ? <p className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{loadError}</p> : null}
       {mode === "phone" ? (
         <PhoneReceiptsView
@@ -1024,7 +1024,7 @@ export default function ReceiptsPage() {
                     setQuery(event.target.value);
                     setPage(1);
                   }}
-                  placeholder="Search nach Filename oder Transaction …"
+                  placeholder="Search by filename or transaction …"
                 />
               </label>
               <Dropdown
@@ -1054,7 +1054,7 @@ export default function ReceiptsPage() {
               </div>
               <div className={styles.rows}>
                 {loading ? (
-                  <LoadingCollection loading knownItemCount={items.length} emptyHeight="100%" label="Receipts werden geladen…"><div /></LoadingCollection>
+                  <LoadingCollection loading knownItemCount={items.length} emptyHeight="100%" label="Receipts are loading…"><div /></LoadingCollection>
                 ) : !visible.length ? (
                   <EmptyState
                     title="No Receipts gefunden"
@@ -1070,7 +1070,7 @@ export default function ReceiptsPage() {
                       </span>
                       <span>
                         <strong>{receipt.file}</strong>
-                        <small>Uploaded von {receipt.uploadedByName}</small>
+                        <small>Uploaded by {receipt.uploadedByName}</small>
                       </span>
                     </span>
                     <span
@@ -1178,7 +1178,7 @@ export default function ReceiptsPage() {
                   <span>
                     {fileName
                       ? "File selected"
-                      : "PDF oder JPG/PNG bis 5 MB. On mobile, the camera is also available."}
+                      : "PDF or JPG/PNG up to 5 MB. On mobile, the camera is also available."}
                   </span>
                   <span className={styles.uploadButton}>Choose file</span>
                 </button>
@@ -1242,7 +1242,7 @@ export default function ReceiptsPage() {
           <div className={styles.modalBody}>
             <label className={styles.formField}>
               <span>Reason</span>
-              <input autoFocus value={archiveReason} onChange={(event) => setArchiveReason(event.target.value)} placeholder="Warum soll der Receipt archiviert werden?" />
+              <input autoFocus value={archiveReason} onChange={(event) => setArchiveReason(event.target.value)} placeholder="Why should the receipt be archived?" />
             </label>
             {actionError ? <p className="rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{actionError}</p> : null}
           </div>

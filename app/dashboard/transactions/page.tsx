@@ -390,7 +390,7 @@ function PhoneTransactionsView({
 
       <div data-ui-slot="list-body">
         {loading ? (
-          <LoadingCollection loading knownItemCount={transactions.length} emptyHeight="12rem" label="Transactions werden geladen…">
+          <LoadingCollection loading knownItemCount={transactions.length} emptyHeight="12rem" label="Transactions are loading…">
             <div className={phoneStyles.rows} />
           </LoadingCollection>
         ) : transactions.length ? (
@@ -765,7 +765,7 @@ export default function TransactionsPage() {
         idempotencyKey: idempotencyKey.current,
       });
       if (!persisted.ok) {
-        setFormError("Die Transaction konnte nicht gespeichert werden.");
+        setFormError("The transaction could not be saved.");
         return;
       }
       const selectedCashRegister = cashRegisters.find((item) => item.id === selectedCashRegisterId);
@@ -915,8 +915,8 @@ export default function TransactionsPage() {
       }
       aria-busy={loading}
     >
-      <LoadingStatus loading={loading} label="Transactions werden geladen…" />
-      {refreshing && !loading ? <span className="sr-only" role="status">Transactions werden aktualisiert…</span> : null}
+      <LoadingStatus loading={loading} label="Transactions are loading…" />
+      {refreshing && !loading ? <span className="sr-only" role="status">Transactions are updating…</span> : null}
       {loadError ? <p className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{loadError}</p> : null}
       {mode === "phone" ? (
         <PhoneTransactionsView
@@ -1079,7 +1079,7 @@ export default function TransactionsPage() {
               </div>
               <div className={styles.rows}>
                 {loading ? (
-                  <LoadingCollection loading knownItemCount={items.length} emptyHeight="100%" label="Transactions werden geladen…">
+                  <LoadingCollection loading knownItemCount={items.length} emptyHeight="100%" label="Transactions are loading…">
                     <div />
                   </LoadingCollection>
                 ) : !visible.length ? (
@@ -1266,7 +1266,7 @@ export default function TransactionsPage() {
             <div>
               <h2>Transactions filtern</h2>
               <p>
-                Choose die Kriterien aus, nach denen du die Transactions
+                Choose the criteria by which you want to filter transactions
                 you want to view.
               </p>
             </div>
@@ -1316,7 +1316,7 @@ export default function TransactionsPage() {
                 <label className={styles.inlineField}>
                   <span>Von</span>
                   <input
-                    aria-label="Amount von"
+                    aria-label="Amount from"
                     inputMode="decimal"
                     value={draftMinAmount}
                     onChange={(event) => setDraftMinAmount(event.target.value)}
@@ -1414,13 +1414,13 @@ export default function TransactionsPage() {
 
       {addOpen ? (
         <Overlay
-          label={editing ? "Transaction bearbeiten" : "Add transaction"}
+          label={editing ? "Transaction edit" : "Add transaction"}
           onClose={closeTransactionModal}
           className={mode === "phone" ? phoneStyles.phoneDialog : undefined}
         >
           <div className={styles.modalHeader}>
             <div>
-              <h2>{editing ? "Transaction bearbeiten" : "Add transaction"}</h2>
+              <h2>{editing ? "Transaction edit" : "Add transaction"}</h2>
               <p>{editing ? "The change will be recorded as a correction in the cash book." : "Record a new income or expense."}</p>
             </div>
             <button
@@ -1483,11 +1483,11 @@ export default function TransactionsPage() {
             </label>
             {editing ? (
               <label className={styles.formField}>
-                <span>Reason der Korrektur</span>
+                <span>Correction reason</span>
                 <textarea
                   value={correctionReason}
                   onChange={(event) => setCorrectionReason(event.target.value)}
-                  placeholder="z. B. Amount auf dem Receipt war falsch"
+                  placeholder="e.g. the amount on the receipt was incorrect"
                   rows={3}
                 />
               </label>
@@ -1580,14 +1580,14 @@ export default function TransactionsPage() {
           <div className={styles.modalHeader}>
             <div>
               <h2>Transaction archivieren?</h2>
-              <p>Die Entry bleibt im Review log erhalten und wird aus den aktiven Summen entfernt.</p>
+              <p>The entry will remain in the review log and be removed from active totals.</p>
             </div>
             <button type="button" className={styles.iconButton} onClick={() => setArchiveTarget(null)} disabled={saving} aria-label="Close dialog"><X /></button>
           </div>
           <div className={styles.modalBody}>
             <label className={styles.formField}>
               <span>Reason</span>
-              <textarea value={archiveReason} onChange={(event) => setArchiveReason(event.target.value)} placeholder="Warum soll die Transaction archiviert werden?" rows={3} autoFocus />
+              <textarea value={archiveReason} onChange={(event) => setArchiveReason(event.target.value)} placeholder="Why should the transaction be archived?" rows={3} autoFocus />
             </label>
             {actionError ? <p className="rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{actionError}</p> : null}
           </div>

@@ -77,7 +77,7 @@ export function ReceiptReviewDialog({
 
       <div className={styles.previewFrame}>
         {previewLoading ? (
-          <div className={styles.previewState} role="status">Receipt wird geladen…</div>
+          <div className={styles.previewState} role="status">Loading receipt…</div>
         ) : previewUrl ? (
           isPdf ? (
             <iframe title={`Vorschau by ${receipt.file}`} src={previewUrl} />
@@ -85,13 +85,13 @@ export function ReceiptReviewDialog({
             <>
               {/* Signed storage URLs are runtime-specific, so this preview remains a native image. */}
               {/* eslint-disable-next-line @next/next/no-img-element -- signed storage URLs are not known to next/image at build time. */}
-              <img width="1200" height="900" src={previewUrl} alt={`Vorschau des Receipts ${receipt.file}`} />
+              <img width="1200" height="900" src={previewUrl} alt={`Receipt preview ${receipt.file}`} />
             </>
           )
         ) : (
           <div className={styles.previewState}>
             <CircleAlert aria-hidden="true" />
-            <span>{previewError || "Die Vorschau konnte nicht geladen werden."}</span>
+            <span>{previewError || "The preview could not be loaded."}</span>
           </div>
         )}
       </div>
@@ -102,7 +102,7 @@ export function ReceiptReviewDialog({
         <div><span>Amount</span><strong>{receipt.amount.toLocaleString("de-DE", { style: "currency", currency: "EUR" })}</strong></div>
         <div><span>Current status</span><strong>{receipt.status}</strong></div>
         {receipt.createdByName ? <div><span>Created by</span><strong>{receipt.createdByName}</strong><small>{formatTimestamp(receipt.createdAt)}</small></div> : null}
-        {receipt.uploadedByName ? <div><span>Uploaded von</span><strong>{receipt.uploadedByName}</strong><small>{formatTimestamp(receipt.uploadedAt)}</small></div> : null}
+        {receipt.uploadedByName ? <div><span>Uploaded by</span><strong>{receipt.uploadedByName}</strong><small>{formatTimestamp(receipt.uploadedAt)}</small></div> : null}
         {receipt.reviewedByName ? <div><span>Reviewed by</span><strong>{receipt.reviewedByName}</strong><small>{formatTimestamp(receipt.reviewedAt)}</small></div> : null}
       </div>
 

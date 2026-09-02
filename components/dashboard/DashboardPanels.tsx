@@ -290,7 +290,7 @@ export function SpendingByCategory() {
     >
       <CardHeader className="px-5 pb-0 pt-5 sm:px-6 lg:px-7 lg:pt-6">
         <CardTitle className="text-xl font-semibold tracking-tight lg:text-2xl">
-          Expenses nach Category
+          Expenses by category
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4 px-5 pb-5 pt-4 sm:px-6 lg:px-7 min-[1280px]:max-[2199px]:space-y-2 min-[1280px]:max-[2199px]:pt-2 min-[2200px]:space-y-1 min-[2200px]:pb-6 min-[2200px]:pt-1">
@@ -346,7 +346,7 @@ export function ReviewPanel() {
           className="flex items-center gap-3 rounded-lg border border-black/[0.08] px-3 py-2.5 text-sm transition-colors hover:bg-black/[0.03] dark:border-white/15 dark:hover:bg-white/[0.06]"
         >
           <AlertTriangle className="size-5 text-[var(--ui-warning)]" />
-          <span className="flex-1">3 Receipts warten auf Review</span>
+          <span className="flex-1">3 receipts waiting for review</span>
           <ArrowRight className="size-4" />
         </Link>
         <Link
@@ -362,7 +362,7 @@ export function ReviewPanel() {
           className="hidden items-center gap-3 rounded-lg border border-black/[0.08] px-3 py-2.5 text-sm transition-colors hover:bg-black/[0.03] min-[2200px]:flex min-[2200px]:py-3 dark:border-white/15 dark:hover:bg-white/[0.06]"
         >
           <FileText className="size-5 text-muted-foreground" />
-          <span className="flex-1">1 Receipt ohne Category</span>
+          <span className="flex-1">1 receipt without a category</span>
           <ArrowRight className="size-4" />
         </Link>
         <Link

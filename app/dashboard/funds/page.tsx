@@ -312,7 +312,7 @@ export default function FundsPage() {
       cardColorVisual: details.color,
     });
     if (!result.success) {
-      setNotice("Kartendaten konnten nicht gespeichert werden.");
+      setNotice("Card details could not be saved.");
       return false;
     }
     setCards((current) =>
@@ -386,7 +386,7 @@ export default function FundsPage() {
         reason: "Cash register archived through cash register management",
       });
       if (!result.success) {
-        setNotice("Cash register konnte nicht archiviert werden.");
+        setNotice("The cash register could not be archived.");
         return;
       }
       setCards((current) =>
@@ -400,9 +400,9 @@ export default function FundsPage() {
       setActiveCardIndex((current) => Math.max(0, current - 1));
       setIsDeleteOpen(false);
       invalidateFinanceQuery("wallets", "dashboard-snapshot", "transactions", "report-snapshot", "report-kpis");
-      setNotice("Cash register archiviert.");
+      setNotice("Cash register archived.");
     } catch {
-      setNotice("Cash register konnte nicht archiviert werden.");
+      setNotice("The cash register could not be archived.");
     } finally {
       setDeleteSaving(false);
     }
@@ -439,7 +439,7 @@ export default function FundsPage() {
         idempotencyKey: countIdempotencyKey.current ?? `count-${cashBox.id}-${crypto.randomUUID()}`,
       });
       if (!persisted.ok) {
-        setCountError("Der Cash count konnte nicht gespeichert werden.");
+        setCountError("The cash count could not be saved.");
         return;
       }
     }
@@ -474,7 +474,7 @@ export default function FundsPage() {
     void loadCashCounts();
     setNotice("Cash count gespeichert.");
     } catch {
-      setCountError("Der Cash count konnte nicht gespeichert werden.");
+      setCountError("The cash count could not be saved.");
     } finally {
       setCountSaving(false);
     }
@@ -525,7 +525,7 @@ export default function FundsPage() {
 
       {isDeleteOpen ? (
         <Dialog
-          label="Cash register archivieren"
+          label="Archive cash register"
           onClose={closeDeleteDialog}
           overlayClassName={styles.overlay}
           dialogClassName={`${styles.modal} ${styles.confirmationModal}`}
@@ -536,8 +536,8 @@ export default function FundsPage() {
                 <Trash2 aria-hidden="true" />
               </span>
               <div>
-                <h2>Cash register archivieren?</h2>
-                <p>Die Cash register wird aus den aktiven Ansichten entfernt. Historische Entryen bleiben erhalten.</p>
+                <h2>Archive cash register?</h2>
+                <p>The cash register will be removed from active views. Historical entries will remain available.</p>
               </div>
             </div>
             <button
@@ -570,7 +570,7 @@ export default function FundsPage() {
               disabled={deleteSaving}
               aria-busy={deleteSaving}
             >
-              {deleteSaving ? "Wird archiviert …" : "Cash register archivieren"}
+              {deleteSaving ? "Wird archiviert …" : "Archive cash register"}
             </button>
           </footer>
         </Dialog>
@@ -721,7 +721,7 @@ export default function FundsPage() {
               )}
 
               <label className={`${styles.formField} ${styles.formFieldFull}`}>
-                <span>Notiz oder Anlass</span>
+                <span>Note or reason</span>
                 <input
                   name="countNote"
                   type="text"

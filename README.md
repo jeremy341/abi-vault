@@ -23,7 +23,8 @@ is ready. It uses sample data only and is completely separate from production.
 ## Run locally
 
 See [docs/self-hosting.md](docs/self-hosting.md) for the local demo, Supabase,
-and Docker setup. The shortest path is:
+and Docker setup. For a separate Vercel demo, see
+[docs/vercel-demo.md](docs/vercel-demo.md). The shortest local path is:
 
 ```text
 pnpm install

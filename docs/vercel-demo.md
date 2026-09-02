@@ -5,9 +5,9 @@ production project or copy its environment variables.
 
 ## Create the demo project
 
-Import the repository into a new Vercel project named something like
-`abi-vault-demo`. Use the preparation branch for the first deployment, then
-select the public default branch after the repository review is complete.
+Import the repository into the separate Vercel project `abi-vault-demo`. Use
+the `open-source-demo` branch for the first deployment, then select the public
+default branch after the repository review is complete.
 
 Create a separate Supabase project for the demo. Apply the migrations and seed
 data there only. The production Supabase project must never be used for this
@@ -31,6 +31,12 @@ APP_ENCRYPTION_KEY=<demo-only-64-hex-character-key>
 
 Local/demo mode bypasses Clerk and uses a fixed demo administrator. Do not add
 production Clerk variables or production Supabase keys to this project.
+
+The verified team-scoped demo URL is:
+
+```text
+https://abi-vault-demo-jerry-team1.vercel.app
+```
 
 ## Before sharing the URL
 

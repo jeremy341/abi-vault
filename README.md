@@ -6,8 +6,8 @@ goals, reports, accounting periods, and member accountability in one place.
 
 ## Try it
 
-The hosted demo link will be published here once the isolated demo deployment
-is ready. It uses sample data only and is completely separate from production.
+Try the [hosted demo](https://abi-vault-demo-jerry-team1.vercel.app). It uses
+sample data only and is completely separate from production.
 
 ## Features
 

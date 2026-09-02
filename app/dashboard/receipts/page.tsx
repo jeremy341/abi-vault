@@ -683,6 +683,8 @@ export default function ReceiptsPage() {
   const [archiveReason, setArchiveReason] = useState("");
   const [actionError, setActionError] = useState("");
   const [fileName, setFileName] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
   const [transaction, setTransaction] = useState("");
   const [availableTransactions, setAvailableTransactions] =
     useState<readonly TransactionOption[]>([]);
@@ -784,7 +786,26 @@ export default function ReceiptsPage() {
 
   function handleFile(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
-    if (file) setFileName(file.name);
+    if (!file) return;
+    setSelectedFile(file);
+    setFileName(file.name);
+  }
+
+  useEffect(() => {
+    if (!selectedFile?.type.startsWith("image/")) {
+      setFilePreviewUrl(null);
+      return;
+    }
+    const previewUrl = URL.createObjectURL(selectedFile);
+    setFilePreviewUrl(previewUrl);
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [selectedFile]);
+
+  function removeSelectedFile() {
+    setSelectedFile(null);
+    setFilePreviewUrl(null);
+    setFileName("");
+    if (fileInput.current) fileInput.current.value = "";
   }
 
   function openEditReceipt(receipt: Receipt) {
@@ -893,6 +914,8 @@ export default function ReceiptsPage() {
     setModalOpen(false);
     setEditingReceipt(null);
     setFileName("");
+    setSelectedFile(null);
+    setFilePreviewUrl(null);
     setTransaction("");
   }
 
@@ -1166,20 +1189,23 @@ export default function ReceiptsPage() {
                   hidden
                   onChange={handleFile}
                 />
-                <button
-                  type="button"
-                  className={styles.uploadArea}
-                  onClick={() => fileInput.current?.click()}
-                >
-                  <Upload />
-                  <strong>{fileName || "Beleg hier ablegen"}</strong>
-                  <span>
-                    {fileName
-                      ? "Datei ausgewählt"
-                      : "PDF oder JPG/PNG bis 5 MB. Auf dem Handy ist auch die Kamera verfügbar."}
-                  </span>
-                  <span className={styles.uploadButton}>Datei auswählen</span>
-                </button>
+                {selectedFile ? (
+                  <div className={styles.uploadPreview}>
+                    {filePreviewUrl ? <img src={filePreviewUrl} alt={`Preview of ${selectedFile.name}`} className={styles.uploadPreviewImage} /> : <FileText className={styles.uploadPreviewIcon} aria-hidden="true" />}
+                    <div className={styles.uploadPreviewMeta}>
+                      <strong>{selectedFile.name}</strong>
+                      <span>{selectedFile.type === "application/pdf" ? "PDF document" : "Image file"}</span>
+                    </div>
+                    <button type="button" className={styles.removeFileButton} onClick={removeSelectedFile} aria-label="Remove selected file"><X aria-hidden="true" /></button>
+                  </div>
+                ) : (
+                  <button type="button" className={styles.uploadArea} onClick={() => fileInput.current?.click()}>
+                    <Upload />
+                    <strong>Drop receipt here</strong>
+                    <span>PDF or JPG/PNG up to 5 MB. On mobile, the camera is also available.</span>
+                    <span className={styles.uploadButton}>Choose file</span>
+                  </button>
+                )}
               </>
             ) : null}
             <label className={styles.formField}>

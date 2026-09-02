@@ -684,6 +684,7 @@ export default function ReceiptsPage() {
   const [actionError, setActionError] = useState("");
   const [fileName, setFileName] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
   const filePreviewUrl = useMemo(
     () => selectedFile?.type.startsWith("image/") ? URL.createObjectURL(selectedFile) : null,
     [selectedFile],
@@ -798,9 +799,20 @@ export default function ReceiptsPage() {
     if (filePreviewUrl) URL.revokeObjectURL(filePreviewUrl);
   }, [filePreviewUrl]);
 
+  useEffect(() => {
+    if (!imagePreviewOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setImagePreviewOpen(false);
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [imagePreviewOpen]);
+
   function removeSelectedFile() {
     setSelectedFile(null);
+    setImagePreviewOpen(false);
     setFileName("");
+    setImagePreviewOpen(false);
     if (fileInput.current) fileInput.current.value = "";
   }
 
@@ -1186,7 +1198,11 @@ export default function ReceiptsPage() {
                 />
                 {selectedFile ? (
                   <div className={styles.uploadPreview}>
-                    {filePreviewUrl ? <img src={filePreviewUrl} alt={`Preview of ${selectedFile.name}`} className={styles.uploadPreviewImage} /> : <FileText className={styles.uploadPreviewIcon} aria-hidden="true" />}
+                    {filePreviewUrl ? (
+                      <button type="button" className={styles.uploadPreviewButton} onClick={() => setImagePreviewOpen(true)} aria-label={`Open full preview of ${selectedFile.name}`}>
+                        <img width="1200" height="900" src={filePreviewUrl} alt={`Preview of ${selectedFile.name}`} className={styles.uploadPreviewImage} />
+                      </button>
+                    ) : <FileText className={styles.uploadPreviewIcon} aria-hidden="true" />}
                     <div className={styles.uploadPreviewMeta}>
                       <strong>{selectedFile.name}</strong>
                       <span>{selectedFile.type === "application/pdf" ? "PDF document" : "Image file"}</span>
@@ -1256,6 +1272,12 @@ export default function ReceiptsPage() {
               <h2>Beleg archivieren?</h2>
               <p>Die Datei bleibt für die Nachvollziehbarkeit erhalten und wird aus der aktiven Liste entfernt.</p>
             </div>
+            {imagePreviewOpen && filePreviewUrl && selectedFile ? (
+              <div className={styles.imageLightbox} role="dialog" aria-modal="true" aria-label={`Full preview of ${selectedFile.name}`} onClick={() => setImagePreviewOpen(false)}>
+                <button type="button" className={styles.imageLightboxClose} onClick={() => setImagePreviewOpen(false)} aria-label="Close image preview"><X aria-hidden="true" /></button>
+                <img width="1600" height="1200" src={filePreviewUrl} alt={`Full preview of ${selectedFile.name}`} className={styles.imageLightboxImage} onClick={(event) => event.stopPropagation()} />
+              </div>
+            ) : null}
             <button type="button" className={styles.closeButton} onClick={() => setArchiveTarget(null)} disabled={saving} aria-label="Dialog schließen"><X /></button>
           </header>
           <div className={styles.modalBody}>

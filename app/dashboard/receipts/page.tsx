@@ -684,7 +684,11 @@ export default function ReceiptsPage() {
   const [actionError, setActionError] = useState("");
   const [fileName, setFileName] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
+  const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
+  const filePreviewUrl = useMemo(
+    () => selectedFile?.type.startsWith("image/") ? URL.createObjectURL(selectedFile) : null,
+    [selectedFile],
+  );
   const [transaction, setTransaction] = useState("");
   const [availableTransactions, setAvailableTransactions] =
     useState<readonly TransactionOption[]>([]);
@@ -791,20 +795,24 @@ export default function ReceiptsPage() {
     setFileName(file.name);
   }
 
+  useEffect(() => () => {
+    if (filePreviewUrl) URL.revokeObjectURL(filePreviewUrl);
+  }, [filePreviewUrl]);
+
   useEffect(() => {
-    if (!selectedFile?.type.startsWith("image/")) {
-      setFilePreviewUrl(null);
-      return;
-    }
-    const previewUrl = URL.createObjectURL(selectedFile);
-    setFilePreviewUrl(previewUrl);
-    return () => URL.revokeObjectURL(previewUrl);
-  }, [selectedFile]);
+    if (!imagePreviewOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setImagePreviewOpen(false);
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [imagePreviewOpen]);
 
   function removeSelectedFile() {
     setSelectedFile(null);
-    setFilePreviewUrl(null);
+    setImagePreviewOpen(false);
     setFileName("");
+    setImagePreviewOpen(false);
     if (fileInput.current) fileInput.current.value = "";
   }
 
@@ -915,7 +923,6 @@ export default function ReceiptsPage() {
     setEditingReceipt(null);
     setFileName("");
     setSelectedFile(null);
-    setFilePreviewUrl(null);
     setTransaction("");
   }
 
@@ -1191,7 +1198,11 @@ export default function ReceiptsPage() {
                 />
                 {selectedFile ? (
                   <div className={styles.uploadPreview}>
-                    {filePreviewUrl ? <img src={filePreviewUrl} alt={`Preview of ${selectedFile.name}`} className={styles.uploadPreviewImage} /> : <FileText className={styles.uploadPreviewIcon} aria-hidden="true" />}
+                    {filePreviewUrl ? (
+                      <button type="button" className={styles.uploadPreviewButton} onClick={() => setImagePreviewOpen(true)} aria-label={`Open full preview of ${selectedFile.name}`}>
+                        <img width="1200" height="900" src={filePreviewUrl} alt={`Preview of ${selectedFile.name}`} className={styles.uploadPreviewImage} />
+                      </button>
+                    ) : <FileText className={styles.uploadPreviewIcon} aria-hidden="true" />}
                     <div className={styles.uploadPreviewMeta}>
                       <strong>{selectedFile.name}</strong>
                       <span>{selectedFile.type === "application/pdf" ? "PDF document" : "Image file"}</span>
@@ -1261,6 +1272,12 @@ export default function ReceiptsPage() {
               <h2>Receipt archivieren?</h2>
               <p>The file is kept for traceability and removed from the active list.</p>
             </div>
+            {imagePreviewOpen && filePreviewUrl && selectedFile ? (
+              <div className={styles.imageLightbox} role="dialog" aria-modal="true" aria-label={`Full preview of ${selectedFile.name}`} onClick={() => setImagePreviewOpen(false)}>
+                <button type="button" className={styles.imageLightboxClose} onClick={() => setImagePreviewOpen(false)} aria-label="Close image preview"><X aria-hidden="true" /></button>
+                <img width="1600" height="1200" src={filePreviewUrl} alt={`Full preview of ${selectedFile.name}`} className={styles.imageLightboxImage} onClick={(event) => event.stopPropagation()} />
+              </div>
+            ) : null}
             <button type="button" className={styles.closeButton} onClick={() => setArchiveTarget(null)} disabled={saving} aria-label="Close dialog"><X /></button>
           </header>
           <div className={styles.modalBody}>

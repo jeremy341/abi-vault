@@ -40,7 +40,7 @@ import { cachedFinanceQuery, getFinanceCacheState, invalidateFinanceQuery, subsc
 import { RowActionMenu } from "@/components/ui/row-actions";
 import { ReceiptReviewDialog, type ReceiptReviewDecision } from "@/components/receipts/ReceiptReviewDialog";
 
-type ReceiptStatus = "Geprüft" | "Zu prüfen" | "Ungültig" | "Ohne Zuordnung";
+type ReceiptStatus = "Approved" | "Pending review" | "Invalid" | "Ohne Zuordnung";
 type Receipt = {
   id: number | string;
   file: string;
@@ -64,7 +64,7 @@ function formatReceiptDate(value: string) {
   const date = new Date(`${value.slice(0, 10)}T00:00:00`);
   return Number.isNaN(date.getTime())
     ? value
-    : date.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
+    : date.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
 type ServerReceipt = {
@@ -97,7 +97,7 @@ function mapReceipt(item: ServerReceipt): Receipt {
     kind: "",
     date: item.date ? formatReceiptDate(item.date) : formatReceiptDate(new Date().toISOString()),
     amount: Number(item.amountMinor) / 100,
-    status: item.status === "approved" ? "Geprüft" : item.status === "rejected" ? "Ungültig" : !item.assigned ? "Ohne Zuordnung" : "Zu prüfen",
+    status: item.status === "approved" ? "Approved" : item.status === "rejected" ? "Invalid" : !item.assigned ? "Ohne Zuordnung" : "Pending review",
     canEdit: item.canEdit,
     canDelete: item.canDelete,
     uploadedByName: item.uploadedByName,
@@ -115,10 +115,10 @@ const receipts: Receipt[] = [];
     type: "PDF",
     size: "245 KB",
     transaction: "Abizeitung Druckkosten",
-    kind: "Ausgaben",
+    kind: "Expenses",
     date: "15.05.2026",
     amount: -1250,
-    status: "Geprüft",
+    status: "Approved",
   },
   {
     id: 2,
@@ -126,10 +126,10 @@ const receipts: Receipt[] = [];
     type: "JPG",
     size: "1,3 MB",
     transaction: "Abiball Deko",
-    kind: "Ausgaben",
+    kind: "Expenses",
     date: "12.05.2026",
     amount: -86.5,
-    status: "Geprüft",
+    status: "Approved",
   },
   {
     id: 3,
@@ -137,10 +137,10 @@ const receipts: Receipt[] = [];
     type: "PDF",
     size: "312 KB",
     transaction: "Abifahrt Bus",
-    kind: "Ausgaben",
+    kind: "Expenses",
     date: "10.05.2026",
     amount: -2400,
-    status: "Geprüft",
+    status: "Approved",
   },
   {
     id: 4,
@@ -148,10 +148,10 @@ const receipts: Receipt[] = [];
     type: "PDF",
     size: "198 KB",
     transaction: "T-Shirts Abijahrgang",
-    kind: "Ausgaben",
+    kind: "Expenses",
     date: "08.05.2026",
     amount: -950,
-    status: "Zu prüfen",
+    status: "Pending review",
   },
   {
     id: 5,
@@ -159,10 +159,10 @@ const receipts: Receipt[] = [];
     type: "JPG",
     size: "980 KB",
     transaction: "Abiball Verpflegung",
-    kind: "Ausgaben",
+    kind: "Expenses",
     date: "07.05.2026",
     amount: -168.75,
-    status: "Geprüft",
+    status: "Approved",
   },
   {
     id: 6,
@@ -170,18 +170,18 @@ const receipts: Receipt[] = [];
     type: "PDF",
     size: "276 KB",
     transaction: "Abiball DJ",
-    kind: "Ausgaben",
+    kind: "Expenses",
     date: "05.05.2026",
     amount: -600,
-    status: "Zu prüfen",
+    status: "Pending review",
   },
   {
     id: 7,
-    file: "Bon_Bäckerei.jpg",
+    file: "bakery-receipt.jpg",
     type: "JPG",
     size: "512 KB",
     transaction: "—",
-    kind: "Nicht zugeordnet",
+    kind: "Unassigned",
     date: "03.05.2026",
     amount: -54.2,
     status: "Ohne Zuordnung",
@@ -192,10 +192,10 @@ const receipts: Receipt[] = [];
     type: "PDF",
     size: "341 KB",
     transaction: "Abiball Lichttechnik",
-    kind: "Ausgaben",
+    kind: "Expenses",
     date: "28.04.2026",
     amount: -350,
-    status: "Geprüft",
+    status: "Approved",
   },
   {
     id: 9,
@@ -203,21 +203,21 @@ const receipts: Receipt[] = [];
     type: "PDF",
     size: "120 KB",
     transaction: "Dekoration Klassenraum",
-    kind: "Ausgaben",
+    kind: "Expenses",
     date: "25.04.2026",
     amount: -96.4,
-    status: "Geprüft",
+    status: "Approved",
   },
   {
     id: 10,
-    file: "Bon_Getränke.jpg",
+    file: "drinks-receipt.jpg",
     type: "JPG",
     size: "760 KB",
     transaction: "Kuchenverkauf",
-    kind: "Einnahmen",
+    kind: "Income",
     date: "22.04.2026",
     amount: 185.5,
-    status: "Geprüft",
+    status: "Approved",
   },
   {
     id: 11,
@@ -225,10 +225,10 @@ const receipts: Receipt[] = [];
     type: "PDF",
     size: "288 KB",
     transaction: "Druck Nachzahlung",
-    kind: "Ausgaben",
+    kind: "Expenses",
     date: "20.04.2026",
     amount: -75,
-    status: "Geprüft",
+    status: "Approved",
   },
   {
     id: 12,
@@ -236,10 +236,10 @@ const receipts: Receipt[] = [];
     type: "JPG",
     size: "640 KB",
     transaction: "Material Einkauf",
-    kind: "Ausgaben",
+    kind: "Expenses",
     date: "18.04.2026",
     amount: -180,
-    status: "Zu prüfen",
+    status: "Pending review",
   },
   {
     id: 13,
@@ -247,21 +247,21 @@ const receipts: Receipt[] = [];
     type: "PDF",
     size: "154 KB",
     transaction: "Spende Eltern",
-    kind: "Einnahmen",
+    kind: "Income",
     date: "15.04.2026",
     amount: 250,
-    status: "Geprüft",
+    status: "Approved",
   },
   {
     id: 14,
-    file: "Rechnung_Bühne.pdf",
+    file: "stage-invoice.pdf",
     type: "PDF",
     size: "402 KB",
-    transaction: "Bühnenaufbau",
-    kind: "Ausgaben",
+    transaction: "Stage setup",
+    kind: "Expenses",
     date: "12.04.2026",
     amount: -420,
-    status: "Geprüft",
+    status: "Approved",
   },
   {
     id: 15,
@@ -269,10 +269,10 @@ const receipts: Receipt[] = [];
     type: "JPG",
     size: "890 KB",
     transaction: "Plakate",
-    kind: "Ausgaben",
+    kind: "Expenses",
     date: "10.04.2026",
     amount: -120,
-    status: "Geprüft",
+    status: "Approved",
   },
   {
     id: 16,
@@ -280,10 +280,10 @@ const receipts: Receipt[] = [];
     type: "PDF",
     size: "219 KB",
     transaction: "Raummiete",
-    kind: "Ausgaben",
+    kind: "Expenses",
     date: "08.04.2026",
     amount: -300,
-    status: "Zu prüfen",
+    status: "Pending review",
   },
   {
     id: 17,
@@ -291,19 +291,19 @@ const receipts: Receipt[] = [];
     type: "JPG",
     size: "438 KB",
     transaction: "Dekoration Abiball",
-    kind: "Ausgaben",
+    kind: "Expenses",
     date: "06.04.2026",
     amount: -72.5,
-    status: "Geprüft",
+    status: "Approved",
   },
 ];
 */
 
 const statusOptions = [
   "Alle",
-  "Geprüft",
-  "Zu prüfen",
-  "Ungültig",
+  "Approved",
+  "Pending review",
+  "Invalid",
   "Ohne Zuordnung",
 ] as const;
 const periodOptions = [
@@ -406,7 +406,7 @@ function TransactionCombobox({
 
   return (
     <label className={styles.formField}>
-      <span>Transaktion zuordnen</span>
+      <span>Transaction zuordnen</span>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger
           render={
@@ -414,11 +414,11 @@ function TransactionCombobox({
               type="button"
               className={styles.comboboxTrigger}
               aria-expanded={open}
-              aria-label="Transaktion auswählen"
+              aria-label="Select transaction"
             />
           }
         >
-          <span>{selected?.label || "Transaktion auswählen"}</span>
+          <span>{selected?.label || "Select transaction"}</span>
           <ChevronsUpDown aria-hidden="true" />
         </PopoverTrigger>
         <PopoverContent
@@ -434,18 +434,18 @@ function TransactionCombobox({
         >
           <label className={styles.comboboxSearch}>
             <Search aria-hidden="true" />
-            <span className="sr-only">Transaktionen durchsuchen</span>
+            <span className="sr-only">Transactions durchsuchen</span>
             <input
               autoFocus
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Name, Datum oder Betrag suchen …"
+              placeholder="Search by name, date, or amount …"
             />
           </label>
           <div
             className={styles.comboboxList}
             role="listbox"
-            aria-label="Verfügbare Transaktionen"
+            aria-label="Available transactions"
           >
             {filteredOptions.length ? (
               filteredOptions.map((option) => (
@@ -466,7 +466,7 @@ function TransactionCombobox({
                     {option.date ? (
                       <small>{option.date}</small>
                     ) : (
-                      <small>Beleg später zuordnen</small>
+                      <small>Assign receipt later</small>
                     )}
                   </span>
                   {option.amount ? (
@@ -490,7 +490,7 @@ function TransactionCombobox({
               ))
             ) : (
               <p className={styles.comboboxEmpty}>
-                Keine passende Transaktion gefunden.
+                No passende Transaction gefunden.
               </p>
             )}
           </div>
@@ -501,7 +501,7 @@ function TransactionCombobox({
 }
 
 function formatAmount(amount: number) {
-  return `${amount < 0 ? "-" : "+"}${Math.abs(amount).toLocaleString("de-DE", { minimumFractionDigits: 2 })} €`;
+  return `${amount < 0 ? "-" : "+"}${Math.abs(amount).toLocaleString("en-GB", { minimumFractionDigits: 2 })} €`;
 }
 
 function PhoneReceiptsView({
@@ -555,7 +555,7 @@ function PhoneReceiptsView({
           <strong><LoadingText loading={loading}>{total}</LoadingText></strong>
         </div>
         <div className={phoneStyles.summaryItem}>
-          <span>Zu prüfen</span>
+          <span>Pending review</span>
           <strong><LoadingText loading={loading}>{pendingCount}</LoadingText></strong>
         </div>
         <div className={phoneStyles.summaryItem}>
@@ -567,12 +567,12 @@ function PhoneReceiptsView({
       <div className={phoneStyles.toolbar} data-ui-slot="toolbar">
         <label className={phoneStyles.search}>
           <Search aria-hidden="true" />
-          <span className="sr-only">Belege suchen</span>
+          <span className="sr-only">Search receipts</span>
           <input
             value={query}
             disabled={loading}
             onChange={(event) => onQueryChange(event.target.value)}
-            placeholder="Dateiname oder Transaktion …"
+            placeholder="Filename or transaction …"
           />
         </label>
         <button
@@ -580,7 +580,7 @@ function PhoneReceiptsView({
           className={phoneStyles.uploadButton}
           onClick={onAdd}
           disabled={loading}
-          aria-label="Beleg hinzufügen"
+          aria-label="Add receipt"
         >
           <Upload aria-hidden="true" />
         </button>
@@ -601,21 +601,21 @@ function PhoneReceiptsView({
       </div>
 
       <header className={phoneStyles.listHeader} data-ui-slot="list-header">
-        <h2>Belege</h2>
+        <h2>Receipts</h2>
         <span><LoadingText loading={loading}>{total} Dateien</LoadingText></span>
       </header>
 
       <div className={phoneStyles.rows} data-ui-slot="list-body">
-        <LoadingCollection loading={loading} knownItemCount={receipts.length} emptyHeight="10rem" label="Belege werden geladen…">
+        <LoadingCollection loading={loading} knownItemCount={receipts.length} emptyHeight="10rem" label="Receipts werden geladen…">
           {receipts.length ? receipts.map((receipt) => (
           <article className={phoneStyles.row} key={receipt.id}>
             <FileText aria-hidden="true" />
             <span className={phoneStyles.rowMain}>
               <strong>{receipt.file}</strong>
-              <small>Hochgeladen von {receipt.uploadedByName}</small>
+              <small>Uploaded by {receipt.uploadedByName}</small>
               <span>
                 {receipt.transaction === "—"
-                  ? "Nicht zugeordnet"
+                  ? "Unassigned"
                   : receipt.transaction}
               </span>
             </span>
@@ -631,7 +631,7 @@ function PhoneReceiptsView({
               </b>
               <small
                 className={
-                  receipt.status === "Geprüft" ? "" : phoneStyles.review
+                  receipt.status === "Approved" ? "" : phoneStyles.review
                 }
               >
                 {receipt.status}
@@ -644,16 +644,16 @@ function PhoneReceiptsView({
               onEdit={() => onEdit(receipt)}
               onDelete={() => onDelete(receipt)}
               onReceipt={() => onReview(receipt)}
-              receiptLabel={receipt.status === "Zu prüfen" ? "Beleg prüfen" : "Beleg ansehen"}
+              receiptLabel={receipt.status === "Pending review" ? "Review receipt" : "View receipt"}
             />
           </article>
-          )) : <div className={phoneStyles.empty}>Keine Belege gefunden.</div>}
+          )) : <div className={phoneStyles.empty}>No receipts found.</div>}
         </LoadingCollection>
       </div>
 
       <footer className={phoneStyles.footer} data-ui-slot="footer">
         <span>
-          <LoadingText loading={loading}>{rangeStart}-{rangeEnd} von {total}</LoadingText>
+          <LoadingText loading={loading}>{rangeStart}-{rangeEnd} by {total}</LoadingText>
         </span>
         <Pagination
           page={page}
@@ -702,7 +702,7 @@ export default function ReceiptsPage() {
     const applyResult = (result: Awaited<ReturnType<typeof listReceiptsForCurrentOrganization>>) => {
         if (!active) return;
         if (!result.ok) {
-          setLoadError("Die Belege konnten nicht geladen werden.");
+          setLoadError("Die Receipts konnten nicht geladen werden.");
           return;
         }
         setItems(result.items.map(mapReceipt));
@@ -712,7 +712,7 @@ export default function ReceiptsPage() {
     cachedFinanceQuery("receipts", listReceiptsForCurrentOrganization, { scope: cacheScope })
       .then(applyResult)
       .catch(() => {
-        if (active) setLoadError("Die Belege konnten nicht geladen werden.");
+        if (active) setLoadError("Die Receipts konnten nicht geladen werden.");
       })
       .finally(() => {
         if (active) { setLoading(false); setRefreshing(false); }
@@ -729,7 +729,7 @@ export default function ReceiptsPage() {
       .then((result) => {
         if (!active) return;
         if (!result.ok) {
-          setUploadError("Die Transaktionen konnten nicht geladen werden.");
+          setUploadError("Die Transactions konnten nicht geladen werden.");
           return;
         }
         setAvailableTransactions([
@@ -738,12 +738,12 @@ export default function ReceiptsPage() {
             value: item.id,
             label: item.title,
             date: item.date ? formatReceiptDate(item.date) : "",
-            amount: `${Number(item.amountMinor) >= 0 ? "+" : "-"}${Math.abs(Number(item.amountMinor) / 100).toLocaleString("de-DE", { minimumFractionDigits: 2 })} €`,
+            amount: `${Number(item.amountMinor) >= 0 ? "+" : "-"}${Math.abs(Number(item.amountMinor) / 100).toLocaleString("en-GB", { minimumFractionDigits: 2 })} €`,
           })),
         ]);
       })
       .catch(() => {
-        if (active) setUploadError("Die Transaktionen konnten nicht geladen werden.");
+        if (active) setUploadError("Die Transactions konnten nicht geladen werden.");
       })
       .finally(() => {
         if (active) setTransactionsLoading(false);
@@ -828,7 +828,7 @@ export default function ReceiptsPage() {
         setReviewError(result.error.message);
         return;
       }
-      const nextStatus: ReceiptStatus = decision === "approved" ? "Geprüft" : decision === "rejected" ? "Ungültig" : "Zu prüfen";
+      const nextStatus: ReceiptStatus = decision === "approved" ? "Approved" : decision === "rejected" ? "Invalid" : "Pending review";
       setItems((current) => current.map((item) => item.id === reviewTarget.id ? { ...item, status: nextStatus } : item));
       setReviewTarget(null);
       invalidateFinanceQuery("receipts", "transactions", "dashboard-snapshot", "report-snapshot", "report-kpis");
@@ -841,7 +841,7 @@ export default function ReceiptsPage() {
     if (saving) return;
     if (editingReceipt) {
       if (!fileName.trim()) {
-        setUploadError("Bitte einen Dateinamen eingeben.");
+        setUploadError("Please einen Dateinamen eingeben.");
         return;
       }
       setSaving(true);
@@ -860,7 +860,7 @@ export default function ReceiptsPage() {
           ...item,
           file: fileName.trim(),
           transactionId: /^[0-9a-f-]{36}$/i.test(transaction) ? transaction : null,
-          transaction: availableTransactions.find((option) => option.value === transaction)?.label ?? "Nicht zugeordnet",
+          transaction: availableTransactions.find((option) => option.value === transaction)?.label ?? "Unassigned",
           status: transaction ? item.status : "Ohne Zuordnung",
         } : item));
         invalidateFinanceQuery("receipts", "transactions", "dashboard-snapshot", "report-snapshot", "report-kpis");
@@ -883,7 +883,7 @@ export default function ReceiptsPage() {
         invalidateFinanceQuery("receipts", "transactions", "dashboard-snapshot", "report-snapshot", "report-kpis");
         closeModal();
       } else {
-        setUploadError("Der Beleg konnte nicht hochgeladen werden.");
+        setUploadError("Der Receipt konnte nicht hochgeladen werden.");
       }
     } finally {
       setSaving(false);
@@ -932,8 +932,8 @@ export default function ReceiptsPage() {
       }
       aria-busy={loading}
     >
-      <LoadingStatus loading={loading} label="Belege werden geladen…" />
-      {refreshing && !loading ? <span className="sr-only" role="status">Belege werden aktualisiert…</span> : null}
+      <LoadingStatus loading={loading} label="Receipts werden geladen…" />
+      {refreshing && !loading ? <span className="sr-only" role="status">Receipts werden aktualisiert…</span> : null}
       {loadError ? <p className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{loadError}</p> : null}
       {mode === "phone" ? (
         <PhoneReceiptsView
@@ -957,7 +957,7 @@ export default function ReceiptsPage() {
           page={currentPage}
           pageCount={pageCount}
           total={filtered.length}
-          pendingCount={items.filter((item) => item.status === "Zu prüfen").length}
+          pendingCount={items.filter((item) => item.status === "Pending review").length}
           unassignedCount={items.filter((item) => item.status === "Ohne Zuordnung").length}
           rangeStart={filtered.length ? (currentPage - 1) * pageSize + 1 : 0}
           rangeEnd={Math.min(currentPage * pageSize, filtered.length)}
@@ -975,7 +975,7 @@ export default function ReceiptsPage() {
                 <FileText />
               </span>
               <div>
-                <span>Alle Belege</span>
+                <span>All receipts</span>
                 <strong><LoadingText loading={loading}>{items.length}</LoadingText></strong>
               </div>
             </article>
@@ -984,8 +984,8 @@ export default function ReceiptsPage() {
                 <Clock3 />
               </span>
               <div>
-                <span>Zu prüfen</span>
-                <strong><LoadingText loading={loading}>{items.filter((item) => item.status === "Zu prüfen").length}</LoadingText></strong>
+                <span>Pending review</span>
+                <strong><LoadingText loading={loading}>{items.filter((item) => item.status === "Pending review").length}</LoadingText></strong>
               </div>
             </article>
             <article className={styles.summaryCard}>
@@ -1001,7 +1001,7 @@ export default function ReceiptsPage() {
 
           <article className={styles.listCard} data-ui-slot="content">
             <header className={styles.listHeader}>
-              <h2>Belegübersicht</h2>
+              <h2>Receipt overview</h2>
               <button
                 type="button"
                 className={styles.primaryButton}
@@ -1010,13 +1010,13 @@ export default function ReceiptsPage() {
                 data-ui-slot="primary-action"
               >
                 <Upload />
-                Beleg hinzufügen
+                Add receipt
               </button>
             </header>
             <div className={styles.filters} data-ui-slot="toolbar">
               <label className={styles.searchField}>
                 <Search />
-                <span className="sr-only">Belege suchen</span>
+                <span className="sr-only">Search receipts</span>
                 <input
                   value={query}
                   disabled={loading}
@@ -1024,7 +1024,7 @@ export default function ReceiptsPage() {
                     setQuery(event.target.value);
                     setPage(1);
                   }}
-                  placeholder="Suche nach Dateiname oder Transaktion …"
+                  placeholder="Search by filename or transaction …"
                 />
               </label>
               <Dropdown
@@ -1045,21 +1045,21 @@ export default function ReceiptsPage() {
             </div>
             <div className={`${styles.tableWrap} ui-data-table`} data-ui-slot="list-body">
               <div className={styles.tableHeader}>
-                <span>Beleg</span>
-                <span>Zugeordnete Transaktion</span>
-                <span>Datum</span>
-                <span>Betrag</span>
+                <span>Receipt</span>
+                <span>Zugeordnete Transaction</span>
+                <span>Date</span>
+                <span>Amount</span>
                 <span>Status</span>
                 <span />
               </div>
               <div className={styles.rows}>
                 {loading ? (
-                  <LoadingCollection loading knownItemCount={items.length} emptyHeight="100%" label="Belege werden geladen…"><div /></LoadingCollection>
+                  <LoadingCollection loading knownItemCount={items.length} emptyHeight="100%" label="Receipts werden geladen…"><div /></LoadingCollection>
                 ) : !visible.length ? (
                   <EmptyState
-                    title="Keine Belege gefunden"
-                    description="Ändere die Suche oder setze die Filter zurück."
-                    action={<button type="button" onClick={() => { setQuery(""); setStatus("Alle"); setPeriod("Alle"); setPage(1); }}>Filter zurücksetzen</button>}
+                    title="No Receipts gefunden"
+                    description="Change your search or reset the filters."
+                    action={<button type="button" onClick={() => { setQuery(""); setStatus("Alle"); setPeriod("Alle"); setPage(1); }}>Reset filters</button>}
                   />
                 ) : null}
                 {!loading && visible.map((receipt) => (
@@ -1070,36 +1070,36 @@ export default function ReceiptsPage() {
                       </span>
                       <span>
                         <strong>{receipt.file}</strong>
-                        <small>Hochgeladen von {receipt.uploadedByName}</small>
+                        <small>Uploaded by {receipt.uploadedByName}</small>
                       </span>
                     </span>
                     <span
-                      data-label="Transaktion"
+                      data-label="Transaction"
                       className={styles.transactionCell}
                     >
                       <strong>{receipt.transaction}</strong>
                     </span>
                     <span
-                      data-label="Datum"
+                      data-label="Date"
                       className={`ui-tabular ${styles.muted}`}
                     >
                       {receipt.date}
                     </span>
                     <span
-                      data-label="Betrag"
+                      data-label="Amount"
                       className={`ui-tabular ${receipt.amount < 0 ? styles.negative : styles.positive}`}
                     >
                       {formatAmount(receipt.amount)}
                     </span>
                     <span
                       data-label="Status"
-                      className={`ui-badge ${styles.statusTag} ${receipt.status === "Geprüft" ? styles.checked : receipt.status === "Zu prüfen" ? styles.review : receipt.status === "Ungültig" ? styles.rejected : styles.unassigned}`}
+                      className={`ui-badge ${styles.statusTag} ${receipt.status === "Approved" ? styles.checked : receipt.status === "Pending review" ? styles.review : receipt.status === "Invalid" ? styles.rejected : styles.unassigned}`}
                     >
-                      {receipt.status === "Geprüft" ? (
+                      {receipt.status === "Approved" ? (
                         <Check />
-                      ) : receipt.status === "Zu prüfen" ? (
+                      ) : receipt.status === "Pending review" ? (
                         <Clock3 />
-                      ) : receipt.status === "Ungültig" ? (
+                      ) : receipt.status === "Invalid" ? (
                         <X />
                       ) : (
                         <Link2 />
@@ -1113,7 +1113,7 @@ export default function ReceiptsPage() {
                       onEdit={() => openEditReceipt(receipt)}
                       onDelete={() => openArchiveReceipt(receipt)}
                       onReceipt={() => { void openReviewReceipt(receipt); }}
-                      receiptLabel={receipt.status === "Zu prüfen" ? "Beleg prüfen" : "Beleg ansehen"}
+                      receiptLabel={receipt.status === "Pending review" ? "Review receipt" : "View receipt"}
                     />
                   </div>
                 ))}
@@ -1122,8 +1122,8 @@ export default function ReceiptsPage() {
             <footer className={styles.pagination} data-ui-slot="footer">
               <span>
                 <LoadingText loading={loading}>{filtered.length
-                  ? `${(currentPage - 1) * pageSize + 1}–${Math.min(currentPage * pageSize, filtered.length)} von ${filtered.length}`
-                  : "0 von 0"}</LoadingText>
+                  ? `${(currentPage - 1) * pageSize + 1}–${Math.min(currentPage * pageSize, filtered.length)} by ${filtered.length}`
+                  : "0 by 0"}</LoadingText>
               </span>
               <Pagination
                 page={currentPage}
@@ -1138,15 +1138,15 @@ export default function ReceiptsPage() {
 
       {modalOpen ? (
         <Dialog
-          label={editingReceipt ? "Beleg bearbeiten" : "Beleg hinzufügen"}
+          label={editingReceipt ? "Edit receipt" : "Add receipt"}
           onClose={closeModal}
           overlayClassName={styles.overlay}
           dialogClassName={`${styles.modal} ${mode === "phone" ? phoneStyles.phoneDialog : ""}`}
         >
           <header className={styles.modalHeader}>
             <div>
-              <h2>{editingReceipt ? "Beleg bearbeiten" : "Beleg hinzufügen"}</h2>
-              <p>{editingReceipt ? "Ändere Dateiname oder Zuordnung. Der Prüfstatus bleibt unverändert." : "Lade einen neuen Beleg hoch und ordne ihn direkt zu."}</p>
+              <h2>{editingReceipt ? "Edit receipt" : "Add receipt"}</h2>
+              <p>{editingReceipt ? "Change the filename or assignment. The review status remains unchanged." : "Upload a new receipt and assign it directly."}</p>
             </div>
             <button
               type="button"
@@ -1174,13 +1174,13 @@ export default function ReceiptsPage() {
                   onClick={() => fileInput.current?.click()}
                 >
                   <Upload />
-                  <strong>{fileName || "Beleg hier ablegen"}</strong>
+                  <strong>{fileName || "Receipt hier ablegen"}</strong>
                   <span>
                     {fileName
-                      ? "Datei ausgewählt"
-                      : "PDF oder JPG/PNG bis 5 MB. Auf dem Handy ist auch die Kamera verfügbar."}
+                      ? "File selected"
+                      : "PDF or JPG/PNG up to 5 MB. Camera access is also available on mobile."}
                   </span>
-                  <span className={styles.uploadButton}>Datei auswählen</span>
+                  <span className={styles.uploadButton}>Choose file</span>
                 </button>
               </>
             ) : null}
@@ -1210,7 +1210,7 @@ export default function ReceiptsPage() {
               onClick={closeModal}
               disabled={saving}
             >
-              Abbrechen
+              Cancel
             </button>
             <button
               type="button"
@@ -1219,7 +1219,7 @@ export default function ReceiptsPage() {
               disabled={saving}
               aria-busy={saving}
             >
-              {saving ? (editingReceipt ? "Wird gespeichert …" : "Wird hochgeladen …") : editingReceipt ? "Änderungen speichern" : "Beleg hinzufügen"}
+              {saving ? (editingReceipt ? "Saving …" : "Wird hochgeladen …") : editingReceipt ? "Save changes" : "Add receipt"}
             </button>
           </footer>
         </Dialog>
@@ -1227,28 +1227,28 @@ export default function ReceiptsPage() {
 
       {archiveTarget ? (
         <Dialog
-          label="Beleg archivieren"
+          label="Receipt archivieren"
           onClose={() => { if (!saving) setArchiveTarget(null); }}
           overlayClassName={styles.overlay}
           dialogClassName={`${styles.modal} ${mode === "phone" ? phoneStyles.phoneDialog : ""}`}
         >
           <header className={styles.modalHeader}>
             <div>
-              <h2>Beleg archivieren?</h2>
-              <p>Die Datei bleibt für die Nachvollziehbarkeit erhalten und wird aus der aktiven Liste entfernt.</p>
+              <h2>Receipt archivieren?</h2>
+              <p>The file is kept for traceability and removed from the active list.</p>
             </div>
             <button type="button" className={styles.closeButton} onClick={() => setArchiveTarget(null)} disabled={saving} aria-label="Dialog schließen"><X /></button>
           </header>
           <div className={styles.modalBody}>
             <label className={styles.formField}>
               <span>Grund</span>
-              <input autoFocus value={archiveReason} onChange={(event) => setArchiveReason(event.target.value)} placeholder="Warum soll der Beleg archiviert werden?" />
+              <input autoFocus value={archiveReason} onChange={(event) => setArchiveReason(event.target.value)} placeholder="Why should this receipt be archived?" />
             </label>
             {actionError ? <p className="rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{actionError}</p> : null}
           </div>
           <footer className={styles.modalFooter}>
-            <button type="button" className={styles.secondaryButton} onClick={() => setArchiveTarget(null)} disabled={saving}>Abbrechen</button>
-            <button type="button" className={styles.primaryButton} onClick={confirmArchiveReceipt} disabled={saving || !archiveReason.trim()} aria-busy={saving}>{saving ? "Wird archiviert …" : "Archivieren"}</button>
+            <button type="button" className={styles.secondaryButton} onClick={() => setArchiveTarget(null)} disabled={saving}>Cancel</button>
+            <button type="button" className={styles.primaryButton} onClick={confirmArchiveReceipt} disabled={saving || !archiveReason.trim()} aria-busy={saving}>{saving ? "Wird archiviert …" : "Archive"}</button>
           </footer>
         </Dialog>
       ) : null}

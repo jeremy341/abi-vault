@@ -62,50 +62,50 @@ const navigationItems = [
     icon: LayoutDashboard,
   },
   {
-    label: "Transaktionen",
-    shortLabel: "Transaktionen",
+    label: "Transactions",
+    shortLabel: "Transactions",
     href: "/dashboard/transactions",
     icon: ReceiptText,
   },
   {
-    label: "Belege",
-    shortLabel: "Belege",
+    label: "Receipts",
+    shortLabel: "Receipts",
     href: "/dashboard/receipts",
     icon: FileText,
   },
   {
-    label: "Ziele",
-    shortLabel: "Ziele",
+    label: "Goals",
+    shortLabel: "Goals",
     href: "/dashboard/goals",
     icon: Target,
   },
   {
-    label: "Kassen",
-    shortLabel: "Kasse",
+    label: "Cash registers",
+    shortLabel: "Cash register",
     href: "/dashboard/funds",
     icon: WalletCards,
   },
   {
-    label: "Berichte",
-    shortLabel: "Berichte",
+    label: "Reports",
+    shortLabel: "Reports",
     href: "/dashboard/reports",
     icon: BarChart3,
   },
   {
-    label: "Personen",
-    shortLabel: "Personen",
+    label: "People",
+    shortLabel: "People",
     href: "/dashboard/people",
     icon: Users,
   },
   {
-    label: "Einstellungen",
-    shortLabel: "Einstellungen",
+    label: "Settings",
+    shortLabel: "Settings",
     href: "/dashboard/settings",
     icon: Settings,
   },
   {
-    label: "Zeiträume",
-    shortLabel: "Zeiträume",
+    label: "Periods",
+    shortLabel: "Periods",
     href: "/dashboard/periods",
     icon: CalendarClock,
   },
@@ -114,40 +114,40 @@ const navigationItems = [
 const pageInformation: Record<string, { title: string; description: string }> =
   {
     "/dashboard": {
-      title: "Finanzübersicht",
-      description: "Klassenfinanzen auf einen Blick.",
+      title: "Financial overview",
+      description: "Class finances at a glance.",
     },
     "/dashboard/transactions": {
-      title: "Transaktionen",
-      description: "Alle Einnahmen und Ausgaben im Überblick.",
+      title: "Transactions",
+      description: "All income and expenses in one view.",
     },
     "/dashboard/receipts": {
-      title: "Belege",
-      description: "Belege hochladen, prüfen und zuordnen.",
+      title: "Receipts",
+      description: "Upload, review, and assign receipts.",
     },
     "/dashboard/goals": {
-      title: "Ziele",
-      description: "Sparziele planen und Fortschritte verfolgen.",
+      title: "Goals",
+      description: "Plan savings goals and track progress.",
     },
     "/dashboard/funds": {
-      title: "Kassen",
-      description: "Barkasse und Kassenbestand verwalten.",
+      title: "Cash registers",
+      description: "Manage cash registers and balances.",
     },
     "/dashboard/reports": {
-      title: "Berichte",
-      description: "Finanzdaten transparent auswerten.",
+      title: "Reports",
+      description: "Review financial data with clarity.",
     },
     "/dashboard/people": {
-      title: "Personen",
-      description: "Mitglieder und Rollen verwalten.",
+      title: "People",
+      description: "Manage members and roles.",
     },
     "/dashboard/settings": {
-      title: "Einstellungen",
-      description: "Arbeitsbereich und Zugriffe konfigurieren.",
+      title: "Settings",
+      description: "Configure workspace and access.",
     },
     "/dashboard/periods": {
-      title: "Zeiträume",
-      description: "Buchungszeiträume öffnen und sicher abschließen.",
+      title: "Periods",
+      description: "Open and safely close accounting periods.",
     },
   };
 
@@ -196,12 +196,12 @@ function TabletTopbar({ pathname, localMode }: { pathname: string; localMode: bo
       <div className={styles.tabletActions}>
         <button type="button" className={styles.tabletCohort}>
           <CalendarDays aria-hidden="true" />
-          Abi 2026
+          Class of 2026
         </button>
         <button
           type="button"
           className={styles.iconButton}
-          aria-label="Benachrichtigungen"
+          aria-label="Notifications"
         >
           <Bell aria-hidden="true" />
         </button>
@@ -223,15 +223,15 @@ function PhoneTopbar({ pathname, localMode }: { pathname: string; localMode: boo
         <Sheet>
           <SheetTrigger
             className={styles.iconButton}
-            aria-label="Benachrichtigungen"
+            aria-label="Notifications"
           >
             <Bell aria-hidden="true" />
           </SheetTrigger>
           <SheetContent side="bottom" className={styles.phoneSheet}>
             <div className={styles.phoneSheetHandle} aria-hidden="true" />
             <SheetHeader>
-              <SheetTitle>Benachrichtigungen</SheetTitle>
-              <SheetDescription>Keine neuen Hinweise.</SheetDescription>
+              <SheetTitle>Notifications</SheetTitle>
+              <SheetDescription>No new notifications.</SheetDescription>
             </SheetHeader>
           </SheetContent>
         </Sheet>
@@ -274,9 +274,9 @@ function PhoneNavigation({ pathname, isAdmin }: { pathname: string; isAdmin: boo
         <SheetContent side="bottom" className={styles.phoneSheet}>
           <div className={styles.phoneSheetHandle} aria-hidden="true" />
           <SheetHeader>
-            <SheetTitle>Weitere Bereiche</SheetTitle>
+            <SheetTitle>More areas</SheetTitle>
             <SheetDescription>
-              Ziele, Auswertungen und Verwaltung öffnen.
+              Open goals, reports, and administration.
             </SheetDescription>
           </SheetHeader>
           <div className={styles.phoneSheetGrid}>
@@ -380,12 +380,12 @@ function DesktopShell({
         </div>
         <nav className={styles.desktopNavigation}>
           <DesktopNavGroup
-            label="Finanzen"
+            label="Finance"
             items={navigationItems.slice(0, 6)}
             pathname={pathname}
           />
           <DesktopNavGroup
-            label="Verwaltung"
+            label="Administration"
             items={navigationItems.slice(6)}
             pathname={pathname}
           />
@@ -418,14 +418,14 @@ function DesktopShell({
                 }
               >
                 <CalendarDays aria-hidden="true" />
-                Abi 2026
+                Class of 2026
                 <ChevronDown aria-hidden="true" />
               </button>
               {openMenu === "cohort" ? (
                 <div
                   className={styles.desktopActionMenu}
                   role="menu"
-                  aria-label="Jahrgang auswählen"
+                  aria-label="Cohort auswählen"
                 >
                   <button
                     type="button"
@@ -434,12 +434,12 @@ function DesktopShell({
                   >
                     <CalendarDays aria-hidden="true" />
                     <span>
-                      <strong>Abi 2026</strong>
-                      <small>Aktiver Jahrgang</small>
+                      <strong>Class of 2026</strong>
+                      <small>Aktiver Cohort</small>
                     </span>
                   </button>
                   <Link href="/dashboard/settings" role="menuitem">
-                    <Settings aria-hidden="true" /> Jahrgang verwalten
+                    <Settings aria-hidden="true" /> Cohort verwalten
                   </Link>
                 </div>
               ) : null}
@@ -451,7 +451,7 @@ function DesktopShell({
               <button
                 type="button"
                 className={styles.desktopIconButton}
-                aria-label="Benachrichtigungen"
+                aria-label="Notifications"
                 aria-haspopup="dialog"
                 aria-expanded={openMenu === "notifications"}
                 onClick={() =>
@@ -466,10 +466,10 @@ function DesktopShell({
                 <div
                   className={styles.desktopNotificationPanel}
                   role="dialog"
-                  aria-label="Benachrichtigungen"
+                  aria-label="Notifications"
                 >
-                  <strong>Benachrichtigungen</strong>
-                  <p>Keine neuen Hinweise.</p>
+                  <strong>Notifications</strong>
+                  <p>No new notifications.</p>
                 </div>
               ) : null}
             </div>

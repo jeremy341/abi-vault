@@ -83,7 +83,7 @@ export default function Klassenkasse() {
                   type="button"
                   className={dashboardStyles.cashCardButton}
                   onClick={() => setPreviewOpen(true)}
-                  aria-label={`${currentCard.details?.accountName ?? "Kasse"} anzeigen`}
+                  aria-label={`${currentCard.details?.accountName ?? "Cash register"} anzeigen`}
                 >
                   <AccountCard
                     variant="bank"
@@ -116,7 +116,7 @@ export default function Klassenkasse() {
           {hasMultipleCards ? (
             <button
               type="button"
-              aria-label="Nächste Karte"
+              aria-label="Next card"
               onClick={() => moveCard(1)}
               className={`${dashboardStyles.cashCarouselButton} ${dashboardStyles.cashNextButton}`}
             >
@@ -143,13 +143,13 @@ export default function Klassenkasse() {
                   2.850,75 €
                 </strong>
                 <p className={dashboardStyles.cashBalanceMeta}>
-                  Kartendarstellung · Ledger-basiert
+                  Card display · Ledger-basiert
                 </p>
               </>
             ) : (
               <>
                 <span className={dashboardStyles.cashBalanceLabel}>
-                  Keine Karte verbunden
+                  No Karte verbunden
                 </span>
                 <p className={dashboardStyles.cashBalanceMeta}>
                   Füge eine Karte hinzu, um Kontodaten zu sehen.
@@ -210,9 +210,9 @@ function CardPreviewDialog({
               id="dashboard-card-preview-title"
               className="text-lg font-semibold tracking-tight"
             >
-              {card.details?.accountName ?? "Kasse"}
+              {card.details?.accountName ?? "Cash register"}
             </h2>
-            <p className="mt-1 text-sm text-muted-foreground">Kartenvorschau</p>
+            <p className="mt-1 text-sm text-muted-foreground">Card preview</p>
           </div>
           <button
             type="button"

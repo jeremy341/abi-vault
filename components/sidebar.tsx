@@ -31,16 +31,16 @@ import ThemeToggle from "@/components/ThemeToggle";
 const navigationItems = [
   { label: "Übersicht", href: "/dashboard", icon: LayoutDashboard },
   {
-    label: "Transaktionen",
+    label: "Transactions",
     href: "/dashboard/transactions",
     icon: ReceiptText,
   },
-  { label: "Belege", href: "/dashboard/receipts", icon: FileText },
-  { label: "Ziele", href: "/dashboard/goals", icon: Target },
-  { label: "Kasse & Konten", href: "/dashboard/funds", icon: WalletCards },
-  { label: "Berichte", href: "/dashboard/reports", icon: BarChart3 },
-  { label: "Personen", href: "/dashboard/people", icon: Users },
-  { label: "Einstellungen", href: "/dashboard/settings", icon: Settings },
+  { label: "Receipts", href: "/dashboard/receipts", icon: FileText },
+  { label: "Goals", href: "/dashboard/goals", icon: Target },
+  { label: "Cash register & Konten", href: "/dashboard/funds", icon: WalletCards },
+  { label: "Reports", href: "/dashboard/reports", icon: BarChart3 },
+  { label: "People", href: "/dashboard/people", icon: Users },
+  { label: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
 export default function Sidebar() {

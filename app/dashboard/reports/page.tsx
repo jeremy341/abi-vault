@@ -65,24 +65,24 @@ const reviewItems: Array<{
 
 const chartConfig = {
   income: {
-    label: "Einnahmen",
+    label: "Income",
     theme: { light: "#18181b", dark: "#f4f4f5" },
   },
   expenses: {
-    label: "Ausgaben",
+    label: "Expenses",
     theme: { light: "#a1a1aa", dark: "#71717a" },
   },
 } satisfies ChartConfig;
 
 const analysisChartConfig = {
   balance: { label: "Kontostand", color: "#18181b" },
-  income: { label: "Einnahmen", color: "#18181b" },
-  expenses: { label: "Ausgaben", color: "#a1a1aa" },
+  income: { label: "Income", color: "#18181b" },
+  expenses: { label: "Expenses", color: "#a1a1aa" },
   current: { label: "Aktuell", color: "#18181b" },
-  target: { label: "Ziel", color: "#a1a1aa" },
+  target: { label: "Goal", color: "#a1a1aa" },
 } satisfies ChartConfig;
 
-const money = new Intl.NumberFormat("de-DE", {
+const money = new Intl.NumberFormat("en-GB", {
   style: "currency",
   currency: "EUR",
   minimumFractionDigits: 2,
@@ -131,7 +131,7 @@ function PhoneReportsView({
         {[
           ["overview", "Übersicht"],
           ["analysis", "Analyse"],
-          ["review", "Prüfung"],
+          ["review", "Review"],
           ["export", "Export"],
         ].map(([value, label]) => (
           <button
@@ -159,14 +159,14 @@ function PhoneReportsView({
           className={phoneStyles.tabPanel}
         >
           <section className={phoneStyles.hero} data-ui-slot="summary">
-            <span>Netto</span>
+            <span>Net</span>
             <strong><LoadingText loading={loading}>{kpis.net}</LoadingText></strong>
-            <p className={phoneStyles.positive}><LoadingText loading={loading}>Kassenbestand</LoadingText></p>
+            <p className={phoneStyles.positive}><LoadingText loading={loading}>Cash balance</LoadingText></p>
             <div className={phoneStyles.heroSide}>
-              <span>Liquidität</span>
+              <span>Liquidity</span>
               <b><LoadingText loading={loading}>{kpis.income}</LoadingText></b>
-              <span>Prüfbedarf</span>
-              <b><LoadingText loading={loading}>{kpis.review} Vorgänge</LoadingText></b>
+              <span>Review needed</span>
+              <b><LoadingText loading={loading}>{kpis.review} items</LoadingText></b>
             </div>
           </section>
           <div className={phoneStyles.filters} data-ui-slot="toolbar">
@@ -211,12 +211,12 @@ function PhoneReportsView({
                   dot={false}
                 />
               </LineChart>
-            </ChartContainer> : <div className={`${phoneStyles.chartEmpty} ${phoneStyles.emptyState}`}>Keine Daten für diesen Zeitraum.</div>}
+            </ChartContainer> : <div className={`${phoneStyles.chartEmpty} ${phoneStyles.emptyState}`}>No data for this period.</div>}
           </section>
           <section className={phoneStyles.section}>
             <header className={phoneStyles.sectionHeader}>
-              <h2>Ausgaben</h2>
-            <span>{liveCategories.length ? money.format(liveCategories.reduce((sum, item) => sum + item.amount, 0)) : "Keine Ausgaben"}</span>
+              <h2>Expenses</h2>
+            <span>{liveCategories.length ? money.format(liveCategories.reduce((sum, item) => sum + item.amount, 0)) : "No Expenses"}</span>
             </header>
             <div className={phoneStyles.rows}>
               {liveCategories.length ? liveCategories.map((item) => (
@@ -229,7 +229,7 @@ function PhoneReportsView({
                   </span>
                   <b>{item.share}%</b>
                 </div>
-              )) : <div className={phoneStyles.emptyState}>Keine Ausgaben für diesen Zeitraum.</div>}
+              )) : <div className={phoneStyles.emptyState}>No expenses for this period.</div>}
             </div>
           </section>
         </div>
@@ -272,15 +272,15 @@ function PhoneReportsView({
                   stroke="var(--color-balance)"
                 />
               </AreaChart>
-            </ChartContainer> : <div className={`${phoneStyles.chartEmpty} ${phoneStyles.emptyState}`}>Keine Daten für diesen Zeitraum.</div>}
+            </ChartContainer> : <div className={`${phoneStyles.chartEmpty} ${phoneStyles.emptyState}`}>No data for this period.</div>}
           </section>
           <section className={phoneStyles.section}>
             <header className={phoneStyles.sectionHeader}>
-              <h2>Finanzprofil</h2>
+              <h2>Financial profile</h2>
               <span>Aktuell</span>
             </header>
             <div className={phoneStyles.rows}>
-              <div className={phoneStyles.emptyState}>Noch kein Finanzprofil verfügbar.</div>
+              <div className={phoneStyles.emptyState}>Noch kein Financial profile verfügbar.</div>
             </div>
           </section>
         </div>
@@ -292,7 +292,7 @@ function PhoneReportsView({
           className={phoneStyles.section}
         >
           <header className={phoneStyles.sectionHeader}>
-            <h2>Offene Vorgänge</h2>
+            <h2>Offene items</h2>
             <span>{kpis.review} insgesamt</span>
           </header>
           <div className={phoneStyles.rows}>
@@ -315,9 +315,9 @@ function PhoneReportsView({
                   <strong>{item.title}</strong>
                   <small>{item.detail}</small>
                 </span>
-                <b>{item.tone === "positive" ? "Erledigt" : "Offen"}</b>
+                <b>{item.tone === "positive" ? "Erledigt" : "Open"}</b>
               </div>
-            )) : <div className={phoneStyles.emptyState}>Keine offenen Vorgänge.</div>}
+            )) : <div className={phoneStyles.emptyState}>No open items.</div>}
           </div>
         </section>
       ) : (
@@ -328,22 +328,22 @@ function PhoneReportsView({
           className={phoneStyles.section}
         >
           <header className={phoneStyles.sectionHeader}>
-            <h2>Bericht exportieren</h2>
-            <span>Abi 2026</span>
+            <h2>Export report</h2>
+            <span>Class of 2026</span>
           </header>
           <div className={phoneStyles.exportGrid}>
             {[
-              ["PDF", "PDF-Bericht", "Für Ablage und Freigabe", FileText],
+              ["PDF", "PDF-Bericht", "For filing and approval", FileText],
               [
                 "Excel",
                 "Excel-Datei",
-                "Für weitere Auswertungen",
+                "For further analysis",
                 FileSpreadsheet,
               ],
               [
-                "Prüfprotokoll",
-                "Prüfprotokoll",
-                "Offene und erledigte Vorgänge",
+                "Review log",
+                "Review log",
+                "Offene und erledigte items",
                 ShieldCheck,
               ],
             ].map(([format, title, description, Icon]) => {
@@ -396,7 +396,7 @@ export default function ReportsPage() {
     review: "0",
     reviewed: "0",
     unassigned: "0",
-    reconciliation: "Noch nicht geprüft",
+    reconciliation: "Not reviewed yet",
   });
   const loading = snapshotLoading || kpiLoading;
   const reportError = snapshotError ?? kpiError;
@@ -414,7 +414,7 @@ export default function ReportsPage() {
           setKpiError("Die Prüfungsdaten konnten nicht geladen werden.");
           return;
         }
-        const format = (minor: string | number) => (Number(minor) / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
+        const format = (minor: string | number) => (Number(minor) / 100).toLocaleString("en-GB", { style: "currency", currency: "EUR" });
         const net = Number(result.netMinor) / 100;
         setReportKpis({
           income: format(result.liquidMinor),
@@ -423,7 +423,7 @@ export default function ReportsPage() {
           review: String(result.reviewCount),
           reviewed: String(result.reviewedReceiptCount),
           unassigned: String(result.unassignedReceiptCount),
-          reconciliation: result.reconciliationPercent === null ? "Noch nicht geprüft" : `${result.reconciliationPercent} %`,
+          reconciliation: result.reconciliationPercent === null ? "Not reviewed yet" : `${result.reconciliationPercent} %`,
         });
       })
       .catch(() => {
@@ -442,7 +442,7 @@ export default function ReportsPage() {
       setExportMessage("PDF-Export ist noch nicht aktiviert.");
       return;
     }
-    const result = await exportReport(format === "Prüfprotokoll" ? "Prüfprotokoll" : "Excel");
+    const result = await exportReport(format === "Review log" ? "Review log" : "Excel");
     if (!result.ok) {
       setExportMessage("Export konnte nicht erstellt werden.");
       return;
@@ -454,7 +454,7 @@ export default function ReportsPage() {
     link.download = result.filename;
     link.click();
     URL.revokeObjectURL(url);
-    setExportMessage(`${format}-Export wurde heruntergeladen.`);
+    setExportMessage(`${format}-Export was heruntergeladen.`);
   }
 
   if (mode === "phone") {
@@ -479,14 +479,14 @@ export default function ReportsPage() {
   return (
     <TooltipProvider>
       <section className={styles.page} aria-busy={loading}>
-        <LoadingStatus loading={loading} label="Berichte werden geladen…" />
+        <LoadingStatus loading={loading} label="Reports are loading…" />
         {reportError ? <p className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{reportError}</p> : null}
         <Tabs defaultValue="overview" className={styles.reportWorkspace}>
           <header className={styles.referenceTabsHeader}>
             <TabsList variant="line" className={styles.workspaceTabs}>
               <TabsTrigger value="overview">Übersicht</TabsTrigger>
               <TabsTrigger value="analysis">Analysen</TabsTrigger>
-              <TabsTrigger value="review">Prüfung</TabsTrigger>
+              <TabsTrigger value="review">Review</TabsTrigger>
               <TabsTrigger value="export">Export</TabsTrigger>
             </TabsList>
           </header>
@@ -494,29 +494,29 @@ export default function ReportsPage() {
           <TabsContent value="overview" className={styles.tabContent}>
             <div className={styles.analysisKpiGrid} data-ui-slot="summary">
               <AnalysisKpi
-                label="Netto"
+                label="Net"
                 value={reportKpis.net}
                 meta="Aus den aktuellen Ledger-Daten"
                 positive
                 loading={loading}
               />
               <AnalysisKpi
-                label="Liquidität"
+                label="Liquidity"
                 value={reportKpis.income}
                 meta="Aus den aktuellen Ledger-Daten"
                 positive
                 loading={loading}
               />
               <AnalysisKpi
-                label="Ausgaben"
+                label="Expenses"
                 value={reportKpis.expenses}
                 meta="Aus den aktuellen Ledger-Daten"
                 loading={loading}
               />
               <AnalysisKpi
-                label="Prüfbedarf"
+                label="Review needed"
                 value={reportKpis.review}
-                meta="Belege / Transaktionen"
+                meta="Receipts / Transactions"
                 loading={loading}
               />
             </div>
@@ -532,11 +532,11 @@ export default function ReportsPage() {
                 ]}
               />
               <FieldDropdown
-                ariaLabel="Kategorie"
+                ariaLabel="Category"
                 value={category}
                 onChange={setCategory}
                 options={[
-                  { value: "alle-kategorien", label: "Alle Kategorien" },
+                  { value: "alle-kategorien", label: "Alle Categories" },
                   { value: "veranstaltung", label: "Veranstaltung" },
                   { value: "material", label: "Material" },
                   { value: "sonstiges", label: "Sonstiges" },
@@ -548,7 +548,7 @@ export default function ReportsPage() {
                 onClick={() => prepareExport("PDF")}
               >
                 <Download aria-hidden="true" />
-                Bericht exportieren
+                Export report
               </button>
             </div>
 
@@ -557,7 +557,7 @@ export default function ReportsPage() {
                 <header className={styles.panelHeader}>
                   <div>
                     <h3>Cashflow</h3>
-                    <p>Monatliche Einnahmen und Ausgaben</p>
+                    <p>Monthly income and expenses</p>
                   </div>
                   <Tooltip>
                     <TooltipTrigger
@@ -572,7 +572,7 @@ export default function ReportsPage() {
                       <Info aria-hidden="true" />
                     </TooltipTrigger>
                     <TooltipContent>
-                      Bewege den Mauszeiger über einen Balken für genaue Werte.
+                      Hover over a bar for exact values.
                     </TooltipContent>
                   </Tooltip>
                 </header>
@@ -599,8 +599,8 @@ export default function ReportsPage() {
                       tickFormatter={(value) => {
                         const numericValue = Number(value);
                         return numericValue >= 1000
-                          ? `${(numericValue / 1000).toLocaleString("de-DE", { maximumFractionDigits: 1 })}k €`
-                          : `${numericValue.toLocaleString("de-DE")} €`;
+                          ? `${(numericValue / 1000).toLocaleString("en-GB", { maximumFractionDigits: 1 })}k €`
+                          : `${numericValue.toLocaleString("en-GB")} €`;
                       }}
                     />
                     <ChartTooltip
@@ -642,7 +642,7 @@ export default function ReportsPage() {
                 <article className={styles.categoryPanel}>
                   <header className={styles.panelHeader}>
                     <div>
-                      <h3>Ausgaben nach Kategorie</h3>
+                      <h3>Expenses nach Category</h3>
                       <p>Aktueller Zeitraum</p>
                     </div>
                   </header>
@@ -670,7 +670,7 @@ export default function ReportsPage() {
                 <article className={styles.goalPanel}>
                   <header className={styles.panelHeader}>
                     <div>
-                      <h3>Zielbeiträge</h3>
+                      <h3>Goal contributions</h3>
                       <p>Finanzierung der aktuellen Sparziele</p>
                     </div>
                   </header>
@@ -684,7 +684,7 @@ export default function ReportsPage() {
                           <div>
                             <strong>{goal.name}</strong>
                             <span>
-                              {money.format(goal.saved)} von{" "}
+                              {money.format(goal.saved)} by{" "}
                               {money.format(goal.target)}
                             </span>
                           </div>
@@ -704,26 +704,26 @@ export default function ReportsPage() {
           >
             <div className={styles.analysisKpiGrid}>
               <AnalysisKpi
-                label="Netto"
+                label="Net"
                 value={reportKpis.net}
                 meta="Aus den aktuellen Ledger-Daten"
                 positive
               />
               <AnalysisKpi
-                label="Liquidität"
+                label="Liquidity"
                 value={reportKpis.income}
                 meta="Aus den aktuellen Ledger-Daten"
                 positive
               />
               <AnalysisKpi
-                label="Ausgaben"
+                label="Expenses"
                 value={reportKpis.expenses}
                 meta="Aus den aktuellen Ledger-Daten"
               />
               <AnalysisKpi
-                label="Prüfbedarf"
+                label="Review needed"
                 value={reportKpis.review}
-                meta="Belege / Transaktionen"
+                meta="Receipts / Transactions"
               />
             </div>
             <div className={styles.analysisFilters}>
@@ -742,8 +742,8 @@ export default function ReportsPage() {
                 value={category}
                 onChange={setCategory}
                 options={[
-                  { value: "alle-kategorien", label: "Alle Kategorien" },
-                  { value: "veranstaltung", label: "Alle Kategorien" },
+                  { value: "alle-kategorien", label: "Alle Categories" },
+                  { value: "veranstaltung", label: "Alle Categories" },
                   { value: "material", label: "Material" },
                 ]}
               />
@@ -755,13 +755,13 @@ export default function ReportsPage() {
                   setCategory("alle-kategorien");
                 }}
               >
-                Filter zurücksetzen
+                Reset filters
               </button>
             </div>
             <div className={styles.analysisGrid}>
               <ChartPanel
                 title="Kontostand-Verlauf"
-                subtitle="Verfügbarer Bestand nach Monat"
+                subtitle="Available balance by month"
                 className={styles.analysisWidePanel}
               >
                 <ChartContainer
@@ -785,7 +785,7 @@ export default function ReportsPage() {
                       axisLine={false}
                       width={50}
                       tickFormatter={(value) =>
-                        `${(Number(value) / 1000).toLocaleString("de-DE", { maximumFractionDigits: 1 })}k €`
+                        `${(Number(value) / 1000).toLocaleString("en-GB", { maximumFractionDigits: 1 })}k €`
                       }
                     />
                     <ChartTooltip content={<ChartTooltipContent />} />
@@ -803,7 +803,7 @@ export default function ReportsPage() {
               </ChartPanel>
 
               <ChartPanel
-                title="Ausgaben nach Kategorie"
+                title="Expenses nach Category"
                 subtitle="Verteilung im Berichtszeitraum"
               >
                 <div className={styles.donutLayout}>
@@ -855,7 +855,7 @@ export default function ReportsPage() {
               </ChartPanel>
 
               <ChartPanel
-                title="Einnahmen & Ausgaben"
+                title="Income & Expenses"
                 subtitle="Monatlicher Vergleich"
                 className={styles.analysisWidePanel}
               >
@@ -880,7 +880,7 @@ export default function ReportsPage() {
                       axisLine={false}
                       width={50}
                       tickFormatter={(value) =>
-                        `${(Number(value) / 1000).toLocaleString("de-DE", { maximumFractionDigits: 1 })}k €`
+                        `${(Number(value) / 1000).toLocaleString("en-GB", { maximumFractionDigits: 1 })}k €`
                       }
                     />
                     <ChartTooltip content={<ChartTooltipContent />} />
@@ -899,13 +899,13 @@ export default function ReportsPage() {
                       strokeDasharray="5 4"
                       dot={{ r: 3 }}
                     />
-                  </LineChart> : <div className={styles.emptyChart}>Keine Daten für diesen Zeitraum.</div>}
+                  </LineChart> : <div className={styles.emptyChart}>No data for this period.</div>}
                 </ChartContainer>
               </ChartPanel>
 
               <ChartPanel
-                title="Finanzprofil"
-                subtitle="Aktuell im Vergleich zum Ziel"
+                title="Financial profile"
+                subtitle="Aktuell im Vergleich zum Goal"
               >
                 <ChartContainer
                   config={analysisChartConfig}
@@ -933,7 +933,7 @@ export default function ReportsPage() {
                       strokeWidth={2}
                     />
                     <Radar
-                      name="Ziel"
+                      name="Goal"
                       dataKey="target"
                       stroke="var(--color-target)"
                       fill="transparent"
@@ -949,29 +949,29 @@ export default function ReportsPage() {
           <TabsContent value="review" className={styles.tabContent}>
             <div className={styles.reviewSummaryGrid}>
               <article>
-                <span>Offene Belege</span>
+                <span>Offene Receipts</span>
                 <strong><LoadingText loading={loading}>{reportKpis.review}</LoadingText></strong>
-                <small>Warten auf Prüfung</small>
+                <small>Warten auf Review</small>
               </article>
               <article>
                 <span>Ohne Zuordnung</span>
                 <strong><LoadingText loading={loading}>{reportKpis.unassigned}</LoadingText></strong>
-                <small>Beleg zuordnen</small>
+                <small>Receipt zuordnen</small>
               </article>
               <article>
                 <span>Abgleich</span>
-                <strong className={reportKpis.reconciliation === "Noch nicht geprüft" ? "" : styles.analysisPositive}><LoadingText loading={loading}>{reportKpis.reconciliation}</LoadingText></strong>
-                <small>{reportKpis.reconciliation === "Noch nicht geprüft" ? "Keine Kassenprüfung vorhanden" : "Kassenbestand geprüft"}</small>
+                <strong className={reportKpis.reconciliation === "Not reviewed yet" ? "" : styles.analysisPositive}><LoadingText loading={loading}>{reportKpis.reconciliation}</LoadingText></strong>
+                <small>{reportKpis.reconciliation === "Not reviewed yet" ? "No Kassenprüfung vorhanden" : "Cash balance geprüft"}</small>
               </article>
             </div>
             <div className={styles.reviewLayout}>
               <section className={styles.reviewQueue}>
                 <header className={styles.reviewSectionHeader}>
                   <div>
-                    <h3>Offene Vorgänge</h3>
-                    <p>Arbeite die wichtigsten Prüfungen der Reihe nach ab.</p>
+                    <h3>Offene items</h3>
+                    <p>Work through the most important reviews in order.</p>
                   </div>
-                  <span>{reportKpis.review} Vorgänge</span>
+                  <span>{reportKpis.review} items</span>
                 </header>
                 <div className={styles.reviewQueueList}>
                   {reviewItems.length ? reviewItems.map((item) => (
@@ -995,28 +995,28 @@ export default function ReportsPage() {
                         <strong>{item.title}</strong>
                         <small>{item.detail}</small>
                       </span>
-                      <b>{item.tone === "positive" ? "Erledigt" : "Öffnen"}</b>
+                      <b>{item.tone === "positive" ? "Erledigt" : "Open"}</b>
                       <ArrowRight aria-hidden="true" />
                     </button>
-                  )) : <div className={styles.reviewEmpty}>Keine offenen Vorgänge.</div>}
+                  )) : <div className={styles.reviewEmpty}>No open items.</div>}
                 </div>
               </section>
               <aside className={styles.reviewStatusPanel}>
                 <header className={styles.reviewSectionHeader}>
                   <div>
-                    <h3>Prüfstatus</h3>
-                    <p>Alle relevanten Vorgänge</p>
+                    <h3>Review status</h3>
+                    <p>All relevant items</p>
                   </div>
                   <Info aria-hidden="true" />
                 </header>
                 <div className={styles.reviewStatusValue}>
                   <strong>{reportKpis.review}</strong>
-                  <span>Vorgänge insgesamt</span>
+                  <span>items insgesamt</span>
                 </div>
                 <div className={styles.reviewStatusBars}>
                   <div>
                     <span>
-                      <b>Geprüft</b>
+                      <b>Approved</b>
                       <b>{reportKpis.reviewed}</b>
                     </span>
                     <i>
@@ -1025,7 +1025,7 @@ export default function ReportsPage() {
                   </div>
                   <div>
                     <span>
-                      <b>Zu prüfen</b>
+                      <b>Pending review</b>
                       <b>{reportKpis.review}</b>
                     </span>
                     <i>
@@ -1050,10 +1050,10 @@ export default function ReportsPage() {
             <section className={styles.exportWorkspace}>
               <header className={styles.exportSectionHeader}>
                 <div>
-                  <h3>Berichte exportieren</h3>
+                  <h3>Reports exportieren</h3>
                   <p>
-                    Wähle einen Bericht und sichere die aktuellen Finanzdaten
-                    für eure Unterlagen.
+                    Choose einen Bericht und sichere die aktuellen Finanzdaten
+                    for your records.
                   </p>
                 </div>
                 <Download aria-hidden="true" />
@@ -1074,7 +1074,7 @@ export default function ReportsPage() {
                   value={category}
                   onChange={setCategory}
                   options={[
-                    { value: "alle-kategorien", label: "Alle Kategorien" },
+                    { value: "alle-kategorien", label: "Alle Categories" },
                     { value: "veranstaltung", label: "Veranstaltung" },
                     { value: "material", label: "Material" },
                   ]}
@@ -1084,35 +1084,35 @@ export default function ReportsPage() {
                 <ExportCard
                   icon={<FileText />}
                   title="PDF-Bericht"
-                  description="Kompakte Übersicht zum Teilen"
+                  description="Compact overview for sharing"
                   onClick={() => prepareExport("PDF")}
                 />
                 <ExportCard
                   icon={<FileSpreadsheet />}
                   title="Excel-Datei"
-                  description="Alle Werte zur Weiterverarbeitung"
+                  description="All values for further processing"
                   onClick={() => prepareExport("Excel")}
                 />
                 <ExportCard
                   icon={<ReceiptText />}
-                  title="Prüfprotokoll"
-                  description="Belege und offene Vorgänge"
-                  onClick={() => prepareExport("Prüfprotokoll")}
+                  title="Review log"
+                  description="Receipts und offene items"
+                  onClick={() => prepareExport("Review log")}
                 />
               </div>
               <p className={styles.exportMessage} aria-live="polite">
-                {exportMessage || "Wähle ein Format für den Export."}
+                {exportMessage || "Choose a format for the export."}
               </p>
             </section>
             <section className={styles.exportHistory}>
               <header className={styles.exportSectionHeader}>
                 <div>
                   <h3>Letzte Exporte</h3>
-                  <p>Bereits erstellte Berichte</p>
+                  <p>Bereits erstellte Reports</p>
                 </div>
               </header>
               <div className={styles.exportHistoryList}>
-                <p className={styles.emptyHistory}>Noch keine Exporte erstellt.</p>
+                <p className={styles.emptyHistory}>No exports created yet.</p>
               </div>
             </section>
           </TabsContent>

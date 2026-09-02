@@ -44,7 +44,7 @@ export const transactionCreateSchema = z
       context.addIssue({
         code: "custom",
         path: ["toWalletId"],
-        message: "Einnahmen benötigen ausschließlich eine Zielkasse.",
+        message: "Income benötigen ausschließlich eine Zielkasse.",
       });
     }
 
@@ -52,7 +52,7 @@ export const transactionCreateSchema = z
       context.addIssue({
         code: "custom",
         path: ["fromWalletId"],
-        message: "Ausgaben benötigen ausschließlich eine Quellkasse.",
+        message: "Expenses require only a source cash register.",
       });
     }
 
@@ -60,7 +60,7 @@ export const transactionCreateSchema = z
       context.addIssue({
         code: "custom",
         path: ["fromWalletId"],
-        message: "Eine Übertragung benötigt zwei unterschiedliche Kassen.",
+        message: "A transfer requires two different cash registers.",
       });
     }
 
@@ -68,7 +68,7 @@ export const transactionCreateSchema = z
       context.addIssue({
         code: "custom",
         path: ["categoryId"],
-        message: "Einnahmen und Ausgaben benötigen eine Kategorie.",
+        message: "Income and expenses require a category.",
       });
     }
   });

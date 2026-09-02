@@ -14,40 +14,40 @@ const ClerkUserButton = dynamic(
 const pageInformation: Record<string, { title: string; description: string }> =
   {
     "/dashboard": {
-      title: "Finanzübersicht",
-      description: "Klassenfinanzen auf einen Blick.",
+      title: "Financial overview",
+      description: "Class finances at a glance.",
     },
     "/dashboard/transactions": {
-      title: "Transaktionen",
-      description: "Alle Einnahmen und Ausgaben im Überblick.",
+      title: "Transactions",
+      description: "All income and expenses in one view.",
     },
     "/dashboard/receipts": {
-      title: "Belege",
-      description: "Belege hochladen, prüfen und zuordnen.",
+      title: "Receipts",
+      description: "Upload, review, and assign receipts.",
     },
     "/dashboard/goals": {
-      title: "Ziele",
-      description: "Sparziele planen und Fortschritte verfolgen.",
+      title: "Goals",
+      description: "Plan savings goals and track progress.",
     },
     "/dashboard/funds": {
-      title: "Kasse & Konten",
-      description: "Barkasse und Kassenbestand verwalten.",
+      title: "Cash register & Konten",
+      description: "Manage cash registers and balances.",
     },
     "/dashboard/reports": {
-      title: "Berichte",
-      description: "Finanzdaten transparent auswerten.",
+      title: "Reports",
+      description: "Review financial data with clarity.",
     },
     "/dashboard/people": {
-      title: "Personen",
-      description: "Mitglieder und Rollen verwalten.",
+      title: "People",
+      description: "Manage members and roles.",
     },
     "/dashboard/settings": {
-      title: "Einstellungen",
-      description: "Arbeitsbereich und Zugriffe konfigurieren.",
+      title: "Settings",
+      description: "Configure workspace and access.",
     },
     "/dashboard/periods": {
-      title: "Zeiträume",
-      description: "Buchungszeiträume öffnen und sicher abschließen.",
+      title: "Periods",
+      description: "Open and safely close accounting periods.",
     },
   };
 
@@ -81,13 +81,13 @@ export default function DashboardHeader() {
           aria-label="Abiturjahrgang auswählen"
         >
           <CalendarDays className="size-5" />
-          Abi 2026
+          Class of 2026
           <ChevronDown className="size-5 text-muted-foreground" />
         </button>
 
         <button
           type="button"
-          aria-label="Benachrichtigungen"
+          aria-label="Notifications"
           className="rounded-lg p-2 hover:bg-black/[0.04] md:size-11 dark:hover:bg-white/[0.08]"
         >
           <Bell className="size-6" />

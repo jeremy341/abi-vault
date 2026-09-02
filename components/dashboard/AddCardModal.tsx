@@ -131,13 +131,13 @@ export default function AddCardModal({
     const nextErrors: FormErrors = {};
 
     if (!values.accountName.trim()) {
-      nextErrors.accountName = "Bitte einen Kassennamen eingeben.";
+      nextErrors.accountName = "Please einen Kassennamen eingeben.";
     }
     if (values.cardNumber.replace(/\D/g, "").length !== 16) {
-      nextErrors.cardNumber = "Die Kartennummer muss 16 Ziffern enthalten.";
+      nextErrors.cardNumber = "Die Card number muss 16 Ziffern enthalten.";
     }
     if (!values.holder.trim()) {
-      nextErrors.holder = "Bitte den Karteninhaber eingeben.";
+      nextErrors.holder = "Please den Card holder eingeben.";
     }
     if (!isValidFutureExpiry(values.expiry)) {
       nextErrors.expiry = "Ungültiges Ablaufdatum.";
@@ -172,10 +172,10 @@ export default function AddCardModal({
         setErrors({});
         idempotencyKey.current = null;
       } else {
-        setSubmitError("Die Kasse konnte nicht gespeichert werden.");
+        setSubmitError("The cash register could not be saved.");
       }
     } catch {
-      setSubmitError("Die Kasse konnte nicht gespeichert werden.");
+      setSubmitError("The cash register could not be saved.");
     } finally {
       setSaving(false);
     }
@@ -200,8 +200,8 @@ export default function AddCardModal({
       >
         <header className={styles.header}>
           <div className={styles.heading}>
-            <h2 id="add-card-title">Kasse hinzufügen</h2>
-            <p>Lege eine weitere Kasse mit eigener Kartendarstellung an.</p>
+            <h2 id="add-card-title">Add cash register</h2>
+            <p>Create another cash register with its own card display.</p>
           </div>
           <button
             type="button"
@@ -215,12 +215,12 @@ export default function AddCardModal({
         </header>
 
         <div className={styles.body}>
-          <div className={styles.preview} aria-label="Kartenvorschau">
+          <div className={styles.preview} aria-label="Card preview">
             <AccountCard
               cardColor={selectedColor}
               details={{
                 ...values,
-                accountName: values.accountName || "Neue Kasse",
+                accountName: values.accountName || "New Cash register",
                 cardNumber: values.cardNumber || previewCardNumber,
                 holder: values.holder || "Mike Smith",
                 expiry: values.expiry || "06/21",
@@ -230,7 +230,7 @@ export default function AddCardModal({
 
           <section className={styles.section} aria-labelledby="add-card-colors">
             <h3 id="add-card-colors" className={styles.sectionTitle}>
-              Kartenfarbe
+              Card color
             </h3>
             <div className={styles.colorOptions}>
               {cardColors.map((color) => (
@@ -254,7 +254,7 @@ export default function AddCardModal({
             aria-labelledby="add-card-information"
           >
             <h3 id="add-card-information" className={styles.sectionTitle}>
-              Karteninformationen
+              Card information
             </h3>
             <div className={styles.formGrid}>
               <Field
@@ -281,7 +281,7 @@ export default function AddCardModal({
                 />
               </Field>
               <Field
-                label="Kartennummer"
+                label="Card number"
                 error={errors.cardNumber}
                 errorId="add-card-number-error"
               >
@@ -305,7 +305,7 @@ export default function AddCardModal({
                 />
               </Field>
               <Field
-                label="Karteninhaber"
+                label="Card holder"
                 error={errors.holder}
                 errorId="add-holder-error"
               >
@@ -359,10 +359,10 @@ export default function AddCardModal({
             onClick={onClose}
             disabled={saving}
           >
-            Abbrechen
+            Cancel
           </button>
           <button type="submit" className={styles.primaryButton} disabled={saving} aria-busy={saving}>
-            {saving ? "Kasse wird gespeichert …" : "Kasse hinzufügen"}
+            {saving ? "Cash register wird gespeichert …" : "Add cash register"}
           </button>
         </footer>
       </form>

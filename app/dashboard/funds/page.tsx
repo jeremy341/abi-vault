@@ -61,7 +61,7 @@ function formatCountDate(value: string) {
   const today = new Date();
   return date.toDateString() === today.toDateString()
     ? "Heute"
-    : date.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
+    : date.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
 function mapWalletToCashBox(wallet: WalletWithCount): CashBox {
@@ -90,7 +90,7 @@ function mapCashCountToAuditEntry(item: CashCountListItem): CashAuditEntry {
   };
 }
 
-const money = new Intl.NumberFormat("de-DE", {
+const money = new Intl.NumberFormat("en-GB", {
   style: "currency",
   currency: "EUR",
   minimumFractionDigits: 2,
@@ -146,7 +146,7 @@ export default function FundsPage() {
     try {
       const result = await cachedFinanceQuery("dashboard-snapshot", getDashboardSnapshot, { scope: cacheScope });
       if (!result.ok) {
-        setLoadError("Die Kassen konnten nicht geladen werden.");
+        setLoadError("Die Cash registers konnten nicht geladen werden.");
         return;
       }
 
@@ -156,7 +156,7 @@ export default function FundsPage() {
       setCashBoxes(Object.fromEntries(cashWallets.map((wallet) => [wallet.id, mapWalletToCashBox(wallet)])));
       setActiveCardIndex((current) => Math.min(current, Math.max(0, cashWallets.length - 1)));
     } catch {
-      setLoadError("Die Kassen konnten nicht geladen werden.");
+      setLoadError("Die Cash registers konnten nicht geladen werden.");
     } finally {
       setLoading(false);
     }
@@ -167,7 +167,7 @@ export default function FundsPage() {
       const result = await cachedFinanceQuery("cash-counts", listCashCountsForCurrentOrganization, { scope: cacheScope });
       if (result.ok) setAuditLogs(result.items.map(mapCashCountToAuditEntry));
     } catch {
-      // The Kasse data remains usable when the optional audit history is unavailable.
+      // The Cash register data remains usable when the optional audit history is unavailable.
     }
   }, [cacheScope]);
 
@@ -296,7 +296,7 @@ export default function FundsPage() {
     setActiveCardIndex(cards.length);
     setIsAddCardOpen(false);
     invalidateFinanceQuery("wallets", "dashboard-snapshot", "transactions", "report-snapshot", "report-kpis");
-    setNotice("Kasse hinzugefügt.");
+    setNotice("Cash register hinzugefügt.");
     return true;
   }
 
@@ -305,7 +305,7 @@ export default function FundsPage() {
     const result = await updateWallet({
       walletId: activeCard.id,
       name: details.accountName,
-      reason: "Kasse über die Kassenverwaltung aktualisiert",
+      reason: "Cash register updated through cash register administration",
       cardNumberVisual: details.cardNumber,
       cardHolderVisual: details.holder,
       cardExpiryVisual: details.expiry,
@@ -383,10 +383,10 @@ export default function FundsPage() {
     try {
       const result = await archiveWallet({
         walletId: activeCard.id,
-        reason: "Kasse über die Kassenverwaltung archiviert",
+        reason: "Cash register archived through cash register administration",
       });
       if (!result.success) {
-        setNotice("Kasse konnte nicht archiviert werden.");
+        setNotice("Cash register konnte nicht archiviert werden.");
         return;
       }
       setCards((current) =>
@@ -400,9 +400,9 @@ export default function FundsPage() {
       setActiveCardIndex((current) => Math.max(0, current - 1));
       setIsDeleteOpen(false);
       invalidateFinanceQuery("wallets", "dashboard-snapshot", "transactions", "report-snapshot", "report-kpis");
-      setNotice("Kasse archiviert.");
+      setNotice("Cash register archiviert.");
     } catch {
-      setNotice("Kasse konnte nicht archiviert werden.");
+      setNotice("Cash register konnte nicht archiviert werden.");
     } finally {
       setDeleteSaving(false);
     }
@@ -415,7 +415,7 @@ export default function FundsPage() {
     try {
     const form = event.currentTarget;
     if (!activeCountedAmountValid || activeCountedAmount < 0) {
-      setCountError("Bitte einen gültigen Zählbetrag eingeben.");
+      setCountError("Please einen gültigen Counted amount eingeben.");
       window.requestAnimationFrame(() => {
         (
           form.elements.namedItem(
@@ -484,7 +484,7 @@ export default function FundsPage() {
     <section
       className={`${adaptiveStyles.root} ${mode === "desktop" ? adaptiveStyles.desktopPageRoot : ""}`}
     >
-      <LoadingStatus loading={loading} label="Kasse wird geladen…" />
+      <LoadingStatus loading={loading} label="Cash register is loading…" />
       <p className={styles.liveNotice} aria-live="polite">
         {notice}
       </p>
@@ -525,7 +525,7 @@ export default function FundsPage() {
 
       {isDeleteOpen ? (
         <Dialog
-          label="Kasse archivieren"
+          label="Cash register archivieren"
           onClose={closeDeleteDialog}
           overlayClassName={styles.overlay}
           dialogClassName={`${styles.modal} ${styles.confirmationModal}`}
@@ -536,8 +536,8 @@ export default function FundsPage() {
                 <Trash2 aria-hidden="true" />
               </span>
               <div>
-                <h2>Kasse archivieren?</h2>
-                <p>Die Kasse wird aus den aktiven Ansichten entfernt. Historische Buchungen bleiben erhalten.</p>
+                <h2>Cash register archivieren?</h2>
+                <p>Die Cash register wird aus den aktiven Ansichten entfernt. Historische Buchungen bleiben erhalten.</p>
               </div>
             </div>
             <button
@@ -545,14 +545,14 @@ export default function FundsPage() {
               className={styles.closeButton}
               onClick={closeDeleteDialog}
               disabled={deleteSaving}
-              aria-label="Schließen"
+              aria-label="Close"
             >
               <X aria-hidden="true" />
             </button>
           </header>
           <div className={styles.confirmationBody}>
             <strong>{activeCard?.details.accountName}</strong>
-            <span>Ledger-basiert · Kartendarstellung</span>
+            <span>Ledger-basiert · Card display</span>
           </div>
           <footer className={styles.modalFooter}>
             <button
@@ -561,7 +561,7 @@ export default function FundsPage() {
               onClick={closeDeleteDialog}
               disabled={deleteSaving}
             >
-              Abbrechen
+              Cancel
             </button>
             <button
               type="button"
@@ -570,7 +570,7 @@ export default function FundsPage() {
               disabled={deleteSaving}
               aria-busy={deleteSaving}
             >
-              {deleteSaving ? "Wird archiviert …" : "Kasse archivieren"}
+              {deleteSaving ? "Wird archiviert …" : "Cash register archivieren"}
             </button>
           </footer>
         </Dialog>
@@ -599,7 +599,7 @@ export default function FundsPage() {
                 className={styles.closeButton}
                 onClick={closeCountDialog}
                 disabled={countSaving}
-                aria-label="Schließen"
+                aria-label="Close"
               >
                 <X aria-hidden="true" />
               </button>
@@ -635,7 +635,7 @@ export default function FundsPage() {
                   }
                   onClick={() => setCountMode("calculator")}
                 >
-                  Stückelung
+                  Denominations
                 </button>
               </div>
 
@@ -647,7 +647,7 @@ export default function FundsPage() {
                   aria-label="Gesamtbetrag"
                 >
                   <label className={styles.formField}>
-                    <span>Gezählter Betrag</span>
+                    <span>Gezählter Amount</span>
                     <div className={styles.amountField}>
                       <input
                         name="countedAmount"
@@ -667,7 +667,7 @@ export default function FundsPage() {
                     </div>
                   </label>
                   <label className={styles.formField}>
-                    <span>Gezählt von</span>
+                    <span>Counted by</span>
                     <input
                       name="auditor"
                       type="text"
@@ -684,7 +684,7 @@ export default function FundsPage() {
                   id="count-calculator-panel"
                   className={styles.denominationGrid}
                   role="tabpanel"
-                  aria-label="Stückelung"
+                  aria-label="Denominations"
                 >
                   {[
                     ["50", "50 € Scheine"],
@@ -732,7 +732,7 @@ export default function FundsPage() {
                 />
               </label>
 
-              <div className={styles.countPreview} aria-label="Zählvorschau">
+              <div className={styles.countPreview} aria-label="Count preview">
                 <div><span>Buchbestand</span><strong>{euro(cashBox.balance)}</strong></div>
                 <div><span>Gezählt</span><strong>{euro(activeCountedAmount)}</strong></div>
                 <div>
@@ -761,10 +761,10 @@ export default function FundsPage() {
                 onClick={closeCountDialog}
                 disabled={countSaving}
               >
-                Abbrechen
+                Cancel
               </button>
               <button type="submit" className={styles.primaryButton} disabled={countSaving} aria-busy={countSaving}>
-                {countSaving ? "Wird gespeichert …" : "Kassensturz speichern"}
+                {countSaving ? "Saving …" : "Kassensturz speichern"}
               </button>
             </footer>
           </form>

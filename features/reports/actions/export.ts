@@ -8,7 +8,7 @@ function csvCell(value: unknown) {
   return /[\",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }
 
-export async function exportReport(format: "Excel" | "Prüfprotokoll") {
+export async function exportReport(format: "Excel" | "Review log") {
   const context = await requirePermission("exportData");
   const supabase = await createSupabaseServerClient();
   const [{ data: wallets, error: walletError }, { data: rawTransactions, error: transactionError }] = await Promise.all([
@@ -34,7 +34,7 @@ export async function exportReport(format: "Excel" | "Prüfprotokoll") {
     activeWalletIds.has(transaction.from_wallet_id ?? "") || activeWalletIds.has(transaction.to_wallet_id ?? ""),
   );
 
-  if (format === "Prüfprotokoll") {
+  if (format === "Review log") {
     const { data: receipts, error: receiptError } = await supabase
       .from("receipts")
       .select("file_name, review_status, created_at, transaction_id")
@@ -43,7 +43,7 @@ export async function exportReport(format: "Excel" | "Prüfprotokoll") {
       .order("created_at", { ascending: false });
     if (receiptError) return { ok: false as const, error: "EXPORT_FAILED" };
     const rows = [
-      ["Datei", "Status", "Transaktions-ID", "Hochgeladen"],
+      ["Datei", "Status", "Transaktions-ID", "Uploaded"],
       ...(receipts ?? []).map((receipt) => [receipt.file_name, receipt.review_status, receipt.transaction_id ?? "", receipt.created_at]),
     ];
     return {
@@ -60,7 +60,7 @@ export async function exportReport(format: "Excel" | "Prüfprotokoll") {
   if (categoryError) return { ok: false as const, error: "EXPORT_FAILED" };
   const categoryMap = new Map((categories ?? []).map((category) => [category.id, category.name]));
   const rows = [
-    ["Titel", "Typ", "Betrag (Cent)", "Währung", "Gebucht am", "Kategorie", "Herkunft", "Provider-ID"],
+    ["Titel", "Typ", "Amount (Cent)", "Currency", "Gebucht on", "Category", "Herkunft", "Provider-ID"],
     ...(transactions ?? []).map((transaction) => [
       transaction.title,
       transaction.type,

@@ -20,7 +20,7 @@ export default function StartPage() {
           </h1>
 
           <p className="mx-auto mt-6 max-w-xl text-base leading-7 text-muted sm:text-lg">
-            Einnahmen, Ausgaben, Belege und Spendenziele an einem Ort.
+            Income, Expenses, Receipts und Spendenziele an einem Ort.
           </p>
 
           <div className={styles.actions}>

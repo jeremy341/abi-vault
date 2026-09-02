@@ -120,7 +120,7 @@ export const dashboardGoals = [
 export const dashboardCategories = [
   {
     title: "Veranstaltung",
-    amount: "1.740,00 € von 3.000,00 €",
+    amount: "1.740,00 € by 3.000,00 €",
     progress: 58,
     color: "bg-black dark:bg-white",
     bubble: "bg-black/[0.04] text-ink dark:bg-white/[0.08]",
@@ -128,7 +128,7 @@ export const dashboardCategories = [
   },
   {
     title: "Material",
-    amount: "384,90 € von 1.200,00 €",
+    amount: "384,90 € by 1.200,00 €",
     progress: 32,
     color: "bg-[var(--ui-positive)]",
     bubble:
@@ -137,7 +137,7 @@ export const dashboardCategories = [
   },
   {
     title: "Sonstiges",
-    amount: "185,50 € von 1.000,00 €",
+    amount: "185,50 € by 1.000,00 €",
     progress: 10,
     color: "bg-[var(--ui-warning)]",
     bubble:
@@ -177,10 +177,10 @@ export function TransactionHistory() {
       <CardContent className="px-4 pb-4 pt-0 sm:px-5 lg:px-6 lg:pb-5">
         <div className="hidden grid-cols-[minmax(0,1.5fr)_minmax(90px,0.9fr)_100px_110px_24px] gap-3 border-b border-black/10 px-2 pb-2 text-xs text-muted-foreground dark:border-white/15 sm:grid">
           <span />
-          <span>Kategorie</span>
-          <span>Datum</span>
-          <span>Betrag</span>
-          <span>Beleg</span>
+          <span>Category</span>
+          <span>Date</span>
+          <span>Amount</span>
+          <span>Receipt</span>
         </div>
         <div className="divide-y divide-black/10 dark:divide-white/10">
           {dashboardTransactions.map((transaction, index) => {
@@ -218,7 +218,7 @@ export function TransactionHistory() {
           href="/dashboard/transactions"
           className="mt-4 inline-flex items-center gap-2 px-2 text-sm font-semibold text-ink transition-transform hover:translate-x-0.5 min-[1280px]:max-[2199px]:mt-2 min-[1280px]:max-[2199px]:translate-y-[13px]"
         >
-          Alle Transaktionen anzeigen <ArrowRight className="size-4" />
+          Alle Transactions anzeigen <ArrowRight className="size-4" />
         </Link>
       </CardContent>
     </Card>
@@ -232,13 +232,13 @@ export function GoalsPanel() {
     >
       <CardHeader className="flex-row items-center justify-between px-5 pb-0 pt-5 sm:px-6 lg:px-7 lg:pt-6">
         <CardTitle className="text-xl font-semibold tracking-tight lg:text-2xl">
-          Ziele
+          Goals
         </CardTitle>
         <Link
           href="/dashboard/goals"
           className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-ink"
         >
-          Alle Ziele <ArrowRight className="size-4" />
+          Alle Goals <ArrowRight className="size-4" />
         </Link>
       </CardHeader>
       <CardContent className="overflow-visible px-4 pb-4 pt-4 sm:px-5 lg:px-6 lg:pb-5">
@@ -273,7 +273,7 @@ export function GoalsPanel() {
               <p
                 className={`${dashboardStyles.goalDate} mt-5 text-sm text-muted-foreground`}
               >
-                Ziel: {goal.date}
+                Goal: {goal.date}
               </p>
             </div>
           ))}
@@ -290,7 +290,7 @@ export function SpendingByCategory() {
     >
       <CardHeader className="px-5 pb-0 pt-5 sm:px-6 lg:px-7 lg:pt-6">
         <CardTitle className="text-xl font-semibold tracking-tight lg:text-2xl">
-          Ausgaben nach Kategorie
+          Expenses nach Category
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4 px-5 pb-5 pt-4 sm:px-6 lg:px-7 min-[1280px]:max-[2199px]:space-y-2 min-[1280px]:max-[2199px]:pt-2 min-[2200px]:space-y-1 min-[2200px]:pb-6 min-[2200px]:pt-1">
@@ -337,7 +337,7 @@ export function ReviewPanel() {
     >
       <CardHeader className="px-5 pb-0 pt-5 sm:px-6 lg:px-7 lg:pt-6">
         <CardTitle className="text-xl font-semibold tracking-tight lg:text-2xl">
-          Zu prüfen
+          Pending review
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2 px-5 pb-7 pt-2 sm:px-6 lg:px-7 min-[1280px]:max-[2199px]:pt-0">
@@ -346,7 +346,7 @@ export function ReviewPanel() {
           className="flex items-center gap-3 rounded-lg border border-black/[0.08] px-3 py-2.5 text-sm transition-colors hover:bg-black/[0.03] dark:border-white/15 dark:hover:bg-white/[0.06]"
         >
           <AlertTriangle className="size-5 text-[var(--ui-warning)]" />
-          <span className="flex-1">3 Belege warten auf Prüfung</span>
+          <span className="flex-1">3 Receipts warten auf Review</span>
           <ArrowRight className="size-4" />
         </Link>
         <Link
@@ -362,14 +362,14 @@ export function ReviewPanel() {
           className="hidden items-center gap-3 rounded-lg border border-black/[0.08] px-3 py-2.5 text-sm transition-colors hover:bg-black/[0.03] min-[2200px]:flex min-[2200px]:py-3 dark:border-white/15 dark:hover:bg-white/[0.06]"
         >
           <FileText className="size-5 text-muted-foreground" />
-          <span className="flex-1">1 Beleg ohne Kategorie</span>
+          <span className="flex-1">1 Receipt ohne Category</span>
           <ArrowRight className="size-4" />
         </Link>
         <Link
           href="/dashboard/transactions"
           className="mt-2 flex h-10 items-center justify-center gap-2 rounded-lg bg-black text-sm font-medium text-white transition-opacity hover:opacity-80 min-[2200px]:mt-3 min-[2200px]:h-12 dark:bg-white dark:text-black"
         >
-          <Plus className="size-5" /> Transaktion hinzufügen
+          <Plus className="size-5" /> Add transaction
         </Link>
       </CardContent>
     </Card>

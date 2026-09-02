@@ -11,11 +11,11 @@ import {
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 function mapGoalError(code?: string) {
-  if (code === "42501") return actionFailure("FORBIDDEN", "Du hast keine Berechtigung, Ziele zu verwalten.");
-  if (code === "55000") return actionFailure("CONFLICT", "Das Ziel oder der Buchungszeitraum ist nicht verfügbar.");
+  if (code === "42501") return actionFailure("FORBIDDEN", "Du hast keine Berechtigung, Goals zu verwalten.");
+  if (code === "55000") return actionFailure("CONFLICT", "Das Goal oder der Buchungszeitraum ist nicht verfügbar.");
   if (code === "23514" || code === "22023") return actionFailure("INVALID_PAYLOAD", "Die Zieldaten sind ungültig.");
-  if (code === "23505") return actionFailure("CONFLICT", "Diese Zieländerung wurde bereits übermittelt.");
-  return actionFailure("DATABASE_ERROR", "Das Ziel konnte nicht gespeichert werden.");
+  if (code === "23505") return actionFailure("CONFLICT", "Diese Goaländerung was bereits übermittelt.");
+  return actionFailure("DATABASE_ERROR", "Das Goal konnte nicht gespeichert werden.");
 }
 
 export async function createGoal(

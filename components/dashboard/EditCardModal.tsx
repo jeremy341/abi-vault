@@ -136,13 +136,13 @@ export default function EditCardModal({
     const nextErrors: FormErrors = {};
 
     if (!values.accountName.trim()) {
-      nextErrors.accountName = "Bitte einen Kassennamen eingeben.";
+      nextErrors.accountName = "Please einen Kassennamen eingeben.";
     }
     if (values.cardNumber.replace(/\D/g, "").length !== 16) {
-      nextErrors.cardNumber = "Die Kartennummer muss 16 Ziffern enthalten.";
+      nextErrors.cardNumber = "Die Card number muss 16 Ziffern enthalten.";
     }
     if (!values.holder.trim()) {
-      nextErrors.holder = "Bitte den Karteninhaber eingeben.";
+      nextErrors.holder = "Please den Card holder eingeben.";
     }
     if (!isValidFutureExpiry(values.expiry)) {
       nextErrors.expiry = "Ungültiges Ablaufdatum.";
@@ -162,9 +162,9 @@ export default function EditCardModal({
     setSubmitError("");
     try {
       const saved = await onSave({ ...values, color: selectedColor });
-      if (!saved) setSubmitError("Die Kasse konnte nicht gespeichert werden.");
+      if (!saved) setSubmitError("The cash register could not be saved.");
     } catch {
-      setSubmitError("Die Kasse konnte nicht gespeichert werden.");
+      setSubmitError("The cash register could not be saved.");
     } finally {
       setSaving(false);
     }
@@ -189,8 +189,8 @@ export default function EditCardModal({
       >
         <header className={styles.header}>
           <div className={styles.heading}>
-            <h2 id="edit-card-title">Kartendaten bearbeiten</h2>
-            <p>Name und Kartendarstellung dieser Kasse aktualisieren.</p>
+            <h2 id="edit-card-title">Edit card details</h2>
+            <p>Name und Card display dieser Cash register aktualisieren.</p>
           </div>
           <button
             type="button"
@@ -204,12 +204,12 @@ export default function EditCardModal({
         </header>
 
         <div className={styles.body}>
-          <div className={styles.preview} aria-label="Kartenvorschau">
+          <div className={styles.preview} aria-label="Card preview">
             <AccountCard
               cardColor={selectedColor}
               details={{
                 ...values,
-                accountName: values.accountName || "Kasse",
+                accountName: values.accountName || "Cash register",
                 cardNumber: values.cardNumber || previewCardNumber,
                 holder: values.holder || "Mike Smith",
                 expiry: values.expiry || "06/21",
@@ -219,7 +219,7 @@ export default function EditCardModal({
 
           <section className={styles.section} aria-labelledby="edit-card-colors">
             <h3 id="edit-card-colors" className={styles.sectionTitle}>
-              Kartenfarbe
+              Card color
             </h3>
             <div className={styles.colorOptions}>
               {cardColors.map((color) => (
@@ -243,7 +243,7 @@ export default function EditCardModal({
             aria-labelledby="edit-card-information"
           >
             <h3 id="edit-card-information" className={styles.sectionTitle}>
-              Karteninformationen
+              Card information
             </h3>
             <div className={styles.formGrid}>
               <Field
@@ -270,7 +270,7 @@ export default function EditCardModal({
                 />
               </Field>
               <Field
-                label="Kartennummer"
+                label="Card number"
                 error={errors.cardNumber}
                 errorId="edit-card-number-error"
               >
@@ -294,7 +294,7 @@ export default function EditCardModal({
                 />
               </Field>
               <Field
-                label="Karteninhaber"
+                label="Card holder"
                 error={errors.holder}
                 errorId="edit-holder-error"
               >
@@ -348,7 +348,7 @@ export default function EditCardModal({
             onClick={onDelete}
             disabled={saving}
           >
-            Kasse archivieren
+            Cash register archivieren
           </button>
           <div className={styles.footerActions}>
             <button
@@ -357,10 +357,10 @@ export default function EditCardModal({
               onClick={onClose}
               disabled={saving}
             >
-              Abbrechen
+              Cancel
             </button>
             <button type="submit" className={styles.primaryButton} disabled={saving} aria-busy={saving}>
-              {saving ? "Wird gespeichert …" : "Änderungen speichern"}
+              {saving ? "Saving …" : "Save changes"}
             </button>
           </div>
         </footer>

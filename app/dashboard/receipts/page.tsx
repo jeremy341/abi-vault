@@ -1163,7 +1163,6 @@ export default function ReceiptsPage() {
                   ref={fileInput}
                   type="file"
                   accept=".pdf,image/jpeg,image/png"
-                  capture="environment"
                   hidden
                   onChange={handleFile}
                 />

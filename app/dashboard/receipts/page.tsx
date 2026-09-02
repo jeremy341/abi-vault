@@ -684,7 +684,10 @@ export default function ReceiptsPage() {
   const [actionError, setActionError] = useState("");
   const [fileName, setFileName] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
+  const filePreviewUrl = useMemo(
+    () => selectedFile?.type.startsWith("image/") ? URL.createObjectURL(selectedFile) : null,
+    [selectedFile],
+  );
   const [transaction, setTransaction] = useState("");
   const [availableTransactions, setAvailableTransactions] =
     useState<readonly TransactionOption[]>([]);
@@ -791,19 +794,12 @@ export default function ReceiptsPage() {
     setFileName(file.name);
   }
 
-  useEffect(() => {
-    if (!selectedFile?.type.startsWith("image/")) {
-      setFilePreviewUrl(null);
-      return;
-    }
-    const previewUrl = URL.createObjectURL(selectedFile);
-    setFilePreviewUrl(previewUrl);
-    return () => URL.revokeObjectURL(previewUrl);
-  }, [selectedFile]);
+  useEffect(() => () => {
+    if (filePreviewUrl) URL.revokeObjectURL(filePreviewUrl);
+  }, [filePreviewUrl]);
 
   function removeSelectedFile() {
     setSelectedFile(null);
-    setFilePreviewUrl(null);
     setFileName("");
     if (fileInput.current) fileInput.current.value = "";
   }
@@ -915,7 +911,6 @@ export default function ReceiptsPage() {
     setEditingReceipt(null);
     setFileName("");
     setSelectedFile(null);
-    setFilePreviewUrl(null);
     setTransaction("");
   }
 

@@ -66,7 +66,9 @@ export default function AddCardModal({
   const idempotencyKey = useRef<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (!open) return;

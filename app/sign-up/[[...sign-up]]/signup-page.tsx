@@ -1,7 +1,7 @@
 import { SignUp } from "@clerk/nextjs";
 import Link from "next/link";
 
-export default function SignUpPage() {
+export default function SignUpPage({ redirectUrl = "/dashboard" }: { redirectUrl?: string }) {
   return (
     <main className="soft-grid flex min-h-[100dvh] flex-col overflow-y-auto text-ink">
       <header className="px-6 py-6 sm:px-10 sm:py-8">
@@ -23,7 +23,7 @@ export default function SignUpPage() {
 
       <section className="flex flex-1 items-center justify-center px-5 pb-24 pt-8 sm:px-8">
         <div className="w-full max-w-md">
-          <SignUp fallbackRedirectUrl="/dashboard" />
+          <SignUp fallbackRedirectUrl={redirectUrl} />
         </div>
       </section>
     </main>

@@ -121,6 +121,14 @@
   grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
   gap: 0.75rem;
 }
+
+/* Keep the shortcut on the same visual track as the right-hand insight column. */
+@media (min-width: 1400px) {
+  .exportShortcut {
+    margin-left: 3rem;
+  }
+}
+
 .exportShortcut {
   display: inline-flex;
   min-height: var(--ui-control-height);

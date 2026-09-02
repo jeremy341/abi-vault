@@ -74,7 +74,7 @@ export default function PeriodsPage() {
         </header>
         <div className={styles.summaryStats}>
           <div className={styles.summaryStat}><span className={`${styles.summaryIcon} ${styles.summaryIconGreen}`}><CalendarClock aria-hidden="true" /></span><span><small>Activeer Zeitraum</small><strong>{activePeriod ? periodLabel(activePeriod) : "Nor"}</strong></span></div>
-          <div className={styles.summaryStat}><span className={`${styles.summaryIcon} ${styles.summaryIconGreen}`}><Check aria-hidden="true" /></span><span><small>Opene Periods</small><strong>{openCount}</strong></span></div>
+          <div className={styles.summaryStat}><span className={`${styles.summaryIcon} ${styles.summaryIconGreen}`}><Check aria-hidden="true" /></span><span><small>Open periods</small><strong>{openCount}</strong></span></div>
           <div className={styles.summaryStat}><span className={styles.summaryIcon}><Lock aria-hidden="true" /></span><span><small>Lockede Periods</small><strong>{lockedCount}</strong></span></div>
         </div>
       </article>

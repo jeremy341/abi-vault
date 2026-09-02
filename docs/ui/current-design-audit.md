@@ -303,7 +303,7 @@ At widths below 1280px, columns collapse into ordered content sections. The desk
 
 ### Transaction table
 
-- Five columns: Transaktion, Kategorie, Datum, Betrag, Beleg.
+- Five columns: Transaction, Category, Date, Amount, Receipt.
 - Table container has 1px border, `.8rem` radius, hidden overflow, and horizontal margins.
 - Header is 2.5rem minimum height, `0.75rem`, lightly tinted background.
 - Rows are grid buttons with muted dividers, `0.85rem` text, icon bubbles, pill category tags, receipt filenames, and green/red amounts.
@@ -340,7 +340,7 @@ At widths below 1280px, columns collapse into ordered content sections. The desk
 
 - Heading: “Receipt overview”. Add action: “Add receipt”.
 - Filters bar: filename/transaction search, status dropdown, period dropdown.
-- Table columns: Beleg, Assigned transaction, Datum, Betrag, Status, overflow action.
+- Table columns: Receipt, Assigned transaction, Date, Amount, Status, overflow action.
 - Rows use file icon/name/type-size stack, transaction/kind stack, date, amount, semantic status pill, and three-dot action.
 - Page size is 9 receipts at the base/1920px layout and 10 receipts at `min-width: 2200px`, matching the wide Transactions density. Pagination is compact previous/current/next.
 - Status colors: green Reviewed, amber Review needed, gray Unassigned.

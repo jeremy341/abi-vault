@@ -467,7 +467,7 @@ export default function PeoplePage() {
                       <button
                         type="button"
                         className={styles.moreButton}
-                        aria-label={`${person.name} Optionen`}
+                        aria-label={`${person.name} Options`}
                         aria-haspopup="menu"
                         aria-expanded={openMenuId === person.id}
                         onClick={(event) => {
@@ -593,7 +593,7 @@ export default function PeoplePage() {
                         </div>
                         <div className={styles.inviteLinkActions}>
                           {link ? (
-                            <button type="button" onClick={() => void copyRoleLink(role)} aria-label={`${role} Link kopieren`}><Copy aria-hidden="true" /> Kopieren</button>
+                            <button type="button" onClick={() => void copyRoleLink(role)} aria-label={`${role} Copy link`}><Copy aria-hidden="true" /> Copy</button>
                           ) : (
                             <button type="button" onClick={() => void generateRoleLink(role)} disabled={linkSaving !== null} aria-busy={linkSaving === role}>
                               {linkSaving === role ? "Erstelle …" : "Link erstellen"}

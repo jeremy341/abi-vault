@@ -28,7 +28,7 @@ import { InlineLoading, LoadingCollection, LoadingStatus, LoadingText } from "@/
 import { mapWalletToCashRegisterCard, type CashRegisterWallet } from "@/lib/finance/cash-register-card";
 
 function displayMinor(value: string) {
-  return (Number(value) / 100).toLocaleString("en-GB", { style: "currency", currency: "EUR" });
+  return (Number(value) / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
 }
 
 function formatLastTransaction(date: string | undefined) {
@@ -62,8 +62,8 @@ function displayDashboardGoals(snapshot: DashboardSnapshot | null) {
     const saved = Number(goal.saved_amount_minor) / 100;
     return {
       title: goal.title,
-      target: target.toLocaleString("en-GB", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }),
-      saved: `${saved.toLocaleString("en-GB", { style: "currency", currency: "EUR" })} gesammelt`,
+      target: target.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }),
+      saved: `${saved.toLocaleString("en-US", { style: "currency", currency: "USD" })} saved`,
       progress: target ? Math.round((saved / target) * 100) : 0,
       date: new Date(`${goal.deadline}T00:00:00`).toLocaleDateString("en-GB"),
     };
@@ -160,17 +160,17 @@ function DesktopDashboard({ snapshot, loading, error }: { snapshot: DashboardSna
         <div>
           <span>Total available</span>
           <strong><LoadingText loading={loading}>{displayMinor(String(cashBalance))}</LoadingText></strong>
-          <small>{loading ? "Cash registers are loading…" : cashWallet?.name ?? "No Cash register angelegt"}</small>
+          <small>{loading ? "Cash registers are loading…" : cashWallet?.name ?? "No cash register created"}</small>
         </div>
         <div>
           <span>Income</span>
           <strong><LoadingText loading={loading}>{displayMinor(String(incomeTotal))}</LoadingText></strong>
-          <small>{loading ? "Cash registers are loading…" : cashWallet ? `Aus ${cashWallet.name}` : "No Daten"}</small>
+          <small>{loading ? "Cash registers are loading…" : cashWallet ? `From ${cashWallet.name}` : "No Daten"}</small>
         </div>
         <div>
           <span>Expenses</span>
           <strong><LoadingText loading={loading}>{displayMinor(String(expenseTotal))}</LoadingText></strong>
-          <small>{loading ? "Cash registers are loading…" : cashWallet ? `Aus ${cashWallet.name}` : "No Daten"}</small>
+          <small>{loading ? "Cash registers are loading…" : cashWallet ? `From ${cashWallet.name}` : "No Daten"}</small>
         </div>
         <div>
           <span>Open reviews</span>
@@ -185,10 +185,10 @@ function DesktopDashboard({ snapshot, loading, error }: { snapshot: DashboardSna
             <DashboardCashCarousel snapshot={snapshot} loading={loading} error={error} selectedWalletId={cashWallet?.id ?? null} onSelectWallet={setSelectedCashWalletId} onPreview={() => setCardPreviewOpen(true)} />
             <div className={desktopStyles.accountSummary}>
               <div>
-                <span className={desktopStyles.eyebrow}>{loading ? "Cash register is loading…" : cashWallet?.name ?? "No Cash register angelegt"}</span>
+                <span className={desktopStyles.eyebrow}>{loading ? "Cash register is loading…" : cashWallet?.name ?? "No cash register created"}</span>
                 <strong><LoadingText loading={loading}>{displayMinor(String(cashBalance))}</LoadingText></strong>
                 <Link className={desktopStyles.accountActivity} href="/dashboard/transactions">
-                  {loading ? "Cash register data is loading…" : cashWallet ? <>Letzte Transaction: <LoadingText loading={loading}>{lastTransaction}</LoadingText></> : "Create a cash register to manage transactions."}
+                  {loading ? "Cash register data is loading…" : cashWallet ? <>Latest transaction: <LoadingText loading={loading}>{lastTransaction}</LoadingText></> : "Create a cash register to manage transactions."}
                 </Link>
               </div>
               <div className={desktopStyles.accountActions}>
@@ -205,7 +205,7 @@ function DesktopDashboard({ snapshot, loading, error }: { snapshot: DashboardSna
           <article className={desktopStyles.transactionsPanel}>
             <header className={desktopStyles.panelHeader}>
               <div>
-                <h2>Letzte Transactions</h2>
+                <h2>Latest transactions</h2>
                 <p>Recent activity across all cash registers</p>
               </div>
               <Link href="/dashboard/transactions">
@@ -395,10 +395,10 @@ function TabletDashboard({ snapshot, loading, error }: { snapshot: DashboardSnap
               {cashWallet ? <AccountCard details={{ accountName: cashWallet.name, cardNumber: cashWallet.cardNumberVisual ?? undefined, holder: cashWallet.cardHolderVisual ?? undefined, expiry: cashWallet.cardExpiryVisual ?? undefined }} cardColor={cashWallet.cardColorVisual ?? undefined} /> : loading ? <InlineLoading label="Cash register is loading…" /> : error ? null : <Link href="/dashboard/funds" aria-label="Create cash register"><AccountCard variant="add" /></Link>}
             </div>
             <div className={styles.tabletBalance}>
-              <span>{loading ? "Cash register is loading…" : cashWallet?.name ?? "No Cash register angelegt"}</span>
+              <span>{loading ? "Cash register is loading…" : cashWallet?.name ?? "No cash register created"}</span>
               <strong><LoadingText loading={loading}>{displayMinor(String(cashBalance))}</LoadingText></strong>
               <Link className={styles.tabletActivity} href="/dashboard/transactions">
-                {loading ? "Cash register data is loading…" : <>Letzte Transaction: <LoadingText loading={loading}>{lastTransaction}</LoadingText></>}
+                {loading ? "Cash register data is loading…" : <>Latest transaction: <LoadingText loading={loading}>{lastTransaction}</LoadingText></>}
               </Link>
               <div className={styles.tabletActions}>
                 <Link
@@ -419,7 +419,7 @@ function TabletDashboard({ snapshot, loading, error }: { snapshot: DashboardSnap
 
           <article className={styles.tabletTransactions}>
             <header className={styles.tabletPanelHeader}>
-              <h2>Letzte Transactions</h2>
+              <h2>Latest transactions</h2>
               <Link href="/dashboard/transactions">
                 View all{" "}
                 <ArrowRight aria-hidden="true" className="size-4" />
@@ -527,7 +527,7 @@ function PhoneDashboard({ snapshot, loading, error }: { snapshot: DashboardSnaps
         <span className={styles.phoneEyebrow}>Total available</span>
         <strong><LoadingText loading={loading}>{displayMinor(String(cashBalance))}</LoadingText></strong>
         <div className={styles.phoneBalanceMeta}>
-          <span>{loading ? "Cash register is loading…" : cashWallet?.name ?? "No Cash register angelegt"}</span>
+          <span>{loading ? "Cash register is loading…" : cashWallet?.name ?? "No cash register created"}</span>
           {cashWallet ? <b>{!cashHasCount ? "Not reviewed yet" : cashCountMatches ? "Reconciliation matches" : "Review discrepancy"}</b> : null}
         </div>
       </div>
@@ -550,10 +550,10 @@ function PhoneDashboard({ snapshot, loading, error }: { snapshot: DashboardSnaps
       <div className={styles.phoneAccountStrip}>
         <div>
           <Link href="/dashboard/funds">
-            <strong>{loading ? "Cash register is loading…" : cashWallet?.name ?? "No Cash register angelegt"}</strong>
+            <strong>{loading ? "Cash register is loading…" : cashWallet?.name ?? "No cash register created"}</strong>
           </Link>
           <Link href="/dashboard/transactions">
-            <span>{loading ? "Cash register data is loading…" : `Letzte Transaction: ${lastTransaction}`}</span>
+            <span>{loading ? "Cash register data is loading…" : `Latest transaction: ${lastTransaction}`}</span>
           </Link>
         </div>
         <b><LoadingText loading={loading}>{displayMinor(String(cashBalance))}</LoadingText></b>

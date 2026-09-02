@@ -84,7 +84,7 @@ const analysisChartConfig = {
 
 const money = new Intl.NumberFormat("en-GB", {
   style: "currency",
-  currency: "EUR",
+  currency: "USD",
   minimumFractionDigits: 2,
 });
 
@@ -175,8 +175,8 @@ function PhoneReportsView({
               value={period}
               onChange={onPeriodChange}
               options={[
-                { value: "3-monate", label: "Letzte 3 months" },
-                { value: "6-monate", label: "Letzte 6 months" },
+                { value: "3-monate", label: "Last 3 months" },
+                { value: "6-monate", label: "Last 6 months" },
                 { value: "jahr", label: "This year" },
               ]}
             />
@@ -390,9 +390,9 @@ export default function ReportsPage() {
   const [kpiLoading, setKpiLoading] = useState(true);
   const [kpiError, setKpiError] = useState("");
   const [reportKpis, setReportKpis] = useState({
-    income: "0,00 €",
-    expenses: "0,00 €",
-    net: "0,00 €",
+    income: "$0.00",
+    expenses: "$0.00",
+    net: "$0.00",
     review: "0",
     reviewed: "0",
     unassigned: "0",
@@ -414,7 +414,7 @@ export default function ReportsPage() {
           setKpiError("Review data could not be loaded.");
           return;
         }
-        const format = (minor: string | number) => (Number(minor) / 100).toLocaleString("en-GB", { style: "currency", currency: "EUR" });
+        const format = (minor: string | number) => (Number(minor) / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
         const net = Number(result.netMinor) / 100;
         setReportKpis({
           income: format(result.liquidMinor),
@@ -526,7 +526,7 @@ export default function ReportsPage() {
                 value={period}
                 onChange={setPeriod}
                 options={[
-                  { value: "6-monate", label: "Letzte 6 months" },
+                  { value: "6-monate", label: "Last 6 months" },
                   { value: "abi-jahr", label: "Abi year 2026" },
                   { value: "gesamt", label: "Gesamter Zeitraum" },
                 ]}
@@ -599,8 +599,8 @@ export default function ReportsPage() {
                       tickFormatter={(value) => {
                         const numericValue = Number(value);
                         return numericValue >= 1000
-                          ? `${(numericValue / 1000).toLocaleString("en-GB", { maximumFractionDigits: 1 })}k €`
-                          : `${numericValue.toLocaleString("en-GB")} €`;
+                          ? `${(numericValue / 1000).toLocaleString("en-GB", { maximumFractionDigits: 1 })}k $`
+                          : `${numericValue.toLocaleString("en-GB")} $`;
                       }}
                     />
                     <ChartTooltip
@@ -785,7 +785,7 @@ export default function ReportsPage() {
                       axisLine={false}
                       width={50}
                       tickFormatter={(value) =>
-                        `${(Number(value) / 1000).toLocaleString("en-GB", { maximumFractionDigits: 1 })}k €`
+                        `${(Number(value) / 1000).toLocaleString("en-GB", { maximumFractionDigits: 1 })}k $`
                       }
                     />
                     <ChartTooltip content={<ChartTooltipContent />} />
@@ -880,7 +880,7 @@ export default function ReportsPage() {
                       axisLine={false}
                       width={50}
                       tickFormatter={(value) =>
-                        `${(Number(value) / 1000).toLocaleString("en-GB", { maximumFractionDigits: 1 })}k €`
+                        `${(Number(value) / 1000).toLocaleString("en-GB", { maximumFractionDigits: 1 })}k $`
                       }
                     />
                     <ChartTooltip content={<ChartTooltipContent />} />
@@ -1064,7 +1064,7 @@ export default function ReportsPage() {
                   value={period}
                   onChange={setPeriod}
                   options={[
-                    { value: "6-monate", label: "Letzte 6 months" },
+                    { value: "6-monate", label: "Last 6 months" },
                     { value: "abi-jahr", label: "Abi year 2026" },
                     { value: "gesamt", label: "Gesamter Zeitraum" },
                   ]}
@@ -1107,7 +1107,7 @@ export default function ReportsPage() {
             <section className={styles.exportHistory}>
               <header className={styles.exportSectionHeader}>
                 <div>
-                  <h3>Letzte Exporte</h3>
+                  <h3>Recent exports</h3>
                   <p>Bereits erstellte Reports</p>
                 </div>
               </header>

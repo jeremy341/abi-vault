@@ -69,7 +69,7 @@ insert into public.transactions (
   idempotency_key
 )
 select
-  'org_local_demo', 32000, 'EUR', 'Druck Abizeitung', 'Lokaler Beispieldatensatz',
+  'org_local_demo', 32000, 'USD', 'Druck Abizeitung', 'Lokaler Beispieldatensatz',
   'expense', 'posted', 'manual', category.id, wallet.id, period.id,
   '2026-08-15', 'user_local_admin', 'seed-local-transaction'
 from public.categories category

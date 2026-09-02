@@ -282,7 +282,7 @@ begin
   ) then
     raise exception 'RECEIPT_FILE_NOT_FOUND' using errcode = '23503';
   end if;
-  perform set_config('app.audit_reason', 'Beleg hochgeladen', true);
+  perform set_config('app.audit_reason', 'Receipt uploaded', true);
   insert into public.receipts (
     id, organization_id, transaction_id, storage_path, file_name,
     mime_type, file_size_bytes, uploaded_by
@@ -360,7 +360,7 @@ begin
   end if;
 
   perform app_private.assert_receipt_transaction(p_organization_id, p_transaction_id);
-  perform set_config('app.audit_reason', 'Belegdaten aktualisiert', true);
+  perform set_config('app.audit_reason', 'Receipt data updated', true);
   update public.receipts
   set file_name = btrim(p_file_name),
       transaction_id = p_transaction_id
@@ -569,7 +569,7 @@ begin
     raise exception 'CONTRIBUTION_EXCEEDS_TRANSACTION' using errcode = '23514';
   end if;
 
-  perform set_config('app.audit_reason', 'Zielbeitrag angelegt', true);
+  perform set_config('app.audit_reason', 'Zielbeitrag created', true);
   insert into public.goal_contributions (
     organization_id, goal_id, transaction_id, allocated_amount_minor,
     idempotency_key, created_by

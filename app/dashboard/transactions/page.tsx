@@ -131,7 +131,7 @@ const fromIso = (value: string) => {
 const displayDate = (date: Date) =>
   `${String(date.getDate()).padStart(2, "0")}.${String(date.getMonth() + 1).padStart(2, "0")}.${date.getFullYear()}`;
 const displayAmount = (amount: number) =>
-  `${amount >= 0 ? "+" : "-"}${Math.abs(amount).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
+  `${amount >= 0 ? "+" : "-"}${Math.abs(amount).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`;
 
 type TrendDirection = "positive" | "negative" | "neutral";
 type Trend = { label: string; direction: TrendDirection };
@@ -1320,7 +1320,7 @@ export default function TransactionsPage() {
                     inputMode="decimal"
                     value={draftMinAmount}
                     onChange={(event) => setDraftMinAmount(event.target.value)}
-                    placeholder="0,00 €"
+                    placeholder="$0.00"
                   />
                 </label>
                 <label className={styles.inlineField}>
@@ -1330,7 +1330,7 @@ export default function TransactionsPage() {
                     inputMode="decimal"
                     value={draftMaxAmount}
                     onChange={(event) => setDraftMaxAmount(event.target.value)}
-                    placeholder="1.000,00 €"
+                    placeholder="1.00$0.00"
                   />
                 </label>
               </div>

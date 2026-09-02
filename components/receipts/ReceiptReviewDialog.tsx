@@ -99,7 +99,7 @@ export function ReceiptReviewDialog({
       <div className={styles.meta}>
         <div><span>Transaction</span><strong>{receipt.transaction}</strong></div>
         <div><span>Date</span><strong>{receipt.date}</strong></div>
-        <div><span>Amount</span><strong>{receipt.amount.toLocaleString("de-DE", { style: "currency", currency: "EUR" })}</strong></div>
+        <div><span>Amount</span><strong>{receipt.amount.toLocaleString("en-US", { style: "currency", currency: "USD" })}</strong></div>
         <div><span>Current status</span><strong>{receipt.status}</strong></div>
         {receipt.createdByName ? <div><span>Created by</span><strong>{receipt.createdByName}</strong><small>{formatTimestamp(receipt.createdAt)}</small></div> : null}
         {receipt.uploadedByName ? <div><span>Uploaded by</span><strong>{receipt.uploadedByName}</strong><small>{formatTimestamp(receipt.uploadedAt)}</small></div> : null}

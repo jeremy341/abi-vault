@@ -155,7 +155,7 @@ function PhoneSettingsView({
               </label>
               <label>
                 <span>Currency</span>
-                <span className={phoneStyles.readonly}>Euro (EUR)</span>
+                <span className={phoneStyles.readonly}>US dollars (USD)</span>
               </label>
             </div>
           </section>
@@ -203,7 +203,7 @@ function PhoneSettingsView({
                     type="button"
                     role="switch"
                     aria-checked={checked}
-                    aria-label={`${label} ${checked ? "deaktivieren" : "aktivieren"}`}
+                    aria-label={`${label} ${checked ? "disable" : "enable"}`}
                     className={`${phoneStyles.switch} ${checked ? phoneStyles.switchOn : ""}`}
                     onClick={() =>
                       onToggleNotification(
@@ -497,7 +497,7 @@ export default function SettingsPage() {
                   <span>Currency</span>
                   <div className={styles.readonlyField}>
                     <Coins aria-hidden="true" />
-                    Euro (EUR)
+                    US dollars (USD)
                   </div>
                 </label>
               </div>
@@ -550,7 +550,7 @@ export default function SettingsPage() {
                 />
                 <SwitchRow
                   label="Goal-Progress"
-                  description="Benachrichtigung bei wichtigen Progresssmarken."
+                  description="Notifications for important progress milestones."
                   checked={notifications.goals}
                   onChange={() => toggleNotification("goals")}
                 />
@@ -623,7 +623,7 @@ export default function SettingsPage() {
                   <span>
                     <strong>Receiptarchiv exportieren</strong>
                     <small>
-                      All uploaded files gesammelt herunterladen
+                      All uploaded files saved herunterladen
                     </small>
                   </span>
                 </button>
@@ -671,7 +671,7 @@ function SwitchRow({
         type="button"
         role="switch"
         aria-checked={checked}
-        aria-label={`${label} ${checked ? "deaktivieren" : "aktivieren"}`}
+        aria-label={`${label} ${checked ? "disable" : "enable"}`}
         className={checked ? styles.switchOn : styles.switchOff}
         onClick={onChange}
       >

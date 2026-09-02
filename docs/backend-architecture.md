@@ -20,7 +20,7 @@ Role checks exist in server actions and database functions. RLS remains the fina
 
 ## Financial model
 
-Money is EUR-only integer minor units (`bigint`). Transactions are posted through database RPCs that create balanced ledger entries atomically. Manual and bank-imported transactions are distinguished by `origin`. Imported provider IDs are unique per organization/provider and imports are idempotent.
+Money is USD-only integer minor units (`bigint`). Transactions are posted through database RPCs that create balanced ledger entries atomically. Manual and bank-imported transactions are distinguished by `origin`. Imported provider IDs are unique per organization/provider and imports are idempotent.
 
 Transfers are posted as one transfer transaction with two wallet sides and two balanced ledger entries. Cash counts are persisted separately with the derived book amount, counted amount, and difference; the count itself does not mutate the ledger.
 

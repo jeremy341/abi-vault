@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { manualUiTransactionSchema } from "./manual-ui";
 
 const validInput = {
-  title: "Kuchenverkauf",
+  title: "Cake sale",
   amount: "12,50",
   direction: "income" as const,
   categoryName: "Sales",

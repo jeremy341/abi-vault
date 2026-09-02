@@ -140,7 +140,7 @@ export default function Klassenkasse() {
                   Total available
                 </span>
                 <strong className={dashboardStyles.cashBalanceAmount}>
-                  2.850,75 €
+                  $2,850.75
                 </strong>
                 <p className={dashboardStyles.cashBalanceMeta}>
                   Card display · Ledger-basiert

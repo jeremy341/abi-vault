@@ -213,7 +213,7 @@ const receipts: Receipt[] = [];
     file: "Drinks receipt.jpg",
     type: "JPG",
     size: "760 KB",
-    transaction: "Kuchenverkauf",
+    transaction: "Cake sale",
     kind: "Income",
     date: "22.04.2026",
     amount: 185.5,
@@ -319,37 +319,37 @@ const transactionOptions = [
     value: "Abizeitung Druckkosten",
     label: "Abizeitung Druckkosten",
     date: "12.05.2024",
-    amount: "-320,00 €",
+    amount: "-$320.00",
   },
   {
-    value: "Kuchenverkauf",
-    label: "Kuchenverkauf",
+    value: "Cake sale",
+    label: "Cake sale",
     date: "11.05.2024",
-    amount: "+185,50 €",
+    amount: "+$185.50",
   },
   {
     value: "Dekoration Abiball",
     label: "Dekoration Abiball",
     date: "08.05.2024",
-    amount: "-184,90 €",
+    amount: "-$184.90",
   },
   {
     value: "Spende Eltern",
     label: "Spende Eltern",
     date: "07.05.2024",
-    amount: "+250,00 €",
+    amount: "+$250.00",
   },
   {
     value: "Abifahrt Bus",
     label: "Abifahrt Bus",
     date: "05.05.2024",
-    amount: "-1.200,00 €",
+    amount: "-$1,200.00",
   },
   {
     value: "T-Shirts Abijahrgang",
     label: "T-Shirts Abijahrgang",
     date: "03.05.2024",
-    amount: "-950,00 €",
+    amount: "-95$0.00",
   },
 ] as const; */
 
@@ -501,7 +501,7 @@ function TransactionCombobox({
 }
 
 function formatAmount(amount: number) {
-  return `${amount < 0 ? "-" : "+"}${Math.abs(amount).toLocaleString("en-GB", { minimumFractionDigits: 2 })} €`;
+  return `${amount < 0 ? "-" : "+"}${Math.abs(amount).toLocaleString("en-GB", { minimumFractionDigits: 2 })} $`;
 }
 
 function PhoneReceiptsView({
@@ -738,7 +738,7 @@ export default function ReceiptsPage() {
             value: item.id,
             label: item.title,
             date: item.date ? formatReceiptDate(item.date) : "",
-            amount: `${Number(item.amountMinor) >= 0 ? "+" : "-"}${Math.abs(Number(item.amountMinor) / 100).toLocaleString("en-GB", { minimumFractionDigits: 2 })} €`,
+            amount: `${Number(item.amountMinor) >= 0 ? "+" : "-"}${Math.abs(Number(item.amountMinor) / 100).toLocaleString("en-GB", { minimumFractionDigits: 2 })} $`,
           })),
         ]);
       })

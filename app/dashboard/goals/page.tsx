@@ -32,14 +32,14 @@ type Goal = {
   date: string;
 };
 
-const euro = new Intl.NumberFormat("en-GB", {
+const dollar = new Intl.NumberFormat("en-US", {
   style: "currency",
-  currency: "EUR",
+  currency: "USD",
   maximumFractionDigits: 0,
 });
-const euroPrecise = new Intl.NumberFormat("en-GB", {
+const dollarPrecise = new Intl.NumberFormat("en-US", {
   style: "currency",
-  currency: "EUR",
+  currency: "USD",
   minimumFractionDigits: 2,
 });
 
@@ -63,9 +63,9 @@ function PhoneGoalsView({
   return (
     <div className={phoneStyles.root} aria-busy={loading}>
       <section className={phoneStyles.hero} aria-label="Gesamtfortschritt" data-ui-slot="summary">
-        <span>Gesamt gespart</span>
-        <strong><LoadingText loading={loading}>{euro.format(totalSaved)}</LoadingText></strong>
-        <p>by <LoadingText loading={loading}>{euro.format(totalTarget)}</LoadingText></p>
+        <span>Total saved</span>
+        <strong><LoadingText loading={loading}>{dollar.format(totalSaved)}</LoadingText></strong>
+        <p>by <LoadingText loading={loading}>{dollar.format(totalTarget)}</LoadingText></p>
         <div className={phoneStyles.heroProgress}>
           <b><LoadingText loading={loading}>{progress}%</LoadingText></b>
           <span>erreicht</span>
@@ -86,9 +86,9 @@ function PhoneGoalsView({
               onClick={() => onEdit(goal, index)}
             >
               <strong>{goal.title}</strong>
-              <b>{euro.format(goal.target)}</b>
+              <b>{dollar.format(goal.target)}</b>
               <span className={phoneStyles.goalMeta}>
-                {euroPrecise.format(goal.saved)} gespart
+                {dollarPrecise.format(goal.saved)} saved
               </span>
               <span className={phoneStyles.goalMeta}>{goal.progress}%</span>
               <div className={phoneStyles.goalTrack} aria-hidden="true">
@@ -96,7 +96,7 @@ function PhoneGoalsView({
               </div>
               <span className={phoneStyles.goalFooter}>
                 <span>Goal: {goal.date}</span>
-                <span>{euroPrecise.format(goal.target - goal.saved)} pending</span>
+                <span>{dollarPrecise.format(goal.target - goal.saved)} pending</span>
               </span>
             </button>
           )) : <div className={phoneStyles.empty}>Noch keine Savings goals vorhanden.</div>}
@@ -251,7 +251,7 @@ export default function GoalsPage() {
     }
     if (saved < 0 || saved > target) {
       setFormError(
-        "The amount already saved must be between €0 and the target amount.",
+        "The amount already saved must be between $0 and the target amount.",
       );
       return;
     }
@@ -382,8 +382,8 @@ export default function GoalsPage() {
                   <CircleDollarSign aria-hidden="true" />
                 </span>
                 <div>
-                  <span>Gesamt gespart</span>
-                  <strong><LoadingText loading={loading}>{euro.format(totalSaved)}</LoadingText></strong>
+                  <span>Total saved</span>
+                  <strong><LoadingText loading={loading}>{dollar.format(totalSaved)}</LoadingText></strong>
                 </div>
               </article>
             </div>
@@ -440,10 +440,10 @@ export default function GoalsPage() {
                         <Target aria-hidden="true" />
                       </div>
                       <strong className={styles.goalTarget}>
-                        {euro.format(goal.target)}
+                        {dollar.format(goal.target)}
                       </strong>
                       <p className={styles.goalSaved}>
-                        {euroPrecise.format(goal.saved)} gesammelt
+                        {dollarPrecise.format(goal.saved)} saved
                       </p>
                       <div className={styles.progressLine}>
                         <div className={styles.progressTrack}>
@@ -457,7 +457,7 @@ export default function GoalsPage() {
                           Goal: {goal.date}
                         </span>
                         <span>
-                          {euroPrecise.format(goal.target - goal.saved)} pending
+                          {dollarPrecise.format(goal.target - goal.saved)} pending
                         </span>
                       </div>
                     </article>
@@ -481,8 +481,8 @@ export default function GoalsPage() {
                   <span style={{ width: `${overallProgress}%` }} />
                 </div>
                 <div className={styles.progressStats}>
-                  <span><LoadingText loading={loading}>{euroPrecise.format(totalSaved)} gespart</LoadingText></span>
-                  <span>by <LoadingText loading={loading}>{euro.format(totalTarget)}</LoadingText></span>
+                  <span><LoadingText loading={loading}>{dollarPrecise.format(totalSaved)} saved</LoadingText></span>
+                  <span>by <LoadingText loading={loading}>{dollar.format(totalTarget)}</LoadingText></span>
                 </div>
               </article>
 
@@ -593,9 +593,9 @@ export default function GoalsPage() {
                   <Target aria-hidden="true" />
                 </div>
                 <strong>
-                  {previewTarget ? euro.format(previewTarget) : "0 €"}
+                  {previewTarget ? dollar.format(previewTarget) : "0 $"}
                 </strong>
-                <p>{euroPrecise.format(previewSaved)} gesammelt</p>
+                <p>{dollarPrecise.format(previewSaved)} saved</p>
                 <div className={styles.progressLine}>
                   <div className={styles.progressTrack}>
                     <span style={{ width: `${previewProgress}%` }} />
@@ -647,12 +647,12 @@ export default function GoalsPage() {
                       }}
                       placeholder="0,00"
                     />
-                    <span>€</span>
+                    <span>$</span>
                   </div>
                 </label>
 
                 <label className={styles.formField}>
-                  <span>Bereits gespart</span>
+                  <span>Already saved</span>
                   <div className={styles.amountField}>
                     <input
                       name="savedAmount"
@@ -665,7 +665,7 @@ export default function GoalsPage() {
                       }}
                       placeholder="0,00"
                     />
-                    <span>€</span>
+                    <span>$</span>
                   </div>
                 </label>
               </div>

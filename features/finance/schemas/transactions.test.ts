@@ -10,8 +10,8 @@ const ids = {
 
 const base = {
   amount: "12,50",
-  currency: "EUR" as const,
-  title: "Kuchenverkauf",
+  currency: "USD" as const,
+  title: "Cake sale",
   description: null,
   categoryId: ids.category,
   periodId: ids.period,

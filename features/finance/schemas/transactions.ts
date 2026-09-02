@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { parseEuroToMinor } from "@/lib/finance/money";
+import { parseDollarToMinor } from "@/lib/finance/money";
 
 const uuid = z.string().uuid();
 
@@ -11,17 +11,17 @@ export const transactionCreateSchema = z
       .min(1, "Amount is required")
       .transform((value, context) => {
         try {
-          return parseEuroToMinor(value);
+          return parseDollarToMinor(value);
         } catch {
           context.addIssue({
             code: "custom",
-            message: "Amount must be a positive EUR value with up to two decimals",
+            message: "Amount must be a positive USD value with up to two decimals",
           });
           return z.NEVER;
         }
       })
       .refine((value) => value > BigInt(0), "Amount must be greater than zero"),
-    currency: z.literal("EUR"),
+    currency: z.literal("USD"),
     title: z.string().trim().min(1).max(200),
     description: z.string().trim().max(2000).nullable().optional(),
     type: z.enum(["income", "expense", "transfer"]),

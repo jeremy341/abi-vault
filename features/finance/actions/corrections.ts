@@ -3,7 +3,7 @@
 import { requirePermission } from "@/lib/auth/permissions-server";
 import { actionFailure, actionSuccess, type ActionResult } from "@/lib/api/result";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { parseEuroToMinor } from "@/lib/finance/money";
+import { parseDollarToMinor } from "@/lib/finance/money";
 import {
   transactionArchiveSchema,
   transactionCorrectionSchema,
@@ -29,7 +29,7 @@ export async function correctTransactionFromUi(
   const context = await requirePermission("editOpenTransactions");
   let amountMinor: bigint;
   try {
-    amountMinor = parseEuroToMinor(parsed.data.amount);
+    amountMinor = parseDollarToMinor(parsed.data.amount);
   } catch {
     return actionFailure("INVALID_PAYLOAD", "The amount is invalid.");
   }

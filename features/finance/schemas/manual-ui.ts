@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { parseEuroToMinor } from "@/lib/finance/money";
+import { parseDollarToMinor } from "@/lib/finance/money";
 
 export const manualUiTransactionSchema = z.object({
   title: z.string().trim().min(1).max(200),
@@ -11,7 +11,7 @@ export const manualUiTransactionSchema = z.object({
 });
 
 export function parseManualUiAmount(value: string) {
-  const amount = parseEuroToMinor(value);
+  const amount = parseDollarToMinor(value);
   if (amount <= BigInt(0)) throw new Error("INVALID_AMOUNT");
   return amount;
 }

@@ -67,7 +67,7 @@ type AdaptiveFundsViewProps = {
   cashBox: FundsCashBox;
   auditLogs: FundsAudit[];
   activities: FundsActivity[];
-  euro: (value: number) => string;
+  dollar: (value: number) => string;
   onSwitchCard: (direction: -1 | 1) => void;
   onSelectCard: (index: number) => void;
   onAddCard: () => void;
@@ -159,9 +159,9 @@ function FundsTabs({
 function SummaryRail({
   cards,
   cashBox,
-  euro,
+  dollar,
   loading,
-}: Pick<AdaptiveFundsViewProps, "cards" | "cashBox" | "euro" | "loading">) {
+}: Pick<AdaptiveFundsViewProps, "cards" | "cashBox" | "dollar" | "loading">) {
   const bankBalance = totalBankBalance(cards);
   const hasCashBox = Boolean(cashBox.id);
   const total = bankBalance + (hasCashBox && !cards.length ? cashBox.balance : 0);
@@ -171,17 +171,17 @@ function SummaryRail({
     <section className={styles.summaryRail} aria-label="Financial overview">
       <div>
         <span>Total available</span>
-        <strong>{loading ? <InlineLoading label="" className={styles.compactInlineLoading} /> : euro(total)}</strong>
+        <strong>{loading ? <InlineLoading label="" className={styles.compactInlineLoading} /> : dollar(total)}</strong>
         <small>{loading ? "Cash registers are loading…" : `${cards.length} Cash registers insgesamt`}</small>
       </div>
       <div>
         <span>cash balance</span>
-        <strong>{loading ? <InlineLoading label="" className={styles.compactInlineLoading} /> : euro(bankBalance)}</strong>
+        <strong>{loading ? <InlineLoading label="" className={styles.compactInlineLoading} /> : dollar(bankBalance)}</strong>
         <small>{loading ? "Balance is loading…" : cards.length ? "All active cash registers" : "No cash registers created"}</small>
       </div>
       <div>
         <span>Selected cash register</span>
-        <strong>{loading ? <InlineLoading label="" className={styles.compactInlineLoading} /> : hasCashBox ? euro(cashBox.balance) : "No Cash register"}</strong>
+        <strong>{loading ? <InlineLoading label="" className={styles.compactInlineLoading} /> : hasCashBox ? dollar(cashBox.balance) : "No Cash register"}</strong>
         <small>{loading ? "Cash register is loading…" : hasCashBox && cashBox.lastCountDate ? `Counted on ${cashBox.lastCountDate}` : "Not reviewed yet"}</small>
       </div>
       <div>
@@ -191,8 +191,8 @@ function SummaryRail({
         </strong>
         <small>
           {loading ? "Status is loading…" : !hasCashBox ? "Create a cash register" : !cashBox.lastCountDate ? "No count yet" : matched
-            ? "No Differenz festgestellt"
-            : `${euro(cashBox.difference)} Differenz`}
+            ? "No Difference festgestellt"
+            : `${dollar(cashBox.difference)} Difference`}
         </small>
       </div>
     </section>
@@ -203,7 +203,7 @@ function AccountList({
   cards,
   activeCardIndex,
   cashSelected,
-  euro,
+  dollar,
   onSelectCard,
   onAddCard,
   loading,
@@ -213,7 +213,7 @@ function AccountList({
   AdaptiveFundsViewProps,
   | "cards"
   | "activeCardIndex"
-  | "euro"
+  | "dollar"
   | "onSelectCard"
   | "onAddCard"
   | "loading"
@@ -259,17 +259,17 @@ function AccountList({
             <small>Cash registerskarte</small>
             </span>
             <span className={styles.accountAmount}>
-              <strong>{euro(card.balance)}</strong>
+              <strong>{dollar(card.balance)}</strong>
               <small>
                 Ledger-basiert
               </small>
             </span>
           </button>
-        )) : <p className={styles.panelEmpty}>Noch keine Cash registers angelegt.</p>}
+        )) : <p className={styles.panelEmpty}>Noch keine Cash registers created.</p>}
       </div>
       <div className={styles.accountListFooter}>
         <span>All Cash registers</span>
-        <strong>{loading ? <InlineLoading label="" className={styles.compactInlineLoading} /> : euro(totalBankBalance(cards))}</strong>
+        <strong>{loading ? <InlineLoading label="" className={styles.compactInlineLoading} /> : dollar(totalBankBalance(cards))}</strong>
       </div>
     </section>
   );
@@ -360,7 +360,7 @@ function CardStage({
         <span>
           {cards.length
             ? `Cash register ${activeCardIndex + 1} of ${cards.length}`
-            : "No Cash register angelegt"}
+            : "No cash register created"}
         </span>
       </div>
     </div>
@@ -374,7 +374,7 @@ function BankDetail({
   props: AdaptiveFundsViewProps;
   compact?: boolean;
 }) {
-  const { activeCard, euro } = props;
+  const { activeCard, dollar } = props;
 
   if (props.loading) {
     return (
@@ -395,7 +395,7 @@ function BankDetail({
     return (
       <section className={styles.emptyAccount} role="status">
         <WalletCards aria-hidden="true" />
-        <h2>No Cash register angelegt</h2>
+        <h2>No cash register created</h2>
         <p>
           Create a cash register to manage the balance and card view.
         </p>
@@ -432,7 +432,7 @@ function BankDetail({
         <CardStage {...props} />
         <div className={styles.balanceBlock}>
           <span>Available balance</span>
-          <strong>{euro(activeCard.balance)}</strong>
+          <strong>{dollar(activeCard.balance)}</strong>
           <small>Ledger-basiert</small>
         </div>
       </div>
@@ -446,7 +446,7 @@ function BankDetail({
 }
 
 function CashDetail({ props }: { props: AdaptiveFundsViewProps }) {
-  const { cashBox, euro } = props;
+  const { cashBox, dollar } = props;
   if (props.loading) {
     return (
       <section className={styles.cashDetail}>
@@ -473,7 +473,7 @@ function CashDetail({ props }: { props: AdaptiveFundsViewProps }) {
       </header>
       <div className={styles.cashHero}>
         <span>Current balance</span>
-        <strong>{euro(cashBox.balance)}</strong>
+        <strong>{dollar(cashBox.balance)}</strong>
       </div>
       <dl className={styles.detailRows}>
         <div>
@@ -505,7 +505,7 @@ function CashDetail({ props }: { props: AdaptiveFundsViewProps }) {
 }
 
 function Reconciliation({ props }: { props: AdaptiveFundsViewProps }) {
-  const { cashBox, euro } = props;
+  const { cashBox, dollar } = props;
   if (props.loading) {
     return (
       <section className={styles.reconciliation}>
@@ -546,16 +546,16 @@ function Reconciliation({ props }: { props: AdaptiveFundsViewProps }) {
       <dl className={styles.detailRows}>
         <div>
           <dt>Soll</dt>
-          <dd>{hasCashBox ? euro(cashBox.balance) : "—"}</dd>
+          <dd>{hasCashBox ? dollar(cashBox.balance) : "—"}</dd>
         </div>
         <div>
           <dt>Ist</dt>
-          <dd>{hasCashBox ? euro(cashBox.balance + cashBox.difference) : "—"}</dd>
+          <dd>{hasCashBox ? dollar(cashBox.balance + cashBox.difference) : "—"}</dd>
         </div>
         <div>
-          <dt>Differenz</dt>
+          <dt>Difference</dt>
           <dd className={matched ? styles.positive : hasCashBox && hasCount ? styles.negative : ""}>
-            {hasCashBox && hasCount ? euro(cashBox.difference) : "—"}
+            {hasCashBox && hasCount ? dollar(cashBox.difference) : "—"}
           </dd>
         </div>
       </dl>
@@ -608,7 +608,7 @@ function ActivityPanel({
               className={item.amount >= 0 ? styles.positive : styles.negative}
             >
               {item.amount >= 0 ? "+" : ""}
-              {props.euro(item.amount)}
+              {props.dollar(item.amount)}
             </b>
           </div>
         )) : <p className={styles.panelEmpty}>No activity available.</p>}
@@ -638,7 +638,7 @@ function AuditPanel({ props }: { props: AdaptiveFundsViewProps }) {
             </span>
             <span>
               <small>Counted onount</small>
-              <strong>{props.euro(entry.countedAmount)}</strong>
+              <strong>{props.dollar(entry.countedAmount)}</strong>
             </span>
             <b
               className={
@@ -647,7 +647,7 @@ function AuditPanel({ props }: { props: AdaptiveFundsViewProps }) {
                   : styles.negative
               }
             >
-              {props.euro(entry.difference)}
+              {props.dollar(entry.difference)}
             </b>
           </div>
         )) : <p className={styles.panelEmpty}>Noch keine Cash counts vorhanden.</p>}
@@ -676,7 +676,7 @@ function AccessPanel({ props }: { props: AdaptiveFundsViewProps }) {
           <dd>No responsible person set</dd>
         </div>
         <div>
-          <dt>Letzte Review</dt>
+          <dt>Last review</dt>
           <dd>{props.cashBox.lastCountDate}</dd>
         </div>
       </dl>
@@ -705,7 +705,7 @@ function DesktopFunds(props: AdaptiveFundsViewProps) {
       <SummaryRail
         cards={props.cards}
         cashBox={props.cashBox}
-        euro={props.euro}
+        dollar={props.dollar}
         loading={props.loading}
       />
       <FundsTabs active={section} onChange={setSection} />
@@ -789,7 +789,7 @@ function TabletAccountSelector({
           <CreditCard aria-hidden="true" />
           <span>
             <strong>{card.details.accountName}</strong>
-            <small>{props.euro(card.balance)}</small>
+            <small>{props.dollar(card.balance)}</small>
           </span>
         </button>
       ))}
@@ -819,7 +819,7 @@ function TabletFunds(props: AdaptiveFundsViewProps) {
       <SummaryRail
         cards={props.cards}
         cashBox={props.cashBox}
-        euro={props.euro}
+        dollar={props.dollar}
         loading={props.loading}
       />
       <FundsTabs active={section} onChange={setSection} />
@@ -890,7 +890,7 @@ function PhoneAccountCard(props: AdaptiveFundsViewProps) {
             <strong>{props.activeCard.details.accountName}</strong>
             <small>Card display</small>
           </span>
-          <b>{props.euro(props.activeCard.balance)}</b>
+          <b>{props.dollar(props.activeCard.balance)}</b>
         </div>
       ) : null}
     </section>
@@ -908,7 +908,7 @@ function PhoneRows({ props }: { props: AdaptiveFundsViewProps }) {
           </span>
           <b className={item.amount >= 0 ? styles.positive : styles.negative}>
             {item.amount >= 0 ? "+" : ""}
-            {props.euro(item.amount)}
+            {props.dollar(item.amount)}
           </b>
         </div>
       )) : <p className={styles.panelEmpty}>No activity available.</p>}
@@ -926,9 +926,9 @@ function PhoneFunds(props: AdaptiveFundsViewProps) {
     <div className={`${styles.root} ${styles.phoneRoot}`}>
       <section className={styles.phoneBalanceHero} aria-label="Gesamtguthaben">
         <span>Total available</span>
-        <strong>{props.loading ? <InlineLoading label="" className={styles.compactInlineLoading} /> : props.euro(totalBalance)}</strong>
+        <strong>{props.loading ? <InlineLoading label="" className={styles.compactInlineLoading} /> : props.dollar(totalBalance)}</strong>
         <div>
-          {props.loading ? <span>Cash registers are loading…</span> : hasCashBox ? <span>{props.euro(props.cashBox.balance)} Cash register</span> : <span>No Cash register angelegt</span>}
+          {props.loading ? <span>Cash registers are loading…</span> : hasCashBox ? <span>{props.dollar(props.cashBox.balance)} Cash register</span> : <span>No cash register created</span>}
         </div>
       </section>
       <FundsTabs active={section} onChange={setSection} />
@@ -963,7 +963,7 @@ function PhoneFunds(props: AdaptiveFundsViewProps) {
           {hasCashBox ? <section className={styles.phoneSection}>
             <header>
               <h2>Cash registersstatus</h2>
-              <b>{props.euro(props.cashBox.balance)}</b>
+              <b>{props.dollar(props.cashBox.balance)}</b>
             </header>
             <button
               type="button"
@@ -1026,7 +1026,7 @@ function PhoneFunds(props: AdaptiveFundsViewProps) {
                   <strong>{card.details.accountName}</strong>
                   <small>Cash registerskarte</small>
                 </span>
-                <b>{props.euro(card.balance)}</b>
+                <b>{props.dollar(card.balance)}</b>
               </button>
             ))}
           </div>
@@ -1038,7 +1038,7 @@ function PhoneFunds(props: AdaptiveFundsViewProps) {
               </div>
               <div>
                 <dt>Balance</dt>
-                <dd>{props.euro(props.activeCard.balance)}</dd>
+                <dd>{props.dollar(props.activeCard.balance)}</dd>
               </div>
               <div>
                 <dt>Administration</dt>
@@ -1085,7 +1085,7 @@ function PhoneFunds(props: AdaptiveFundsViewProps) {
                       : styles.negative
                   }
                 >
-                  {props.euro(entry.difference)}
+                  {props.dollar(entry.difference)}
                 </b>
               </button>
             )) : (

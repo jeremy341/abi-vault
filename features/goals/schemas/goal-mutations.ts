@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { parseEuroToMinor } from "@/lib/finance/money";
+import { parseDollarToMinor } from "@/lib/finance/money";
 
 const amount = z.string().trim().transform((value, context) => {
   try {
-    const parsed = parseEuroToMinor(value);
+    const parsed = parseDollarToMinor(value);
     if (parsed <= BigInt(0)) throw new Error();
     return parsed;
   } catch {

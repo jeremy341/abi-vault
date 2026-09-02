@@ -44,8 +44,8 @@ export function RowActionMenu({
         render={
           <button
             type="button"
-            aria-label={`${label} Optionen`}
-            title={`${label} Optionen`}
+            aria-label={`${label} Options`}
+            title={`${label} Options`}
             onClick={(event) => event.stopPropagation()}
             className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           />

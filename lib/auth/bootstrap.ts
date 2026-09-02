@@ -92,7 +92,7 @@ async function bootstrapOrganizationData(session: Awaited<ReturnType<typeof auth
     organization_id: session.orgId,
     school_name: "",
     graduation_year: new Date().getFullYear(),
-    currency: "EUR",
+    currency: "USD",
     timezone: "Europe/Berlin",
   }, { onConflict: "organization_id", ignoreDuplicates: true });
   if (settingsError) throw settingsError;

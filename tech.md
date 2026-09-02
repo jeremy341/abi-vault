@@ -230,7 +230,7 @@ Use Conventional Commits, for example `feat: add fundraising goals` or `fix: rej
 
 ## 6. Financial domain model
 
-All amounts are positive EUR values stored as `DECIMAL(10,2)`. Currency is currently EUR only and must be enforced by a database constraint.
+All amounts are positive USD values stored as `DECIMAL(10,2)`. Currency is currently USD only and must be enforced by a database constraint.
 
 ### 6.1 Transaction routing
 
@@ -270,8 +270,8 @@ Do not add an approval workflow until the committee’s real operating process i
 
 A goal lets an authorized person define an amount the committee wants to raise by a particular date. Examples:
 
-- “Raise €2,000 for the graduation venue by 2027-04-01”
-- “Collect €800 for decorations by 2027-05-15”
+- “Raise $2,000 for the graduation venue by 2027-04-01”
+- “Collect $800 for decorations by 2027-05-15”
 
 Goals are visible to students when marked public, allowing them to see the target, deadline, and progress without exposing private financial records.
 
@@ -365,7 +365,7 @@ Clerk user IDs are stored as `TEXT`, not UUID. Database-generated entity IDs use
 The database must enforce:
 
 - Positive amounts
-- `currency = 'EUR'`
+- `currency = 'USD'`
 - Valid transaction types and wallet routing
 - Different wallets for transfers
 - Valid role values: `admin`, `supervisor`, `student`

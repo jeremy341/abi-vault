@@ -17,7 +17,7 @@ import { cachedFinanceQuery, getFinanceCacheState } from "@/lib/finance/client-c
 import { invalidateFinanceQuery } from "@/lib/finance/client-cache";
 import { archiveWallet, createWallet, updateWallet } from "@/features/finance/actions/wallets";
 import { recordCashCount } from "@/features/finance/actions/cash-counts";
-import { parseEuroToMinor } from "@/lib/finance/money";
+import { parseDollarToMinor } from "@/lib/finance/money";
 import { calculateCashDenominationMinor } from "@/lib/finance/cash-count";
 import {
   mapWalletToCashRegisterCard,
@@ -92,12 +92,12 @@ function mapCashCountToAuditEntry(item: CashCountListItem): CashAuditEntry {
 
 const money = new Intl.NumberFormat("en-GB", {
   style: "currency",
-  currency: "EUR",
+  currency: "USD",
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 });
 
-const euro = (value: number) => money.format(value);
+const dollar = (value: number) => money.format(value);
 
 export default function FundsPage() {
   const mode = usePresentationMode();
@@ -234,7 +234,7 @@ export default function FundsPage() {
   );
   const directCountedMinor = useMemo(() => {
     try {
-      return parseEuroToMinor(countedAmountInput);
+      return parseDollarToMinor(countedAmountInput);
     } catch {
       return null;
     }
@@ -500,7 +500,7 @@ export default function FundsPage() {
         cashBox={cashBox}
         auditLogs={auditLogs}
         activities={[]}
-        euro={euro}
+        dollar={dollar}
         onSwitchCard={switchCard}
         onSelectCard={selectCard}
         onAddCard={() => setIsAddCardOpen(true)}
@@ -663,7 +663,7 @@ export default function FundsPage() {
                         }
                         placeholder="0,00"
                       />
-                      <span>€</span>
+                      <span>$</span>
                     </div>
                   </label>
                   <label className={styles.formField}>
@@ -687,15 +687,15 @@ export default function FundsPage() {
                   aria-label="Denominations"
                 >
                   {[
-                    ["50", "50 € Scheine"],
-                    ["20", "20 € Scheine"],
-                    ["10", "10 € Scheine"],
-                    ["5", "5 € Scheine"],
-                    ["2", "€2 coins"],
-                    ["1", "€1 coins"],
-                    ["0.5", "€0.50 coins"],
-                    ["0.2", "€0.20 coins"],
-                    ["0.1", "€0.10 coins"],
+                    ["50", "50 $ Scheine"],
+                    ["20", "20 $ Scheine"],
+                    ["10", "10 $ Scheine"],
+                    ["5", "5 $ Scheine"],
+                    ["2", "$2 coins"],
+                    ["1", "$1 coins"],
+                    ["0.5", "$0.50 coins"],
+                    ["0.2", "$0.20 coins"],
+                    ["0.1", "$0.10 coins"],
                   ].map(([denomination, label]) => (
                     <label className={styles.denominationItem} key={denomination}>
                       <span>{label}</span>
@@ -733,12 +733,12 @@ export default function FundsPage() {
               </label>
 
               <div className={styles.countPreview} aria-label="Count preview">
-                <div><span>Buchbestand</span><strong>{euro(cashBox.balance)}</strong></div>
-                <div><span>Counted</span><strong>{euro(activeCountedAmount)}</strong></div>
+                <div><span>Book balance</span><strong>{dollar(cashBox.balance)}</strong></div>
+                <div><span>Counted</span><strong>{dollar(activeCountedAmount)}</strong></div>
                 <div>
-                  <span>Differenz</span>
+                  <span>Difference</span>
                   <strong className={Math.abs(currentDiffPreview) < 0.01 ? styles.positive : styles.negative}>
-                    {currentDiffPreview > 0 ? "+" : ""}{euro(currentDiffPreview)}
+                    {currentDiffPreview > 0 ? "+" : ""}{dollar(currentDiffPreview)}
                   </strong>
                 </div>
               </div>

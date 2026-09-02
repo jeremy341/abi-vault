@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useAppAuth } from "@/components/auth/app-auth";
 import { getReportSnapshot } from "@/features/finance/actions/queries";
 import {
   cachedFinanceQuery,
@@ -10,7 +10,7 @@ import {
 } from "@/lib/finance/client-cache";
 
 export function useReportSnapshot() {
-  const { userId, orgId } = useAuth();
+  const { userId, orgId } = useAppAuth();
   const scope = `${orgId ?? "no-org"}:${userId ?? "anonymous"}`;
   type ReportSnapshot = Extract<Awaited<ReturnType<typeof getReportSnapshot>>, { ok: true }>;
   const cached = getFinanceCacheState<ReportSnapshot>("report-snapshot", scope);

@@ -6,14 +6,18 @@ import styles from "./welcome-page.module.css";
 export default function StartPage() {
   const localMode = isLocalMode();
   return (
-    <main className={`${styles.page} soft-grid flex min-h-[100dvh] flex-col overflow-hidden`}>
+    <main
+      className={`${styles.page} soft-grid flex min-h-[100dvh] flex-col overflow-hidden`}
+    >
       {/* Keep the brand anchored in the same top-left position as the app shell. */}
-      <header className={`${styles.header} px-6 py-6 sm:px-8 sm:py-8`}>
+      <header className={styles.header}>
         <AbiLogo />
       </header>
 
       {/* Main content: this is the centered welcome area. */}
-      <section className={`${styles.hero} flex min-h-[75vh] items-center justify-center px-6 py-20 text-center`}>
+      <section
+        className={`${styles.hero} flex min-h-[75vh] items-center justify-center px-6 py-20 text-center`}
+      >
         <div className="max-w-2xl">
           <h1 className="text-balance text-5xl font-semibold leading-tight tracking-tight sm:text-7xl">
             Class finances, clearly organized.
@@ -24,7 +28,11 @@ export default function StartPage() {
           </p>
 
           <div className={styles.actions}>
-            {localMode ? <Link href="/dashboard" className="action-link">Overview</Link> : null}
+            {localMode ? (
+              <Link href="/dashboard" className="action-link">
+                Overview
+              </Link>
+            ) : null}
           </div>
         </div>
       </section>

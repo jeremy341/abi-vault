@@ -64,8 +64,20 @@
   --ui-page-padding-inline: clamp(1rem, 2vw, 3rem);
   --ui-page-padding-bottom: clamp(1rem, 1.8vh, 2rem);
   --ui-card-shadow: 0 2px 8px rgb(0 0 0 / 0.04);
+  --ui-dashboard-panel-shadow: 0 12px 28px rgb(0 0 0 / 0.07);
   --ui-data-shadow: 0 1px 3px rgb(0 0 0 / 0.03);
   --ui-modal-shadow: 0 1.5rem 3rem rgb(0 0 0 / 0.2);
+  --ui-review-overlay: rgb(15 23 42 / 0.38);
+  --ui-review-dialog-shadow: 0 24px 70px rgb(15 23 42 / 0.2);
+  --ui-surface-muted: #f7f7f5;
+  --ui-surface-control-muted: #f4f4f5;
+  --ui-ring: #18181b;
+  --ui-warning-strong: #b45309;
+  --ui-negative-strong: #b91c1c;
+  --ui-positive-strong: #15803d;
+  --ui-warning-border: rgb(180 83 9 / 0.25);
+  --ui-negative-border: rgb(185 28 28 / 0.25);
+  --ui-positive-border: rgb(21 128 61 / 0.25);
   --ui-table-border: rgb(0 0 0 / 0.08);
   --ui-badge-radius: 999px;
   --ui-badge-padding-inline: 0.55rem;
@@ -602,10 +614,10 @@ body {
 
 .dark .ui-skeleton::after {
   background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgb(255 255 255 / 0.12) 45%,
-      transparent 75%
+    90deg,
+    transparent 0%,
+    rgb(255 255 255 / 0.12) 45%,
+    transparent 75%
   );
 }
 

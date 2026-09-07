@@ -17,18 +17,30 @@ import {
 } from "lucide-react";
 import AccountCard from "@/components/dashboard/AccountCard";
 import { Dialog } from "@/components/ui/dialog";
-import {
-  dashboardCategories,
-} from "@/components/dashboard/DashboardPanels";
+import { dashboardCategories } from "@/components/dashboard/DashboardPanels";
 import { usePresentationMode } from "@/hooks/use-presentation-mode";
 import styles from "@/app/dashboard/dashboard-adaptive.module.css";
 import desktopStyles from "@/app/dashboard/dashboard-desktop.module.css";
-import { useDashboardSnapshot, type DashboardSnapshot } from "@/hooks/use-dashboard-snapshot";
-import { InlineLoading, LoadingCollection, LoadingStatus, LoadingText } from "@/components/ui/loading-state";
-import { mapWalletToCashRegisterCard, type CashRegisterWallet } from "@/lib/finance/cash-register-card";
+import {
+  useDashboardSnapshot,
+  type DashboardSnapshot,
+} from "@/hooks/use-dashboard-snapshot";
+import {
+  InlineLoading,
+  LoadingCollection,
+  LoadingStatus,
+  LoadingText,
+} from "@/components/ui/loading-state";
+import {
+  mapWalletToCashRegisterCard,
+  type CashRegisterWallet,
+} from "@/lib/finance/cash-register-card";
 
 function displayMinor(value: string) {
-  return (Number(value) / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
+  return (Number(value) / 100).toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+  });
 }
 
 function formatLastTransaction(date: string | undefined) {
@@ -36,8 +48,14 @@ function formatLastTransaction(date: string | undefined) {
   const parsed = new Date(date);
   if (Number.isNaN(parsed.getTime())) return "No transactions yet";
 
-  const days = Math.max(0, Math.floor((Date.now() - parsed.getTime()) / 86_400_000));
-  const time = parsed.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  const days = Math.max(
+    0,
+    Math.floor((Date.now() - parsed.getTime()) / 86_400_000),
+  );
+  const time = parsed.toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
   if (days === 0) return `${time}, today`;
   if (days === 1) return `${time}, vor 1 Tag`;
   return `${time}, vor ${days} Tagen`;
@@ -62,7 +80,11 @@ function displayDashboardGoals(snapshot: DashboardSnapshot | null) {
     const saved = Number(goal.saved_amount_minor) / 100;
     return {
       title: goal.title,
-      target: target.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }),
+      target: target.toLocaleString("en-US", {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: 0,
+      }),
       saved: `${saved.toLocaleString("en-US", { style: "currency", currency: "USD" })} saved`,
       progress: target ? Math.round((saved / target) * 100) : 0,
       date: new Date(`${goal.deadline}T00:00:00`).toLocaleDateString("en-GB"),
@@ -76,9 +98,15 @@ function displayDashboardCategories(snapshot: DashboardSnapshot | null) {
     title: item.name,
     amount: displayMinor(item.amountMinor),
     progress: item.progress,
-    color: dashboardCategories[index % dashboardCategories.length]?.color ?? "bg-black",
-    bubble: dashboardCategories[index % dashboardCategories.length]?.bubble ?? "bg-black/[0.04] text-ink",
-    icon: dashboardCategories[index % dashboardCategories.length]?.icon ?? MoreHorizontal,
+    color:
+      dashboardCategories[index % dashboardCategories.length]?.color ??
+      "bg-black",
+    bubble:
+      dashboardCategories[index % dashboardCategories.length]?.bubble ??
+      "bg-black/[0.04] text-ink",
+    icon:
+      dashboardCategories[index % dashboardCategories.length]?.icon ??
+      MoreHorizontal,
   }));
 }
 
@@ -101,7 +129,8 @@ function DashboardCashCarousel({
   onSelectWallet: (walletId: string) => void;
   onPreview: (wallet: CashRegisterWallet) => void;
 }) {
-  const wallets = snapshot?.wallets.filter((wallet) => wallet.type === "cash") ?? [];
+  const wallets =
+    snapshot?.wallets.filter((wallet) => wallet.type === "cash") ?? [];
   if (loading) {
     return (
       <div className={desktopStyles.cashCardCarousel} aria-busy="true">
@@ -111,17 +140,60 @@ function DashboardCashCarousel({
       </div>
     );
   }
-  if (error) return <div className={desktopStyles.cashCardCarousel} aria-hidden="true" />;
-  if (!wallets.length) return <Link href="/dashboard/funds" className={desktopStyles.accountCard} aria-label="Create cash register"><AccountCard variant="add" /></Link>;
-  const selectedIndex = wallets.findIndex((wallet) => wallet.id === selectedWalletId);
+  if (error)
+    return (
+      <div className={desktopStyles.cashCardCarousel} aria-hidden="true" />
+    );
+  if (!wallets.length)
+    return (
+      <Link
+        href="/dashboard/funds"
+        className={desktopStyles.accountCard}
+        aria-label="Create cash register"
+      >
+        <AccountCard variant="add" />
+      </Link>
+    );
+  const selectedIndex = wallets.findIndex(
+    (wallet) => wallet.id === selectedWalletId,
+  );
   const safeIndex = selectedIndex >= 0 ? selectedIndex : 0;
   const wallet = wallets[safeIndex];
   const card = mapWalletToCashRegisterCard(wallet);
   return (
     <div className={desktopStyles.cashCardCarousel}>
-      {wallets.length > 1 ? <button type="button" aria-label="Previous cash register" onClick={() => onSelectWallet(wallets[(safeIndex - 1 + wallets.length) % wallets.length].id)}><ChevronLeft aria-hidden="true" /></button> : null}
-      <button type="button" className={desktopStyles.cashCardCarouselCard} aria-label={`${wallet.name} anzeigen`} onClick={() => onPreview(wallet)}><AccountCard cardColor={card.details.color} details={card.details} /></button>
-      {wallets.length > 1 ? <button type="button" aria-label="Next cash register" onClick={() => onSelectWallet(wallets[(safeIndex + 1) % wallets.length].id)}><ChevronRight aria-hidden="true" /></button> : null}
+      {wallets.length > 1 ? (
+        <button
+          type="button"
+          aria-label="Previous cash register"
+          onClick={() =>
+            onSelectWallet(
+              wallets[(safeIndex - 1 + wallets.length) % wallets.length].id,
+            )
+          }
+        >
+          <ChevronLeft aria-hidden="true" />
+        </button>
+      ) : null}
+      <button
+        type="button"
+        className={desktopStyles.cashCardCarouselCard}
+        aria-label={`${wallet.name} anzeigen`}
+        onClick={() => onPreview(wallet)}
+      >
+        <AccountCard cardColor={card.details.color} details={card.details} />
+      </button>
+      {wallets.length > 1 ? (
+        <button
+          type="button"
+          aria-label="Next cash register"
+          onClick={() =>
+            onSelectWallet(wallets[(safeIndex + 1) % wallets.length].id)
+          }
+        >
+          <ChevronRight aria-hidden="true" />
+        </button>
+      ) : null}
     </div>
   );
 }
@@ -132,63 +204,170 @@ function displayDashboardReviews(snapshot: DashboardSnapshot | null) {
     .filter((item) => item.reviewStatus !== "Approved")
     .map((item) => ({
       title: item.title,
-      detail: item.receipt ? "Receipt status pending" : "Cash payment without receipt",
+      detail: item.receipt
+        ? "Receipt status pending"
+        : "Cash payment without receipt",
       href: "/dashboard/transactions",
     }));
 }
 
-function DesktopDashboard({ snapshot, loading, error }: { snapshot: DashboardSnapshot | null; loading: boolean; error: string | null }) {
+function DesktopDashboard({
+  snapshot,
+  loading,
+  error,
+}: {
+  snapshot: DashboardSnapshot | null;
+  loading: boolean;
+  error: string | null;
+}) {
   const [cardPreviewOpen, setCardPreviewOpen] = useState(false);
-  const [selectedCashWalletId, setSelectedCashWalletId] = useState<string | null>(null);
+  const [selectedCashWalletId, setSelectedCashWalletId] = useState<
+    string | null
+  >(null);
   const transactionItems = displayDashboardTransactions(snapshot);
   const goalItems = displayDashboardGoals(snapshot);
   const categoryItems = displayDashboardCategories(snapshot);
   const reviewItems = displayDashboardReviews(snapshot);
-  const cashWallets = snapshot?.wallets.filter((wallet) => wallet.type === "cash") ?? [];
-  const cashWallet = cashWallets.find((wallet) => wallet.id === selectedCashWalletId) ?? cashWallets[0] ?? null;
+  const cashWallets =
+    snapshot?.wallets.filter((wallet) => wallet.type === "cash") ?? [];
+  const cashWallet =
+    cashWallets.find((wallet) => wallet.id === selectedCashWalletId) ??
+    cashWallets[0] ??
+    null;
   const cashCard = cashWallet ? mapWalletToCashRegisterCard(cashWallet) : null;
   const cashBalance = cashWallet ? Number(cashWallet.balanceMinor) : 0;
-  const incomeTotal = snapshot ? snapshot.transactions.filter((item) => Number(item.amountMinor) >= 0).reduce((sum, item) => sum + Number(item.amountMinor), 0) : 0;
-  const expenseTotal = snapshot ? snapshot.transactions.filter((item) => Number(item.amountMinor) < 0).reduce((sum, item) => sum + Math.abs(Number(item.amountMinor)), 0) : 0;
-  const lastTransaction = formatLastTransaction(snapshot?.transactions[0]?.date);
+  const incomeTotal = snapshot
+    ? snapshot.transactions
+        .filter((item) => Number(item.amountMinor) >= 0)
+        .reduce((sum, item) => sum + Number(item.amountMinor), 0)
+    : 0;
+  const expenseTotal = snapshot
+    ? snapshot.transactions
+        .filter((item) => Number(item.amountMinor) < 0)
+        .reduce((sum, item) => sum + Math.abs(Number(item.amountMinor)), 0)
+    : 0;
+  const lastTransaction = formatLastTransaction(
+    snapshot?.transactions[0]?.date,
+  );
 
   return (
-    <section className={desktopStyles.page} aria-label="Financial overview" aria-busy={loading}>
+    <section
+      className={desktopStyles.page}
+      aria-label="Financial overview"
+      aria-busy={loading}
+    >
       <LoadingStatus loading={loading} label="Financial overview is loading…" />
-      {error ? <p className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{error}</p> : null}
-      <div className={desktopStyles.metrics} aria-label="Financial metrics" data-ui-slot="summary">
+      {error ? (
+        <p
+          className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300"
+          role="alert"
+        >
+          {error}
+        </p>
+      ) : null}
+      <div
+        className={desktopStyles.metrics}
+        aria-label="Financial metrics"
+        data-ui-slot="summary"
+      >
         <div>
           <span>Total available</span>
-          <strong><LoadingText loading={loading}>{displayMinor(String(cashBalance))}</LoadingText></strong>
-          <small>{loading ? "Cash registers are loading…" : cashWallet?.name ?? "No cash register created"}</small>
+          <strong>
+            <LoadingText loading={loading}>
+              {displayMinor(String(cashBalance))}
+            </LoadingText>
+          </strong>
+          <small>
+            {loading
+              ? "Cash registers are loading…"
+              : (cashWallet?.name ?? "No cash register created")}
+          </small>
         </div>
         <div>
           <span>Income</span>
-          <strong><LoadingText loading={loading}>{displayMinor(String(incomeTotal))}</LoadingText></strong>
-          <small>{loading ? "Cash registers are loading…" : cashWallet ? `From ${cashWallet.name}` : "No Daten"}</small>
+          <strong>
+            <LoadingText loading={loading}>
+              {displayMinor(String(incomeTotal))}
+            </LoadingText>
+          </strong>
+          <small>
+            {loading
+              ? "Cash registers are loading…"
+              : cashWallet
+                ? `From ${cashWallet.name}`
+                : "No Daten"}
+          </small>
         </div>
         <div>
           <span>Expenses</span>
-          <strong><LoadingText loading={loading}>{displayMinor(String(expenseTotal))}</LoadingText></strong>
-          <small>{loading ? "Cash registers are loading…" : cashWallet ? `From ${cashWallet.name}` : "No Daten"}</small>
+          <strong>
+            <LoadingText loading={loading}>
+              {displayMinor(String(expenseTotal))}
+            </LoadingText>
+          </strong>
+          <small>
+            {loading
+              ? "Cash registers are loading…"
+              : cashWallet
+                ? `From ${cashWallet.name}`
+                : "No Daten"}
+          </small>
         </div>
         <div>
           <span>Open reviews</span>
-          <strong><LoadingText loading={loading}>{reviewItems.length} items</LoadingText></strong>
-          <small>{reviewItems.length ? "Activee Reviewen" : "No pendingen Reviewen"}</small>
+          <strong>
+            <LoadingText loading={loading}>
+              {reviewItems.length} items
+            </LoadingText>
+          </strong>
+          <small>
+            {reviewItems.length ? "Activee Reviewen" : "No pendingen Reviewen"}
+          </small>
         </div>
       </div>
 
       <div className={desktopStyles.workspace} data-ui-slot="content">
         <div className={desktopStyles.primaryColumn}>
-          <article className={desktopStyles.accountPanel} data-ui-slot="primary-panel">
-            <DashboardCashCarousel snapshot={snapshot} loading={loading} error={error} selectedWalletId={cashWallet?.id ?? null} onSelectWallet={setSelectedCashWalletId} onPreview={() => setCardPreviewOpen(true)} />
+          <article
+            className={desktopStyles.accountPanel}
+            data-ui-slot="primary-panel"
+          >
+            <DashboardCashCarousel
+              snapshot={snapshot}
+              loading={loading}
+              error={error}
+              selectedWalletId={cashWallet?.id ?? null}
+              onSelectWallet={setSelectedCashWalletId}
+              onPreview={() => setCardPreviewOpen(true)}
+            />
             <div className={desktopStyles.accountSummary}>
               <div>
-                <span className={desktopStyles.eyebrow}>{loading ? "Cash register is loading…" : cashWallet?.name ?? "No cash register created"}</span>
-                <strong><LoadingText loading={loading}>{displayMinor(String(cashBalance))}</LoadingText></strong>
-                <Link className={desktopStyles.accountActivity} href="/dashboard/transactions">
-                  {loading ? "Cash register data is loading…" : cashWallet ? <>Latest transaction: <LoadingText loading={loading}>{lastTransaction}</LoadingText></> : "Create a cash register to manage transactions."}
+                <span className={desktopStyles.eyebrow}>
+                  {loading
+                    ? "Cash register is loading…"
+                    : (cashWallet?.name ?? "No cash register created")}
+                </span>
+                <strong>
+                  <LoadingText loading={loading}>
+                    {displayMinor(String(cashBalance))}
+                  </LoadingText>
+                </strong>
+                <Link
+                  className={desktopStyles.accountActivity}
+                  href="/dashboard/transactions"
+                >
+                  {loading ? (
+                    "Cash register data is loading…"
+                  ) : cashWallet ? (
+                    <>
+                      Latest transaction:{" "}
+                      <LoadingText loading={loading}>
+                        {lastTransaction}
+                      </LoadingText>
+                    </>
+                  ) : (
+                    "Create a cash register to manage transactions."
+                  )}
                 </Link>
               </div>
               <div className={desktopStyles.accountActions}>
@@ -218,8 +397,16 @@ function DesktopDashboard({ snapshot, loading, error }: { snapshot: DashboardSna
               <span>Date</span>
               <span>Amount</span>
             </div>
-            <div className={desktopStyles.transactionRows} data-ui-slot="list-body">
-              <LoadingCollection loading={loading} knownItemCount={transactionItems.length} emptyHeight="100%" label="Transactions are loading…">
+            <div
+              className={desktopStyles.transactionRows}
+              data-ui-slot="list-body"
+            >
+              <LoadingCollection
+                loading={loading}
+                knownItemCount={transactionItems.length}
+                emptyHeight="100%"
+                label="Transactions are loading…"
+              >
                 {transactionItems.map((item) => {
                   const Icon = item.icon;
                   return (
@@ -250,7 +437,10 @@ function DesktopDashboard({ snapshot, loading, error }: { snapshot: DashboardSna
           </article>
         </div>
 
-        <aside className={desktopStyles.secondaryColumn} data-ui-slot="secondary-panel">
+        <aside
+          className={desktopStyles.secondaryColumn}
+          data-ui-slot="secondary-panel"
+        >
           <article className={desktopStyles.goalsPanel}>
             <header className={desktopStyles.panelHeader}>
               <div>
@@ -262,7 +452,12 @@ function DesktopDashboard({ snapshot, loading, error }: { snapshot: DashboardSna
               </Link>
             </header>
             <div className={desktopStyles.goalRows}>
-              <LoadingCollection loading={loading} knownItemCount={goalItems.length} emptyHeight="8rem" label="Goals are loading…">
+              <LoadingCollection
+                loading={loading}
+                knownItemCount={goalItems.length}
+                emptyHeight="8rem"
+                label="Goals are loading…"
+              >
                 {goalItems.map((goal) => (
                   <div className={desktopStyles.goalRow} key={goal.title}>
                     <span>
@@ -285,10 +480,17 @@ function DesktopDashboard({ snapshot, loading, error }: { snapshot: DashboardSna
                 <h2>Expenses</h2>
                 <p>By category</p>
               </div>
-              <span className={desktopStyles.panelValue}>{displayMinor(String(expenseTotal))}</span>
+              <span className={desktopStyles.panelValue}>
+                {displayMinor(String(expenseTotal))}
+              </span>
             </header>
             <div className={desktopStyles.spendingRows}>
-              <LoadingCollection loading={loading} knownItemCount={categoryItems.length} emptyHeight="7rem" label="Expenses are loading…">
+              <LoadingCollection
+                loading={loading}
+                knownItemCount={categoryItems.length}
+                emptyHeight="7rem"
+                label="Expenses are loading…"
+              >
                 {categoryItems.map((item) => (
                   <div className={desktopStyles.spendingRow} key={item.title}>
                     <span>{item.title}</span>
@@ -308,13 +510,18 @@ function DesktopDashboard({ snapshot, loading, error }: { snapshot: DashboardSna
                 <h2>Pending review</h2>
                 <p>Tasks needing attention</p>
               </div>
-              <span className={desktopStyles.reviewCount}>{reviewItems.length}</span>
+              <span className={desktopStyles.reviewCount}>
+                {reviewItems.length}
+              </span>
             </header>
             <div className={desktopStyles.reviewRows}>
               {reviewItems.map((item) => (
                 <Link href={item.href} key={item.title}>
                   <FileText aria-hidden="true" />
-                  <span><strong>{item.title}</strong><small>{item.detail}</small></span>
+                  <span>
+                    <strong>{item.title}</strong>
+                    <small>{item.detail}</small>
+                  </span>
                   <ArrowRight aria-hidden="true" />
                 </Link>
               ))}
@@ -345,7 +552,11 @@ function DesktopDashboard({ snapshot, loading, error }: { snapshot: DashboardSna
           </header>
           <div className={desktopStyles.accountDialogCard}>
             <AccountCard
-              details={cashCard?.details ?? { accountName: cashWallet?.name ?? "Cash register" }}
+              details={
+                cashCard?.details ?? {
+                  accountName: cashWallet?.name ?? "Cash register",
+                }
+              }
               cardColor={cashCard?.details.color}
             />
           </div>
@@ -355,36 +566,81 @@ function DesktopDashboard({ snapshot, loading, error }: { snapshot: DashboardSna
   );
 }
 
-function TabletDashboard({ snapshot, loading, error }: { snapshot: DashboardSnapshot | null; loading: boolean; error: string | null }) {
+function TabletDashboard({
+  snapshot,
+  loading,
+  error,
+}: {
+  snapshot: DashboardSnapshot | null;
+  loading: boolean;
+  error: string | null;
+}) {
   const transactionItems = displayDashboardTransactions(snapshot);
   const goalItems = displayDashboardGoals(snapshot);
   const categoryItems = displayDashboardCategories(snapshot);
   const reviewItems = displayDashboardReviews(snapshot);
   const cashWallet = primaryCashWallet(snapshot);
   const cashBalance = cashWallet ? Number(cashWallet.balanceMinor) : 0;
-  const lastTransaction = formatLastTransaction(snapshot?.transactions[0]?.date);
-  const incomeTotal = snapshot ? snapshot.transactions.filter((item) => Number(item.amountMinor) >= 0).reduce((sum, item) => sum + Number(item.amountMinor), 0) : 0;
-  const expenseTotal = snapshot ? snapshot.transactions.filter((item) => Number(item.amountMinor) < 0).reduce((sum, item) => sum + Math.abs(Number(item.amountMinor)), 0) : 0;
+  const lastTransaction = formatLastTransaction(
+    snapshot?.transactions[0]?.date,
+  );
+  const incomeTotal = snapshot
+    ? snapshot.transactions
+        .filter((item) => Number(item.amountMinor) >= 0)
+        .reduce((sum, item) => sum + Number(item.amountMinor), 0)
+    : 0;
+  const expenseTotal = snapshot
+    ? snapshot.transactions
+        .filter((item) => Number(item.amountMinor) < 0)
+        .reduce((sum, item) => sum + Math.abs(Number(item.amountMinor)), 0)
+    : 0;
   return (
     <section className={styles.tabletPage} aria-busy={loading}>
       <LoadingStatus loading={loading} label="Financial overview is loading…" />
-      {error ? <p className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{error}</p> : null}
-      <div className={styles.tabletMetricStrip} aria-label="Financial metrics" data-ui-slot="summary">
+      {error ? (
+        <p
+          className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300"
+          role="alert"
+        >
+          {error}
+        </p>
+      ) : null}
+      <div
+        className={styles.tabletMetricStrip}
+        aria-label="Financial metrics"
+        data-ui-slot="summary"
+      >
         <div className={styles.tabletMetric}>
           <span>cash balance</span>
-          <strong><LoadingText loading={loading}>{displayMinor(String(cashBalance))}</LoadingText></strong>
+          <strong>
+            <LoadingText loading={loading}>
+              {displayMinor(String(cashBalance))}
+            </LoadingText>
+          </strong>
         </div>
         <div className={styles.tabletMetric}>
           <span>Income</span>
-          <strong><LoadingText loading={loading}>{displayMinor(String(incomeTotal))}</LoadingText></strong>
+          <strong>
+            <LoadingText loading={loading}>
+              {displayMinor(String(incomeTotal))}
+            </LoadingText>
+          </strong>
         </div>
         <div className={styles.tabletMetric}>
           <span>Expenses</span>
-          <strong><LoadingText loading={loading}>{displayMinor(String(expenseTotal))}</LoadingText></strong>
+          <strong>
+            <LoadingText loading={loading}>
+              {displayMinor(String(expenseTotal))}
+            </LoadingText>
+          </strong>
         </div>
         <div className={styles.tabletMetric}>
           <span>Pending review</span>
-          <strong><LoadingText loading={loading}>{reviewItems.length} items</LoadingText></strong>
+          <strong>
+            <LoadingText loading={loading}>
+              {reviewItems.length} items
+            </LoadingText>
+          </strong>
         </div>
       </div>
 
@@ -392,13 +648,49 @@ function TabletDashboard({ snapshot, loading, error }: { snapshot: DashboardSnap
         <div className={styles.tabletPrimary}>
           <article className={styles.tabletAccount}>
             <div className={styles.tabletCardSlot}>
-              {cashWallet ? <AccountCard details={{ accountName: cashWallet.name, cardNumber: cashWallet.cardNumberVisual ?? undefined, holder: cashWallet.cardHolderVisual ?? undefined, expiry: cashWallet.cardExpiryVisual ?? undefined }} cardColor={cashWallet.cardColorVisual ?? undefined} /> : loading ? <InlineLoading label="Cash register is loading…" /> : error ? null : <Link href="/dashboard/funds" aria-label="Create cash register"><AccountCard variant="add" /></Link>}
+              {cashWallet ? (
+                <AccountCard
+                  details={{
+                    accountName: cashWallet.name,
+                    cardNumber: cashWallet.cardNumberVisual ?? undefined,
+                    holder: cashWallet.cardHolderVisual ?? undefined,
+                    expiry: cashWallet.cardExpiryVisual ?? undefined,
+                  }}
+                  cardColor={cashWallet.cardColorVisual ?? undefined}
+                />
+              ) : loading ? (
+                <InlineLoading label="Cash register is loading…" />
+              ) : error ? null : (
+                <Link href="/dashboard/funds" aria-label="Create cash register">
+                  <AccountCard variant="add" />
+                </Link>
+              )}
             </div>
             <div className={styles.tabletBalance}>
-              <span>{loading ? "Cash register is loading…" : cashWallet?.name ?? "No cash register created"}</span>
-              <strong><LoadingText loading={loading}>{displayMinor(String(cashBalance))}</LoadingText></strong>
-              <Link className={styles.tabletActivity} href="/dashboard/transactions">
-                {loading ? "Cash register data is loading…" : <>Latest transaction: <LoadingText loading={loading}>{lastTransaction}</LoadingText></>}
+              <span>
+                {loading
+                  ? "Cash register is loading…"
+                  : (cashWallet?.name ?? "No cash register created")}
+              </span>
+              <strong>
+                <LoadingText loading={loading}>
+                  {displayMinor(String(cashBalance))}
+                </LoadingText>
+              </strong>
+              <Link
+                className={styles.tabletActivity}
+                href="/dashboard/transactions"
+              >
+                {loading ? (
+                  "Cash register data is loading…"
+                ) : (
+                  <>
+                    Latest transaction:{" "}
+                    <LoadingText loading={loading}>
+                      {lastTransaction}
+                    </LoadingText>
+                  </>
+                )}
               </Link>
               <div className={styles.tabletActions}>
                 <Link
@@ -421,12 +713,19 @@ function TabletDashboard({ snapshot, loading, error }: { snapshot: DashboardSnap
             <header className={styles.tabletPanelHeader}>
               <h2>Latest transactions</h2>
               <Link href="/dashboard/transactions">
-                View all{" "}
-                <ArrowRight aria-hidden="true" className="size-4" />
+                View all <ArrowRight aria-hidden="true" className="size-4" />
               </Link>
             </header>
-            <div className={styles.tabletTransactionList} data-ui-slot="list-body">
-              <LoadingCollection loading={loading} knownItemCount={transactionItems.length} emptyHeight="100%" label="Transactions are loading…">
+            <div
+              className={styles.tabletTransactionList}
+              data-ui-slot="list-body"
+            >
+              <LoadingCollection
+                loading={loading}
+                knownItemCount={transactionItems.length}
+                emptyHeight="100%"
+                label="Transactions are loading…"
+              >
                 {transactionItems.slice(0, 6).map((item) => (
                   <div className={styles.tabletTransaction} key={item.title}>
                     <span>{item.title}</span>
@@ -447,7 +746,10 @@ function TabletDashboard({ snapshot, loading, error }: { snapshot: DashboardSnap
           </article>
         </div>
 
-        <aside className={styles.tabletSecondary} data-ui-slot="secondary-panel">
+        <aside
+          className={styles.tabletSecondary}
+          data-ui-slot="secondary-panel"
+        >
           <article className={styles.tabletGoals}>
             <header className={styles.tabletSectionHeader}>
               <h2>Goals</h2>
@@ -492,13 +794,21 @@ function TabletDashboard({ snapshot, loading, error }: { snapshot: DashboardSnap
           <article className={styles.tabletAttention}>
             <header className={styles.tabletSectionHeader}>
               <h2>Aufmerksamkeit</h2>
-              <span className={styles.sectionMeta}>{reviewItems.length} pending</span>
+              <span className={styles.sectionMeta}>
+                {reviewItems.length} pending
+              </span>
             </header>
             <div className={styles.tabletAttentionList}>
               {reviewItems.map((item) => (
-                <Link href={item.href} className={styles.tabletAttentionRow} key={item.title}>
+                <Link
+                  href={item.href}
+                  className={styles.tabletAttentionRow}
+                  key={item.title}
+                >
                   <FileText aria-hidden="true" />
-                  <span><strong>{item.title}</strong></span>
+                  <span>
+                    <strong>{item.title}</strong>
+                  </span>
                   <ArrowRight aria-hidden="true" />
                 </Link>
               ))}
@@ -510,29 +820,68 @@ function TabletDashboard({ snapshot, loading, error }: { snapshot: DashboardSnap
   );
 }
 
-function PhoneDashboard({ snapshot, loading, error }: { snapshot: DashboardSnapshot | null; loading: boolean; error: string | null }) {
+function PhoneDashboard({
+  snapshot,
+  loading,
+  error,
+}: {
+  snapshot: DashboardSnapshot | null;
+  loading: boolean;
+  error: string | null;
+}) {
   const transactionItems = displayDashboardTransactions(snapshot);
   const goalItems = displayDashboardGoals(snapshot);
   const reviewItems = displayDashboardReviews(snapshot);
   const cashWallet = primaryCashWallet(snapshot);
   const cashBalance = cashWallet ? Number(cashWallet.balanceMinor) : 0;
   const cashHasCount = Boolean(cashWallet?.lastCountAt);
-  const cashCountMatches = cashHasCount && Math.abs(Number(cashWallet?.lastCountDifferenceMinor ?? 0)) < 0.01;
-  const lastTransaction = formatLastTransaction(snapshot?.transactions[0]?.date);
+  const cashCountMatches =
+    cashHasCount &&
+    Math.abs(Number(cashWallet?.lastCountDifferenceMinor ?? 0)) < 0.01;
+  const lastTransaction = formatLastTransaction(
+    snapshot?.transactions[0]?.date,
+  );
   return (
     <section className={styles.phonePage} aria-busy={loading}>
       <LoadingStatus loading={loading} label="Financial overview is loading…" />
-      {error ? <p className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{error}</p> : null}
+      {error ? (
+        <p
+          className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300"
+          role="alert"
+        >
+          {error}
+        </p>
+      ) : null}
       <div className={styles.phoneBalanceHero} data-ui-slot="summary">
         <span className={styles.phoneEyebrow}>Total available</span>
-        <strong><LoadingText loading={loading}>{displayMinor(String(cashBalance))}</LoadingText></strong>
+        <strong>
+          <LoadingText loading={loading}>
+            {displayMinor(String(cashBalance))}
+          </LoadingText>
+        </strong>
         <div className={styles.phoneBalanceMeta}>
-          <span>{loading ? "Cash register is loading…" : cashWallet?.name ?? "No cash register created"}</span>
-          {cashWallet ? <b>{!cashHasCount ? "Not reviewed yet" : cashCountMatches ? "Reconciliation matches" : "Review discrepancy"}</b> : null}
+          <span>
+            {loading
+              ? "Cash register is loading…"
+              : (cashWallet?.name ?? "No cash register created")}
+          </span>
+          {cashWallet ? (
+            <b>
+              {!cashHasCount
+                ? "Not reviewed yet"
+                : cashCountMatches
+                  ? "Reconciliation matches"
+                  : "Review discrepancy"}
+            </b>
+          ) : null}
         </div>
       </div>
 
-      <nav className={styles.phoneQuickActions} aria-label="Schnellaktionen" data-ui-slot="toolbar">
+      <nav
+        className={styles.phoneQuickActions}
+        aria-label="Schnellaktionen"
+        data-ui-slot="toolbar"
+      >
         <Link
           href="/dashboard/transactions"
           className={styles.phoneQuickAction}
@@ -550,13 +899,25 @@ function PhoneDashboard({ snapshot, loading, error }: { snapshot: DashboardSnaps
       <div className={styles.phoneAccountStrip}>
         <div>
           <Link href="/dashboard/funds">
-            <strong>{loading ? "Cash register is loading…" : cashWallet?.name ?? "No cash register created"}</strong>
+            <strong>
+              {loading
+                ? "Cash register is loading…"
+                : (cashWallet?.name ?? "No cash register created")}
+            </strong>
           </Link>
           <Link href="/dashboard/transactions">
-            <span>{loading ? "Cash register data is loading…" : `Latest transaction: ${lastTransaction}`}</span>
+            <span>
+              {loading
+                ? "Cash register data is loading…"
+                : `Latest transaction: ${lastTransaction}`}
+            </span>
           </Link>
         </div>
-        <b><LoadingText loading={loading}>{displayMinor(String(cashBalance))}</LoadingText></b>
+        <b>
+          <LoadingText loading={loading}>
+            {displayMinor(String(cashBalance))}
+          </LoadingText>
+        </b>
       </div>
 
       <section className={styles.phoneSection}>
@@ -567,7 +928,12 @@ function PhoneDashboard({ snapshot, loading, error }: { snapshot: DashboardSnaps
           </Link>
         </header>
         <div className={styles.phoneTransactionList} data-ui-slot="list-body">
-          <LoadingCollection loading={loading} knownItemCount={transactionItems.length} emptyHeight="4rem" label="Transactions are loading…">
+          <LoadingCollection
+            loading={loading}
+            knownItemCount={transactionItems.length}
+            emptyHeight="4rem"
+            label="Transactions are loading…"
+          >
             {transactionItems.slice(0, 4).map((item) => (
               <div className={styles.phoneTransaction} key={item.title}>
                 <span>
@@ -599,7 +965,12 @@ function PhoneDashboard({ snapshot, loading, error }: { snapshot: DashboardSnaps
           </Link>
         </header>
         <div className={styles.phoneGoalScroller}>
-          <LoadingCollection loading={loading} knownItemCount={goalItems.length} emptyHeight="5rem" label="Goals are loading…">
+          <LoadingCollection
+            loading={loading}
+            knownItemCount={goalItems.length}
+            emptyHeight="5rem"
+            label="Goals are loading…"
+          >
             {goalItems.map((goal) => (
               <article className={styles.phoneGoal} key={goal.title}>
                 <header>
@@ -624,7 +995,11 @@ function PhoneDashboard({ snapshot, loading, error }: { snapshot: DashboardSnaps
         </header>
         <div className={styles.phoneAttentionList}>
           {reviewItems.map((item) => (
-            <Link href={item.href} className={styles.phoneAttentionRow} key={item.title}>
+            <Link
+              href={item.href}
+              className={styles.phoneAttentionRow}
+              key={item.title}
+            >
               <FileText aria-hidden="true" />
               <span>{item.title}</span>
               <ArrowRight aria-hidden="true" />
@@ -639,7 +1014,15 @@ function PhoneDashboard({ snapshot, loading, error }: { snapshot: DashboardSnaps
 export default function AdaptiveDashboardPage() {
   const mode = usePresentationMode();
   const { snapshot, loading, error } = useDashboardSnapshot();
-  if (mode === "tablet") return <TabletDashboard snapshot={snapshot} loading={loading} error={error} />;
-  if (mode === "phone") return <PhoneDashboard snapshot={snapshot} loading={loading} error={error} />;
-  return <DesktopDashboard snapshot={snapshot} loading={loading} error={error} />;
+  if (mode === "tablet")
+    return (
+      <TabletDashboard snapshot={snapshot} loading={loading} error={error} />
+    );
+  if (mode === "phone")
+    return (
+      <PhoneDashboard snapshot={snapshot} loading={loading} error={error} />
+    );
+  return (
+    <DesktopDashboard snapshot={snapshot} loading={loading} error={error} />
+  );
 }

@@ -20,7 +20,11 @@ import {
 } from "@/components/ui/field-dropdown";
 import { Pagination } from "@/components/ui/pagination";
 import { ModalSkeleton } from "@/components/ui/modal-skeleton";
-import { LoadingCollection, LoadingStatus, LoadingText } from "@/components/ui/loading-state";
+import {
+  LoadingCollection,
+  LoadingStatus,
+  LoadingText,
+} from "@/components/ui/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   Popover,
@@ -34,13 +38,32 @@ import {
   getDashboardSnapshot,
   listReceiptsForCurrentOrganization,
 } from "@/features/finance/actions/queries";
-import { createReceiptDownloadUrl, reviewReceipt, uploadReceipt } from "@/features/receipts/actions/receipts";
-import { archiveReceipt, updateReceiptMetadata } from "@/features/receipts/actions/receipts";
-import { cachedFinanceQuery, getFinanceCacheState, invalidateFinanceQuery, subscribeFinanceQuery } from "@/lib/finance/client-cache";
+import {
+  createReceiptDownloadUrl,
+  reviewReceipt,
+  uploadReceipt,
+} from "@/features/receipts/actions/receipts";
+import {
+  archiveReceipt,
+  updateReceiptMetadata,
+} from "@/features/receipts/actions/receipts";
+import {
+  cachedFinanceQuery,
+  getFinanceCacheState,
+  invalidateFinanceQuery,
+  subscribeFinanceQuery,
+} from "@/lib/finance/client-cache";
 import { RowActionMenu } from "@/components/ui/row-actions";
-import { ReceiptReviewDialog, type ReceiptReviewDecision } from "@/components/receipts/ReceiptReviewDialog";
+import {
+  ReceiptReviewDialog,
+  type ReceiptReviewDecision,
+} from "@/components/receipts/ReceiptReviewDialog";
 
-type ReceiptStatus = "Approved" | "Pending review" | "Invalid" | "Ohne Zuordnung";
+type ReceiptStatus =
+  | "Approved"
+  | "Pending review"
+  | "Invalid"
+  | "Ohne Zuordnung";
 type Receipt = {
   id: number | string;
   file: string;
@@ -64,7 +87,11 @@ function formatReceiptDate(value: string) {
   const date = new Date(`${value.slice(0, 10)}T00:00:00`);
   return Number.isNaN(date.getTime())
     ? value
-    : date.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" });
+    : date.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
 }
 
 type ServerReceipt = {
@@ -95,9 +122,18 @@ function mapReceipt(item: ServerReceipt): Receipt {
     transaction: item.transaction,
     transactionId: item.transactionId,
     kind: "",
-    date: item.date ? formatReceiptDate(item.date) : formatReceiptDate(new Date().toISOString()),
+    date: item.date
+      ? formatReceiptDate(item.date)
+      : formatReceiptDate(new Date().toISOString()),
     amount: Number(item.amountMinor) / 100,
-    status: item.status === "approved" ? "Approved" : item.status === "rejected" ? "Invalid" : !item.assigned ? "Ohne Zuordnung" : "Pending review",
+    status:
+      item.status === "approved"
+        ? "Approved"
+        : item.status === "rejected"
+          ? "Invalid"
+          : !item.assigned
+            ? "Ohne Zuordnung"
+            : "Pending review",
     canEdit: item.canEdit,
     canDelete: item.canDelete,
     uploadedByName: item.uploadedByName,
@@ -306,12 +342,7 @@ const statusOptions = [
   "Invalid",
   "Ohne Zuordnung",
 ] as const;
-const periodOptions = [
-  "All",
-  "This month",
-  "Last month",
-  "This year",
-] as const;
+const periodOptions = ["All", "This month", "Last month", "This year"] as const;
 /*
 const transactionOptions = [
   { value: "", label: "Ohne Zuordnung", date: "", amount: "" },
@@ -548,18 +579,28 @@ function PhoneReceiptsView({
 }) {
   return (
     <div className={phoneStyles.root} aria-busy={loading}>
-      <section className={phoneStyles.summary} aria-label="Receiptstatus" data-ui-slot="summary">
+      <section
+        className={phoneStyles.summary}
+        aria-label="Receiptstatus"
+        data-ui-slot="summary"
+      >
         <div className={phoneStyles.summaryItem}>
           <span>All</span>
-          <strong><LoadingText loading={loading}>{total}</LoadingText></strong>
+          <strong>
+            <LoadingText loading={loading}>{total}</LoadingText>
+          </strong>
         </div>
         <div className={phoneStyles.summaryItem}>
           <span>Pending review</span>
-          <strong><LoadingText loading={loading}>{pendingCount}</LoadingText></strong>
+          <strong>
+            <LoadingText loading={loading}>{pendingCount}</LoadingText>
+          </strong>
         </div>
         <div className={phoneStyles.summaryItem}>
           <span>Ohne Zuordnung</span>
-          <strong><LoadingText loading={loading}>{unassignedCount}</LoadingText></strong>
+          <strong>
+            <LoadingText loading={loading}>{unassignedCount}</LoadingText>
+          </strong>
         </div>
       </section>
 
@@ -601,58 +642,75 @@ function PhoneReceiptsView({
 
       <header className={phoneStyles.listHeader} data-ui-slot="list-header">
         <h2>Receipts</h2>
-        <span><LoadingText loading={loading}>{total} Fileen</LoadingText></span>
+        <span>
+          <LoadingText loading={loading}>{total} Fileen</LoadingText>
+        </span>
       </header>
 
       <div className={phoneStyles.rows} data-ui-slot="list-body">
-        <LoadingCollection loading={loading} knownItemCount={receipts.length} emptyHeight="10rem" label="Receipts are loading…">
-          {receipts.length ? receipts.map((receipt) => (
-          <article className={phoneStyles.row} key={receipt.id}>
-            <FileText aria-hidden="true" />
-            <span className={phoneStyles.rowMain}>
-              <strong>{receipt.file}</strong>
-              <small>Uploaded by {receipt.uploadedByName}</small>
-              <span>
-                {receipt.transaction === "—"
-                  ? "Unassigned"
-                  : receipt.transaction}
-              </span>
-            </span>
-            <span className={phoneStyles.rowSide}>
-              <b
-                className={
-                  receipt.amount >= 0
-                    ? phoneStyles.positive
-                    : phoneStyles.negative
-                }
-              >
-                {formatAmount(receipt.amount)}
-              </b>
-              <small
-                className={
-                  receipt.status === "Approved" ? "" : phoneStyles.review
-                }
-              >
-                {receipt.status}
-              </small>
-            </span>
-            <RowActionMenu
-              label={receipt.file}
-              canEdit={receipt.canEdit}
-              canDelete={receipt.canDelete}
-              onEdit={() => onEdit(receipt)}
-              onDelete={() => onDelete(receipt)}
-              onReceipt={() => onReview(receipt)}
-              receiptLabel={receipt.status === "Pending review" ? "Review receipt" : "View receipt"}
-            />
-          </article>
-          )) : <div className={phoneStyles.empty}>No receipts found.</div>}
+        <LoadingCollection
+          loading={loading}
+          knownItemCount={receipts.length}
+          emptyHeight="10rem"
+          label="Receipts are loading…"
+        >
+          {receipts.length ? (
+            receipts.map((receipt) => (
+              <article className={phoneStyles.row} key={receipt.id}>
+                <FileText aria-hidden="true" />
+                <span className={phoneStyles.rowMain}>
+                  <strong>{receipt.file}</strong>
+                  <small>Uploaded by {receipt.uploadedByName}</small>
+                  <span>
+                    {receipt.transaction === "—"
+                      ? "Unassigned"
+                      : receipt.transaction}
+                  </span>
+                </span>
+                <span className={phoneStyles.rowSide}>
+                  <b
+                    className={
+                      receipt.amount >= 0
+                        ? phoneStyles.positive
+                        : phoneStyles.negative
+                    }
+                  >
+                    {formatAmount(receipt.amount)}
+                  </b>
+                  <small
+                    className={
+                      receipt.status === "Approved" ? "" : phoneStyles.review
+                    }
+                  >
+                    {receipt.status}
+                  </small>
+                </span>
+                <RowActionMenu
+                  label={receipt.file}
+                  canEdit={receipt.canEdit}
+                  canDelete={receipt.canDelete}
+                  onEdit={() => onEdit(receipt)}
+                  onDelete={() => onDelete(receipt)}
+                  onReceipt={() => onReview(receipt)}
+                  receiptLabel={
+                    receipt.status === "Pending review"
+                      ? "Review receipt"
+                      : "View receipt"
+                  }
+                />
+              </article>
+            ))
+          ) : (
+            <div className={phoneStyles.empty}>No receipts found.</div>
+          )}
         </LoadingCollection>
       </div>
 
       <footer className={phoneStyles.footer} data-ui-slot="footer">
         <span>
-          <LoadingText loading={loading}>{rangeStart}-{rangeEnd} by {total}</LoadingText>
+          <LoadingText loading={loading}>
+            {rangeStart}-{rangeEnd} by {total}
+          </LoadingText>
         </span>
         <Pagination
           page={page}
@@ -668,10 +726,16 @@ export default function ReceiptsPage() {
   const mode = usePresentationMode();
   const { userId, orgId } = useAppAuth();
   const cacheScope = `${orgId ?? "no-org"}:${userId ?? "anonymous"}`;
-  const initialReceipts = getFinanceCacheState<Awaited<ReturnType<typeof listReceiptsForCurrentOrganization>>>("receipts", cacheScope);
-  const [items, setItems] = useState<Receipt[]>(() => initialReceipts.data?.ok ? initialReceipts.data.items.map(mapReceipt) : []);
+  const initialReceipts = getFinanceCacheState<
+    Awaited<ReturnType<typeof listReceiptsForCurrentOrganization>>
+  >("receipts", cacheScope);
+  const [items, setItems] = useState<Receipt[]>(() =>
+    initialReceipts.data?.ok ? initialReceipts.data.items.map(mapReceipt) : [],
+  );
   const [loading, setLoading] = useState(!initialReceipts.data?.ok);
-  const [refreshing, setRefreshing] = useState(Boolean(initialReceipts.data?.ok && !initialReceipts.fresh));
+  const [refreshing, setRefreshing] = useState(
+    Boolean(initialReceipts.data?.ok && !initialReceipts.fresh),
+  );
   const [loadError, setLoadError] = useState("");
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("All");
@@ -686,12 +750,16 @@ export default function ReceiptsPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
   const filePreviewUrl = useMemo(
-    () => selectedFile?.type.startsWith("image/") ? URL.createObjectURL(selectedFile) : null,
+    () =>
+      selectedFile?.type.startsWith("image/")
+        ? URL.createObjectURL(selectedFile)
+        : null,
     [selectedFile],
   );
   const [transaction, setTransaction] = useState("");
-  const [availableTransactions, setAvailableTransactions] =
-    useState<readonly TransactionOption[]>([]);
+  const [availableTransactions, setAvailableTransactions] = useState<
+    readonly TransactionOption[]
+  >([]);
   const [transactionsLoading, setTransactionsLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadError, setUploadError] = useState("");
@@ -704,23 +772,39 @@ export default function ReceiptsPage() {
   const archiveIdempotencyKey = useRef<string | null>(null);
   useEffect(() => {
     let active = true;
-    const applyResult = (result: Awaited<ReturnType<typeof listReceiptsForCurrentOrganization>>) => {
-        if (!active) return;
-        if (!result.ok) {
-          setLoadError("Receipts could not be loaded.");
-          return;
-        }
-        setItems(result.items.map(mapReceipt));
-        setLoadError("");
-      };
-    const unsubscribe = subscribeFinanceQuery("receipts", (value) => applyResult(value as Awaited<ReturnType<typeof listReceiptsForCurrentOrganization>>), cacheScope);
-    cachedFinanceQuery("receipts", listReceiptsForCurrentOrganization, { scope: cacheScope })
+    const applyResult = (
+      result: Awaited<ReturnType<typeof listReceiptsForCurrentOrganization>>,
+    ) => {
+      if (!active) return;
+      if (!result.ok) {
+        setLoadError("Receipts could not be loaded.");
+        return;
+      }
+      setItems(result.items.map(mapReceipt));
+      setLoadError("");
+    };
+    const unsubscribe = subscribeFinanceQuery(
+      "receipts",
+      (value) =>
+        applyResult(
+          value as Awaited<
+            ReturnType<typeof listReceiptsForCurrentOrganization>
+          >,
+        ),
+      cacheScope,
+    );
+    cachedFinanceQuery("receipts", listReceiptsForCurrentOrganization, {
+      scope: cacheScope,
+    })
       .then(applyResult)
       .catch(() => {
         if (active) setLoadError("Receipts could not be loaded.");
       })
       .finally(() => {
-        if (active) { setLoading(false); setRefreshing(false); }
+        if (active) {
+          setLoading(false);
+          setRefreshing(false);
+        }
       });
     return () => {
       active = false;
@@ -730,7 +814,9 @@ export default function ReceiptsPage() {
 
   useEffect(() => {
     let active = true;
-    cachedFinanceQuery("dashboard-snapshot", getDashboardSnapshot, { scope: cacheScope })
+    cachedFinanceQuery("dashboard-snapshot", getDashboardSnapshot, {
+      scope: cacheScope,
+    })
       .then((result) => {
         if (!active) return;
         if (!result.ok) {
@@ -795,9 +881,12 @@ export default function ReceiptsPage() {
     setFileName(file.name);
   }
 
-  useEffect(() => () => {
-    if (filePreviewUrl) URL.revokeObjectURL(filePreviewUrl);
-  }, [filePreviewUrl]);
+  useEffect(
+    () => () => {
+      if (filePreviewUrl) URL.revokeObjectURL(filePreviewUrl);
+    },
+    [filePreviewUrl],
+  );
 
   useEffect(() => {
     if (!imagePreviewOpen) return;
@@ -856,10 +945,25 @@ export default function ReceiptsPage() {
         setReviewError(result.error.message);
         return;
       }
-      const nextStatus: ReceiptStatus = decision === "approved" ? "Approved" : decision === "rejected" ? "Invalid" : "Pending review";
-      setItems((current) => current.map((item) => item.id === reviewTarget.id ? { ...item, status: nextStatus } : item));
+      const nextStatus: ReceiptStatus =
+        decision === "approved"
+          ? "Approved"
+          : decision === "rejected"
+            ? "Invalid"
+            : "Pending review";
+      setItems((current) =>
+        current.map((item) =>
+          item.id === reviewTarget.id ? { ...item, status: nextStatus } : item,
+        ),
+      );
       setReviewTarget(null);
-      invalidateFinanceQuery("receipts", "transactions", "dashboard-snapshot", "report-snapshot", "report-kpis");
+      invalidateFinanceQuery(
+        "receipts",
+        "transactions",
+        "dashboard-snapshot",
+        "report-snapshot",
+        "report-kpis",
+      );
     } finally {
       setSaving(false);
     }
@@ -878,20 +982,39 @@ export default function ReceiptsPage() {
         const result = await updateReceiptMetadata({
           receiptId: editingReceipt.id.toString(),
           fileName: fileName.trim(),
-          transactionId: /^[0-9a-f-]{36}$/i.test(transaction) ? transaction : null,
+          transactionId: /^[0-9a-f-]{36}$/i.test(transaction)
+            ? transaction
+            : null,
         });
         if (!result.success) {
           setUploadError(result.error.message);
           return;
         }
-        setItems((current) => current.map((item) => item.id === editingReceipt.id ? {
-          ...item,
-          file: fileName.trim(),
-          transactionId: /^[0-9a-f-]{36}$/i.test(transaction) ? transaction : null,
-          transaction: availableTransactions.find((option) => option.value === transaction)?.label ?? "Unassigned",
-          status: transaction ? item.status : "Ohne Zuordnung",
-        } : item));
-        invalidateFinanceQuery("receipts", "transactions", "dashboard-snapshot", "report-snapshot", "report-kpis");
+        setItems((current) =>
+          current.map((item) =>
+            item.id === editingReceipt.id
+              ? {
+                  ...item,
+                  file: fileName.trim(),
+                  transactionId: /^[0-9a-f-]{36}$/i.test(transaction)
+                    ? transaction
+                    : null,
+                  transaction:
+                    availableTransactions.find(
+                      (option) => option.value === transaction,
+                    )?.label ?? "Unassigned",
+                  status: transaction ? item.status : "Ohne Zuordnung",
+                }
+              : item,
+          ),
+        );
+        invalidateFinanceQuery(
+          "receipts",
+          "transactions",
+          "dashboard-snapshot",
+          "report-snapshot",
+          "report-kpis",
+        );
         closeModal();
       } finally {
         setSaving(false);
@@ -904,11 +1027,18 @@ export default function ReceiptsPage() {
     setUploadError("");
     const formData = new FormData();
     formData.append("file", file);
-    if (/^[0-9a-f-]{36}$/i.test(transaction)) formData.append("transactionId", transaction);
+    if (/^[0-9a-f-]{36}$/i.test(transaction))
+      formData.append("transactionId", transaction);
     try {
       const result = await uploadReceipt(formData);
       if (result.success) {
-        invalidateFinanceQuery("receipts", "transactions", "dashboard-snapshot", "report-snapshot", "report-kpis");
+        invalidateFinanceQuery(
+          "receipts",
+          "transactions",
+          "dashboard-snapshot",
+          "report-snapshot",
+          "report-kpis",
+        );
         closeModal();
       } else {
         setUploadError("The receipt could not be uploaded.");
@@ -934,17 +1064,27 @@ export default function ReceiptsPage() {
       const result = await archiveReceipt({
         receiptId: archiveTarget.id.toString(),
         reason: archiveReason,
-        idempotencyKey: archiveIdempotencyKey.current ?? `archive-receipt-${archiveTarget.id}`,
+        idempotencyKey:
+          archiveIdempotencyKey.current ??
+          `archive-receipt-${archiveTarget.id}`,
       });
       if (!result.success) {
         setActionError(result.error.message);
         return;
       }
-      setItems((current) => current.filter((item) => item.id !== archiveTarget.id));
+      setItems((current) =>
+        current.filter((item) => item.id !== archiveTarget.id),
+      );
       setArchiveTarget(null);
       setArchiveReason("");
       archiveIdempotencyKey.current = null;
-      invalidateFinanceQuery("receipts", "transactions", "dashboard-snapshot", "report-snapshot", "report-kpis");
+      invalidateFinanceQuery(
+        "receipts",
+        "transactions",
+        "dashboard-snapshot",
+        "report-snapshot",
+        "report-kpis",
+      );
     } finally {
       setSaving(false);
     }
@@ -962,8 +1102,19 @@ export default function ReceiptsPage() {
       aria-busy={loading}
     >
       <LoadingStatus loading={loading} label="Receipts are loading…" />
-      {refreshing && !loading ? <span className="sr-only" role="status">Receipts are updating…</span> : null}
-      {loadError ? <p className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{loadError}</p> : null}
+      {refreshing && !loading ? (
+        <span className="sr-only" role="status">
+          Receipts are updating…
+        </span>
+      ) : null}
+      {loadError ? (
+        <p
+          className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300"
+          role="alert"
+        >
+          {loadError}
+        </p>
+      ) : null}
       {mode === "phone" ? (
         <PhoneReceiptsView
           loading={loading}
@@ -986,8 +1137,12 @@ export default function ReceiptsPage() {
           page={currentPage}
           pageCount={pageCount}
           total={filtered.length}
-          pendingCount={items.filter((item) => item.status === "Pending review").length}
-          unassignedCount={items.filter((item) => item.status === "Ohne Zuordnung").length}
+          pendingCount={
+            items.filter((item) => item.status === "Pending review").length
+          }
+          unassignedCount={
+            items.filter((item) => item.status === "Ohne Zuordnung").length
+          }
           rangeStart={filtered.length ? (currentPage - 1) * pageSize + 1 : 0}
           rangeEnd={Math.min(currentPage * pageSize, filtered.length)}
           onPageChange={setPage}
@@ -1005,7 +1160,9 @@ export default function ReceiptsPage() {
               </span>
               <div>
                 <span>All Receipts</span>
-                <strong><LoadingText loading={loading}>{items.length}</LoadingText></strong>
+                <strong>
+                  <LoadingText loading={loading}>{items.length}</LoadingText>
+                </strong>
               </div>
             </article>
             <article className={styles.summaryCard}>
@@ -1014,7 +1171,14 @@ export default function ReceiptsPage() {
               </span>
               <div>
                 <span>Pending review</span>
-                <strong><LoadingText loading={loading}>{items.filter((item) => item.status === "Pending review").length}</LoadingText></strong>
+                <strong>
+                  <LoadingText loading={loading}>
+                    {
+                      items.filter((item) => item.status === "Pending review")
+                        .length
+                    }
+                  </LoadingText>
+                </strong>
               </div>
             </article>
             <article className={styles.summaryCard}>
@@ -1023,7 +1187,14 @@ export default function ReceiptsPage() {
               </span>
               <div>
                 <span>Ohne Zuordnung</span>
-                <strong><LoadingText loading={loading}>{items.filter((item) => item.status === "Ohne Zuordnung").length}</LoadingText></strong>
+                <strong>
+                  <LoadingText loading={loading}>
+                    {
+                      items.filter((item) => item.status === "Ohne Zuordnung")
+                        .length
+                    }
+                  </LoadingText>
+                </strong>
               </div>
             </article>
           </div>
@@ -1072,7 +1243,10 @@ export default function ReceiptsPage() {
                 onChange={setPeriod}
               />
             </div>
-            <div className={`${styles.tableWrap} ui-data-table`} data-ui-slot="list-body">
+            <div
+              className={`${styles.tableWrap} ui-data-table`}
+              data-ui-slot="list-body"
+            >
               <div className={styles.tableHeader}>
                 <span>Receipt</span>
                 <span>Zugeordnete Transaction</span>
@@ -1083,76 +1257,104 @@ export default function ReceiptsPage() {
               </div>
               <div className={styles.rows}>
                 {loading ? (
-                  <LoadingCollection loading knownItemCount={items.length} emptyHeight="100%" label="Receipts are loading…"><div /></LoadingCollection>
+                  <LoadingCollection
+                    loading
+                    knownItemCount={items.length}
+                    emptyHeight="100%"
+                    label="Receipts are loading…"
+                  >
+                    <div />
+                  </LoadingCollection>
                 ) : !visible.length ? (
                   <EmptyState
                     title="No Receipts gefunden"
                     description="Change the search or reset the filters."
-                    action={<button type="button" onClick={() => { setQuery(""); setStatus("All"); setPeriod("All"); setPage(1); }}>Reset filters</button>}
+                    action={
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setQuery("");
+                          setStatus("All");
+                          setPeriod("All");
+                          setPage(1);
+                        }}
+                      >
+                        Reset filters
+                      </button>
+                    }
                   />
                 ) : null}
-                {!loading && visible.map((receipt) => (
-                  <div className={styles.row} key={receipt.id}>
-                    <span className={styles.fileCell}>
-                      <span className={styles.fileIcon}>
-                        <FileText />
+                {!loading &&
+                  visible.map((receipt) => (
+                    <div className={styles.row} key={receipt.id}>
+                      <span className={styles.fileCell}>
+                        <span className={styles.fileIcon}>
+                          <FileText />
+                        </span>
+                        <span>
+                          <strong>{receipt.file}</strong>
+                          <small>Uploaded by {receipt.uploadedByName}</small>
+                        </span>
                       </span>
-                      <span>
-                        <strong>{receipt.file}</strong>
-                        <small>Uploaded by {receipt.uploadedByName}</small>
+                      <span
+                        data-label="Transaction"
+                        className={styles.transactionCell}
+                      >
+                        <strong>{receipt.transaction}</strong>
                       </span>
-                    </span>
-                    <span
-                      data-label="Transaction"
-                      className={styles.transactionCell}
-                    >
-                      <strong>{receipt.transaction}</strong>
-                    </span>
-                    <span
-                      data-label="Date"
-                      className={`ui-tabular ${styles.muted}`}
-                    >
-                      {receipt.date}
-                    </span>
-                    <span
-                      data-label="Amount"
-                      className={`ui-tabular ${receipt.amount < 0 ? styles.negative : styles.positive}`}
-                    >
-                      {formatAmount(receipt.amount)}
-                    </span>
-                    <span
-                      data-label="Status"
-                      className={`ui-badge ${styles.statusTag} ${receipt.status === "Approved" ? styles.checked : receipt.status === "Pending review" ? styles.review : receipt.status === "Invalid" ? styles.rejected : styles.unassigned}`}
-                    >
-                      {receipt.status === "Approved" ? (
-                        <Check />
-                      ) : receipt.status === "Pending review" ? (
-                        <Clock3 />
-                      ) : receipt.status === "Invalid" ? (
-                        <X />
-                      ) : (
-                        <Link2 />
-                      )}
-                      {receipt.status}
-                    </span>
-                    <RowActionMenu
-                      label={receipt.file}
-                      canEdit={receipt.canEdit}
-                      canDelete={receipt.canDelete}
-                      onEdit={() => openEditReceipt(receipt)}
-                      onDelete={() => openArchiveReceipt(receipt)}
-                      onReceipt={() => { void openReviewReceipt(receipt); }}
-                      receiptLabel={receipt.status === "Pending review" ? "Review receipt" : "View receipt"}
-                    />
-                  </div>
-                ))}
+                      <span
+                        data-label="Date"
+                        className={`ui-tabular ${styles.muted}`}
+                      >
+                        {receipt.date}
+                      </span>
+                      <span
+                        data-label="Amount"
+                        className={`ui-tabular ${receipt.amount < 0 ? styles.negative : styles.positive}`}
+                      >
+                        {formatAmount(receipt.amount)}
+                      </span>
+                      <span
+                        data-label="Status"
+                        className={`ui-badge ${styles.statusTag} ${receipt.status === "Approved" ? styles.checked : receipt.status === "Pending review" ? styles.review : receipt.status === "Invalid" ? styles.rejected : styles.unassigned}`}
+                      >
+                        {receipt.status === "Approved" ? (
+                          <Check />
+                        ) : receipt.status === "Pending review" ? (
+                          <Clock3 />
+                        ) : receipt.status === "Invalid" ? (
+                          <X />
+                        ) : (
+                          <Link2 />
+                        )}
+                        {receipt.status}
+                      </span>
+                      <RowActionMenu
+                        label={receipt.file}
+                        canEdit={receipt.canEdit}
+                        canDelete={receipt.canDelete}
+                        onEdit={() => openEditReceipt(receipt)}
+                        onDelete={() => openArchiveReceipt(receipt)}
+                        onReceipt={() => {
+                          void openReviewReceipt(receipt);
+                        }}
+                        receiptLabel={
+                          receipt.status === "Pending review"
+                            ? "Review receipt"
+                            : "View receipt"
+                        }
+                      />
+                    </div>
+                  ))}
               </div>
             </div>
             <footer className={styles.pagination} data-ui-slot="footer">
               <span>
-                <LoadingText loading={loading}>{filtered.length
-                  ? `${(currentPage - 1) * pageSize + 1}–${Math.min(currentPage * pageSize, filtered.length)} by ${filtered.length}`
-                  : "0 by 0"}</LoadingText>
+                <LoadingText loading={loading}>
+                  {filtered.length
+                    ? `${(currentPage - 1) * pageSize + 1}–${Math.min(currentPage * pageSize, filtered.length)} by ${filtered.length}`
+                    : "0 by 0"}
+                </LoadingText>
               </span>
               <Pagination
                 page={currentPage}
@@ -1175,7 +1377,11 @@ export default function ReceiptsPage() {
           <header className={styles.modalHeader}>
             <div>
               <h2>{editingReceipt ? "Edit receipt" : "Add receipt"}</h2>
-              <p>{editingReceipt ? "Change the filename or assignment. The review status remains unchanged." : "Upload a new receipt and assign it immediately."}</p>
+              <p>
+                {editingReceipt
+                  ? "Change the filename or assignment. The review status remains unchanged."
+                  : "Upload a new receipt and assign it immediately."}
+              </p>
             </div>
             <button
               type="button"
@@ -1199,21 +1405,55 @@ export default function ReceiptsPage() {
                 {selectedFile ? (
                   <div className={styles.uploadPreview}>
                     {filePreviewUrl ? (
-                      <button type="button" className={styles.uploadPreviewButton} onClick={() => setImagePreviewOpen(true)} aria-label={`Open full preview of ${selectedFile.name}`}>
-                        <img width="1200" height="900" src={filePreviewUrl} alt={`Preview of ${selectedFile.name}`} className={styles.uploadPreviewImage} />
+                      <button
+                        type="button"
+                        className={styles.uploadPreviewButton}
+                        onClick={() => setImagePreviewOpen(true)}
+                        aria-label={`Open full preview of ${selectedFile.name}`}
+                      >
+                        <img
+                          width="1200"
+                          height="900"
+                          src={filePreviewUrl}
+                          alt={`Preview of ${selectedFile.name}`}
+                          className={styles.uploadPreviewImage}
+                        />
                       </button>
-                    ) : <FileText className={styles.uploadPreviewIcon} aria-hidden="true" />}
+                    ) : (
+                      <FileText
+                        className={styles.uploadPreviewIcon}
+                        aria-hidden="true"
+                      />
+                    )}
                     <div className={styles.uploadPreviewMeta}>
                       <strong>{selectedFile.name}</strong>
-                      <span>{selectedFile.type === "application/pdf" ? "PDF document" : "Image file"}</span>
+                      <span>
+                        {selectedFile.type === "application/pdf"
+                          ? "PDF document"
+                          : "Image file"}
+                      </span>
                     </div>
-                    <button type="button" className={styles.removeFileButton} onClick={removeSelectedFile} aria-label="Remove selected file"><X aria-hidden="true" /></button>
+                    <button
+                      type="button"
+                      className={styles.removeFileButton}
+                      onClick={removeSelectedFile}
+                      aria-label="Remove selected file"
+                    >
+                      <X aria-hidden="true" />
+                    </button>
                   </div>
                 ) : (
-                  <button type="button" className={styles.uploadArea} onClick={() => fileInput.current?.click()}>
+                  <button
+                    type="button"
+                    className={styles.uploadArea}
+                    onClick={() => fileInput.current?.click()}
+                  >
                     <Upload />
                     <strong>Drop receipt here</strong>
-                    <span>PDF or JPG/PNG up to 5 MB. On mobile, the camera is also available.</span>
+                    <span>
+                      PDF or JPG/PNG up to 5 MB. On mobile, the camera is also
+                      available.
+                    </span>
                     <span className={styles.uploadButton}>Choose file</span>
                   </button>
                 )}
@@ -1237,7 +1477,14 @@ export default function ReceiptsPage() {
               />
             )}
           </div>
-          {uploadError ? <p className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{uploadError}</p> : null}
+          {uploadError ? (
+            <p
+              className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300"
+              role="alert"
+            >
+              {uploadError}
+            </p>
+          ) : null}
           <footer className={styles.modalFooter}>
             <button
               type="button"
@@ -1254,7 +1501,13 @@ export default function ReceiptsPage() {
               disabled={saving}
               aria-busy={saving}
             >
-              {saving ? (editingReceipt ? "Saving …" : "Uploading …") : editingReceipt ? "Save changes" : "Add receipt"}
+              {saving
+                ? editingReceipt
+                  ? "Saving …"
+                  : "Uploading …"
+                : editingReceipt
+                  ? "Save changes"
+                  : "Add receipt"}
             </button>
           </footer>
         </Dialog>
@@ -1263,33 +1516,93 @@ export default function ReceiptsPage() {
       {archiveTarget ? (
         <Dialog
           label="Receipt archivieren"
-          onClose={() => { if (!saving) setArchiveTarget(null); }}
+          onClose={() => {
+            if (!saving) setArchiveTarget(null);
+          }}
           overlayClassName={styles.overlay}
           dialogClassName={`${styles.modal} ${mode === "phone" ? phoneStyles.phoneDialog : ""}`}
         >
           <header className={styles.modalHeader}>
             <div>
               <h2>Receipt archivieren?</h2>
-              <p>The file is kept for traceability and removed from the active list.</p>
+              <p>
+                The file is kept for traceability and removed from the active
+                list.
+              </p>
             </div>
             {imagePreviewOpen && filePreviewUrl && selectedFile ? (
-              <div className={styles.imageLightbox} role="dialog" aria-modal="true" aria-label={`Full preview of ${selectedFile.name}`} onClick={() => setImagePreviewOpen(false)}>
-                <button type="button" className={styles.imageLightboxClose} onClick={() => setImagePreviewOpen(false)} aria-label="Close image preview"><X aria-hidden="true" /></button>
-                <img width="1600" height="1200" src={filePreviewUrl} alt={`Full preview of ${selectedFile.name}`} className={styles.imageLightboxImage} onClick={(event) => event.stopPropagation()} />
+              <div
+                className={styles.imageLightbox}
+                role="dialog"
+                aria-modal="true"
+                aria-label={`Full preview of ${selectedFile.name}`}
+                onClick={() => setImagePreviewOpen(false)}
+              >
+                <button
+                  type="button"
+                  className={styles.imageLightboxClose}
+                  onClick={() => setImagePreviewOpen(false)}
+                  aria-label="Close image preview"
+                >
+                  <X aria-hidden="true" />
+                </button>
+                <img
+                  width="1600"
+                  height="1200"
+                  src={filePreviewUrl}
+                  alt={`Full preview of ${selectedFile.name}`}
+                  className={styles.imageLightboxImage}
+                  onClick={(event) => event.stopPropagation()}
+                />
               </div>
             ) : null}
-            <button type="button" className={styles.closeButton} onClick={() => setArchiveTarget(null)} disabled={saving} aria-label="Close dialog"><X /></button>
+            <button
+              type="button"
+              className={styles.closeButton}
+              onClick={() => setArchiveTarget(null)}
+              disabled={saving}
+              aria-label="Close dialog"
+            >
+              <X />
+            </button>
           </header>
           <div className={styles.modalBody}>
             <label className={styles.formField}>
               <span>Reason</span>
-              <input autoFocus value={archiveReason} onChange={(event) => setArchiveReason(event.target.value)} placeholder="Why should the receipt be archived?" />
+              <input
+                autoFocus
+                value={archiveReason}
+                onChange={(event) => setArchiveReason(event.target.value)}
+                placeholder="Why should the receipt be archived?"
+              />
             </label>
-            {actionError ? <p className="rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{actionError}</p> : null}
+            {actionError ? (
+              <p
+                className="rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300"
+                role="alert"
+              >
+                {actionError}
+              </p>
+            ) : null}
           </div>
           <footer className={styles.modalFooter}>
-            <button type="button" className={styles.secondaryButton} onClick={() => setArchiveTarget(null)} disabled={saving}>Cancel</button>
-            <button type="button" className={styles.primaryButton} onClick={confirmArchiveReceipt} disabled={saving || !archiveReason.trim()} aria-busy={saving}>{saving ? "Archiving …" : "Archive"}</button>
+            <button
+              type="button"
+              className={styles.secondaryButton}
+              onClick={() => setArchiveTarget(null)}
+              disabled={saving}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className={styles.primaryButton}
+              onClick={confirmArchiveReceipt}
+              disabled={saving || !archiveReason.trim()}
+              aria-busy={saving}
+            >
+              {saving ? "Archiving …" : "Archive"}
+            </button>
           </footer>
         </Dialog>
       ) : null}
@@ -1303,7 +1616,9 @@ export default function ReceiptsPage() {
           saving={saving}
           error={reviewError}
           onClose={() => setReviewTarget(null)}
-          onDecision={(decision) => { void confirmReviewReceipt(decision); }}
+          onDecision={(decision) => {
+            void confirmReviewReceipt(decision);
+          }}
         />
       ) : null}
     </section>

@@ -155,7 +155,21 @@ function DesktopDashboard({ snapshot, loading, error, retry }: { snapshot: Dashb
   return (
     <section className={desktopStyles.page} aria-label="Finanzübersicht" aria-busy={loading}>
       <LoadingStatus loading={loading} label="Finanzübersicht wird geladen…" />
-      {error ? <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert"><span>{error}</span><button type="button" className="rounded-md border border-current px-2.5 py-1.5 text-xs font-semibold" onClick={retry}>Erneut laden</button></div> : null}
+      {error ? (
+        <div
+          className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300"
+          role="alert"
+        >
+          <span>{error}</span>
+          <button
+            type="button"
+            className="rounded-md border border-current px-2.5 py-1.5 text-xs font-semibold"
+            onClick={retry}
+          >
+            Erneut laden
+          </button>
+        </div>
+      ) : null}
       <div className={desktopStyles.metrics} aria-label="Finanzkennzahlen" data-ui-slot="summary">
         <div>
           <span>Gesamt verfügbar</span>
@@ -368,7 +382,21 @@ function TabletDashboard({ snapshot, loading, error, retry }: { snapshot: Dashbo
   return (
     <section className={styles.tabletPage} aria-busy={loading}>
       <LoadingStatus loading={loading} label="Finanzübersicht wird geladen…" />
-      {error ? <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert"><span>{error}</span><button type="button" className="rounded-md border border-current px-2.5 py-1.5 text-xs font-semibold" onClick={retry}>Erneut laden</button></div> : null}
+      {error ? (
+        <div
+          className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300"
+          role="alert"
+        >
+          <span>{error}</span>
+          <button
+            type="button"
+            className="rounded-md border border-current px-2.5 py-1.5 text-xs font-semibold"
+            onClick={retry}
+          >
+            Erneut laden
+          </button>
+        </div>
+      ) : null}
       <div className={styles.tabletMetricStrip} aria-label="Finanzkennzahlen" data-ui-slot="summary">
         <div className={styles.tabletMetric}>
           <span>Kassenbestand</span>
@@ -522,7 +550,21 @@ function PhoneDashboard({ snapshot, loading, error, retry }: { snapshot: Dashboa
   return (
     <section className={styles.phonePage} aria-busy={loading}>
       <LoadingStatus loading={loading} label="Finanzübersicht wird geladen…" />
-      {error ? <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert"><span>{error}</span><button type="button" className="rounded-md border border-current px-2.5 py-1.5 text-xs font-semibold" onClick={retry}>Erneut laden</button></div> : null}
+      {error ? (
+        <div
+          className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300"
+          role="alert"
+        >
+          <span>{error}</span>
+          <button
+            type="button"
+            className="rounded-md border border-current px-2.5 py-1.5 text-xs font-semibold"
+            onClick={retry}
+          >
+            Erneut laden
+          </button>
+        </div>
+      ) : null}
       <div className={styles.phoneBalanceHero} data-ui-slot="summary">
         <span className={styles.phoneEyebrow}>Gesamt verfügbar</span>
         <strong><LoadingText loading={loading}>{displayMinor(String(cashBalance))}</LoadingText></strong>

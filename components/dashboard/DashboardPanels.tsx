@@ -167,7 +167,7 @@ function IconBubble({
 export function TransactionHistory() {
   return (
     <Card
-      className={`${dashboardStyles.transactionPanel} h-full rounded-2xl bg-white/85 py-0 shadow-[0_12px_28px_rgb(0_0_0_/_0.07)] backdrop-blur-[3px] dark:bg-card/85`}
+      className={`${dashboardStyles.transactionPanel} h-full rounded-2xl bg-white/85 py-0 shadow-[var(--ui-dashboard-panel-shadow)] backdrop-blur-[3px] dark:bg-card/85`}
     >
       <CardHeader className="px-5 pb-0 pt-5 sm:px-6 lg:px-7 lg:pt-6">
         <CardTitle className="text-xl font-semibold tracking-tight lg:text-2xl">
@@ -228,7 +228,7 @@ export function TransactionHistory() {
 export function GoalsPanel() {
   return (
     <Card
-      className={`${dashboardStyles.goalsPanel} rounded-2xl bg-white/85 py-0 shadow-[0_12px_28px_rgb(0_0_0_/_0.07)] backdrop-blur-[3px] dark:bg-card/85`}
+      className={`${dashboardStyles.goalsPanel} rounded-2xl bg-white/85 py-0 shadow-[var(--ui-dashboard-panel-shadow)] backdrop-blur-[3px] dark:bg-card/85`}
     >
       <CardHeader className="flex-row items-center justify-between px-5 pb-0 pt-5 sm:px-6 lg:px-7 lg:pt-6">
         <CardTitle className="text-xl font-semibold tracking-tight lg:text-2xl">
@@ -286,7 +286,7 @@ export function GoalsPanel() {
 export function SpendingByCategory() {
   return (
     <Card
-      className={`${dashboardStyles.spendingPanel} rounded-2xl bg-white/85 py-0 shadow-[0_12px_28px_rgb(0_0_0_/_0.07)] backdrop-blur-[3px] dark:bg-card/85`}
+      className={`${dashboardStyles.spendingPanel} rounded-2xl bg-white/85 py-0 shadow-[var(--ui-dashboard-panel-shadow)] backdrop-blur-[3px] dark:bg-card/85`}
     >
       <CardHeader className="px-5 pb-0 pt-5 sm:px-6 lg:px-7 lg:pt-6">
         <CardTitle className="text-xl font-semibold tracking-tight lg:text-2xl">
@@ -333,7 +333,7 @@ export function SpendingByCategory() {
 export function ReviewPanel() {
   return (
     <Card
-      className={`${dashboardStyles.reviewPanel} rounded-2xl bg-white/85 py-0 shadow-[0_12px_28px_rgb(0_0_0_/_0.07)] backdrop-blur-[3px] dark:bg-card/85`}
+      className={`${dashboardStyles.reviewPanel} rounded-2xl bg-white/85 py-0 shadow-[var(--ui-dashboard-panel-shadow)] backdrop-blur-[3px] dark:bg-card/85`}
     >
       <CardHeader className="px-5 pb-0 pt-5 sm:px-6 lg:px-7 lg:pt-6">
         <CardTitle className="text-xl font-semibold tracking-tight lg:text-2xl">

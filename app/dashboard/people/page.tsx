@@ -675,7 +675,35 @@ export default function PeoplePage() {
               >
                 Abbrechen
               </button>
-              {roleLinks[linkRole] ? <><button type="button" className={styles.secondaryButton} onClick={() => void revokeRoleLink(linkRole)} disabled={linkSaving !== null}><Trash2 aria-hidden="true" /> Revoke</button><button type="button" className={styles.primaryButton} onClick={() => void shareRoleLink(linkRole)}><Share2 aria-hidden="true" /> Share link</button></> : <button type="button" className={styles.primaryButton} onClick={() => void generateRoleLink(linkRole)} disabled={linkSaving !== null} aria-busy={linkSaving === linkRole}>{linkSaving === linkRole ? "Creating …" : "Create link"}</button>}
+              {roleLinks[linkRole] ? (
+                <>
+                  <button
+                    type="button"
+                    className={styles.secondaryButton}
+                    onClick={() => void revokeRoleLink(linkRole)}
+                    disabled={linkSaving !== null}
+                  >
+                    <Trash2 aria-hidden="true" /> Revoke
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.primaryButton}
+                    onClick={() => void shareRoleLink(linkRole)}
+                  >
+                    <Share2 aria-hidden="true" /> Share link
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  className={styles.primaryButton}
+                  onClick={() => void generateRoleLink(linkRole)}
+                  disabled={linkSaving !== null}
+                  aria-busy={linkSaving === linkRole}
+                >
+                  {linkSaving === linkRole ? "Creating …" : "Create link"}
+                </button>
+              )}
             </footer>
           </div>
         </Dialog>

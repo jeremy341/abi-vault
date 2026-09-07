@@ -1285,22 +1285,71 @@ export default function ReceiptsPage() {
                   if (event.key === "Escape") setImagePreviewOpen(false);
                 }}
               >
-                <button type="button" className={styles.imageLightboxClose} onClick={() => setImagePreviewOpen(false)} aria-label="Close image preview"><X aria-hidden="true" /></button>
-                <Image unoptimized width={1600} height={1200} src={filePreviewUrl} alt={`Full preview of ${selectedFile.name}`} className={styles.imageLightboxImage} onClick={(event) => event.stopPropagation()} />
+                <button
+                  type="button"
+                  className={styles.imageLightboxClose}
+                  onClick={() => setImagePreviewOpen(false)}
+                  aria-label="Close image preview"
+                >
+                  <X aria-hidden="true" />
+                </button>
+                <Image
+                  unoptimized
+                  width={1600}
+                  height={1200}
+                  src={filePreviewUrl}
+                  alt={`Full preview of ${selectedFile.name}`}
+                  className={styles.imageLightboxImage}
+                  onClick={(event) => event.stopPropagation()}
+                />
               </div>
             ) : null}
-            <button type="button" className={styles.closeButton} onClick={() => setArchiveTarget(null)} disabled={saving} aria-label="Dialog schließen"><X /></button>
+            <button
+              type="button"
+              className={styles.closeButton}
+              onClick={() => setArchiveTarget(null)}
+              disabled={saving}
+              aria-label="Dialog schließen"
+            >
+              <X />
+            </button>
           </header>
           <div className={styles.modalBody}>
             <label className={styles.formField}>
               <span>Grund</span>
-              <input value={archiveReason} onChange={(event) => setArchiveReason(event.target.value)} placeholder="Warum soll der Beleg archiviert werden?" />
+              <input
+                value={archiveReason}
+                onChange={(event) => setArchiveReason(event.target.value)}
+                placeholder="Warum soll der Beleg archiviert werden?"
+              />
             </label>
-            {actionError ? <p className="rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{actionError}</p> : null}
+            {actionError ? (
+              <p
+                className="rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300"
+                role="alert"
+              >
+                {actionError}
+              </p>
+            ) : null}
           </div>
           <footer className={styles.modalFooter}>
-            <button type="button" className={styles.secondaryButton} onClick={() => setArchiveTarget(null)} disabled={saving}>Abbrechen</button>
-            <button type="button" className={styles.primaryButton} onClick={confirmArchiveReceipt} disabled={saving || !archiveReason.trim()} aria-busy={saving}>{saving ? "Wird archiviert …" : "Archivieren"}</button>
+            <button
+              type="button"
+              className={styles.secondaryButton}
+              onClick={() => setArchiveTarget(null)}
+              disabled={saving}
+            >
+              Abbrechen
+            </button>
+            <button
+              type="button"
+              className={styles.primaryButton}
+              onClick={confirmArchiveReceipt}
+              disabled={saving || !archiveReason.trim()}
+              aria-busy={saving}
+            >
+              {saving ? "Wird archiviert …" : "Archivieren"}
+            </button>
           </footer>
         </Dialog>
       ) : null}

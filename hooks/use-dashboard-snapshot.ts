@@ -19,6 +19,12 @@ export function useDashboardSnapshot() {
   const [loading, setLoading] = useState(!cached.data);
   const [refreshing, setRefreshing] = useState(Boolean(cached.data && !cached.fresh));
   const [error, setError] = useState<string | null>(null);
+  const [retryToken, setRetryToken] = useState(0);
+  const retry = () => {
+    setLoading(true);
+    setError(null);
+    setRetryToken((value) => value + 1);
+  };
   useEffect(() => {
     let active = true;
     const applyResult = (result: Awaited<ReturnType<typeof getDashboardSnapshot>>) => {
@@ -40,6 +46,6 @@ export function useDashboardSnapshot() {
       }
     });
     return () => { active = false; unsubscribe(); };
-  }, [scope]);
-  return { snapshot, loading, refreshing, error };
+  }, [retryToken, scope]);
+  return { snapshot, loading, refreshing, error, retry };
 }

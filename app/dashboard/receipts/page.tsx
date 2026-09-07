@@ -1,6 +1,7 @@
 "use client";
 
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import { useAuth } from "@clerk/nextjs";
 import {
   Check,
@@ -1200,7 +1201,7 @@ export default function ReceiptsPage() {
                   <div className={styles.uploadPreview}>
                     {filePreviewUrl ? (
                       <button type="button" className={styles.uploadPreviewButton} onClick={() => setImagePreviewOpen(true)} aria-label={`Open full preview of ${selectedFile.name}`}>
-                        <img width="1200" height="900" src={filePreviewUrl} alt={`Preview of ${selectedFile.name}`} className={styles.uploadPreviewImage} />
+                        <Image unoptimized width={1200} height={900} src={filePreviewUrl} alt={`Preview of ${selectedFile.name}`} className={styles.uploadPreviewImage} />
                       </button>
                     ) : <FileText className={styles.uploadPreviewIcon} aria-hidden="true" />}
                     <div className={styles.uploadPreviewMeta}>
@@ -1273,9 +1274,19 @@ export default function ReceiptsPage() {
               <p>Die Datei bleibt für die Nachvollziehbarkeit erhalten und wird aus der aktiven Liste entfernt.</p>
             </div>
             {imagePreviewOpen && filePreviewUrl && selectedFile ? (
-              <div className={styles.imageLightbox} role="dialog" aria-modal="true" aria-label={`Full preview of ${selectedFile.name}`} onClick={() => setImagePreviewOpen(false)}>
+              <div
+                className={styles.imageLightbox}
+                role="dialog"
+                aria-modal="true"
+                aria-label={`Full preview of ${selectedFile.name}`}
+                tabIndex={-1}
+                onClick={() => setImagePreviewOpen(false)}
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") setImagePreviewOpen(false);
+                }}
+              >
                 <button type="button" className={styles.imageLightboxClose} onClick={() => setImagePreviewOpen(false)} aria-label="Close image preview"><X aria-hidden="true" /></button>
-                <img width="1600" height="1200" src={filePreviewUrl} alt={`Full preview of ${selectedFile.name}`} className={styles.imageLightboxImage} onClick={(event) => event.stopPropagation()} />
+                <Image unoptimized width={1600} height={1200} src={filePreviewUrl} alt={`Full preview of ${selectedFile.name}`} className={styles.imageLightboxImage} onClick={(event) => event.stopPropagation()} />
               </div>
             ) : null}
             <button type="button" className={styles.closeButton} onClick={() => setArchiveTarget(null)} disabled={saving} aria-label="Dialog schließen"><X /></button>
@@ -1283,7 +1294,7 @@ export default function ReceiptsPage() {
           <div className={styles.modalBody}>
             <label className={styles.formField}>
               <span>Grund</span>
-              <input autoFocus value={archiveReason} onChange={(event) => setArchiveReason(event.target.value)} placeholder="Warum soll der Beleg archiviert werden?" />
+              <input value={archiveReason} onChange={(event) => setArchiveReason(event.target.value)} placeholder="Warum soll der Beleg archiviert werden?" />
             </label>
             {actionError ? <p className="rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{actionError}</p> : null}
           </div>

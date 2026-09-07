@@ -110,7 +110,7 @@ export default function PeriodsPage() {
           <div className={styles.dialogBody}>
             <span className={styles.dialogIcon}>{target.status === "open" ? <Lock /> : <Unlock />}</span>
             <p>{target.status === "open" ? "Gebuchte Transaktionen können nach dem Sperren nicht mehr geändert werden." : "Der Zeitraum wird wieder für berechtigte Änderungen geöffnet."}</p>
-            <label><span>Grund</span><textarea value={reason} onChange={(event) => setReason(event.target.value)} placeholder="z. B. Monatsabschluss geprüft …" rows={3} autoFocus /></label>
+            <label><span>Grund</span><textarea value={reason} onChange={(event) => setReason(event.target.value)} placeholder="z. B. Monatsabschluss geprüft …" rows={3} /></label>
             {message ? <p className={styles.dialogError} role="alert">{message}</p> : null}
           </div>
           <footer className={styles.dialogFooter}><button type="button" className={styles.cancelButton} onClick={() => setTarget(null)} disabled={saving}>Abbrechen</button><button type="button" className={styles.confirmButton} onClick={confirmPeriodAction} disabled={saving || !reason.trim()} aria-busy={saving}>{saving ? "Wird gespeichert …" : target.status === "open" ? "Zeitraum sperren" : "Zeitraum entsperren"}</button></footer>

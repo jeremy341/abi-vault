@@ -137,7 +137,7 @@ function displayDashboardReviews(snapshot: DashboardSnapshot | null) {
     }));
 }
 
-function DesktopDashboard({ snapshot, loading, error }: { snapshot: DashboardSnapshot | null; loading: boolean; error: string | null }) {
+function DesktopDashboard({ snapshot, loading, error, retry }: { snapshot: DashboardSnapshot | null; loading: boolean; error: string | null; retry: () => void }) {
   const [cardPreviewOpen, setCardPreviewOpen] = useState(false);
   const [selectedCashWalletId, setSelectedCashWalletId] = useState<string | null>(null);
   const transactionItems = displayDashboardTransactions(snapshot);
@@ -155,7 +155,7 @@ function DesktopDashboard({ snapshot, loading, error }: { snapshot: DashboardSna
   return (
     <section className={desktopStyles.page} aria-label="Finanzübersicht" aria-busy={loading}>
       <LoadingStatus loading={loading} label="Finanzübersicht wird geladen…" />
-      {error ? <p className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{error}</p> : null}
+      {error ? <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert"><span>{error}</span><button type="button" className="rounded-md border border-current px-2.5 py-1.5 text-xs font-semibold" onClick={retry}>Erneut laden</button></div> : null}
       <div className={desktopStyles.metrics} aria-label="Finanzkennzahlen" data-ui-slot="summary">
         <div>
           <span>Gesamt verfügbar</span>
@@ -355,7 +355,7 @@ function DesktopDashboard({ snapshot, loading, error }: { snapshot: DashboardSna
   );
 }
 
-function TabletDashboard({ snapshot, loading, error }: { snapshot: DashboardSnapshot | null; loading: boolean; error: string | null }) {
+function TabletDashboard({ snapshot, loading, error, retry }: { snapshot: DashboardSnapshot | null; loading: boolean; error: string | null; retry: () => void }) {
   const transactionItems = displayDashboardTransactions(snapshot);
   const goalItems = displayDashboardGoals(snapshot);
   const categoryItems = displayDashboardCategories(snapshot);
@@ -368,7 +368,7 @@ function TabletDashboard({ snapshot, loading, error }: { snapshot: DashboardSnap
   return (
     <section className={styles.tabletPage} aria-busy={loading}>
       <LoadingStatus loading={loading} label="Finanzübersicht wird geladen…" />
-      {error ? <p className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{error}</p> : null}
+      {error ? <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert"><span>{error}</span><button type="button" className="rounded-md border border-current px-2.5 py-1.5 text-xs font-semibold" onClick={retry}>Erneut laden</button></div> : null}
       <div className={styles.tabletMetricStrip} aria-label="Finanzkennzahlen" data-ui-slot="summary">
         <div className={styles.tabletMetric}>
           <span>Kassenbestand</span>
@@ -510,7 +510,7 @@ function TabletDashboard({ snapshot, loading, error }: { snapshot: DashboardSnap
   );
 }
 
-function PhoneDashboard({ snapshot, loading, error }: { snapshot: DashboardSnapshot | null; loading: boolean; error: string | null }) {
+function PhoneDashboard({ snapshot, loading, error, retry }: { snapshot: DashboardSnapshot | null; loading: boolean; error: string | null; retry: () => void }) {
   const transactionItems = displayDashboardTransactions(snapshot);
   const goalItems = displayDashboardGoals(snapshot);
   const reviewItems = displayDashboardReviews(snapshot);
@@ -522,7 +522,7 @@ function PhoneDashboard({ snapshot, loading, error }: { snapshot: DashboardSnaps
   return (
     <section className={styles.phonePage} aria-busy={loading}>
       <LoadingStatus loading={loading} label="Finanzübersicht wird geladen…" />
-      {error ? <p className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{error}</p> : null}
+      {error ? <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert"><span>{error}</span><button type="button" className="rounded-md border border-current px-2.5 py-1.5 text-xs font-semibold" onClick={retry}>Erneut laden</button></div> : null}
       <div className={styles.phoneBalanceHero} data-ui-slot="summary">
         <span className={styles.phoneEyebrow}>Gesamt verfügbar</span>
         <strong><LoadingText loading={loading}>{displayMinor(String(cashBalance))}</LoadingText></strong>
@@ -638,8 +638,8 @@ function PhoneDashboard({ snapshot, loading, error }: { snapshot: DashboardSnaps
 
 export default function AdaptiveDashboardPage() {
   const mode = usePresentationMode();
-  const { snapshot, loading, error } = useDashboardSnapshot();
-  if (mode === "tablet") return <TabletDashboard snapshot={snapshot} loading={loading} error={error} />;
-  if (mode === "phone") return <PhoneDashboard snapshot={snapshot} loading={loading} error={error} />;
-  return <DesktopDashboard snapshot={snapshot} loading={loading} error={error} />;
+  const { snapshot, loading, error, retry } = useDashboardSnapshot();
+  if (mode === "tablet") return <TabletDashboard snapshot={snapshot} loading={loading} error={error} retry={retry} />;
+  if (mode === "phone") return <PhoneDashboard snapshot={snapshot} loading={loading} error={error} retry={retry} />;
+  return <DesktopDashboard snapshot={snapshot} loading={loading} error={error} retry={retry} />;
 }

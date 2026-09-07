@@ -96,6 +96,12 @@
   font-size: 0.8rem;
 }
 
+.search:focus-within {
+  border-color: var(--ui-border-focus);
+  outline: 2px solid rgb(0 0 0 / 0.12);
+  outline-offset: 2px;
+}
+
 .filterButton {
   position: relative;
   display: inline-flex;

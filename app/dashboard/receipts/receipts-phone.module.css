@@ -78,6 +78,12 @@
   font-size: 0.78rem;
 }
 
+.search:focus-within {
+  border-color: var(--ui-border-focus);
+  outline: 2px solid rgb(0 0 0 / 0.12);
+  outline-offset: 2px;
+}
+
 .filterRow {
   display: grid;
   grid-column: 1 / -1;

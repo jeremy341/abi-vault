@@ -176,6 +176,24 @@ function TabletRail({ pathname, isAdmin }: { pathname: string; isAdmin: boolean 
 
 function TabletTopbar({ pathname }: { pathname: string }) {
   const page = pageInformation[pathname] ?? pageInformation["/dashboard"];
+  const [openMenu, setOpenMenu] = useState<"cohort" | "notifications" | null>(null);
+
+  useEffect(() => {
+    if (!openMenu) return;
+
+    function closeMenu(event: KeyboardEvent | PointerEvent) {
+      if (event instanceof KeyboardEvent && event.key !== "Escape") return;
+      setOpenMenu(null);
+    }
+
+    document.addEventListener("keydown", closeMenu);
+    document.addEventListener("pointerdown", closeMenu);
+    return () => {
+      document.removeEventListener("keydown", closeMenu);
+      document.removeEventListener("pointerdown", closeMenu);
+    };
+  }, [openMenu]);
+
   return (
     <header className={styles.tabletTopbar}>
       <div className={styles.tabletTitle}>
@@ -183,17 +201,49 @@ function TabletTopbar({ pathname }: { pathname: string }) {
         <p>{page.description}</p>
       </div>
       <div className={styles.tabletActions}>
-        <button type="button" className={styles.tabletCohort}>
-          <CalendarDays aria-hidden="true" />
-          Abi 2026
-        </button>
-        <button
-          type="button"
-          className={styles.iconButton}
-          aria-label="Benachrichtigungen"
-        >
-          <Bell aria-hidden="true" />
-        </button>
+        <div className={styles.tabletActionControl} onPointerDown={(event) => event.stopPropagation()}>
+          <button
+            type="button"
+            className={styles.tabletCohort}
+            aria-haspopup="menu"
+            aria-expanded={openMenu === "cohort"}
+            aria-label="Jahrgang Abi 2026 auswählen"
+            onClick={() => setOpenMenu((current) => current === "cohort" ? null : "cohort")}
+          >
+            <CalendarDays aria-hidden="true" />
+            Abi 2026
+            <ChevronDown aria-hidden="true" />
+          </button>
+          {openMenu === "cohort" ? (
+            <div className={styles.tabletActionMenu} role="menu" aria-label="Jahrgang auswählen">
+              <button type="button" role="menuitem" onClick={() => setOpenMenu(null)}>
+                <CalendarDays aria-hidden="true" />
+                <span><strong>Abi 2026</strong><small>Aktiver Jahrgang</small></span>
+              </button>
+              <Link href="/dashboard/settings" role="menuitem">
+                <Settings aria-hidden="true" /> Jahrgang verwalten
+              </Link>
+            </div>
+          ) : null}
+        </div>
+        <div className={styles.tabletActionControl} onPointerDown={(event) => event.stopPropagation()}>
+          <button
+            type="button"
+            className={styles.iconButton}
+            aria-label="Benachrichtigungen"
+            aria-haspopup="dialog"
+            aria-expanded={openMenu === "notifications"}
+            onClick={() => setOpenMenu((current) => current === "notifications" ? null : "notifications")}
+          >
+            <Bell aria-hidden="true" />
+          </button>
+          {openMenu === "notifications" ? (
+            <div className={styles.tabletNotificationPanel} role="dialog" aria-label="Benachrichtigungen">
+              <strong>Benachrichtigungen</strong>
+              <p>Keine neuen Hinweise.</p>
+            </div>
+          ) : null}
+        </div>
         <ClerkUserButton />
       </div>
     </header>

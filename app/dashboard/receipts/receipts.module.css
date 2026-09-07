@@ -185,6 +185,11 @@
   gap: 0.6rem;
   padding: 0 0.8rem;
 }
+.searchField:focus-within {
+  border-color: var(--ui-border-focus);
+  outline: 2px solid rgb(0 0 0 / 0.12);
+  outline-offset: 2px;
+}
 .searchField svg {
   width: 1rem;
   color: #52525b;

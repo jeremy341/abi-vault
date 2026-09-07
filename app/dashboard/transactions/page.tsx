@@ -275,7 +275,7 @@ function CashRegisterCombobox({
         </button>
         {open ? (
           <div className={styles.cashRegisterMenu}>
-            <input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Kasse suchen …" aria-label="Kassen suchen" />
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Kasse suchen …" aria-label="Kassen suchen" />
             <div role="listbox" aria-label="Kassen">
               {filtered.length ? filtered.map((option) => (
                 <button type="button" role="option" aria-selected={option.id === value} key={option.id} onClick={() => { onChange(option.id); setOpen(false); setQuery(""); }}>
@@ -1437,7 +1437,6 @@ export default function TransactionsPage() {
             <label className={styles.formField}>
               <span>Bezeichnung</span>
               <input
-                autoFocus={mode !== "phone"}
                 value={newTitle}
                 onChange={(event) => setNewTitle(event.target.value)}
                 placeholder="z. B. Sponsoring Schule"
@@ -1587,7 +1586,7 @@ export default function TransactionsPage() {
           <div className={styles.modalBody}>
             <label className={styles.formField}>
               <span>Grund</span>
-              <textarea value={archiveReason} onChange={(event) => setArchiveReason(event.target.value)} placeholder="Warum soll die Transaktion archiviert werden?" rows={3} autoFocus />
+              <textarea value={archiveReason} onChange={(event) => setArchiveReason(event.target.value)} placeholder="Warum soll die Transaktion archiviert werden?" rows={3} />
             </label>
             {actionError ? <p className="rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{actionError}</p> : null}
           </div>

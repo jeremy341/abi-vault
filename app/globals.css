@@ -94,9 +94,9 @@
   --color-muted: var(--muted);
   --color-line: var(--line);
   --color-soft: var(--soft);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-geist-sans), sans-serif;
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-geist-sans), sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -140,6 +140,15 @@ body {
   background: var(--canvas);
   color: var(--ink);
   font-family: var(--ui-font);
+}
+
+html {
+  color-scheme: light;
+  scrollbar-gutter: stable;
+}
+
+html.dark {
+  color-scheme: dark;
 }
 
 /* Shared dropdown contract used by the data pages. */
@@ -277,8 +286,8 @@ body {
 }
 .ui-pagination-buttons button {
   display: inline-flex;
-  width: 1.85rem;
-  height: 1.85rem;
+  width: 2.75rem;
+  height: 2.75rem;
   align-items: center;
   justify-content: center;
   border: 0;
@@ -532,6 +541,22 @@ body {
   border-color: var(--ui-border-focus);
   outline: 2px solid rgb(0 0 0 / 0.12);
   outline-offset: 2px;
+}
+
+/* Search fields intentionally remove the native outline, so the containing
+   control owns one consistent focus treatment across desktop and iPad. */
+.search:focus-within,
+.searchField:focus-within,
+.searchBar:focus-within {
+  border-color: var(--ui-border-focus);
+  outline: 2px solid rgb(0 0 0 / 0.12);
+  outline-offset: 2px;
+}
+
+.dark .search:focus-within,
+.dark .searchField:focus-within,
+.dark .searchBar:focus-within {
+  outline-color: rgb(255 255 255 / 0.2);
 }
 
 @media (prefers-reduced-motion: reduce) {

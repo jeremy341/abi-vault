@@ -54,16 +54,27 @@
 
 .primaryColumn,
 .secondaryColumn {
-  display: grid;
   min-width: 0;
   min-height: 0;
   gap: clamp(0.75rem, 1.1vw, 1.1rem);
 }
 .primaryColumn {
+  display: grid;
   grid-template-rows: minmax(11.5rem, 0.68fr) minmax(20rem, 1.32fr);
 }
 .secondaryColumn {
-  grid-template-rows: repeat(3, minmax(0, 1fr));
+  display: flex;
+  flex-direction: column;
+}
+
+.secondaryColumn > .goalsPanel,
+.secondaryColumn > .reviewPanel {
+  flex: 0 0 auto;
+}
+
+.secondaryColumn > .spendingPanel {
+  min-height: 0;
+  flex: 1 1 0;
 }
 
 .accountPanel,
@@ -468,9 +479,6 @@
   }
   .accountSummary {
     padding: 0.8rem 1rem;
-  }
-  .secondaryColumn {
-    grid-template-rows: minmax(0, 1.02fr) minmax(0, 0.9fr) minmax(0, 1.08fr);
   }
   .panelHeader {
     min-height: 3rem;

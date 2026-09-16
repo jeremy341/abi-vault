@@ -15,7 +15,7 @@ import {
 import styles from "./AccountCardModal.module.css";
 
 const cardColors = [
-  { name: "Forest ink", value: "#242923" },
+  { name: "Charcoal", value: "#242426" },
   { name: "Graphit", value: "#3b3b40" },
   { name: "White", value: "#e9e9e7" },
   { name: "Forest green", value: "#25453b" },

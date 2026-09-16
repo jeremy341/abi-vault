@@ -7,7 +7,7 @@
 }
 
 .card:hover {
-  box-shadow: 0 14px 26px -10px rgb(45 51 40 / 42%);
+  box-shadow: 0 14px 26px -10px rgb(36 36 40 / 42%);
 }
 
 .cardTint {
@@ -21,14 +21,14 @@
 }
 
 .cardTintLight {
-  background: #eef2e7;
+  background: #f0f0ee;
   mix-blend-mode: normal;
   opacity: 1;
 }
 
 .cardLight {
-  border: 1px solid #dfe3d9;
-  background: #eef2e7;
+  border: 1px solid #dedee1;
+  background: #f0f0ee;
 }
 
 .cardLight::after {
@@ -55,7 +55,7 @@
   }
 
   .card:hover {
-    box-shadow: 0 10px 24px rgb(45 51 40 / 16%);
+    box-shadow: 0 10px 24px rgb(36 36 40 / 16%);
   }
 }
 .cardFrame {

@@ -1,12 +1,42 @@
 import {
+  CalendarDays,
   FileText,
   HandCoins,
   MoreHorizontal,
+  Package,
 } from "lucide-react";
-import { dashboardCategories } from "@/components/dashboard/DashboardPanels";
 import type {
   DashboardSnapshot,
 } from "@/hooks/use-dashboard-snapshot";
+
+const dashboardCategories = [
+  {
+    title: "Veranstaltung",
+    amount: "$1,740.00 of $3,000.00",
+    progress: 58,
+    color: "bg-[var(--chart-2)] dark:bg-[var(--chart-1)]",
+    bubble: "bg-[var(--ui-surface-muted)] text-ink dark:bg-[var(--ui-surface-muted)]",
+    icon: CalendarDays,
+  },
+  {
+    title: "Material",
+    amount: "$384.90 of $1,200.00",
+    progress: 32,
+    color: "bg-[var(--ui-positive)]",
+    bubble:
+      "bg-[var(--ui-positive-soft)] text-[var(--ui-positive)] dark:bg-green-500/15",
+    icon: Package,
+  },
+  {
+    title: "Sonstiges",
+    amount: "$185.50 of $1,000.00",
+    progress: 10,
+    color: "bg-[var(--ui-warning)]",
+    bubble:
+      "bg-[var(--ui-warning-soft)] text-[var(--ui-warning)] dark:bg-amber-500/15",
+    icon: MoreHorizontal,
+  },
+];
 
 export type DashboardReviewSnapshot = {
   transactions: Array<{

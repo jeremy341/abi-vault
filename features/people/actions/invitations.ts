@@ -7,9 +7,11 @@ import { actionFailure, actionSuccess, type ActionResult } from "@/lib/api/resul
 
 export async function inviteMember(input: InviteMemberInput): Promise<ActionResult<{ id: string }>> {
   const parsed = inviteMemberSchema.safeParse(input);
+
   if (!parsed.success) return actionFailure("INVALID_INPUT", "The invitation data is invalid.");
   const context = await requirePermission("manageMemberships");
   const client = await clerkClient();
+
   try {
     const invitation = await client.organizations.createOrganizationInvitation({
       organizationId: context.organizationId,
@@ -21,6 +23,7 @@ export async function inviteMember(input: InviteMemberInput): Promise<ActionResu
         abiVaultRole: parsed.data.role,
       },
     });
+
     return actionSuccess({ id: invitation.id });
   } catch {
     return actionFailure("INVITATION_FAILED", "The invitation could not be sent.");

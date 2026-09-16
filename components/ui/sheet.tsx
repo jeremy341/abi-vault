@@ -61,7 +61,9 @@ function SheetContent({
 
   function handlePointerDown(event: SheetPointerEvent) {
     onPointerDown?.(event);
+
     if (!dragDismiss || side !== "bottom" || !(event.target instanceof Element) || !event.target.closest("[data-sheet-drag-handle]")) return;
+
     if (event.pointerType === "mouse" && event.button !== 0) return;
     event.currentTarget.setPointerCapture(event.pointerId);
     dragRef.current = { pointerId: event.pointerId, startY: event.clientY, lastY: event.clientY, lastTime: performance.now(), velocity: 0 };
@@ -72,12 +74,14 @@ function SheetContent({
   function handlePointerMove(event: SheetPointerEvent) {
     onPointerMove?.(event);
     const drag = dragRef.current;
+
     if (!drag || drag.pointerId !== event.pointerId) return;
     const now = performance.now();
     drag.velocity = Math.max(0, event.clientY - drag.lastY) / Math.max(1, now - drag.lastTime);
     drag.lastY = event.clientY;
     drag.lastTime = now;
     dragOffsetRef.current = Math.min(Math.max(0, event.clientY - drag.startY), window.innerHeight * 0.8);
+
     if (frameRef.current === null) {
       frameRef.current = requestAnimationFrame(() => {
         frameRef.current = null;
@@ -89,9 +93,11 @@ function SheetContent({
   function finishDrag(event: SheetPointerEvent) {
     onPointerUp?.(event);
     const drag = dragRef.current;
+
     if (!drag || drag.pointerId !== event.pointerId) return;
     const distance = Math.max(0, event.clientY - drag.startY);
     dragRef.current = null;
+
     if (distance >= 72 || drag.velocity >= 0.11) {
       resetDragStyles();
       closeRef.current?.click();
@@ -110,6 +116,7 @@ function SheetContent({
     if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
     frameRef.current = null;
     dragOffsetRef.current = 0;
+
     if (popupRef.current) {
       popupRef.current.style.removeProperty("transform");
       popupRef.current.style.removeProperty("transition");
@@ -121,6 +128,7 @@ function SheetContent({
     if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
     frameRef.current = null;
     dragOffsetRef.current = 0;
+
     if (!popupRef.current) return;
     popupRef.current.style.setProperty("transition", "transform 200ms cubic-bezier(0.32, 0.72, 0, 1)");
     popupRef.current.style.setProperty("transform", "translate3d(0, 0, 0)");

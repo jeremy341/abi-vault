@@ -12,7 +12,9 @@ import {
 export function useReportSnapshot() {
   const { userId, orgId } = useAppAuth();
   const scope = `${orgId ?? "no-org"}:${userId ?? "anonymous"}`;
+
   type ReportSnapshot = Extract<Awaited<ReturnType<typeof getReportSnapshot>>, { ok: true }>;
+
   const cached = getFinanceCacheState<ReportSnapshot>("report-snapshot", scope);
   const [snapshot, setSnapshot] = useState<ReportSnapshot | null>(cached.data ?? null);
   const [loading, setLoading] = useState(!cached.data);
@@ -20,8 +22,10 @@ export function useReportSnapshot() {
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     let active = true;
+
     const applyResult = (result: Awaited<ReturnType<typeof getReportSnapshot>>) => {
       if (!active) return;
+
       if (result.ok) {
         setSnapshot(result);
         setError(null);
@@ -29,13 +33,16 @@ export function useReportSnapshot() {
         setError("Reports could not be loaded.");
       }
     };
+
     const unsubscribe = subscribeFinanceQuery<Awaited<ReturnType<typeof getReportSnapshot>>>("report-snapshot", applyResult, scope);
     cachedFinanceQuery("report-snapshot", getReportSnapshot, { scope }).then(applyResult).catch(() => {
       if (active) setError("Reports could not be loaded.");
     }).finally(() => {
       if (active) { setLoading(false); setRefreshing(false); }
     });
+
     return () => { active = false; unsubscribe(); };
   }, [scope]);
+
   return { snapshot, loading, refreshing, error };
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { type KeyboardEvent } from "react";
-import { ChevronLeft, ChevronRight, CreditCard, Pencil, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, CreditCard, Plus } from "lucide-react";
 import AccountCard from "@/components/dashboard/AccountCard";
 import { InlineLoading } from "@/components/ui/loading-state";
 import type { AdaptiveFundsViewProps, FundsCard, FundsSection } from "./funds-types";
@@ -58,9 +58,11 @@ export function FundsTabs({
 
     event.preventDefault();
     onChange(tabs[nextIndex].value);
+
     const tabButtons = event.currentTarget.parentElement?.querySelectorAll<HTMLElement>(
       '[role="tab"]',
     );
+
     tabButtons?.[nextIndex]?.focus();
   }
 
@@ -296,4 +298,3 @@ export function CardStage({
     </div>
   );
 }
-

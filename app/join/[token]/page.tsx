@@ -22,6 +22,7 @@ export default function JoinPage({ params }: { params: Promise<{ token: string }
       .catch(() => {
         if (active) setMessage("The invitation link could not be loaded.");
       });
+
     return () => {
       active = false;
     };
@@ -33,14 +34,17 @@ export default function JoinPage({ params }: { params: Promise<{ token: string }
     acceptRoleInviteLink(token)
       .then(async (result) => {
         if (!active) return;
+
         if (!result.ok) {
           setMessage(
             result.error.code === "LINK_EXPIRED" || result.error.code === "LINK_ALREADY_USED"
               ? "This invitation link is no longer valid."
               : "The invitation link could not be accepted.",
           );
+
           return;
         }
+
         try {
           await setActive({ organization: result.data.organizationId });
           router.replace("/dashboard");
@@ -51,6 +55,7 @@ export default function JoinPage({ params }: { params: Promise<{ token: string }
       .catch(() => {
         if (active) setMessage("The invitation link could not be accepted.");
       });
+
     return () => {
       active = false;
     };

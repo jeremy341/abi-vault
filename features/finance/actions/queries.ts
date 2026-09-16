@@ -55,9 +55,11 @@ export type AccountingPeriodListItem = {
   lockReason: string | null;
 };
 
+// SAFETY: Supabase query selections and membership checks establish the row shapes used below.
 export async function listTransactionsForCurrentOrganization() {
   const context = await requireClerkContext();
   const supabase = await createSupabaseServerClient();
+
   const { data: membership } = await supabase
     .from("committee_memberships")
     .select("role")
@@ -65,6 +67,7 @@ export async function listTransactionsForCurrentOrganization() {
     .eq("clerk_user_id", context.clerkUserId)
     .eq("status", "active")
     .maybeSingle();
+
   if (!membership) return { ok: false as const, error: "FORBIDDEN" as const };
 
   if (membership.role === "student") {
@@ -72,7 +75,9 @@ export async function listTransactionsForCurrentOrganization() {
       .from("transparency_transactions")
       .select("transaction_id, public_title, public_type, public_date, amount_minor, category_name, wallet_label")
       .order("public_date", { ascending: false });
+
     if (error) return { ok: false as const, error: "DATABASE_ERROR" as const };
+
     return {
       ok: true as const,
       items: (data ?? []).map((item) => ({
@@ -106,8 +111,10 @@ export async function listTransactionsForCurrentOrganization() {
     .eq("organization_id", context.organizationId)
     .eq("type", "cash")
     .eq("status", "active");
+
   if (cashWalletError) return { ok: false as const, error: "DATABASE_ERROR" as const };
   const cashWalletIds = new Set((cashWallets ?? []).map((wallet) => wallet.id));
+
   if (!cashWalletIds.size) return { ok: true as const, items: [] };
 
   const { data, error } = await supabase
@@ -119,35 +126,46 @@ export async function listTransactionsForCurrentOrganization() {
     .is("superseded_at", null)
     .or("correction_role.is.null,correction_role.neq.reversal")
     .order("booked_at", { ascending: false });
+
   if (error) return { ok: false as const, error: "DATABASE_ERROR" as const };
 
   const cashTransactions = (data ?? []).filter((item) =>
     cashWalletIds.has(item.from_wallet_id ?? "") || cashWalletIds.has(item.to_wallet_id ?? ""),
   );
+
   const categoryIds = [...new Set(cashTransactions.map((item) => item.category_id).filter(Boolean))];
   const walletIds = [...new Set(cashTransactions.flatMap((item) => [item.from_wallet_id, item.to_wallet_id]).filter(Boolean))];
+
   const [
     { data: categories, error: categoryError },
     { data: wallets, error: walletError },
     { data: receipts, error: receiptError },
   ] = await Promise.all([
+    // SAFETY: empty fallbacks match the selected category row shape.
     categoryIds.length ? supabase.from("categories").select("id, name").in("id", categoryIds) : Promise.resolve({ data: [] as { id: string; name: string }[], error: null }),
+    // SAFETY: empty fallbacks match the selected wallet row shape.
     walletIds.length ? supabase.from("wallets").select("id, name").in("id", walletIds) : Promise.resolve({ data: [] as { id: string; name: string }[], error: null }),
     supabase.from("receipts").select("id, file_name, mime_type, transaction_id, review_status").eq("organization_id", context.organizationId).is("archived_at", null),
   ]);
+
   if (categoryError || walletError || receiptError) return { ok: false as const, error: "DATABASE_ERROR" as const };
   const categoryMap = new Map((categories ?? []).map((item) => [item.id, item.name]));
   const walletMap = new Map((wallets ?? []).map((item) => [item.id, item.name]));
   const creatorIds = [...new Set(cashTransactions.map((item) => item.created_by).filter(Boolean))];
+
+  const emptyCreatorProfiles: Array<{ clerk_user_id: string; display_name: string; email: string }> = [];
+
   const { data: creators, error: creatorError } = creatorIds.length
     ? await supabase.from("profiles").select("clerk_user_id, display_name, email").in("clerk_user_id", creatorIds)
-    : { data: [] as { clerk_user_id: string; display_name: string; email: string }[], error: null };
+    : { data: emptyCreatorProfiles, error: null };
+
   if (creatorError) return { ok: false as const, error: "DATABASE_ERROR" as const };
   const creatorMap = new Map((creators ?? []).map((item) => [item.clerk_user_id, item.display_name || item.email || "Unbekannt"]));
+
   const receiptMap = new Map<string, { id: string; fileName: string; type: string; status: string }>(
     (receipts ?? [])
-      .filter((item) => item.transaction_id)
-      .map((item) => [item.transaction_id as string, { id: item.id, fileName: item.file_name, type: item.mime_type, status: item.review_status }]),
+      .filter((item): item is typeof item & { transaction_id: string } => Boolean(item.transaction_id))
+      .map((item) => [item.transaction_id, { id: item.id, fileName: item.file_name, type: item.mime_type, status: item.review_status }]),
   );
 
   return {
@@ -177,9 +195,11 @@ export async function listTransactionsForCurrentOrganization() {
   };
 }
 
+// SAFETY: Supabase query selections establish the receipt, transaction, and profile row shapes used below.
 export async function listReceiptsForCurrentOrganization() {
   const context = await requireClerkContext();
   const supabase = await createSupabaseServerClient();
+
   const { data: membership, error: membershipError } = await supabase
     .from("committee_memberships")
     .select("role")
@@ -187,31 +207,44 @@ export async function listReceiptsForCurrentOrganization() {
     .eq("clerk_user_id", context.clerkUserId)
     .eq("status", "active")
     .maybeSingle();
+
   if (membershipError || !membership) return { ok: false as const, error: "FORBIDDEN" as const };
+
   const { data, error } = await supabase
     .from("receipts")
     .select("id, file_name, mime_type, file_size_bytes, transaction_id, review_status, created_at, uploaded_by, reviewed_by, reviewed_at")
     .eq("organization_id", context.organizationId)
     .is("archived_at", null)
     .order("created_at", { ascending: false });
+
   if (error) return { ok: false as const, error: "DATABASE_ERROR" as const };
 
   const transactionIds = [...new Set((data ?? []).map((item) => item.transaction_id).filter(Boolean))];
+
+  const emptyReceiptTransactions: Array<{ id: string; title: string; type: string; booked_at: string | null; amount_minor: number }> = [];
+
   const { data: transactions, error: transactionError } = transactionIds.length
     ? await supabase.from("transactions").select("id, title, type, booked_at, amount_minor").in("id", transactionIds)
-    : { data: [] as { id: string; title: string; type: string; booked_at: string | null; amount_minor: number }[] };
+    : { data: emptyReceiptTransactions };
+
   if (transactionError) return { ok: false as const, error: "DATABASE_ERROR" as const };
   const transactionMap = new Map((transactions ?? []).map((item) => [item.id, item]));
   const profileIds = [...new Set((data ?? []).flatMap((item) => [item.uploaded_by, item.reviewed_by]).filter(Boolean))];
+
+  const emptyReceiptProfiles: Array<{ clerk_user_id: string; display_name: string; email: string }> = [];
+
   const { data: receiptProfiles, error: receiptProfileError } = profileIds.length
     ? await supabase.from("profiles").select("clerk_user_id, display_name, email").in("clerk_user_id", profileIds)
-    : { data: [] as { clerk_user_id: string; display_name: string; email: string }[], error: null };
+    : { data: emptyReceiptProfiles, error: null };
+
   if (receiptProfileError) return { ok: false as const, error: "DATABASE_ERROR" as const };
   const receiptProfileMap = new Map((receiptProfiles ?? []).map((item) => [item.clerk_user_id, item.display_name || item.email || "Unbekannt"]));
+
   return {
     ok: true as const,
     items: (data ?? []).map((item) => {
       const transaction = item.transaction_id ? transactionMap.get(item.transaction_id) : undefined;
+
       return {
         id: item.id,
         file: item.file_name,
@@ -234,9 +267,11 @@ export async function listReceiptsForCurrentOrganization() {
   };
 }
 
+// SAFETY: Supabase query selections establish the wallet and transaction row shapes used below.
 export async function listWalletsForCurrentOrganization(options?: { includeBalances?: boolean }) {
   const context = await requireClerkContext();
   const supabase = await createSupabaseServerClient();
+
   const { data: wallets, error } = await supabase
     .from("wallets")
     .select("id, name, type, status, responsible_clerk_user_id, opening_balance_minor, card_number_visual, card_holder_visual, card_expiry_visual, card_color_visual")
@@ -244,8 +279,10 @@ export async function listWalletsForCurrentOrganization(options?: { includeBalan
     .eq("type", "cash")
     .eq("status", "active")
     .order("created_at", { ascending: true });
+
   if (error) return { ok: false as const, error: "DATABASE_ERROR" as const };
 
+  // SAFETY: the empty branch matches the selected transaction row shape.
   const transactions = options?.includeBalances === false
     ? { data: [] as Array<{ amount_minor: number; type: string; from_wallet_id: string | null; to_wallet_id: string | null }>, error: null }
     : await supabase
@@ -256,19 +293,27 @@ export async function listWalletsForCurrentOrganization(options?: { includeBalan
       .is("deleted_at", null)
       .is("superseded_at", null)
       .or("correction_role.is.null,correction_role.neq.reversal");
+
   if (transactions.error) return { ok: false as const, error: "DATABASE_ERROR" as const };
   const transactionRows = transactions.data ?? [];
   const activeWalletIds = new Set((wallets ?? []).map((wallet) => wallet.id));
+
   const effectiveTransactions = transactionRows.filter((transaction) =>
     activeWalletIds.has(transaction.from_wallet_id ?? "") || activeWalletIds.has(transaction.to_wallet_id ?? ""),
   );
+
   const balances = new Map((wallets ?? []).map((wallet) => [wallet.id, BigInt(String(wallet.opening_balance_minor ?? 0))]));
+
   for (const transaction of effectiveTransactions) {
     const amount = BigInt(String(transaction.amount_minor));
+
     if (transaction.type === "income" && transaction.to_wallet_id) balances.set(transaction.to_wallet_id, (balances.get(transaction.to_wallet_id) ?? BigInt(0)) + amount);
+
     if (transaction.type === "expense" && transaction.from_wallet_id) balances.set(transaction.from_wallet_id, (balances.get(transaction.from_wallet_id) ?? BigInt(0)) - amount);
+
     if (transaction.type === "transfer") {
       if (transaction.from_wallet_id) balances.set(transaction.from_wallet_id, (balances.get(transaction.from_wallet_id) ?? BigInt(0)) - amount);
+
       if (transaction.to_wallet_id) balances.set(transaction.to_wallet_id, (balances.get(transaction.to_wallet_id) ?? BigInt(0)) + amount);
     }
   }
@@ -278,13 +323,16 @@ export async function listWalletsForCurrentOrganization(options?: { includeBalan
     .select("wallet_id, counted_amount_minor, difference_minor, counted_by_name, created_at")
     .eq("organization_id", context.organizationId)
     .order("created_at", { ascending: false });
+
   if (cashCountError) return { ok: false as const, error: "DATABASE_ERROR" as const };
+
   const latestCounts = new Map<string, {
     countedAmountMinor: string;
     differenceMinor: string;
     countedByName: string | null;
     createdAt: string;
   }>();
+
   for (const cashCount of cashCounts ?? []) {
     if (!latestCounts.has(cashCount.wallet_id)) {
       latestCounts.set(cashCount.wallet_id, {
@@ -325,6 +373,7 @@ export async function listWalletsForCurrentOrganization(options?: { includeBalan
 export async function listGoalsForCurrentOrganization() {
   const context = await requireClerkContext();
   const supabase = await createSupabaseServerClient();
+
   const { data: membership } = await supabase
     .from("committee_memberships")
     .select("role")
@@ -332,26 +381,37 @@ export async function listGoalsForCurrentOrganization() {
     .eq("clerk_user_id", context.clerkUserId)
     .eq("status", "active")
     .maybeSingle();
+
   if (!membership) return { ok: false as const, error: "FORBIDDEN" as const };
 
   if (membership.role === "student") {
     const { data, error } = await supabase.from("transparency_goal_progress").select("id, title, target_amount_minor, saved_amount_minor, deadline").order("deadline");
+
     if (error) return { ok: false as const, error: "DATABASE_ERROR" as const };
+
     return { ok: true as const, items: data ?? [] };
   }
+
   const { data: goals, error } = await supabase
     .from("fundraising_goals")
     .select("id, title, target_amount_minor, deadline, status")
     .eq("organization_id", context.organizationId)
     .neq("status", "archived")
     .order("deadline");
+
   if (error) return { ok: false as const, error: "DATABASE_ERROR" as const };
   const ids = (goals ?? []).map((goal) => goal.id);
+
+  const emptyContributions: Array<{ goal_id: string; allocated_amount_minor: number }> = [];
+
   const { data: contributions } = ids.length
     ? await supabase.from("goal_contributions").select("goal_id, allocated_amount_minor").in("goal_id", ids)
-    : { data: [] as { goal_id: string; allocated_amount_minor: number }[] };
+    : { data: emptyContributions };
+
   const saved = new Map<string, bigint>();
+
   for (const contribution of contributions ?? []) saved.set(contribution.goal_id, (saved.get(contribution.goal_id) ?? BigInt(0)) + BigInt(String(contribution.allocated_amount_minor)));
+
   return {
     ok: true as const,
     items: (goals ?? []).map((goal) => ({
@@ -367,28 +427,35 @@ export async function listGoalsForCurrentOrganization() {
 export async function getCommitteeSettingsForCurrentOrganization() {
   const context = await requireClerkContext();
   const supabase = await createSupabaseServerClient();
+
   const { data, error } = await supabase
     .from("committee_settings")
     .select("school_name, graduation_year, notifications")
     .eq("organization_id", context.organizationId)
     .maybeSingle();
+
   if (error) return { ok: false as const, error: "DATABASE_ERROR" as const };
+
   return { ok: true as const, data };
 }
 
 export async function listMembersForCurrentOrganization() {
   const context = await requireClerkContext();
   const supabase = await createSupabaseServerClient();
+
   const { data, error } = await supabase
     .from("committee_memberships")
     .select("clerk_user_id, role, status, profiles(display_name, email)")
     .eq("organization_id", context.organizationId)
     .order("created_at");
+
   if (error) return { ok: false as const, error: "DATABASE_ERROR" as const };
+
   return {
     ok: true as const,
     items: (data ?? []).map((item) => {
       const profile = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles;
+
       return {
         id: item.clerk_user_id,
         name: profile?.display_name || profile?.email || "Unbekannt",
@@ -399,9 +466,11 @@ export async function listMembersForCurrentOrganization() {
   };
 }
 
+// SAFETY: the KPI projection consumes only explicitly selected Supabase rows.
 export async function getReportKpisForCurrentOrganization() {
   const context = await requireClerkContext();
   const supabase = await createSupabaseServerClient();
+
   const [
     { data: transactions, error: transactionError },
     { data: wallets, error: walletError },
@@ -413,13 +482,17 @@ export async function getReportKpisForCurrentOrganization() {
     supabase.from("receipts").select("review_status, transaction_id").eq("organization_id", context.organizationId).is("archived_at", null),
     supabase.from("cash_counts").select("wallet_id, difference_minor, created_at").eq("organization_id", context.organizationId).order("created_at", { ascending: false }),
   ]);
+
   if (transactionError || walletError || receiptError || cashCountError) {
     return { ok: false as const, error: "DATABASE_ERROR" as const };
   }
+
   const activeWalletIds = new Set((wallets ?? []).map((wallet) => wallet.id));
+
   const effectiveTransactions = (transactions ?? []).filter((transaction) =>
     activeWalletIds.has(transaction.from_wallet_id ?? "") || activeWalletIds.has(transaction.to_wallet_id ?? ""),
   );
+
   const projectionTransactions: ProjectionTransaction[] = effectiveTransactions.map((transaction) => ({
     amountMinor: String(transaction.amount_minor),
     type: transaction.type,
@@ -427,10 +500,12 @@ export async function getReportKpisForCurrentOrganization() {
     fromWalletId: transaction.from_wallet_id,
     toWalletId: transaction.to_wallet_id,
   }));
+
   const totals = projectFlowTotals(projectionTransactions);
   const pendingReceipts = (receipts ?? []).filter((receipt) => receipt.review_status === "pending").length;
   const reviewedReceiptCount = (receipts ?? []).filter((receipt) => receipt.review_status === "approved").length;
   const unassignedReceiptCount = (receipts ?? []).filter((receipt) => !receipt.transaction_id).length;
+
   const balances = projectWalletBalances(
     (wallets ?? []).map((wallet) => ({
       id: wallet.id,
@@ -438,18 +513,23 @@ export async function getReportKpisForCurrentOrganization() {
     })),
     projectionTransactions,
   );
+
   const liquid = [...balances.entries()]
     .filter(([walletId]) => activeWalletIds.has(walletId))
     .reduce((sum, [, amount]) => sum + amount, BigInt(0));
+
   const latestCounts = new Map<string, { difference_minor: number }>();
+
   for (const count of cashCounts ?? []) {
     if (activeWalletIds.has(count.wallet_id) && !latestCounts.has(count.wallet_id)) {
       latestCounts.set(count.wallet_id, { difference_minor: count.difference_minor });
     }
   }
+
   const reconciliationPercent = activeWalletIds.size > 0 && latestCounts.size === activeWalletIds.size
     ? Math.round((([...latestCounts.values()].filter((count) => Number(count.difference_minor) === 0).length / activeWalletIds.size) * 100))
     : null;
+
   return {
     ok: true as const,
     incomeMinor: totals.incomeMinor.toString(),
@@ -467,12 +547,15 @@ export async function getReportKpisForCurrentOrganization() {
 export async function listCashCountsForCurrentOrganization() {
   const context = await requireClerkContext();
   const supabase = await createSupabaseServerClient();
+
   const { data, error } = await supabase
     .from("cash_counts")
     .select("id, wallet_id, counted_amount_minor, book_amount_minor, difference_minor, counted_by_name, created_at, note")
     .eq("organization_id", context.organizationId)
     .order("created_at", { ascending: false });
+
   if (error) return { ok: false as const, error: "DATABASE_ERROR" as const };
+
   return {
     ok: true as const,
     items: (data ?? []).map((item): CashCountListItem => ({
@@ -491,18 +574,24 @@ export async function listCashCountsForCurrentOrganization() {
 export async function listAccountingPeriodsForCurrentOrganization() {
   const context = await requirePermission("lockPeriods");
   const supabase = await createSupabaseServerClient();
+
   const { data: periods, error } = await supabase
     .from("accounting_periods")
     .select("id, year, month, status, locked_at, locked_by, lock_reason")
     .eq("organization_id", context.organizationId)
     .order("year", { ascending: false })
     .order("month", { ascending: false });
+
   if (error) return { ok: false as const, error: "DATABASE_ERROR" as const };
 
   const lockedByIds = [...new Set((periods ?? []).map((period) => period.locked_by).filter(Boolean))];
+
+  const emptyLockedProfiles: Array<{ clerk_user_id: string; display_name: string; email: string }> = [];
+
   const { data: profiles, error: profileError } = lockedByIds.length
     ? await supabase.from("profiles").select("clerk_user_id, display_name, email").in("clerk_user_id", lockedByIds)
-    : { data: [] as { clerk_user_id: string; display_name: string; email: string }[], error: null };
+    : { data: emptyLockedProfiles, error: null };
+
   if (profileError) return { ok: false as const, error: "DATABASE_ERROR" as const };
   const profileMap = new Map((profiles ?? []).map((profile) => [profile.clerk_user_id, profile.display_name || profile.email || "Unbekannt"]));
 
@@ -526,6 +615,7 @@ export async function getDashboardSnapshot() {
     listTransactionsForCurrentOrganization(),
     listGoalsForCurrentOrganization(),
   ]);
+
   if (!wallets.ok || !transactions.ok || !goals.ok) {
     if (process.env.NODE_ENV === "development") {
       console.error("Dashboard snapshot query failed", {
@@ -534,8 +624,10 @@ export async function getDashboardSnapshot() {
         goals: goals.ok ? "ok" : goals.error,
       });
     }
+
     return { ok: false as const };
   }
+
   const projectionTransactions = transactions.items.map((transaction) => ({
     amountMinor: transaction.amountMinor,
     type: transaction.type,
@@ -544,7 +636,9 @@ export async function getDashboardSnapshot() {
     fromWalletId: transaction.fromWalletId ?? null,
     toWalletId: transaction.toWalletId ?? null,
   }));
+
   const categories = projectCategoryTotals(projectionTransactions);
+
   const balances = projectWalletBalances(
     wallets.items.map((wallet) => ({
       id: wallet.id,
@@ -552,6 +646,7 @@ export async function getDashboardSnapshot() {
     })),
     projectionTransactions,
   );
+
   return {
     ok: true as const,
     wallets: wallets.items.map((wallet) => ({
@@ -564,21 +659,26 @@ export async function getDashboardSnapshot() {
   };
 }
 
+// SAFETY: report projections consume only typed results returned by the query helpers above.
 export async function getReportSnapshot() {
   const [transactions, goals, wallets] = await Promise.all([
     listTransactionsForCurrentOrganization(),
     listGoalsForCurrentOrganization(),
     listWalletsForCurrentOrganization({ includeBalances: false }),
   ]);
+
   if (!transactions.ok || !goals.ok || !wallets.ok) return { ok: false as const };
 
   const now = new Date();
+
   const months = Array.from({ length: 6 }, (_, index) => {
     const date = new Date(now.getFullYear(), now.getMonth() - 5 + index, 1);
     const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
     const label = date.toLocaleDateString("en-GB", { month: "short" }).replace(".", "");
+
     return { key, label, year: date.getFullYear() };
   });
+
   const projectionTransactions = transactions.items.map((transaction) => ({
     amountMinor: transaction.amountMinor,
     type: transaction.type,
@@ -587,7 +687,9 @@ export async function getReportSnapshot() {
     fromWalletId: transaction.fromWalletId ?? null,
     toWalletId: transaction.toWalletId ?? null,
   }));
+
   const cashflow = projectMonthlyFlow(projectionTransactions, months);
+
   if (!transactions.items.length) {
     return {
       ok: true as const,
@@ -603,23 +705,32 @@ export async function getReportSnapshot() {
       reviewItems: [],
     };
   }
+
   const categoryTotals = projectCategoryTotals(projectionTransactions);
+
   const categories = categoryTotals.map((category) => ({
     name: category.name,
     amount: Number(category.amountMinor) / 100,
     share: category.progress,
   }));
+
   let balance = wallets.items.reduce((sum, wallet) => sum + Number(wallet.openingBalanceMinor) / 100, 0);
+
   for (const transaction of transactions.items) {
     if (transaction.date && transaction.date.slice(0, 7) >= months[0].key) continue;
     const amount = Math.abs(Number(transaction.amountMinor)) / 100;
+
     if (transaction.type === "income") balance += amount;
+
     if (transaction.type === "expense") balance -= amount;
   }
+
   const analysisBalance = cashflow.map((month, index) => {
     balance += month.income - month.expenses;
+
     return { month: `${month.month} ${months[index]?.year ?? now.getFullYear()}`, balance };
   });
+
   return {
     ok: true as const,
     cashflow,

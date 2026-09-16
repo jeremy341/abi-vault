@@ -12,4 +12,5 @@ export const removeMemberSchema = z.object({
 });
 
 export type UpdateMemberRoleInput = z.input<typeof updateMemberRoleSchema>;
+
 export type RemoveMemberInput = z.input<typeof removeMemberSchema>;

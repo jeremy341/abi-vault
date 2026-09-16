@@ -8,15 +8,19 @@ import { actionFailure, actionSuccess, type ActionResult } from "@/lib/api/resul
 
 export async function recordCashCount(input: CashCountInput): Promise<ActionResult<{ id: string }>> {
   const parsed = cashCountSchema.safeParse(input);
+
   if (!parsed.success) return actionFailure("INVALID_INPUT", "The cash count data is invalid.");
   let amount: bigint;
+
   try {
     amount = parseDollarToMinor(parsed.data.countedAmount);
   } catch {
     return actionFailure("INVALID_AMOUNT", "The cash count amount is invalid.");
   }
+
   const context = await requirePermission("createTransactions");
   const supabase = await createSupabaseServerClient();
+
   const { data, error } = await supabase.rpc("record_cash_count_v2", {
     p_organization_id: context.organizationId,
     p_wallet_id: parsed.data.walletId,
@@ -25,6 +29,7 @@ export async function recordCashCount(input: CashCountInput): Promise<ActionResu
     p_note: parsed.data.note ?? null,
     p_idempotency_key: parsed.data.idempotencyKey,
   });
+
   return error
     ? actionFailure("CASH_COUNT_FAILED", "The cash count could not be saved.")
     : actionSuccess({ id: String(data) });

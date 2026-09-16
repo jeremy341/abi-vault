@@ -18,6 +18,7 @@ export function useDelayedLoading(loading: boolean, delay = 160) {
       () => setVisible(loading),
       loading ? delay : 0,
     );
+
     return () => window.clearTimeout(timer);
   }, [delay, loading]);
 
@@ -26,6 +27,7 @@ export function useDelayedLoading(loading: boolean, delay = 160) {
 
 export function LoadingStatus({ loading, label = "Content is loading…" }: { loading: boolean; label?: string }) {
   if (!loading) return null;
+
   return <span className={styles.status} role="status" aria-live="polite">{label}</span>;
 }
 
@@ -35,6 +37,7 @@ export function LoadingText({ loading, children, className }: { loading: boolean
 
 export function LoadingBlock({ loading, children, className }: { loading: boolean; children?: ReactNode; className?: string }) {
   if (!loading) return <>{children}</>;
+
   return <div aria-hidden="true" className={cn(styles.loadingBlock, className)} />;
 }
 
@@ -44,9 +47,11 @@ export function InlineLoading({ label = "Loading…", className }: { label?: str
 
 export function LoadingCollection({ loading, knownItemCount = 0, emptyHeight, children, label }: LoadingState & { emptyHeight: string; children: ReactNode; label: string }) {
   if (!loading || knownItemCount > 0) return <>{children}</>;
+
   return (
     <div
       className={styles.collectionLoading}
+      // SAFETY: the inline keys are valid CSS custom properties consumed by the loading styles.
       style={{
         minHeight: emptyHeight,
         height: emptyHeight === "100%" ? "100%" : undefined,

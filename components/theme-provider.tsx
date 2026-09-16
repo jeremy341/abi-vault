@@ -30,6 +30,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       const next = !current;
       document.documentElement.classList.toggle("dark", next);
       window.localStorage.setItem("abi-theme", next ? "dark" : "light");
+
       return next;
     });
   }
@@ -43,6 +44,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
 export function useTheme() {
   const context = useContext(ThemeContext);
+
   if (!context) throw new Error("useTheme must be used inside ThemeProvider");
+
   return context;
 }

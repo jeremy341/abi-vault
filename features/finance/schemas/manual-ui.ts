@@ -14,6 +14,8 @@ export type ManualUiTransactionInput = z.input<typeof manualUiTransactionSchema>
 
 export function parseManualUiAmount(value: string) {
   const amount = parseDollarToMinor(value);
+
   if (amount <= BigInt(0)) throw new Error("INVALID_AMOUNT");
+
   return amount;
 }

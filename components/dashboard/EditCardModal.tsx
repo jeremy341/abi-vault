@@ -34,15 +34,18 @@ type EditCardModalProps = {
 };
 
 type FormValues = Omit<AccountCardDetails, "color">;
+
 type FormErrors = Partial<Record<keyof FormValues, string>>;
 
 function formatCardNumber(value: string) {
   const digits = value.replace(/\D/g, "").slice(0, 16);
+
   return digits.match(/.{1,4}/g)?.join(" ") ?? "";
 }
 
 function formatExpiry(value: string) {
   const digits = value.replace(/\D/g, "").slice(0, 4);
+
   return digits.length > 2
     ? `${digits.slice(0, 2)}/${digits.slice(2)}`
     : digits;
@@ -58,12 +61,14 @@ export default function EditCardModal({
   const [selectedColor, setSelectedColor] = useState(
     card?.color ?? cardColors[0].value,
   );
+
   const [values, setValues] = useState<FormValues>({
     accountName: card?.accountName ?? "",
     cardNumber: card?.cardNumber ?? "",
     holder: card?.holder ?? "",
     expiry: card?.expiry ?? "",
   });
+
   const [errors, setErrors] = useState<FormErrors>({});
   const [saving, setSaving] = useState(false);
   const [submitError, setSubmitError] = useState("");
@@ -77,12 +82,15 @@ export default function EditCardModal({
   useEffect(() => {
     if (!open) return;
 
+    // SAFETY: document.activeElement is an HTMLElement or null in this browser focus trap.
     const previouslyFocused = document.activeElement as HTMLElement | null;
     const previousOverflow = document.body.style.overflow;
     const form = formRef.current;
+
     const focusable = form?.querySelectorAll<HTMLElement>(
       'button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
     );
+
     const first = focusable?.[0];
     const last = focusable?.[focusable.length - 1];
     const firstInput = form?.querySelector<HTMLElement>("input");
@@ -92,6 +100,7 @@ export default function EditCardModal({
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") onCloseRef.current();
+
       if (event.key !== "Tab" || !first || !last) return;
 
       if (event.shiftKey && document.activeElement === first) {
@@ -104,6 +113,7 @@ export default function EditCardModal({
     }
 
     document.addEventListener("keydown", handleKeyDown);
+
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = previousOverflow;
@@ -121,12 +131,15 @@ export default function EditCardModal({
   function handleExpiryChange(value: string) {
     const digits = value.replace(/\D/g, "").slice(0, 4);
     const month = digits.slice(0, 2);
+
     const invalidMonth =
       (digits.length > 0 && !["0", "1"].includes(digits[0])) ||
       (month.length === 2 && (month === "00" || Number(month) > 12));
+
     const next = formatExpiry(value);
 
     updateValue("expiry", next);
+
     if (invalidMonth || (next.length === 5 && !isValidFutureExpiry(next))) {
       setErrors((current) => ({
         ...current,
@@ -137,36 +150,44 @@ export default function EditCardModal({
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
     if (saving) return;
     const nextErrors: FormErrors = {};
 
     if (!values.accountName.trim()) {
       nextErrors.accountName = "Please enter a cash register name.";
     }
+
     if (values.cardNumber.replace(/\D/g, "").length !== 16) {
       nextErrors.cardNumber = "The card number must contain 16 digits.";
     }
+
     if (!values.holder.trim()) {
       nextErrors.holder = "Please enter the card holder.";
     }
+
     if (!isValidFutureExpiry(values.expiry)) {
       nextErrors.expiry = "Invalides Expiry date.";
     }
 
     setErrors(nextErrors);
+
     if (Object.keys(nextErrors).length > 0) {
       window.requestAnimationFrame(() => {
         formRef.current
           ?.querySelector<HTMLElement>('[aria-invalid="true"]')
           ?.focus();
       });
+
       return;
     }
 
     setSaving(true);
     setSubmitError("");
+
     try {
       const saved = await onSave({ ...values, color: selectedColor });
+
       if (!saved) setSubmitError("The cash register could not be saved.");
     } catch {
       setSubmitError("The cash register could not be saved.");
@@ -234,6 +255,7 @@ export default function EditCardModal({
                   className={styles.colorOption}
                   aria-label={`Select ${color.name}`}
                   aria-pressed={selectedColor === color.value}
+                  // SAFETY: the swatch custom property is a valid React CSS property.
                   style={
                     { "--swatch": color.value } as React.CSSProperties
                   }

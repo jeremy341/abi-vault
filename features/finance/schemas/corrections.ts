@@ -17,4 +17,5 @@ export const transactionArchiveSchema = z.object({
 });
 
 export type TransactionCorrectionInput = z.input<typeof transactionCorrectionSchema>;
+
 export type TransactionArchiveInput = z.input<typeof transactionArchiveSchema>;

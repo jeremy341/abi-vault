@@ -43,10 +43,23 @@ import { createReceiptDownloadUrl, reviewReceipt } from "@/features/receipts/act
 import { ReceiptReviewDialog, type ReceiptReviewDecision, type ReceiptReviewDialogReceipt } from "@/components/receipts/ReceiptReviewDialog";
 
 type Category = "Material" | "Sonstiges" | "Veranstaltung";
+
 type FilterType = "Income" | "Expenses";
+
 type ReceiptFilter = "All" | "Vorhanden" | "Fehlt";
+
 type ReviewFilter = "All" | "Approved" | "Pending review" | "Invalid";
+
 type AccountFilter = string;
+
+const categoryFilterOptions: readonly Category[] = ["Material", "Sonstiges", "Veranstaltung"];
+
+const transactionTypeFilterOptions: readonly FilterType[] = ["Income", "Expenses"];
+
+const receiptFilterOptions: readonly ReceiptFilter[] = ["All", "Vorhanden", "Fehlt"];
+
+const reviewFilterOptions: readonly ReviewFilter[] = ["All", "Approved", "Pending review", "Invalid"];
+
 type Transaction = {
   id: number | string;
   title: string;
@@ -90,16 +103,19 @@ type ServerTransaction = {
   canDelete: boolean;
 };
 
+// SAFETY: server transaction rows are validated by the finance query projection before mapping.
 function mapTransaction(item: ServerTransaction): Transaction {
   return {
     id: item.id,
     title: item.title,
+    // SAFETY: the server transaction category is constrained by the active category schema.
     category: item.category as Category,
     date: item.date ? displayDate(fromIso(item.date)) : displayDate(new Date()),
     amount: Number(item.amountMinor) / 100,
     receipt: item.receiptFile ?? (item.receipt ? "receipt" : undefined),
     receiptId: item.receiptId,
     receiptType: item.receiptType,
+    // SAFETY: the server review status is constrained by the receipt-status union.
     reviewStatus: item.reviewStatus as Transaction["reviewStatus"],
     createdByName: item.createdByName,
     createdAt: item.createdAt,
@@ -120,64 +136,85 @@ const toneClasses = {
   green: styles.green,
   orange: styles.orange,
 };
+
 const parseDate = (value: string) => {
   const [day, month, year] = value.split(".").map(Number);
+
   return new Date(year, month - 1, day);
 };
+
 const fromIso = (value: string) => {
   const [year, month, day] = value.split("-").map(Number);
+
   return new Date(year, month - 1, day);
 };
+
 const displayDate = (date: Date) =>
   `${String(date.getDate()).padStart(2, "0")}.${String(date.getMonth() + 1).padStart(2, "0")}.${date.getFullYear()}`;
+
 const displayAmount = (amount: number) =>
   `${amount >= 0 ? "+" : "-"}${Math.abs(amount).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`;
 
 type TrendDirection = "positive" | "negative" | "neutral";
+
 type Trend = { label: string; direction: TrendDirection };
+
+type TrendSummary = { income: Trend; expense: Trend; net: Trend };
 
 function trendFor(current: number, previous: number, increaseIsPositive = true): Trend {
   if (current === 0 && previous === 0) return { label: "—", direction: "neutral" };
+
   if (previous === 0) return { label: "New", direction: current > 0 === increaseIsPositive ? "positive" : "negative" };
 
   const change = ((current - previous) / Math.abs(previous)) * 100;
+
   const direction = change === 0
     ? "neutral"
     : change > 0 === increaseIsPositive
       ? "positive"
       : "negative";
+
   return {
     label: `${change >= 0 ? "+" : "−"}${Math.abs(change).toLocaleString("en-GB", { maximumFractionDigits: 1 })} %`,
     direction,
   };
 }
 
-function calculateTrends(items: Transaction[]): { income: Trend; expense: Trend; net: Trend } {
+function calculateTrends(items: Transaction[]): TrendSummary {
   if (!items.length) {
     const empty = trendFor(0, 0);
+
     return { income: empty, expense: empty, net: empty };
   }
 
   const latest = items.reduce((latestDate, item) => {
     const date = parseDate(item.date);
+
     return date > latestDate ? date : latestDate;
   }, parseDate(items[0].date));
+
   const currentMonth = latest.getMonth();
   const currentYear = latest.getFullYear();
   const previousMonth = currentMonth === 0 ? 11 : currentMonth - 1;
   const previousYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+
   const inPeriod = (item: Transaction, month: number, year: number) => {
     const date = parseDate(item.date);
+
     return date.getMonth() === month && date.getFullYear() === year;
   };
+
   const totalsFor = (month: number, year: number) => {
     const periodItems = items.filter((item) => inPeriod(item, month, year));
     const income = periodItems.filter((item) => item.amount >= 0).reduce((sum, item) => sum + item.amount, 0);
     const expense = periodItems.filter((item) => item.amount < 0).reduce((sum, item) => sum + Math.abs(item.amount), 0);
+
     return { income, expense, net: income - expense };
   };
+
   const current = totalsFor(currentMonth, currentYear);
   const previous = totalsFor(previousMonth, previousYear);
+
   return {
     income: trendFor(current.income, previous.income),
     expense: trendFor(current.expense, previous.expense, false),
@@ -191,6 +228,7 @@ function TrendIndicator({ trend, loading }: { trend: Trend; loading: boolean }) 
     : trend.direction === "neutral"
       ? Equal
       : TrendingUp;
+
   return (
     <span className={`${styles.trend} ${styles[trend.direction]}`}>
       <Icon aria-hidden="true" />
@@ -210,6 +248,7 @@ function Overlay({
   label: string;
   className?: string;
 }) {
+  // SAFETY: callers pass the readonly option objects accepted by FieldDropdown.
   return (
     <Dialog
       label={label}
@@ -222,6 +261,7 @@ function Overlay({
   );
 }
 
+// SAFETY: dropdown values come from the literal option sets passed by each caller.
 function StyledDropdown({
   ariaLabel,
   label,
@@ -239,12 +279,15 @@ function StyledDropdown({
   className?: string;
   placement?: "bottom" | "top";
 }) {
+  // SAFETY: callers pass the readonly option objects accepted by FieldDropdown.
+  const typedOptions = options as readonly FieldDropdownOption[];
+
   return (
     <FieldDropdown
       ariaLabel={ariaLabel}
       label={label}
       value={value}
-      options={options as readonly FieldDropdownOption[]}
+      options={typedOptions}
       onChange={onChange}
       className={className}
       placement={placement}
@@ -265,6 +308,7 @@ function CashRegisterCombobox({
   const [query, setQuery] = useState("");
   const selected = options.find((option) => option.id === value);
   const filtered = options.filter((option) => option.name.toLowerCase().includes(query.trim().toLowerCase()));
+
   return (
     <div className={styles.formField}>
       <span>Cash register</span>
@@ -469,11 +513,14 @@ function PhoneTransactionsView({
   );
 }
 
+// SAFETY: transaction filters and form values are constrained by their schema-backed option sets.
 export default function TransactionsPage() {
   const mode = usePresentationMode();
   const { userId, orgId } = useAppAuth();
   const cacheScope = `${orgId ?? "no-org"}:${userId ?? "anonymous"}`;
+
   type DashboardResult = Awaited<ReturnType<typeof getDashboardSnapshot>>;
+
   const initialSnapshot = getFinanceCacheState<DashboardResult>("dashboard-snapshot", cacheScope);
   const [items, setItems] = useState<Transaction[]>(() => initialSnapshot.data?.ok ? initialSnapshot.data.transactions.map(mapTransaction) : []);
   const [cashRegisters, setCashRegisters] = useState<Array<{ id: string; name: string }>>(() => initialSnapshot.data?.ok ? initialSnapshot.data.wallets.map((item) => ({ id: item.id, name: item.name })) : []);
@@ -488,12 +535,16 @@ export default function TransactionsPage() {
   const archiveIdempotencyKey = useRef<string | null>(null);
   useEffect(() => {
     let active = true;
+
     const applyResult = (result: DashboardResult) => {
       if (!active) return;
+
       if (!result.ok) {
         setLoadError("Transactions could not be loaded.");
+
         return;
       }
+
       setItems(result.transactions.map(mapTransaction));
       const nextWallets = result.wallets.map((item) => ({ id: item.id, name: item.name }));
       setCashRegisters(nextWallets);
@@ -502,6 +553,8 @@ export default function TransactionsPage() {
       setTransactionsLoading(false);
       setWalletLoading(false);
     };
+
+    // SAFETY: the dashboard cache key is paired with DashboardResult.
     const unsubscribe = subscribeFinanceQuery("dashboard-snapshot", (value) => applyResult(value as DashboardResult), cacheScope);
     cachedFinanceQuery("dashboard-snapshot", getDashboardSnapshot, { scope: cacheScope })
       .then(applyResult)
@@ -511,6 +564,7 @@ export default function TransactionsPage() {
       .finally(() => {
         if (active) { setTransactionsLoading(false); setRefreshing(false); }
       });
+
     return () => {
       active = false;
       unsubscribe();
@@ -522,9 +576,11 @@ export default function TransactionsPage() {
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
   const [draftCategory, setDraftCategory] = useState<"All" | Category>("All");
+
   const [draftType, setDraftType] = useState<"All" | "Income" | "Expenses">(
     "All",
   );
+
   const [draftStart, setDraftStart] = useState("");
   const [draftEnd, setDraftEnd] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<Category[]>([]);
@@ -537,10 +593,13 @@ export default function TransactionsPage() {
   const [draftTypes, setDraftTypes] = useState<FilterType[]>([]);
   const [draftMinAmount, setDraftMinAmount] = useState("");
   const [draftMaxAmount, setDraftMaxAmount] = useState("");
+
   const [draftReceiptFilter, setDraftReceiptFilter] =
     useState<ReceiptFilter>("All");
+
   const [draftReviewFilter, setDraftReviewFilter] =
     useState<ReviewFilter>("All");
+
   const [filterOpen, setFilterOpen] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
@@ -550,11 +609,13 @@ export default function TransactionsPage() {
   const [archiveReason, setArchiveReason] = useState("");
   const [actionError, setActionError] = useState("");
   const [page, setPage] = useState(1);
+
   const pageSize = useResponsivePageSize({
     defaultSize: 10,
     landscapeSize: 6,
     wideSize: 10,
   });
+
   const [newTitle, setNewTitle] = useState("");
   const [newAmount, setNewAmount] = useState("");
   const [newCategory, setNewCategory] = useState<Category>("Sonstiges");
@@ -572,6 +633,7 @@ export default function TransactionsPage() {
         .filter((item) => {
           const search = query.trim().toLowerCase();
           const date = parseDate(item.date);
+
           return (
             (!search ||
               `${item.title} ${item.category} ${item.date}`
@@ -620,20 +682,26 @@ export default function TransactionsPage() {
 
   const pages = Math.max(1, Math.ceil(results.length / pageSize));
   const currentPage = Math.min(page, pages);
+
   const visible = results.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize,
   );
+
   const rangeStart = results.length ? (currentPage - 1) * pageSize + 1 : 0;
   const rangeEnd = Math.min(currentPage * pageSize, results.length);
+
   const totalIncome = items
     .filter((item) => item.amount >= 0)
     .reduce((sum, item) => sum + item.amount, 0);
+
   const totalExpense = items
     .filter((item) => item.amount < 0)
     .reduce((sum, item) => sum + Math.abs(item.amount), 0);
+
   const netBalance = totalIncome - totalExpense;
   const trends = useMemo(() => calculateTrends(items), [items]);
+
   const activeFilterCount = [
     query.trim() ? 1 : 0,
     category !== "All" ? 1 : 0,
@@ -670,6 +738,7 @@ export default function TransactionsPage() {
     setDraftReviewFilter("All");
     setPage(1);
   }
+
   function openFilters() {
     setDraftCategory(category);
     setDraftType(type);
@@ -683,6 +752,7 @@ export default function TransactionsPage() {
     setDraftReviewFilter(reviewFilter);
     setFilterOpen(true);
   }
+
   function applyFilters() {
     setCategory(draftCategory);
     setType(draftType);
@@ -698,6 +768,7 @@ export default function TransactionsPage() {
     setFilterOpen(false);
     setDateOpen(false);
   }
+
   function toggleDraftCategory(value: Category) {
     setDraftCategories((current) =>
       current.includes(value)
@@ -705,6 +776,7 @@ export default function TransactionsPage() {
         : [...current, value],
     );
   }
+
   function toggleDraftType(value: FilterType) {
     setDraftTypes((current) =>
       current.includes(value)
@@ -718,13 +790,17 @@ export default function TransactionsPage() {
   async function addTransaction() {
     if (saving) return;
     const amount = Number(newAmount.replace(",", "."));
+
     if (!newTitle.trim() || !Number.isFinite(amount) || (!editing && !selectedCashRegisterId) || (editing && !correctionReason.trim())) {
       setFormError(editing ? "Please complete the description, amount, and correction reason." : "Please complete the cash register, description, and amount.");
+
       return;
     }
+
     setSaving(true);
     setFormError("");
     idempotencyKey.current ??= `ui-${crypto.randomUUID()}`;
+
     try {
       if (editing) {
         const corrected = await correctTransactionFromUi({
@@ -736,10 +812,13 @@ export default function TransactionsPage() {
           reason: correctionReason,
           idempotencyKey: idempotencyKey.current,
         });
+
         if (!corrected.success) {
           setFormError(corrected.error.message);
+
           return;
         }
+
         setItems((current) => current.map((item) => item.id === editing.id ? {
           ...item,
           id: corrected.data.id,
@@ -754,8 +833,10 @@ export default function TransactionsPage() {
         setCorrectionReason("");
         invalidateFinanceQuery("transactions", "wallets", "dashboard-snapshot", "report-snapshot", "report-kpis");
         idempotencyKey.current = null;
+
         return;
       }
+
       const persisted = await createManualTransactionFromUi({
         title: newTitle.trim(),
         amount: newAmount,
@@ -764,10 +845,13 @@ export default function TransactionsPage() {
         walletId: selectedCashRegisterId,
         idempotencyKey: idempotencyKey.current,
       });
+
       if (!persisted.ok) {
         setFormError("The transaction could not be saved.");
+
         return;
       }
+
       const selectedCashRegister = cashRegisters.find((item) => item.id === selectedCashRegisterId);
     setItems((current) => [
       {
@@ -851,6 +935,7 @@ export default function TransactionsPage() {
     setReceiptReviewError("");
     setReceiptPreviewLoading(true);
     const result = await createReceiptDownloadUrl(transaction.receiptId);
+
     if (result.success) setReceiptPreviewUrl(result.data.url);
     else setReceiptPreviewError(result.error.message);
     setReceiptPreviewLoading(false);
@@ -860,12 +945,16 @@ export default function TransactionsPage() {
     if (!receiptReviewTarget || saving) return;
     setSaving(true);
     setReceiptReviewError("");
+
     try {
       const result = await reviewReceipt({ receiptId: receiptReviewTarget.id, status: decision });
+
       if (!result.success) {
         setReceiptReviewError(result.error.message);
+
         return;
       }
+
       const nextStatus = decision === "approved" ? "Approved" : decision === "rejected" ? "Invalid" : "Pending review";
       setItems((current) => current.map((item) => item.receiptId === receiptReviewTarget.id ? { ...item, reviewStatus: nextStatus } : item));
       setReceiptReviewTarget(null);
@@ -879,16 +968,20 @@ export default function TransactionsPage() {
     if (!archiveTarget || saving || !archiveReason.trim()) return;
     setSaving(true);
     setActionError("");
+
     try {
       const result = await archiveTransactionAction({
         transactionId: archiveTarget.id.toString(),
         reason: archiveReason,
         idempotencyKey: archiveIdempotencyKey.current ?? `archive-${archiveTarget.id}`,
       });
+
       if (!result.success) {
         setActionError(result.error.message);
+
         return;
       }
+
       setItems((current) => current.filter((item) => item.id !== archiveTarget.id));
       setArchiveTarget(null);
       setArchiveReason("");
@@ -1020,6 +1113,7 @@ export default function TransactionsPage() {
                 ariaLabel="Select category"
                 value={category}
                 onChange={(value) => {
+                  // SAFETY: the dropdown options are the category union used by this state.
                   setCategory(value as typeof category);
                   setPage(1);
                 }}
@@ -1035,6 +1129,7 @@ export default function TransactionsPage() {
                 ariaLabel="Select type"
                 value={type}
                 onChange={(value) => {
+                  // SAFETY: the dropdown options are the transaction-type union used by this state.
                   setType(value as typeof type);
                   setPage(1);
                 }}
@@ -1091,6 +1186,7 @@ export default function TransactionsPage() {
                   />
                 ) : visible.map((transaction) => {
                   const Icon = transaction.icon;
+
                   return (
                     <div
                       role="button"
@@ -1283,7 +1379,8 @@ export default function TransactionsPage() {
             <div className={styles.filterColumns}>
               <fieldset className={styles.filterGroup}>
                 <legend>Category</legend>
-                {(["Material", "Sonstiges", "Veranstaltung"] as Category[]).map(
+                {/* SAFETY: these values are the complete category option set. */}
+                {categoryFilterOptions.map(
                   (value) => (
                     <label className={styles.checkRow} key={value}>
                       <input
@@ -1298,7 +1395,8 @@ export default function TransactionsPage() {
               </fieldset>
               <fieldset className={styles.filterGroup}>
                 <legend>Typ</legend>
-                {(["Income", "Expenses"] as FilterType[]).map((value) => (
+                {/* SAFETY: these values are the complete filter-type option set. */}
+                {transactionTypeFilterOptions.map((value) => (
                   <label className={styles.checkRow} key={value}>
                     <input
                       type="checkbox"
@@ -1339,7 +1437,8 @@ export default function TransactionsPage() {
               <fieldset className={styles.filterGroup}>
                 <legend>Receipt status</legend>
                 <div className={styles.segmented}>
-                  {(["All", "Vorhanden", "Fehlt"] as ReceiptFilter[]).map(
+                  {/* SAFETY: these values are the complete receipt-filter option set. */}
+                  {receiptFilterOptions.map(
                     (value) => (
                       <button
                         type="button"
@@ -1360,7 +1459,8 @@ export default function TransactionsPage() {
               <fieldset className={styles.filterGroup}>
                 <legend>Review status</legend>
                 <div className={styles.segmented}>
-                  {(["All", "Approved", "Pending review", "Invalid"] as ReviewFilter[]).map(
+                  {/* SAFETY: these values are the complete review-filter option set. */}
+                  {reviewFilterOptions.map(
                     (value) => (
                       <button
                         type="button"
@@ -1452,7 +1552,10 @@ export default function TransactionsPage() {
                 ariaLabel="Select type"
                 label="Type"
                 value={newType}
-                onChange={(value) => setNewType(value as typeof newType)}
+                onChange={(value) => {
+                  // SAFETY: the dropdown options are the new-transaction type union.
+                  setNewType(value as typeof newType);
+                }}
                 className={styles.formDropdown}
                 options={[
                   { value: "Einnahme", label: "Income" },
@@ -1463,7 +1566,10 @@ export default function TransactionsPage() {
                 ariaLabel="Select category"
                 label="Category"
                 value={newCategory}
-                onChange={(value) => setNewCategory(value as Category)}
+                onChange={(value) => {
+                  // SAFETY: the dropdown options are the category union.
+                  setNewCategory(value as Category);
+                }}
                 className={styles.formDropdown}
                 options={[
                   { value: "Material", label: "Material" },

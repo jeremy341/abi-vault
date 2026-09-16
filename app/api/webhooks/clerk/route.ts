@@ -1,6 +1,11 @@
 import { verifyWebhook } from "@clerk/nextjs/webhooks";
 import type { NextRequest } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import {
+  applicationRoleFromClerkRole,
+  applicationRoleFromMetadata,
+  type ClerkApplicationMetadata,
+} from "@/lib/auth/application-role";
 
 function displayName(data: {
   first_name?: string | null;
@@ -18,27 +23,6 @@ function primaryEmail(data: {
   return data.email_addresses?.[0]?.email_address ?? "";
 }
 
-function applicationRoleFromMetadata(metadata: unknown) {
-  if (metadata && typeof metadata === "object") {
-    const appRole = (metadata as { abiVaultRole?: unknown }).abiVaultRole;
-    if (appRole === "admin" || appRole === "supervisor" || appRole === "student") {
-      return appRole;
-    }
-  }
-  return null;
-}
-
-function applicationRoleFromClerkRole(
-  role: string | null | undefined,
-  metadata?: unknown,
-) {
-  const metadataRole = applicationRoleFromMetadata(metadata);
-  if (metadataRole) return metadataRole;
-  if (role === "org:admin" || role === "admin") return "admin" as const;
-  if (role === "org:supervisor" || role === "supervisor") return "supervisor" as const;
-  return "student" as const;
-}
-
 async function recordWebhook(
   admin: ReturnType<typeof createSupabaseAdminClient>,
   eventId: string,
@@ -52,6 +36,7 @@ async function recordWebhook(
     .maybeSingle();
 
   if (lookupError) throw lookupError;
+
   if (existing?.status === "processed") return false;
 
   if (!existing) {
@@ -61,6 +46,7 @@ async function recordWebhook(
       event_type: eventType,
       status: "received",
     });
+
     if (error && error.code !== "23505") throw error;
   }
 
@@ -87,9 +73,11 @@ async function markWebhook(
 
 export async function POST(request: NextRequest) {
   const eventId = request.headers.get("svix-id");
+
   if (!eventId) return new Response("Missing webhook event id", { status: 400 });
 
   let event;
+
   try {
     event = await verifyWebhook(request);
   } catch {
@@ -101,10 +89,12 @@ export async function POST(request: NextRequest) {
 
   try {
     shouldProcess = await recordWebhook(admin, eventId, event.type);
+
     if (!shouldProcess) return new Response("Already processed", { status: 200 });
 
     if (event.type === "user.created" || event.type === "user.updated") {
       const user = event.data;
+
       const { error } = await admin.from("profiles").upsert(
         {
           clerk_user_id: user.id,
@@ -114,6 +104,7 @@ export async function POST(request: NextRequest) {
         },
         { onConflict: "clerk_user_id" },
       );
+
       if (error) throw error;
     }
 
@@ -126,12 +117,14 @@ export async function POST(request: NextRequest) {
           email: "",
         })
         .eq("clerk_user_id", event.data.id);
+
       if (error) throw error;
 
       const { error: membershipError } = await admin
         .from("committee_memberships")
         .update({ status: "removed" })
         .eq("clerk_user_id", event.data.id);
+
       if (membershipError) throw membershipError;
     }
 
@@ -143,6 +136,7 @@ export async function POST(request: NextRequest) {
         },
         { onConflict: "organization_id" },
       );
+
       if (error) throw error;
     }
 
@@ -153,8 +147,10 @@ export async function POST(request: NextRequest) {
       const membership = event.data;
       const organizationId = membership.organization.id;
       const clerkUserId = membership.public_user_data.user_id;
-      const membershipMetadata = (membership as { public_metadata?: unknown }).public_metadata;
+      // SAFETY: Clerk webhook membership data carries public_metadata at this boundary.
+      const membershipMetadata = (membership as { public_metadata?: ClerkApplicationMetadata }).public_metadata;
       const invitedApplicationRole = applicationRoleFromMetadata(membershipMetadata);
+
       const userName = [
         membership.public_user_data.first_name,
         membership.public_user_data.last_name,
@@ -169,6 +165,7 @@ export async function POST(request: NextRequest) {
           { organization_id: organizationId, name: membership.organization.name },
           { onConflict: "organization_id" },
         );
+
       if (committeeError) throw committeeError;
 
       const { error: profileError } = await admin.from("profiles").upsert(
@@ -179,6 +176,7 @@ export async function POST(request: NextRequest) {
         },
         { onConflict: "clerk_user_id" },
       );
+
       if (profileError) throw profileError;
 
       const { data: existing } = await admin
@@ -202,6 +200,7 @@ export async function POST(request: NextRequest) {
           },
           { onConflict: "organization_id,clerk_user_id" },
         );
+
       if (membershipError) throw membershipError;
     }
 
@@ -211,14 +210,17 @@ export async function POST(request: NextRequest) {
         .update({ status: "removed" })
         .eq("organization_id", event.data.organization.id)
         .eq("clerk_user_id", event.data.public_user_data.user_id);
+
       if (error) throw error;
     }
 
     await markWebhook(admin, eventId, "processed");
+
     return new Response("OK", { status: 200 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     await markWebhook(admin, eventId, "failed", message);
+
     return new Response("Webhook processing failed", { status: 500 });
   }
 }

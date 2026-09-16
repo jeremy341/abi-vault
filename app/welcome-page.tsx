@@ -5,6 +5,7 @@ import styles from "./welcome-page.module.css";
 
 export default function StartPage() {
   const localMode = isLocalMode();
+
   return (
     <main
       className={`${styles.page} soft-grid flex min-h-[100dvh] flex-col overflow-hidden`}

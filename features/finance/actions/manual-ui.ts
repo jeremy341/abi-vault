@@ -11,26 +11,33 @@ import { actionFailure, actionSuccess, type ActionResult } from "@/lib/api/resul
 
 export async function createManualTransactionFromUi(input: ManualUiTransactionInput): Promise<ActionResult<{ id: string }>> {
   const parsed = manualUiTransactionSchema.safeParse(input);
+
   if (!parsed.success) return actionFailure("INVALID_INPUT", "The transaction data is invalid.");
   const context = await requirePermission("createTransactions");
   const supabase = await createSupabaseServerClient();
   let amountMinor: bigint;
+
   try {
     amountMinor = parseManualUiAmount(parsed.data.amount);
   } catch {
     return actionFailure("INVALID_AMOUNT", "The transaction amount is invalid.");
   }
+
   const type = parsed.data.direction;
+
   const [{ data: wallet }, { data: category }] = await Promise.all([
     supabase.from("wallets").select("id").eq("organization_id", context.organizationId).eq("id", parsed.data.walletId).eq("type", "cash").eq("status", "active").maybeSingle(),
     supabase.from("categories").select("id").eq("organization_id", context.organizationId).eq("name", parsed.data.categoryName).eq("kind", type).is("archived_at", null).maybeSingle(),
   ]);
+
   const today = new Date().toISOString().slice(0, 10);
   const [year, month] = today.split("-").map(Number);
   const { data: period } = await supabase.from("accounting_periods").select("id").eq("organization_id", context.organizationId).eq("year", year).eq("month", month).eq("status", "open").maybeSingle();
+
   if (!wallet || !category || !period) {
     return actionFailure("ACCOUNT_SETUP_INCOMPLETE", "The cash register setup is incomplete.");
   }
+
   const { data, error } = await supabase.rpc("create_manual_transaction", {
     p_organization_id: context.organizationId,
     p_amount_minor: amountMinor.toString(),
@@ -44,6 +51,7 @@ export async function createManualTransactionFromUi(input: ManualUiTransactionIn
     p_booked_at: today,
     p_idempotency_key: parsed.data.idempotencyKey,
   });
+
   return error
     ? actionFailure("TRANSACTION_CREATE_FAILED", "The transaction could not be saved.")
     : actionSuccess({ id: String(data) });

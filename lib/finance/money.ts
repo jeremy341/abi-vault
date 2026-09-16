@@ -2,6 +2,7 @@ const USD_AMOUNT_PATTERN = /^(?:0|[1-9]\d*)(?:[.,]\d{1,2})?$/;
 
 export function parseDollarToMinor(value: string) {
   const raw = value.trim().replace(/\s/g, "");
+
   const normalized = raw.includes(",")
     ? raw.replace(/\./g, "").replace(",", ".")
     : raw;
@@ -11,6 +12,7 @@ export function parseDollarToMinor(value: string) {
   }
 
   const [whole, fraction = ""] = normalized.split(".");
+
   return BigInt(whole) * BigInt(100) + BigInt(fraction.padEnd(2, "0"));
 }
 

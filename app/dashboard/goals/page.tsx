@@ -37,6 +37,7 @@ const dollar = new Intl.NumberFormat("en-US", {
   currency: "USD",
   maximumFractionDigits: 0,
 });
+
 const dollarPrecise = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
@@ -113,12 +114,16 @@ export default function GoalsPage() {
   const mode = usePresentationMode();
   const { userId, orgId } = useAppAuth();
   const cacheScope = `${orgId ?? "no-org"}:${userId ?? "anonymous"}`;
+
   type DashboardResult = Awaited<ReturnType<typeof getDashboardSnapshot>>;
+
   const initialSnapshot = getFinanceCacheState<DashboardResult>("dashboard-snapshot", cacheScope);
   const initialGoals = initialSnapshot.data?.ok ? initialSnapshot.data.goals : [];
+
   const [goals, setGoals] = useState<Goal[]>(() => initialGoals.map((goal) => {
     const target = Number(goal.target_amount_minor) / 100;
     const saved = Number(goal.saved_amount_minor) / 100;
+
     return {
       id: goal.id,
       title: goal.title,
@@ -128,6 +133,7 @@ export default function GoalsPage() {
       date: new Date(`${goal.deadline}T00:00:00`).toLocaleDateString("en-GB"),
     };
   }));
+
   const [loading, setLoading] = useState(!initialSnapshot.data?.ok);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingGoalIndex, setEditingGoalIndex] = useState<number | null>(null);
@@ -145,13 +151,17 @@ export default function GoalsPage() {
     cachedFinanceQuery("dashboard-snapshot", getDashboardSnapshot, { scope: cacheScope })
       .then((result) => {
         if (!active) return;
+
         if (!result.ok) {
           setLoadError("The goals could not be loaded.");
+
           return;
         }
+
         setGoals(result.goals.map((goal) => {
           const target = Number(goal.target_amount_minor) / 100;
           const saved = Number(goal.saved_amount_minor) / 100;
+
           return {
             id: goal.id,
             title: goal.title,
@@ -168,6 +178,7 @@ export default function GoalsPage() {
       .finally(() => {
         if (active) setLoading(false);
       });
+
     return () => {
       active = false;
     };
@@ -177,16 +188,19 @@ export default function GoalsPage() {
     () => goals.reduce((sum, goal) => sum + goal.target, 0),
     [goals],
   );
+
   const totalSaved = useMemo(
     () => goals.reduce((sum, goal) => sum + goal.saved, 0),
     [goals],
   );
+
   const overallProgress = totalTarget
     ? Math.round((totalSaved / totalTarget) * 100)
     : 0;
 
   const previewTarget = Number(targetAmount.replace(",", ".")) || 0;
   const previewSaved = Number(savedAmount.replace(",", ".")) || 0;
+
   const previewProgress = previewTarget
     ? Math.min(100, Math.round((previewSaved / previewTarget) * 100))
     : 0;
@@ -219,21 +233,25 @@ export default function GoalsPage() {
 
     // Convert DD.MM.YYYY to YYYY-MM-DD for date input
     const parts = goal.date.split(".");
+
     if (parts.length === 3) {
       setDeadline(`${parts[2]}-${parts[1]}-${parts[0]}`);
     } else {
       setDeadline(goal.date);
     }
+
     setFormError("");
     setModalOpen(true);
   }
 
   async function handleSaveGoal(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
     if (saving) return;
     setSaving(true);
     setFormError("");
     idempotencyKey.current ??= `goal-${crypto.randomUUID()}`;
+
     try {
     const formData = new FormData(event.currentTarget);
     const submittedName = String(formData.get("goalName") ?? "").trim();
@@ -247,12 +265,15 @@ export default function GoalsPage() {
       setFormError(
         "Please complete the name, target amount, and target date.",
       );
+
       return;
     }
+
     if (saved < 0 || saved > target) {
       setFormError(
         "The amount already saved must be between $0 and the target amount.",
       );
+
       return;
     }
 
@@ -262,6 +283,7 @@ export default function GoalsPage() {
 
     if (editingGoalIndex !== null) {
       const currentGoal = goals[editingGoalIndex];
+
       if (currentGoal && /^[0-9a-f-]{36}$/i.test(currentGoal.id)) {
         const result = await updateGoal({
           goalId: currentGoal.id,
@@ -271,11 +293,14 @@ export default function GoalsPage() {
           deadline: submittedDeadline,
           reason: "Goal updated in the goal dialog",
         });
+
         if (!result.ok) {
           setFormError("The goal could not be saved.");
+
           return;
         }
       }
+
       // Update existing goal
       setGoals((current) =>
         current.map((g, idx) =>
@@ -300,10 +325,13 @@ export default function GoalsPage() {
         visibility: "private",
         idempotencyKey: idempotencyKey.current,
       });
+
       if (!result.success) {
         setFormError("The goal could not be saved.");
+
         return;
       }
+
       // Add new goal
       setGoals((current) => [
         ...current,
@@ -317,6 +345,7 @@ export default function GoalsPage() {
         },
       ]);
     }
+
     invalidateFinanceQuery("goals", "dashboard-snapshot", "report-snapshot");
     idempotencyKey.current = null;
     closeModal();
@@ -330,18 +359,23 @@ export default function GoalsPage() {
   async function handleDeleteGoal() {
     if (editingGoalIndex === null || saving) return;
     setSaving(true);
+
     try {
       const currentGoal = goals[editingGoalIndex];
+
       if (/^[0-9a-f-]{36}$/i.test(currentGoal.id)) {
         const result = await archiveGoal({
           goalId: currentGoal.id,
           reason: "Goal archived in the goal dialog",
         });
+
         if (!result.ok) {
           setFormError("The goal could not be archived.");
+
           return;
         }
       }
+
       setGoals((current) => current.filter((_, idx) => idx !== editingGoalIndex));
       invalidateFinanceQuery("goals", "dashboard-snapshot", "report-snapshot");
       closeModal();
@@ -510,6 +544,7 @@ export default function GoalsPage() {
                         const originalIndex = goals.findIndex(
                           (g) => g.title === goal.title,
                         );
+
                         return (
                           <button
                             type="button"

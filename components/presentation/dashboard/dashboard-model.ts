@@ -56,23 +56,29 @@ export function displayMinor(value: string) {
 export function formatLastTransaction(date: string | undefined) {
   if (!date) return "No transactions yet";
   const parsed = new Date(date);
+
   if (Number.isNaN(parsed.getTime())) return "No transactions yet";
 
   const days = Math.max(
     0,
     Math.floor((Date.now() - parsed.getTime()) / 86_400_000),
   );
+
   const time = parsed.toLocaleTimeString("en-GB", {
     hour: "2-digit",
     minute: "2-digit",
   });
+
   if (days === 0) return `${time}, today`;
+
   if (days === 1) return `${time}, 1 day ago`;
+
   return `${time}, ${days} days ago`;
 }
 
 export function displayDashboardTransactions(snapshot: DashboardSnapshot | null) {
   if (!snapshot) return [];
+
   return snapshot.transactions.map((item) => ({
     title: item.title,
     category: item.category,
@@ -85,9 +91,11 @@ export function displayDashboardTransactions(snapshot: DashboardSnapshot | null)
 
 export function displayDashboardGoals(snapshot: DashboardSnapshot | null) {
   if (!snapshot) return [];
+
   return snapshot.goals.map((goal) => {
     const target = Number(goal.target_amount_minor) / 100;
     const saved = Number(goal.saved_amount_minor) / 100;
+
     return {
       title: goal.title,
       target: target.toLocaleString("en-US", {
@@ -104,6 +112,7 @@ export function displayDashboardGoals(snapshot: DashboardSnapshot | null) {
 
 export function displayDashboardCategories(snapshot: DashboardSnapshot | null) {
   if (!snapshot) return [];
+
   return snapshot.categories.map((item, index) => ({
     title: item.name,
     amount: displayMinor(item.amountMinor),
@@ -126,6 +135,7 @@ export function primaryCashWallet(snapshot: DashboardSnapshot | null) {
 
 export function displayDashboardReviews(snapshot: DashboardReviewSnapshot | null) {
   if (!snapshot) return [];
+
   return snapshot.transactions
     .filter((item) => item.reviewStatus !== "Approved")
     .map((item) => ({

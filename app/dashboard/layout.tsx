@@ -24,6 +24,7 @@ export default async function DashboardLayout({
   if (!isAuthenticated) {
     redirect("/sign-in");
   }
+
   if (orgId) await ensureCurrentOrganizationData();
 
   return (

@@ -18,6 +18,7 @@ import phoneStyles from "./settings-phone.module.css";
 import { usePresentationMode } from "@/hooks/use-presentation-mode";
 import { getCommitteeSettingsForCurrentOrganization } from "@/features/finance/actions/queries";
 import { updateCommitteeSettings } from "@/features/settings/actions/settings";
+import { updateCommitteeSettingsSchema } from "@/features/settings/schemas/settings";
 
 type Section = "general" | "notifications" | "permissions" | "data";
 
@@ -48,6 +49,7 @@ const sections = [
   },
 ];
 
+// SAFETY: settings keys come from the literal notification and section maps in this module.
 function PhoneSettingsView({
   loading,
   activeSection,
@@ -79,6 +81,7 @@ function PhoneSettingsView({
 }) {
   const active =
     sections.find((section) => section.id === activeSection) ?? sections[0];
+
   const ActiveIcon = active.icon;
 
   return (
@@ -86,6 +89,7 @@ function PhoneSettingsView({
       <nav className={phoneStyles.nav} aria-label="Einstellungsbereiche" data-ui-slot="toolbar">
         {sections.map((section) => {
           const Icon = section.icon;
+
           return (
             <button
               type="button"
@@ -192,7 +196,9 @@ function PhoneSettingsView({
               ],
               ["goals", "Goal-Progress", "Wichtige Progresssmarken"],
             ].map(([key, label, description]) => {
+              // SAFETY: notification rows use the keys declared by the notifications state.
               const checked = notifications[key as keyof typeof notifications];
+
               return (
                 <div className={phoneStyles.switchRow} key={key}>
                   <span>
@@ -207,6 +213,7 @@ function PhoneSettingsView({
                     className={`${phoneStyles.switch} ${checked ? phoneStyles.switchOn : ""}`}
                     onClick={() =>
                       onToggleNotification(
+                        // SAFETY: notification rows are generated from the declared notification keys.
                         key as "receipts" | "payments" | "goals",
                       )
                     }
@@ -301,16 +308,19 @@ function PhoneSettingsView({
   );
 }
 
+// SAFETY: settings keys and parsed persistence values are constrained by the settings schema.
 export default function SettingsPage() {
   const mode = usePresentationMode();
   const [activeSection, setActiveSection] = useState<Section>("general");
   const [workspaceName, setWorkspaceName] = useState("Abi 2026");
   const [school, setSchool] = useState("Example School Berlin");
+
   const [notifications, setNotifications] = useState({
     receipts: true,
     payments: true,
     goals: false,
   });
+
   const [statusMessage, setStatusMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -321,20 +331,20 @@ export default function SettingsPage() {
     getCommitteeSettingsForCurrentOrganization()
       .then((result) => {
         if (!active) return;
+
         if (!result.ok || !result.data) {
           setLoadError("Settings could not be loaded.");
+
           return;
         }
+
         setSchool(result.data.school_name);
         setWorkspaceName(`Abi ${result.data.graduation_year}`);
         const stored = result.data.notifications;
-        if (stored && typeof stored === "object") {
-          setNotifications((current) => ({
-            receipts: typeof stored.receipts === "boolean" ? stored.receipts : current.receipts,
-            payments: typeof stored.payments === "boolean" ? stored.payments : current.payments,
-            goals: typeof stored.goals === "boolean" ? stored.goals : current.goals,
-          }));
-        }
+
+        const parsedNotifications = updateCommitteeSettingsSchema.shape.notifications.safeParse(stored);
+
+        if (parsedNotifications.success) setNotifications(parsedNotifications.data);
       })
       .catch(() => {
         if (active) setLoadError("Settings could not be loaded.");
@@ -342,6 +352,7 @@ export default function SettingsPage() {
       .finally(() => {
         if (active) setLoading(false);
       });
+
     return () => {
       active = false;
     };
@@ -350,12 +361,14 @@ export default function SettingsPage() {
   async function saveSettings() {
     if (saving) return;
     setSaving(true);
+
     try {
       const result = await updateCommitteeSettings({
         schoolName: school,
         graduationYear: Number(workspaceName.replace(/\D/g, "")) || 2026,
         notifications,
       });
+
       setStatusMessage(result.ok ? "Changes saved." : "Changes could not be saved.");
     } catch {
       setStatusMessage("Changes could not be saved.");
@@ -371,6 +384,7 @@ export default function SettingsPage() {
 
   const active =
     sections.find((section) => section.id === activeSection) ?? sections[0];
+
   const ActiveIcon = active.icon;
 
   if (mode === "phone") {
@@ -411,6 +425,7 @@ export default function SettingsPage() {
         <nav aria-label="Einstellungsbereiche">
           {sections.map((section) => {
             const Icon = section.icon;
+
             return (
               <button
                 type="button"

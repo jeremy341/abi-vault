@@ -49,7 +49,9 @@ export function projectFlowTotals(
 
   for (const transaction of transactions) {
     const amount = toMinor(transaction.amountMinor);
+
     if (transaction.type === "income") incomeMinor += amount;
+
     if (transaction.type === "expense") expenseMinor += amount;
   }
 
@@ -144,10 +146,13 @@ export function projectMonthlyFlow(
   for (const transaction of transactions) {
     const monthKey = transaction.date?.slice(0, 7);
     const flow = monthKey ? monthly.get(monthKey) : undefined;
+
     if (!flow) continue;
 
     const amount = Math.abs(Number(transaction.amountMinor)) / 100;
+
     if (transaction.type === "income") flow.income += amount;
+
     if (transaction.type === "expense") flow.expenses += amount;
   }
 

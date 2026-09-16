@@ -7,5 +7,6 @@ export default async function PeriodsLayout({ children }: { children: React.Reac
   } catch {
     redirect("/dashboard");
   }
+
   return children;
 }

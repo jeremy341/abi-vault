@@ -21,8 +21,10 @@ export function useDashboardSnapshot() {
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     let active = true;
+
     const applyResult = (result: Awaited<ReturnType<typeof getDashboardSnapshot>>) => {
       if (!active) return;
+
       if (result.ok) {
         setSnapshot(result);
         setError(null);
@@ -30,6 +32,7 @@ export function useDashboardSnapshot() {
         setError("The financial overview could not be loaded.");
       }
     };
+
     const unsubscribe = subscribeFinanceQuery<Awaited<ReturnType<typeof getDashboardSnapshot>>>("dashboard-snapshot", applyResult, scope);
     cachedFinanceQuery("dashboard-snapshot", getDashboardSnapshot, { scope }).then(applyResult).catch(() => {
       if (active) setError("The financial overview could not be loaded.");
@@ -39,7 +42,9 @@ export function useDashboardSnapshot() {
         setRefreshing(false);
       }
     });
+
     return () => { active = false; unsubscribe(); };
   }, [scope]);
+
   return { snapshot, loading, refreshing, error };
 }

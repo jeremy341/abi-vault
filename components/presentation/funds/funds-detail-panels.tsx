@@ -1,7 +1,6 @@
 "use client";
 
 import { Activity, Banknote, Check, Pencil, Plus, ShieldCheck, WalletCards } from "lucide-react";
-import { InlineLoading } from "@/components/ui/loading-state";
 import { CardStage, PanelLoading } from "./funds-controls";
 import type { AdaptiveFundsViewProps } from "./funds-types";
 import styles from "@/app/dashboard/funds/funds-adaptive.module.css";
@@ -86,6 +85,7 @@ export function BankDetail({
 
 export function CashDetail({ props }: { props: AdaptiveFundsViewProps }) {
   const { cashBox, dollar } = props;
+
   if (props.loading) {
     return (
       <section className={styles.cashDetail}>
@@ -145,6 +145,7 @@ export function CashDetail({ props }: { props: AdaptiveFundsViewProps }) {
 
 export function Reconciliation({ props }: { props: AdaptiveFundsViewProps }) {
   const { cashBox, dollar } = props;
+
   if (props.loading) {
     return (
       <section className={styles.reconciliation}>
@@ -163,6 +164,7 @@ export function Reconciliation({ props }: { props: AdaptiveFundsViewProps }) {
   const hasCashBox = Boolean(cashBox.id);
   const hasCount = Boolean(cashBox.lastCountDate);
   const matched = hasCashBox && hasCount && cashBox.countStatus === "matched";
+
   return (
     <section className={styles.reconciliation}>
       <header className={styles.panelHeader}>
@@ -329,6 +331,5 @@ export function AccessPanel({ props }: { props: AdaptiveFundsViewProps }) {
     </aside>
   );
 }
-
 
 

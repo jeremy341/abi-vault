@@ -59,12 +59,15 @@ function PhonePeopleView({
   onAdd: () => void;
 }) {
   const active = people.filter((person) => person.status === "Active").length;
+
   const admins = people.filter(
     (person) => person.role === "Administrator",
   ).length;
+
   const supervisors = people.filter(
     (person) => person.role === "Supervisor",
   ).length;
+
   const students = people.filter((person) => person.role === "Member").length;
 
   return (
@@ -192,25 +195,33 @@ export default function PeoplePage() {
   const [message, setMessage] = useState("");
   const [loadError, setLoadError] = useState("");
   const [openMenuId, setOpenMenuId] = useState<number | string | null>(null);
+
   const [busyPersonId, setBusyPersonId] = useState<number | string | null>(
     null,
   );
+
   const [inviteSaving, setInviteSaving] = useState(false);
+
   const [linkSaving, setLinkSaving] = useState<"admin" | "supervisor" | null>(
     null,
   );
+
   const [roleLinks, setRoleLinks] = useState<
     Partial<Record<RoleInviteLink["role"], RoleInviteLink>>
   >({});
+
   useEffect(() => {
     let active = true;
     listMembersForCurrentOrganization()
       .then((result) => {
         if (!active) return;
+
         if (!result.ok) {
           setLoadError("The members could not be loaded.");
+
           return;
         }
+
         setPeople(
           result.items.map((member) => ({
             id: member.id,
@@ -248,10 +259,12 @@ export default function PeoplePage() {
       .finally(() => {
         if (active) setLoading(false);
       });
+
     return () => {
       active = false;
     };
   }, []);
+
   const filteredPeople = useMemo(
     () =>
       people.filter((person) =>
@@ -286,6 +299,7 @@ export default function PeoplePage() {
 
     document.addEventListener("keydown", closeMenu);
     document.addEventListener("pointerdown", closeMenu);
+
     return () => {
       document.removeEventListener("keydown", closeMenu);
       document.removeEventListener("pointerdown", closeMenu);
@@ -293,21 +307,28 @@ export default function PeoplePage() {
   }, [openMenuId]);
 
   async function cycleRole(personId: number | string) {
-    if (busyPersonId !== null || typeof personId !== "string") return;
+    if (busyPersonId !== null) return;
     const selected = people.find((person) => person.id === personId);
+
     if (!selected) return;
     const nextRole = selected.role === "Administrator" ? "supervisor" : "admin";
-    if (/^[^\s]+$/.test(personId)) {
-      setBusyPersonId(personId);
+
+    const personKey = String(personId);
+
+    if (/^[^\s]+$/.test(personKey)) {
+      setBusyPersonId(personKey);
+
       try {
         const result = await updateMemberRole({
-          clerkUserId: personId,
+          clerkUserId: personKey,
           role: nextRole,
           reason: "Role changed through member management",
         });
+
         if (!result.ok) {
           setMessage("The role could not be updated.");
           setOpenMenuId(null);
+
           return;
         }
       } catch {
@@ -317,11 +338,14 @@ export default function PeoplePage() {
         setBusyPersonId(null);
       }
     }
+
     setPeople((current) =>
       current.map((person) => {
         if (person.id !== personId) return person;
+
         const role =
           person.role === "Administrator" ? "Supervisor" : "Administrator";
+
         return {
           ...person,
           role,
@@ -336,31 +360,40 @@ export default function PeoplePage() {
 
   async function addPerson(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
     if (inviteSaving) return;
+
     if (!inviteEmail.trim()) {
       setMessage("Please enter an email address.");
+
       return;
     }
+
     setInviteSaving(true);
+
     const role =
       newRole === "Administrator"
         ? "admin"
         : newRole === "Supervisor"
           ? "supervisor"
           : "supervisor";
+
     try {
       const invitation = await inviteMember({
         email: inviteEmail.trim(),
         role,
       });
+
       if (!invitation.ok) {
         setMessage(
           invitation.error.code === "INVALID_INPUT"
             ? "Please enter a valid email address and choose a role."
             : "The invitation could not be sent.",
         );
+
         return;
       }
+
       setInviteEmail("");
       setMessage(`Invitation sent to ${inviteEmail.trim()}.`);
     } catch {
@@ -371,13 +404,16 @@ export default function PeoplePage() {
   }
 
   async function handleRemovePerson(personId: number | string) {
-    if (busyPersonId !== null || typeof personId !== "string") return;
-    setBusyPersonId(personId);
+    if (busyPersonId !== null) return;
+    const personKey = String(personId);
+    setBusyPersonId(personKey);
+
     try {
       const result = await removeMember({
-        clerkUserId: personId,
+        clerkUserId: personKey,
         reason: "Member removed through member management",
       });
+
       if (!result.ok) {
         setMessage(
           result.error.code === "LAST_ADMIN_REQUIRED"
@@ -385,8 +421,10 @@ export default function PeoplePage() {
             : "The person could not be removed.",
         );
         setOpenMenuId(null);
+
         return;
       }
+
       setPeople((current) => current.filter((entry) => entry.id !== personId));
       setMessage("Person removed.");
       setOpenMenuId(null);
@@ -402,12 +440,16 @@ export default function PeoplePage() {
     if (linkSaving) return;
     setLinkSaving(role);
     setMessage("");
+
     try {
       const result = await createRoleInviteLink({ role });
+
       if (!result.ok) {
         setMessage("The invitation link could not be created.");
+
         return;
       }
+
       setRoleLinks((current) => ({ ...current, [role]: result.data }));
       setMessage(`${role === "admin" ? "Admin" : "Supervisor"} link created.`);
     } catch {
@@ -419,6 +461,7 @@ export default function PeoplePage() {
 
   async function copyRoleLink(role: RoleInviteLink["role"]) {
     const link = roleLinks[role];
+
     if (!link) return;
     await navigator.clipboard.writeText(link.url);
     setMessage("Invitation link copied.");
@@ -674,6 +717,7 @@ export default function PeoplePage() {
                 <div className={styles.inviteLinkList}>
                   {(["supervisor", "admin"] as const).map((role) => {
                     const link = roleLinks[role];
+
                     return (
                       <div className={styles.inviteLinkCard} key={role}>
                         <span className={styles.inviteLinkIcon}>

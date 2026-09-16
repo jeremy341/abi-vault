@@ -7,6 +7,7 @@ export default async function SignInPage({
   searchParams?: Promise<{ redirect_url?: string }>;
 }) {
   const params = await searchParams;
+
   const redirectUrl = params?.redirect_url?.startsWith("/")
     ? params.redirect_url
     : "/dashboard";

@@ -67,7 +67,7 @@ export const navigationItems = [
   },
 ] as const;
 
-export const pageInformation: Record<string, { title: string; description: string }> = {
+export const pageInformation = {
   "/dashboard": {
     title: "Financial overview",
     description: "Class finances at a glance.",
@@ -104,4 +104,9 @@ export const pageInformation: Record<string, { title: string; description: strin
     title: "Periods",
     description: "Open and safely close accounting periods.",
   },
-};
+} satisfies Record<string, { title: string; description: string }>;
+
+export function pageInformationFor(pathname: string) {
+  // SAFETY: unknown paths intentionally fall back to the dashboard overview.
+  return pageInformation[pathname as keyof typeof pageInformation] ?? pageInformation["/dashboard"];
+}

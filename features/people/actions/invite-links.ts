@@ -23,16 +23,19 @@ function hashToken(token: string) {
 
 async function appOrigin() {
   const configured = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");
+
   if (configured) return configured;
 
   const requestHeaders = await headers();
   const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");
   const protocol = requestHeaders.get("x-forwarded-proto") ?? "http";
+
   return host ? `${protocol}://${host}` : "http://localhost:3000";
 }
 
 export async function createRoleInviteLink(input: InviteLinkRoleInput): Promise<ActionResult<{ id: string; role: "admin" | "supervisor"; expiresAt: string; url: string }>> {
   const parsed = inviteLinkRoleSchema.safeParse(input);
+
   if (!parsed.success) return actionFailure("INVALID_INPUT", "The invitation link data is invalid.");
 
   const context = await requirePermission("manageMemberships");
@@ -67,11 +70,14 @@ export async function createRoleInviteLink(input: InviteLinkRoleInput): Promise<
 
 export async function acceptRoleInviteLink(token: string): Promise<ActionResult<{ organizationId: string; role: "admin" | "supervisor" }>> {
   const session = await auth();
+
   if (!session.userId) return actionFailure("UNAUTHENTICATED", "Sign-in is required.");
+
   if (!token || token.length < 32) return actionFailure("INVALID_LINK", "The invitation link is invalid.");
 
   const admin = createSupabaseAdminClient();
   const tokenHash = hashToken(token);
+
   const { data: invite, error: lookupError } = await admin
     .from("organization_invite_links")
     .select("id, organization_id, role, max_uses, uses, expires_at, revoked_at")
@@ -79,6 +85,7 @@ export async function acceptRoleInviteLink(token: string): Promise<ActionResult<
     .maybeSingle();
 
   if (lookupError || !invite) return actionFailure("INVALID_LINK", "The invitation link is invalid.");
+
   if (invite.revoked_at || invite.uses >= invite.max_uses || new Date(invite.expires_at).getTime() <= Date.now()) {
     return actionFailure("LINK_EXPIRED", "The invitation link is no longer valid.");
   }
@@ -92,10 +99,12 @@ export async function acceptRoleInviteLink(token: string): Promise<ActionResult<
     .eq("clerk_user_id", session.userId)
     .eq("status", "active")
     .maybeSingle();
+
   if (existingMembershipError) return actionFailure("MEMBERSHIP_SYNC_FAILED", "The membership could not be synchronized.");
 
   const client = await clerkClient();
   let createdClerkMembership = false;
+
   try {
     if (!existingMembership) {
       await client.organizations.createOrganizationMembership({
@@ -130,6 +139,7 @@ export async function acceptRoleInviteLink(token: string): Promise<ActionResult<
         // webhook remains the final reconciliation path if cleanup fails.
       }
     }
+
     return actionFailure("LINK_ALREADY_USED", "The invitation link has already been used.");
   }
 
@@ -138,6 +148,7 @@ export async function acceptRoleInviteLink(token: string): Promise<ActionResult<
     : invite.role === "admin"
       ? "admin"
       : "supervisor";
+
   const applicationClerkRole = applicationRole === "admin" ? "org:admin" : "org:member";
 
   const { error: membershipError } = await admin
@@ -156,6 +167,7 @@ export async function acceptRoleInviteLink(token: string): Promise<ActionResult<
       .update({ uses: invite.uses })
       .eq("id", invite.id)
       .eq("uses", invite.uses + 1);
+
     if (createdClerkMembership) {
       try {
         await client.organizations.deleteOrganizationMembership({
@@ -166,7 +178,9 @@ export async function acceptRoleInviteLink(token: string): Promise<ActionResult<
         // The membership webhook remains the final reconciliation path.
       }
     }
+
     return actionFailure("MEMBERSHIP_SYNC_FAILED", "The membership could not be synchronized.");
   }
+
   return actionSuccess({ organizationId: invite.organization_id, role: applicationRole });
 }

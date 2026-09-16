@@ -28,6 +28,7 @@ export default function DashboardCashCarousel({
 }) {
   const wallets =
     snapshot?.wallets.filter((wallet) => wallet.type === "cash") ?? [];
+
   if (loading) {
     return (
       <div className={desktopStyles.cashCardCarousel} aria-busy="true">
@@ -37,10 +38,12 @@ export default function DashboardCashCarousel({
       </div>
     );
   }
+
   if (error)
     return (
       <div className={desktopStyles.cashCardCarousel} aria-hidden="true" />
     );
+
   if (!wallets.length)
     return (
       <Link
@@ -51,12 +54,15 @@ export default function DashboardCashCarousel({
         <AccountCard variant="add" />
       </Link>
     );
+
   const selectedIndex = wallets.findIndex(
     (wallet) => wallet.id === selectedWalletId,
   );
+
   const safeIndex = selectedIndex >= 0 ? selectedIndex : 0;
   const wallet = wallets[safeIndex];
   const card = mapWalletToCashRegisterCard(wallet);
+
   return (
     <div className={desktopStyles.cashCardCarousel}>
       {wallets.length > 1 ? (

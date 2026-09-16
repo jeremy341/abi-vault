@@ -30,12 +30,15 @@ function PhoneDashboard({
   const cashWallet = primaryCashWallet(snapshot);
   const cashBalance = cashWallet ? Number(cashWallet.balanceMinor) : 0;
   const cashHasCount = Boolean(cashWallet?.lastCountAt);
+
   const cashCountMatches =
     cashHasCount &&
     Math.abs(Number(cashWallet?.lastCountDifferenceMinor ?? 0)) < 0.01;
+
   const lastTransaction = formatLastTransaction(
     snapshot?.transactions[0]?.date,
   );
+
   return (
     <section className={styles.phonePage} aria-busy={loading}>
       <LoadingStatus loading={loading} label="Financial overview is loading…" />

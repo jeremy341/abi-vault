@@ -31,9 +31,12 @@ export default function PeriodsPage() {
   const [target, setTarget] = useState<AccountingPeriodListItem | null>(null);
   const [reason, setReason] = useState("");
   const [saving, setSaving] = useState(false);
+
   const activePeriod =
     periods.find((period) => period.status === "open") ?? null;
+
   const openCount = periods.filter((period) => period.status === "open").length;
+
   const lockedCount = periods.filter(
     (period) => period.status === "locked",
   ).length;
@@ -43,10 +46,13 @@ export default function PeriodsPage() {
     listAccountingPeriodsForCurrentOrganization()
       .then((result) => {
         if (!active) return;
+
         if (!result.ok) {
           setError("The accounting periods could not be loaded.");
+
           return;
         }
+
         setPeriods(result.items);
       })
       .catch(() => {
@@ -55,6 +61,7 @@ export default function PeriodsPage() {
       .finally(() => {
         if (active) setLoading(false);
       });
+
     return () => {
       active = false;
     };
@@ -69,9 +76,12 @@ export default function PeriodsPage() {
   async function confirmPeriodAction() {
     if (!target || saving || !reason.trim()) return;
     setSaving(true);
+
     const action =
       target.status === "open" ? lockAccountingPeriod : unlockAccountingPeriod;
+
     const result = await action({ periodId: target.id, reason: reason.trim() });
+
     if (!result.success) setMessage(result.error.message);
     else {
       setPeriods((current) =>
@@ -89,6 +99,7 @@ export default function PeriodsPage() {
         `${periodLabel(target)} was ${target.status === "open" ? "locked" : "unlocked"}.`,
       );
     }
+
     setSaving(false);
   }
 

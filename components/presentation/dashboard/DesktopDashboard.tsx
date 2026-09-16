@@ -30,31 +30,39 @@ function DesktopDashboard({
   error: string | null;
 }) {
   const [cardPreviewOpen, setCardPreviewOpen] = useState(false);
+
   const [selectedCashWalletId, setSelectedCashWalletId] = useState<
     string | null
   >(null);
+
   const transactionItems = displayDashboardTransactions(snapshot);
   const goalItems = displayDashboardGoals(snapshot);
   const categoryItems = displayDashboardCategories(snapshot);
   const reviewItems = displayDashboardReviews(snapshot);
+
   const cashWallets =
     snapshot?.wallets.filter((wallet) => wallet.type === "cash") ?? [];
+
   const cashWallet =
     cashWallets.find((wallet) => wallet.id === selectedCashWalletId) ??
     cashWallets[0] ??
     null;
+
   const cashCard = cashWallet ? mapWalletToCashRegisterCard(cashWallet) : null;
   const cashBalance = cashWallet ? Number(cashWallet.balanceMinor) : 0;
+
   const incomeTotal = snapshot
     ? snapshot.transactions
         .filter((item) => Number(item.amountMinor) >= 0)
         .reduce((sum, item) => sum + Number(item.amountMinor), 0)
     : 0;
+
   const expenseTotal = snapshot
     ? snapshot.transactions
         .filter((item) => Number(item.amountMinor) < 0)
         .reduce((sum, item) => sum + Math.abs(Number(item.amountMinor)), 0)
     : 0;
+
   const lastTransaction = formatLastTransaction(
     snapshot?.transactions[0]?.date,
   );
@@ -226,6 +234,7 @@ function DesktopDashboard({
                 >
                   {transactionItems.map((item) => {
                     const Icon = item.icon;
+
                     return (
                       <div
                         className={desktopStyles.transactionRow}

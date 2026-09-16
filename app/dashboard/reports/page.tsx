@@ -114,6 +114,7 @@ function PhoneReportsView({
   onExport: (format: string) => void;
 }) {
   const [tab, setTab] = useState<PhoneReportTab>("overview");
+
   const periodLabel = period === "3-monate"
     ? "3 months"
     : period === "jahr"
@@ -143,7 +144,10 @@ function PhoneReportsView({
             aria-controls={`reports-panel-${value}`}
             tabIndex={tab === value ? 0 : -1}
             className={tab === value ? phoneStyles.activeTab : ""}
-            onClick={() => setTab(value as PhoneReportTab)}
+            onClick={() => {
+              // SAFETY: the tab buttons are generated from the PhoneReportTab option set.
+              setTab(value as PhoneReportTab);
+            }}
             disabled={loading}
           >
             {label}
@@ -347,7 +351,9 @@ function PhoneReportsView({
                 ShieldCheck,
               ],
             ].map(([format, title, description, Icon]) => {
+              // SAFETY: export entries use the same Lucide component contract as FileText.
               const ExportIcon = Icon as typeof FileText;
+
               return (
                 <button
                   type="button"
@@ -389,6 +395,7 @@ export default function ReportsPage() {
   const liveAnalysisFlow = reportSnapshot?.analysisFlow ?? [];
   const [kpiLoading, setKpiLoading] = useState(true);
   const [kpiError, setKpiError] = useState("");
+
   const [reportKpis, setReportKpis] = useState({
     income: "$0.00",
     expenses: "$0.00",
@@ -398,6 +405,7 @@ export default function ReportsPage() {
     unassigned: "0",
     reconciliation: "Not reviewed yet",
   });
+
   const loading = snapshotLoading || kpiLoading;
   const reportError = snapshotError ?? kpiError;
   const reviewedReceiptCount = Number(reportKpis.reviewed);
@@ -410,10 +418,13 @@ export default function ReportsPage() {
     cachedFinanceQuery("report-kpis", getReportKpisForCurrentOrganization, { scope: cacheScope })
       .then((result) => {
         if (!active) return;
+
         if (!result.ok) {
           setKpiError("Review data could not be loaded.");
+
           return;
         }
+
         const format = (minor: string | number) => (Number(minor) / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
         const net = Number(result.netMinor) / 100;
         setReportKpis({
@@ -432,6 +443,7 @@ export default function ReportsPage() {
       .finally(() => {
         if (active) setKpiLoading(false);
       });
+
     return () => {
       active = false;
     };
@@ -440,13 +452,18 @@ export default function ReportsPage() {
   async function prepareExport(format: string) {
     if (format === "PDF") {
       setExportMessage("PDF export is not enabled yet.");
+
       return;
     }
+
     const result = await exportReport(format === "Review log" ? "Review log" : "Excel");
+
     if (!result.ok) {
       setExportMessage("The export could not be created.");
+
       return;
     }
+
     const blob = new Blob([result.content], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -598,6 +615,7 @@ export default function ReportsPage() {
                       width={58}
                       tickFormatter={(value) => {
                         const numericValue = Number(value);
+
                         return numericValue >= 1000
                           ? `${(numericValue / 1000).toLocaleString("en-GB", { maximumFractionDigits: 1 })}k $`
                           : `${numericValue.toLocaleString("en-GB")} $`;
@@ -611,6 +629,7 @@ export default function ReportsPage() {
                             <div className={styles.tooltipValue}>
                               <span>
                                 {
+                                  // SAFETY: chart series names come from the chartConfig keys.
                                   chartConfig[name as keyof typeof chartConfig]
                                     ?.label
                                 }
@@ -679,6 +698,7 @@ export default function ReportsPage() {
                       const progress = Math.round(
                         (goal.saved / goal.target) * 100,
                       );
+
                       return (
                         <div className={styles.goalItem} key={goal.name}>
                           <div>

@@ -10,7 +10,10 @@ export type { AdaptiveFundsViewProps } from "./funds/funds-shared";
 
 export default function AdaptiveFundsView(props: AdaptiveFundsViewProps) {
   const mode: PresentationMode = props.mode;
+
   if (mode === "desktop") return <DesktopFunds {...props} />;
+
   if (mode === "tablet") return <TabletFunds {...props} />;
+
   return <PhoneFunds {...props} />;
 }

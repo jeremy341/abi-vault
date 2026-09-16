@@ -30,6 +30,7 @@ export const walletArchiveSchema = z.object({
 });
 
 export type WalletUpdateInput = z.input<typeof walletUpdateSchema>;
+
 export type WalletArchiveInput = z.input<typeof walletArchiveSchema>;
 
 export const periodActionSchema = z.object({

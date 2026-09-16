@@ -12,6 +12,7 @@ export async function createSupabaseServerClient() {
     accessToken: async () => {
       if (isLocalMode()) return createLocalSupabaseJwt();
       const { getToken } = await auth();
+
       return getToken();
     },
     auth: {

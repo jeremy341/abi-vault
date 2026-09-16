@@ -32,19 +32,23 @@ function TabletDashboard({
   const reviewItems = displayDashboardReviews(snapshot);
   const cashWallet = primaryCashWallet(snapshot);
   const cashBalance = cashWallet ? Number(cashWallet.balanceMinor) : 0;
+
   const lastTransaction = formatLastTransaction(
     snapshot?.transactions[0]?.date,
   );
+
   const incomeTotal = snapshot
     ? snapshot.transactions
         .filter((item) => Number(item.amountMinor) >= 0)
         .reduce((sum, item) => sum + Number(item.amountMinor), 0)
     : 0;
+
   const expenseTotal = snapshot
     ? snapshot.transactions
         .filter((item) => Number(item.amountMinor) < 0)
         .reduce((sum, item) => sum + Math.abs(Number(item.amountMinor)), 0)
     : 0;
+
   return (
     <section className={styles.tabletPage} aria-busy={loading}>
       <LoadingStatus loading={loading} label="Financial overview is loading…" />

@@ -5,6 +5,7 @@ import styles from "./AccountCard.module.css";
 import { maskCardNumber } from "@/lib/card-format";
 
 type AccountCardVariant = "bank" | "add";
+
 export type AccountCardDetails = {
   accountName: string;
   cardNumber: string;
@@ -25,14 +26,19 @@ export default function AccountCard({
   details,
 }: AccountCardProps) {
   const accountName = details?.accountName || "Cash register";
+
   const cardNumber = details?.cardNumber
     ? maskCardNumber(details.cardNumber)
     : "•••• •••• •••• ••••";
+
   const holder = details?.holder || "Not set";
   const expiry = details?.expiry || "—";
+
   const visualCardColor =
     cardColor?.toLowerCase() === "#111114" ? "#242923" : cardColor;
+
   const isLightCard = visualCardColor === "#e9e9e7";
+
   return (
     <div
       key={variant}
@@ -50,6 +56,7 @@ export default function AccountCard({
       ) : (
         <div
           className={`${styles.card} ${isLightCard ? styles.cardLight : ""} relative aspect-[340/196] w-full max-w-[340px] overflow-hidden rounded-[12px] shadow-[0_10px_24px_rgb(45_51_40_/_16%)] min-[2200px]:max-w-[440px]`}
+          // SAFETY: --card-color is the custom property consumed by AccountCard.module.css.
           style={
             visualCardColor
               ? ({ "--card-color": visualCardColor } as React.CSSProperties)

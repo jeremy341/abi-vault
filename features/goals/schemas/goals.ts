@@ -4,10 +4,13 @@ import { parseDollarToMinor } from "@/lib/finance/money";
 const minorAmount = z.string().trim().transform((value, context) => {
   try {
     const amount = parseDollarToMinor(value);
+
     if (amount <= BigInt(0)) throw new Error("not positive");
+
     return amount;
   } catch {
     context.addIssue({ code: "custom", message: "Enter a positive dollar amount." });
+
     return z.NEVER;
   }
 });
@@ -29,4 +32,5 @@ export const goalContributionSchema = z.object({
 });
 
 export type GoalCreateInput = z.input<typeof goalCreateSchema>;
+
 export type GoalContributionInput = z.input<typeof goalContributionSchema>;

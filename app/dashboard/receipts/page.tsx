@@ -64,6 +64,7 @@ type ReceiptStatus =
   | "Pending review"
   | "Invalid"
   | "Ohne Zuordnung";
+
 type Receipt = {
   id: number | string;
   file: string;
@@ -85,6 +86,7 @@ type Receipt = {
 
 function formatReceiptDate(value: string) {
   const date = new Date(`${value.slice(0, 10)}T00:00:00`);
+
   return Number.isNaN(date.getTime())
     ? value
     : date.toLocaleDateString("en-GB", {
@@ -342,6 +344,7 @@ const statusOptions = [
   "Invalid",
   "Ohne Zuordnung",
 ] as const;
+
 const periodOptions = ["All", "This month", "Last month", "This year"] as const;
 /*
 const transactionOptions = [
@@ -399,11 +402,15 @@ function Dropdown({
     value: option,
     label: option === "All" ? `${ariaLabel}: All` : option,
   }));
+
+  // SAFETY: dropdown options are built from the string option list above.
+  const typedDropdownOptions = dropdownOptions as readonly FieldDropdownOption[];
+
   return (
     <FieldDropdown
       ariaLabel={ariaLabel}
       value={value}
-      options={dropdownOptions as readonly FieldDropdownOption[]}
+      options={typedDropdownOptions}
       onChange={onChange}
       className={styles.dropdown}
     />
@@ -429,6 +436,7 @@ function TransactionCombobox({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const selected = options.find((option) => option.value === value);
+
   const filteredOptions = options.filter((option) =>
     `${option.label} ${option.date} ${option.amount}`
       .toLowerCase()
@@ -726,16 +734,21 @@ export default function ReceiptsPage() {
   const mode = usePresentationMode();
   const { userId, orgId } = useAppAuth();
   const cacheScope = `${orgId ?? "no-org"}:${userId ?? "anonymous"}`;
+
   const initialReceipts = getFinanceCacheState<
     Awaited<ReturnType<typeof listReceiptsForCurrentOrganization>>
   >("receipts", cacheScope);
+
   const [items, setItems] = useState<Receipt[]>(() =>
     initialReceipts.data?.ok ? initialReceipts.data.items.map(mapReceipt) : [],
   );
+
   const [loading, setLoading] = useState(!initialReceipts.data?.ok);
+
   const [refreshing, setRefreshing] = useState(
     Boolean(initialReceipts.data?.ok && !initialReceipts.fresh),
   );
+
   const [loadError, setLoadError] = useState("");
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("All");
@@ -749,6 +762,7 @@ export default function ReceiptsPage() {
   const [fileName, setFileName] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
+
   const filePreviewUrl = useMemo(
     () =>
       selectedFile?.type.startsWith("image/")
@@ -756,10 +770,13 @@ export default function ReceiptsPage() {
         : null,
     [selectedFile],
   );
+
   const [transaction, setTransaction] = useState("");
+
   const [availableTransactions, setAvailableTransactions] = useState<
     readonly TransactionOption[]
   >([]);
+
   const [transactionsLoading, setTransactionsLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadError, setUploadError] = useState("");
@@ -772,27 +789,34 @@ export default function ReceiptsPage() {
   const archiveIdempotencyKey = useRef<string | null>(null);
   useEffect(() => {
     let active = true;
+
     const applyResult = (
       result: Awaited<ReturnType<typeof listReceiptsForCurrentOrganization>>,
     ) => {
       if (!active) return;
+
       if (!result.ok) {
         setLoadError("Receipts could not be loaded.");
+
         return;
       }
+
       setItems(result.items.map(mapReceipt));
       setLoadError("");
     };
+
     const unsubscribe = subscribeFinanceQuery(
       "receipts",
       (value) =>
         applyResult(
+          // SAFETY: the receipts cache key is paired with the list-receipts query result.
           value as Awaited<
             ReturnType<typeof listReceiptsForCurrentOrganization>
           >,
         ),
       cacheScope,
     );
+
     cachedFinanceQuery("receipts", listReceiptsForCurrentOrganization, {
       scope: cacheScope,
     })
@@ -806,6 +830,7 @@ export default function ReceiptsPage() {
           setRefreshing(false);
         }
       });
+
     return () => {
       active = false;
       unsubscribe();
@@ -819,10 +844,13 @@ export default function ReceiptsPage() {
     })
       .then((result) => {
         if (!active) return;
+
         if (!result.ok) {
           setUploadError("Transactions could not be loaded.");
+
           return;
         }
+
         setAvailableTransactions([
           { value: "", label: "Ohne Zuordnung", date: "", amount: "" },
           ...result.transactions.map((item) => ({
@@ -839,6 +867,7 @@ export default function ReceiptsPage() {
       .finally(() => {
         if (active) setTransactionsLoading(false);
       });
+
     return () => {
       active = false;
     };
@@ -849,6 +878,7 @@ export default function ReceiptsPage() {
       items.filter((receipt) => {
         const needle = query.trim().toLowerCase();
         const month = receipt.date.slice(3, 5);
+
         return (
           (!needle ||
             `${receipt.file} ${receipt.transaction}`
@@ -862,13 +892,16 @@ export default function ReceiptsPage() {
       }),
     [items, period, query, status],
   );
+
   const pageSize = useResponsivePageSize({
     defaultSize: 9,
     landscapeSize: 6,
     wideSize: 10,
   });
+
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, pageCount);
+
   const visible = filtered.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize,
@@ -876,6 +909,7 @@ export default function ReceiptsPage() {
 
   function handleFile(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
+
     if (!file) return;
     setSelectedFile(file);
     setFileName(file.name);
@@ -890,10 +924,13 @@ export default function ReceiptsPage() {
 
   useEffect(() => {
     if (!imagePreviewOpen) return;
+
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") setImagePreviewOpen(false);
     };
+
     document.addEventListener("keydown", closeOnEscape);
+
     return () => document.removeEventListener("keydown", closeOnEscape);
   }, [imagePreviewOpen]);
 
@@ -902,6 +939,7 @@ export default function ReceiptsPage() {
     setImagePreviewOpen(false);
     setFileName("");
     setImagePreviewOpen(false);
+
     if (fileInput.current) fileInput.current.value = "";
   }
 
@@ -927,6 +965,7 @@ export default function ReceiptsPage() {
     setReviewPreviewError("");
     setReviewPreviewLoading(true);
     const result = await createReceiptDownloadUrl(receipt.id.toString());
+
     if (result.success) setReviewPreviewUrl(result.data.url);
     else setReviewPreviewError(result.error.message);
     setReviewPreviewLoading(false);
@@ -936,21 +975,26 @@ export default function ReceiptsPage() {
     if (!reviewTarget || saving) return;
     setSaving(true);
     setReviewError("");
+
     try {
       const result = await reviewReceipt({
         receiptId: reviewTarget.id.toString(),
         status: decision,
       });
+
       if (!result.success) {
         setReviewError(result.error.message);
+
         return;
       }
+
       const nextStatus: ReceiptStatus =
         decision === "approved"
           ? "Approved"
           : decision === "rejected"
             ? "Invalid"
             : "Pending review";
+
       setItems((current) =>
         current.map((item) =>
           item.id === reviewTarget.id ? { ...item, status: nextStatus } : item,
@@ -971,13 +1015,17 @@ export default function ReceiptsPage() {
 
   async function submitReceipt() {
     if (saving) return;
+
     if (editingReceipt) {
       if (!fileName.trim()) {
         setUploadError("Please enter a filename.");
+
         return;
       }
+
       setSaving(true);
       setUploadError("");
+
       try {
         const result = await updateReceiptMetadata({
           receiptId: editingReceipt.id.toString(),
@@ -986,10 +1034,13 @@ export default function ReceiptsPage() {
             ? transaction
             : null,
         });
+
         if (!result.success) {
           setUploadError(result.error.message);
+
           return;
         }
+
         setItems((current) =>
           current.map((item) =>
             item.id === editingReceipt.id
@@ -1019,18 +1070,24 @@ export default function ReceiptsPage() {
       } finally {
         setSaving(false);
       }
+
       return;
     }
+
     const file = fileInput.current?.files?.[0];
+
     if (!file) return;
     setSaving(true);
     setUploadError("");
     const formData = new FormData();
     formData.append("file", file);
+
     if (/^[0-9a-f-]{36}$/i.test(transaction))
       formData.append("transactionId", transaction);
+
     try {
       const result = await uploadReceipt(formData);
+
       if (result.success) {
         invalidateFinanceQuery(
           "receipts",
@@ -1060,6 +1117,7 @@ export default function ReceiptsPage() {
     if (!archiveTarget || saving || !archiveReason.trim()) return;
     setSaving(true);
     setActionError("");
+
     try {
       const result = await archiveReceipt({
         receiptId: archiveTarget.id.toString(),
@@ -1068,10 +1126,13 @@ export default function ReceiptsPage() {
           archiveIdempotencyKey.current ??
           `archive-receipt-${archiveTarget.id}`,
       });
+
       if (!result.success) {
         setActionError(result.error.message);
+
         return;
       }
+
       setItems((current) =>
         current.filter((item) => item.id !== archiveTarget.id),
       );

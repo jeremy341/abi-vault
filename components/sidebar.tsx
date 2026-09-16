@@ -37,7 +37,7 @@ const navigationItems = [
   },
   { label: "Receipts", href: "/dashboard/receipts", icon: FileText },
   { label: "Goals", href: "/dashboard/goals", icon: Target },
-  { label: "Cash register & Konten", href: "/dashboard/funds", icon: WalletCards },
+  { label: "Cash registers & accounts", href: "/dashboard/funds", icon: WalletCards },
   { label: "Reports", href: "/dashboard/reports", icon: BarChart3 },
   { label: "People", href: "/dashboard/people", icon: Users },
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
@@ -49,7 +49,7 @@ export default function Sidebar() {
   return (
     <ShadcnSidebar
       collapsible="icon"
-      className="overflow-hidden rounded-l-3xl border-sidebar-border bg-white dark:bg-sidebar"
+      className="overflow-hidden rounded-l-[0.7rem] border-sidebar-border bg-[var(--ui-surface)] dark:bg-sidebar"
     >
       <SidebarHeader className={`${dashboardStyles.sidebarHeader} px-6 py-7`}>
         <AbiLogo className="ml-0" />
@@ -71,7 +71,7 @@ export default function Sidebar() {
                       tooltip={item.label}
                       aria-label={item.label}
                       title={item.label}
-                      className={`${dashboardStyles.sidebarMenuButton} h-14 gap-3 rounded-xl px-4 text-[15px] text-black/55 transition-[background-color,color,transform] duration-200 hover:translate-x-0.5 hover:bg-black/[0.025] hover:text-ink active:scale-[0.99] data-active:bg-black/[0.045] data-active:text-ink motion-reduce:transform-none dark:text-white/65 dark:hover:bg-white/[0.06] dark:hover:text-white dark:data-active:bg-white/[0.1] dark:data-active:text-white [&_svg]:size-5 [&_svg]:stroke-[1.7]`}
+                      className={`${dashboardStyles.sidebarMenuButton} h-14 gap-3 rounded-[0.45rem] px-4 text-[15px] text-[var(--sidebar-foreground)] transition-[background-color,color,transform] duration-200 hover:translate-x-0.5 hover:bg-[var(--sidebar-accent)] hover:text-[var(--sidebar-accent-foreground)] active:scale-[0.99] data-active:bg-[var(--sidebar-primary)] data-active:text-[var(--sidebar-primary-foreground)] motion-reduce:transform-none [&_svg]:size-5 [&_svg]:stroke-[1.7]`}
                     >
                       <Icon />
                       <span>{item.label}</span>

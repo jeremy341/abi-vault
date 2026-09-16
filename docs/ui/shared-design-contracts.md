@@ -1,10 +1,10 @@
 # Abi Manager UI — Shared Design Contracts
 
-> Current implementation reference for the shared design decisions already introduced. The Dashboard remains the visual source of truth: calm Geist typography, white cards on a light canvas, thin neutral rules, restrained depth, and small semantic accents.
+> Current implementation reference for the shared design decisions already introduced. The Dashboard remains the visual source of truth: calm Manrope typography, forest-ink navigation, white cards on a light canvas, thin neutral rules, restrained depth, and one lime primary action accent.
 
 ## Design direction
 
-- **Product tone:** trust-first, calm, minimal finance workspace.
+- **Product tone:** trust-first, calm, precise finance workspace with a forest/lime concept-03 identity.
 - **Visual source of truth:** Dashboard panels and shell.
 - **Composition rule:** shared contracts normalize styling without changing page information architecture, grid composition, or responsive row behavior.
 - **Density rule:** preserve the existing Dashboard density at 1920px and 2560px; wide-screen rhythm expands to 2rem only where the existing Dashboard already does so.
@@ -12,7 +12,7 @@
 
 ## Typography contract
 
-The product uses Geist Sans from `next/font` through `--font-geist-sans`.
+The product uses Manrope from `next/font` through `--font-manrope`. Geist Mono remains available for numeric/code-like text.
 
 | Role          | Token                     |                                Value | Intended use                                                            |
 | ------------- | ------------------------- | -----------------------------------: | ----------------------------------------------------------------------- |
@@ -61,8 +61,8 @@ Semantic colors are intentionally restrained. Green, red, amber, violet, and ora
 
 | Token                                   |                                                        Value | Role                                             |
 | --------------------------------------- | -----------------------------------------------------------: | ------------------------------------------------ |
-| `--ui-card-radius`                      |                                                       `1rem` | Shared card and panel radius                     |
-| `--ui-control-radius`                   |                                                     `0.7rem` | Dropdowns, buttons, inputs, and compact controls |
+| `--ui-card-radius`                      |                                                      `10px` | Shared card and panel radius                     |
+| `--ui-control-radius`                   |                                                       `7px` | Dropdowns, buttons, inputs, and compact controls |
 | `--ui-control-height`                   |                                                    `2.75rem` | Shared dropdown/control baseline                 |
 | `--ui-page-gap`                         |                 `1.5rem` base, `2rem` at `min-width: 2200px` | Vertical page stack rhythm                       |
 | `--ui-card-gap`                         |                 `1.5rem` base, `2rem` at `min-width: 2200px` | KPI/summary and sibling-card rhythm              |
@@ -73,7 +73,7 @@ Semantic colors are intentionally restrained. Green, red, amber, violet, and ora
 
 Spacing rules:
 
-- The Dashboard remains unchanged and establishes the visual rhythm.
+- The Dashboard remains the layout source of truth and establishes the visual rhythm. Concept-03 color, shape, copy, and semantic data roles are shared across all surfaces.
 - Transactions and Receipts consume the same page/card gap values for their page stack and summary/KPI grids.
 - Dashboard, Transactions, and Receipts consume the same page-container variables. At 1600px the content is capped at 1880px with a larger inset; at 2200px the cap is removed and the inset becomes 2rem.
 - Existing page-specific table heights, row counts, and wide-screen whitespace behavior remain intentional local behavior until the product-table contract is finalized.
@@ -172,7 +172,7 @@ Existing local page buttons remain in place where changing their markup would al
 ## Responsive contract
 
 - Target desktop references are 1920×1080 and 2560×1440.
-- Tablet/iPad support spans 768–1399px and uses a persistent 5.25rem icon rail, a 6rem page header, 1.25rem page/card rhythm, and touch-safe controls.
+- Tablet/iPad support spans 768–1399px and uses a persistent 5.25rem icon rail, a 6rem page header, 10px cards, 7px controls, and touch-safe controls.
 - Tablet portrait (768–1099px) converts Transactions and Receipts tables into labeled card rows; tablet landscape (1100–1399px) preserves compact full tables with six records per page.
 - Dashboard portrait uses one ordered scrolling flow; dashboard landscape is a scroll-free at-a-glance overview with a compact bank card, five recent transactions, simplified goals, and condensed category/review cards.
 - Tablet pages may scroll vertically, but must not introduce document- or main-level horizontal overflow.
@@ -207,4 +207,4 @@ The current implementation was checked in the in-app browser at 768×1024, 820×
 - Page-specific table height/row-count behavior remains local so the established 1920px and 2560px compositions do not change.
 - Modal footer composition remains page-specific: reset-plus-actions for Transactions and action-only for Receipts.
 - Some legacy local declarations remain in CSS modules, but their rendered surfaces now resolve through the shared tokens at the contract boundary.
-- The account-card sweep/tilt animation is intentionally excluded from the P2 pass and must not be changed without a separate request.
+- The account-card sweep/tilt animation was removed. The card now uses a restrained shadow-only hover state and forest-ink surface.

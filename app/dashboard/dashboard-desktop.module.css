@@ -74,7 +74,7 @@
   min-height: 0;
   overflow: hidden;
   border: 1px solid var(--ui-border-subtle);
-  border-radius: 0.8rem;
+  border-radius: var(--ui-card-radius);
   background: var(--ui-surface);
 }
 
@@ -87,7 +87,7 @@
   width: min(100% - 2rem, 21rem);
   justify-self: center;
   border: 0;
-  border-radius: 1.25rem;
+  border-radius: var(--ui-card-radius);
   background: transparent;
   padding: 0;
   text-align: left;
@@ -176,15 +176,15 @@
   align-items: center;
   gap: 0.4rem;
   border: 1px solid var(--ui-border);
-  border-radius: 0.55rem;
+  border-radius: var(--ui-control-radius);
   padding: 0 0.7rem;
   font-size: 0.68rem;
   font-weight: 620;
 }
 .accountActions a:first-child {
-  border-color: var(--ui-ink);
-  background: var(--ui-ink);
-  color: var(--ui-surface);
+  border-color: var(--ui-action-primary);
+  background: var(--ui-action-primary);
+  color: var(--ui-action-primary-ink);
 }
 .accountActions svg,
 .panelHeader svg {
@@ -294,15 +294,14 @@
   inset: 0;
   display: grid;
   place-items: center;
-  background: rgb(0 0 0 / 0.3);
+  background: rgb(36 41 35 / 42%);
   padding: 1rem;
-  backdrop-filter: blur(3px);
 }
 
 .accountDialog {
   width: min(29rem, calc(100vw - 2rem));
   border: 1px solid var(--ui-border);
-  border-radius: 0.85rem;
+  border-radius: var(--ui-card-radius);
   background: var(--ui-surface);
   padding: 1rem;
   box-shadow: 0 24px 70px rgb(0 0 0 / 0.22);
@@ -334,7 +333,7 @@
   align-items: center;
   justify-content: center;
   border: 0;
-  border-radius: 0.55rem;
+  border-radius: var(--ui-icon-radius);
   background: transparent;
   color: var(--ui-muted-ink);
 }
@@ -387,7 +386,12 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: var(--ui-ink);
+}
+.goalRow i {
+  background: var(--ui-data-goal);
+}
+.spendingRow i {
+  background: var(--ui-data-expense);
 }
 .goalRow b,
 .spendingRow b {

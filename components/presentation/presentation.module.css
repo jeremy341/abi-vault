@@ -25,7 +25,7 @@
   align-content: start;
   justify-items: center;
   gap: 1.15rem;
-  border-radius: 1.25rem 0 0 1.25rem;
+  border-radius: var(--ui-shell-radius) 0 0 var(--ui-shell-radius);
   padding: 1rem 0.75rem;
 }
 
@@ -39,7 +39,7 @@
 .presentationFallbackLogo {
   width: 2.1rem;
   height: 2.1rem;
-  border-radius: 0.65rem;
+  border-radius: var(--ui-icon-radius);
   background: var(--ui-ink);
 }
 
@@ -47,7 +47,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border-radius: 0 1.25rem 1.25rem 0;
+  border-radius: 0 var(--ui-shell-radius) var(--ui-shell-radius) 0;
 }
 
 .presentationFallbackTopbar {
@@ -64,7 +64,7 @@
   width: 2.5rem;
   height: 2.5rem;
   border: 1px solid var(--ui-border-subtle);
-  border-radius: 0.75rem;
+  border-radius: var(--ui-control-radius);
   background: var(--ui-canvas);
 }
 
@@ -79,7 +79,7 @@
   width: 100%;
   height: 4rem;
   border: 1px solid var(--ui-border-subtle);
-  border-radius: 0.9rem;
+  border-radius: var(--ui-card-radius);
   background: var(--ui-canvas);
 }
 
@@ -155,8 +155,9 @@
 .desktopSidebar {
   display: flex;
   flex-direction: column;
-  border-radius: 1rem 0 0 1rem;
-  background: color-mix(in srgb, var(--ui-surface) 96%, var(--ui-canvas));
+  border-radius: var(--ui-shell-radius) 0 0 var(--ui-shell-radius);
+  background: #242923;
+  border-color: #3b4335;
   padding: 1rem 0.8rem;
 }
 
@@ -178,7 +179,7 @@
   display: grid;
   overflow: hidden;
   border: 1px solid var(--ui-border);
-  border-radius: 0.65rem;
+  border-radius: var(--ui-control-radius);
   background: var(--ui-surface);
   box-shadow: 0 14px 32px rgb(0 0 0 / 0.13);
 }
@@ -259,7 +260,7 @@
 .desktopNavGroup h2 {
   margin: 0;
   padding-inline: 0.75rem;
-  color: var(--ui-muted-ink);
+  color: #a5b09a;
   font-size: 0.63rem;
   font-weight: 650;
   letter-spacing: 0.04em;
@@ -277,9 +278,9 @@
   min-height: 2.75rem;
   align-items: center;
   gap: 0.7rem;
-  border-radius: 0.6rem;
+  border-radius: 0.45rem;
   padding: 0 0.75rem;
-  color: var(--ui-muted-ink);
+  color: #a5aba1;
   font-size: 0.78rem;
   font-weight: 560;
   transition:
@@ -306,18 +307,18 @@
 }
 
 .desktopNavLink:hover {
-  background: rgb(0 0 0 / 0.035);
-  color: var(--ui-ink);
+  background: #333a2f;
+  color: #ffffff;
   transform: translateX(1px);
 }
 
 .desktopNavLinkActive {
-  background: rgb(0 0 0 / 0.055);
-  color: var(--ui-ink);
+  background: #d4ef89;
+  color: #26311f;
 }
 
 .desktopNavLinkActive::before {
-  background: var(--ui-ink);
+  background: #d4ef89;
 }
 
 .desktopSidebarFooter {
@@ -337,7 +338,8 @@
   flex-direction: column;
   overflow: hidden;
   border-left: 0;
-  border-radius: 0 1rem 1rem 0;
+  border-radius: 0 var(--ui-shell-radius) var(--ui-shell-radius) 0;
+  background: var(--ui-canvas);
 }
 
 .desktopTopbar {
@@ -348,6 +350,7 @@
   justify-content: space-between;
   gap: 1.5rem;
   border-bottom: 1px solid var(--ui-border-subtle);
+  background: var(--ui-surface);
   padding: 0.75rem 1.5rem;
 }
 
@@ -389,7 +392,7 @@
   align-items: center;
   justify-content: center;
   border: 1px solid var(--ui-border);
-  border-radius: 0.7rem;
+  border-radius: 0.45rem;
   background: var(--ui-surface);
   color: var(--ui-ink);
 }
@@ -457,7 +460,9 @@
   z-index: 2;
   display: flex;
   flex-direction: column;
-  border-radius: 1.25rem 0 0 1.25rem;
+  border-radius: var(--ui-shell-radius) 0 0 var(--ui-shell-radius);
+  border-color: #3b4335;
+  background: #242923;
   padding: max(0.75rem, env(safe-area-inset-top)) 0.55rem
     max(0.75rem, env(safe-area-inset-bottom));
 }
@@ -481,8 +486,8 @@
   min-height: 3.65rem;
   place-items: center;
   gap: 0.15rem;
-  border-radius: 0.8rem;
-  color: var(--ui-muted-ink);
+  border-radius: var(--ui-control-radius);
+  color: #a5aba1;
   font-size: 0.58rem;
   font-weight: 550;
   line-height: 0.75rem;
@@ -500,8 +505,8 @@
 }
 
 .tabletNavLink:hover {
-  background: rgb(0 0 0 / 0.035);
-  color: var(--ui-ink);
+  background: #333a2f;
+  color: #ffffff;
 }
 
 .tabletNavLink:active {
@@ -509,19 +514,30 @@
 }
 
 .tabletNavLinkActive {
-  background: var(--ui-ink);
-  color: var(--ui-surface);
+  background: var(--ui-primary);
+  color: var(--ui-primary-ink);
 }
 
 .tabletNavLinkActive:hover {
-  background: var(--ui-ink);
-  color: var(--ui-surface);
+  background: var(--ui-primary);
+  color: var(--ui-primary-ink);
 }
 
 .tabletRailFooter {
   display: flex;
   justify-content: center;
+  border-top: 1px solid #3b4335;
+  padding-top: 0.65rem;
   margin-top: auto;
+}
+
+.tabletRailFooter :global(button) {
+  color: #a5aba1;
+}
+
+.tabletRailFooter :global(button:hover) {
+  background: #333a2f;
+  color: #ffffff;
 }
 
 .tabletRailFooter button {
@@ -541,7 +557,7 @@
   flex-direction: column;
   overflow: hidden;
   border-left: 0;
-  border-radius: 0 1.25rem 1.25rem 0;
+  border-radius: 0 var(--ui-shell-radius) var(--ui-shell-radius) 0;
 }
 
 .tabletTopbar {
@@ -602,7 +618,7 @@
   align-items: center;
   justify-content: center;
   border: 1px solid var(--ui-border);
-  border-radius: 0.75rem;
+  border-radius: var(--ui-control-radius);
   background: var(--ui-surface);
   color: var(--ui-ink);
 }
@@ -626,11 +642,11 @@
   height: 2rem;
   place-items: center;
   border-radius: 999px;
-  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-  color: white;
+  background: #d4ef89;
+  color: #26311f;
   font-size: 0.75rem;
   font-weight: 700;
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
+  box-shadow: none;
 }
 
 .tabletContent {
@@ -670,9 +686,8 @@
   gap: 0.75rem;
   flex: 0 0 auto;
   border-bottom: 1px solid var(--ui-border-subtle);
-  background: color-mix(in srgb, var(--ui-surface) 94%, transparent);
+  background: var(--ui-surface);
   padding: max(0.6rem, env(safe-area-inset-top)) 1rem 0.6rem;
-  backdrop-filter: blur(16px);
 }
 
 .phoneTitle h1 {
@@ -737,9 +752,8 @@
   min-height: calc(4.5rem + env(safe-area-inset-bottom));
   grid-template-columns: repeat(5, minmax(0, 1fr));
   border-top: 1px solid var(--ui-border-subtle);
-  background: color-mix(in srgb, var(--ui-surface) 96%, transparent);
+  background: var(--ui-surface);
   padding: 0.35rem 0.35rem max(0.35rem, env(safe-area-inset-bottom));
-  backdrop-filter: blur(18px);
 }
 
 .phoneNavLink,
@@ -750,7 +764,7 @@
   place-items: center;
   gap: 0.12rem;
   border: 0;
-  border-radius: 0.75rem;
+  border-radius: var(--ui-control-radius);
   background: transparent;
   color: var(--ui-muted-ink);
   font: inherit;
@@ -767,12 +781,13 @@
 }
 
 .phoneNavLinkActive {
-  background: rgb(0 0 0 / 0.055);
-  color: var(--ui-ink);
+  background: var(--ui-primary);
+  color: var(--ui-primary-ink);
 }
 
 :global(.dark) .phoneNavLinkActive {
-  background: rgb(255 255 255 / 0.1);
+  background: var(--ui-primary);
+  color: var(--ui-primary-ink);
 }
 
 .phoneNavLink:active,
@@ -785,7 +800,7 @@
   left: 0;
   max-height: min(78dvh, 38rem);
   overflow: auto;
-  border-radius: 1.25rem 1.25rem 0 0;
+  border-radius: var(--ui-card-radius) var(--ui-card-radius) 0 0;
   padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
   overscroll-behavior: contain;
 }
@@ -825,7 +840,7 @@
   align-items: center;
   gap: 0.7rem;
   border: 1px solid var(--ui-border-subtle);
-  border-radius: 0.85rem;
+  border-radius: var(--ui-control-radius);
   padding: 0.75rem;
   color: var(--ui-ink);
   font-size: 0.78rem;

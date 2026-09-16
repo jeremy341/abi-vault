@@ -433,7 +433,7 @@ function DesktopShell({
                     <CalendarDays aria-hidden="true" />
                     <span>
                       <strong>Abi 2026</strong>
-                      <small>Activeer Cohort</small>
+                      <small>Activate cohort</small>
                     </span>
                   </button>
                   <Link href="/dashboard/settings" role="menuitem">

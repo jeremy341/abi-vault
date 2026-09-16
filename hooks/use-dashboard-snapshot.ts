@@ -30,7 +30,7 @@ export function useDashboardSnapshot() {
         setError("The financial overview could not be loaded.");
       }
     };
-    const unsubscribe = subscribeFinanceQuery("dashboard-snapshot", (value) => applyResult(value as Awaited<ReturnType<typeof getDashboardSnapshot>>), scope);
+    const unsubscribe = subscribeFinanceQuery<Awaited<ReturnType<typeof getDashboardSnapshot>>>("dashboard-snapshot", applyResult, scope);
     cachedFinanceQuery("dashboard-snapshot", getDashboardSnapshot, { scope }).then(applyResult).catch(() => {
       if (active) setError("The financial overview could not be loaded.");
     }).finally(() => {

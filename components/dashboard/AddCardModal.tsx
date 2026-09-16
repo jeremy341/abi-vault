@@ -15,7 +15,7 @@ import {
 import styles from "./AccountCardModal.module.css";
 
 const cardColors = [
-  { name: "Schwarz", value: "#111114" },
+  { name: "Forest ink", value: "#242923" },
   { name: "Graphit", value: "#3b3b40" },
   { name: "White", value: "#e9e9e7" },
   { name: "Forest green", value: "#25453b" },
@@ -66,7 +66,10 @@ export default function AddCardModal({
   const idempotencyKey = useRef<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (!open) return;
@@ -260,7 +263,7 @@ export default function AddCardModal({
             </h3>
             <div className={styles.formGrid}>
               <Field
-                label="Cash registersname"
+                label="Cash register name"
                 error={errors.accountName}
                 errorId="add-account-name-error"
               >

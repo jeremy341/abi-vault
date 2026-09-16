@@ -361,12 +361,12 @@ function PhoneTransactionsView({
       <div className={phoneStyles.toolbar} data-ui-slot="toolbar">
         <label className={phoneStyles.search}>
           <Search aria-hidden="true" />
-          <span className="sr-only">Transactions durchsuchen</span>
+          <span className="sr-only">Search transactions</span>
           <input
             value={query}
             disabled={loading}
             onChange={(event) => onQueryChange(event.target.value)}
-            placeholder="Transactions durchsuchen …"
+            placeholder="Search transactions …"
           />
         </label>
         <button
@@ -771,7 +771,7 @@ export default function TransactionsPage() {
       const selectedCashRegister = cashRegisters.find((item) => item.id === selectedCashRegisterId);
     setItems((current) => [
       {
-        id: persisted.id,
+        id: persisted.data.id,
         title: newTitle.trim(),
         category: newCategory,
         date: displayDate(new Date()),
@@ -988,7 +988,7 @@ export default function TransactionsPage() {
             <header className={styles.listHeader}>
               <div className={styles.headingGroup}>
                 <h2>All Transactions</h2>
-                <span><LoadingText loading={loading}>{activeFilterCount} aktive Filter</LoadingText></span>
+                <span><LoadingText loading={loading}>{activeFilterCount} active filters</LoadingText></span>
               </div>
               <button
                 type="button"
@@ -1005,7 +1005,7 @@ export default function TransactionsPage() {
             <div className={styles.filters} data-ui-slot="toolbar">
               <label className={styles.searchField}>
                 <Search />
-                <span className="sr-only">Transactions durchsuchen</span>
+                <span className="sr-only">Search transactions</span>
                 <input
                   value={query}
                   disabled={loading}
@@ -1013,7 +1013,7 @@ export default function TransactionsPage() {
                     setQuery(event.target.value);
                     setPage(1);
                   }}
-                  placeholder="Transactions durchsuchen …"
+                  placeholder="Search transactions …"
                 />
               </label>
               <StyledDropdown
@@ -1337,7 +1337,7 @@ export default function TransactionsPage() {
             </div>
             <div className={styles.filterColumns}>
               <fieldset className={styles.filterGroup}>
-                <legend>Receiptstatus</legend>
+                <legend>Receipt status</legend>
                 <div className={styles.segmented}>
                   {(["All", "Vorhanden", "Fehlt"] as ReceiptFilter[]).map(
                     (value) => (
@@ -1351,7 +1351,7 @@ export default function TransactionsPage() {
                         }
                         onClick={() => setDraftReceiptFilter(value)}
                       >
-                        {value}
+                        {value === "Vorhanden" ? "Present" : value === "Fehlt" ? "Missing" : value}
                       </button>
                     ),
                   )}
@@ -1405,7 +1405,7 @@ export default function TransactionsPage() {
                 className={styles.primaryButton}
                 onClick={applyFilters}
               >
-                Filter anwenden
+                Apply filters
               </button>
             </div>
           </div>
@@ -1440,7 +1440,7 @@ export default function TransactionsPage() {
                 autoFocus={mode !== "phone"}
                 value={newTitle}
                 onChange={(event) => setNewTitle(event.target.value)}
-                placeholder="z. B. Sponsoring School"
+                placeholder="e.g. Sponsorship"
               />
             </label>
             <div className={editing ? styles.editWalletNote : undefined}>
@@ -1450,13 +1450,13 @@ export default function TransactionsPage() {
             <div className={styles.dateFields}>
               <StyledDropdown
                 ariaLabel="Select type"
-                label="Typ"
+                label="Type"
                 value={newType}
                 onChange={(value) => setNewType(value as typeof newType)}
                 className={styles.formDropdown}
                 options={[
-                  { value: "Einnahme", label: "Einnahme" },
-                  { value: "Ausgabe", label: "Ausgabe" },
+                  { value: "Einnahme", label: "Income" },
+                  { value: "Ausgabe", label: "Expense" },
                 ]}
               />
               <StyledDropdown

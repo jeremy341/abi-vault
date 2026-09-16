@@ -3,10 +3,10 @@
 type CacheEntry<T> = { data?: T; promise?: Promise<T>; updatedAt: number };
 
 export type FinanceCacheOptions = { scope?: string; ttlMs?: number };
-type CacheListener = (value: unknown) => void;
+type CacheListener<T> = (value: T) => void;
 
 const entries = new Map<string, CacheEntry<unknown>>();
-const listeners = new Map<string, Set<CacheListener>>();
+const listeners = new Map<string, Set<CacheListener<unknown>>>();
 export const FINANCE_CACHE_TTL_MS = 15_000;
 
 function scopedKey(key: string, scope = "anonymous") {
@@ -31,13 +31,19 @@ export function getCachedFinanceData<T>(key: string, scope = "anonymous") {
   return getFinanceCacheState<T>(key, scope).data;
 }
 
-export function subscribeFinanceQuery(key: string, listener: CacheListener, scope = "anonymous") {
+export function subscribeFinanceQuery<T>(
+  key: string,
+  listener: CacheListener<T>,
+  scope = "anonymous",
+) {
   const cacheKey = scopedKey(key, scope);
-  const current = listeners.get(cacheKey) ?? new Set<CacheListener>();
-  current.add(listener);
+  const current = listeners.get(cacheKey) ?? new Set<CacheListener<unknown>>();
+  // SAFETY: the caller's listener type is paired with the same cache key and query value.
+  const typedListener: CacheListener<unknown> = (value) => listener(value as T);
+  current.add(typedListener);
   listeners.set(cacheKey, current);
   return () => {
-    current.delete(listener);
+    current.delete(typedListener);
     if (!current.size) listeners.delete(cacheKey);
   };
 }

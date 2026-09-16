@@ -2,11 +2,12 @@
 
 import { clerkClient } from "@clerk/nextjs/server";
 import { requirePermission } from "@/lib/auth/permissions-server";
-import { inviteMemberSchema } from "@/features/people/schemas/invitations";
+import { inviteMemberSchema, type InviteMemberInput } from "@/features/people/schemas/invitations";
+import { actionFailure, actionSuccess, type ActionResult } from "@/lib/api/result";
 
-export async function inviteMember(input: unknown) {
+export async function inviteMember(input: InviteMemberInput): Promise<ActionResult<{ id: string }>> {
   const parsed = inviteMemberSchema.safeParse(input);
-  if (!parsed.success) return { ok: false as const, error: "INVALID_INPUT" };
+  if (!parsed.success) return actionFailure("INVALID_INPUT", "The invitation data is invalid.");
   const context = await requirePermission("manageMemberships");
   const client = await clerkClient();
   try {
@@ -20,8 +21,8 @@ export async function inviteMember(input: unknown) {
         abiVaultRole: parsed.data.role,
       },
     });
-    return { ok: true as const, id: invitation.id };
+    return actionSuccess({ id: invitation.id });
   } catch {
-    return { ok: false as const, error: "INVITATION_FAILED" };
+    return actionFailure("INVITATION_FAILED", "The invitation could not be sent.");
   }
 }

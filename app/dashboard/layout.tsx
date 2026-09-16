@@ -31,7 +31,7 @@ export default async function DashboardLayout({
       <FinanceCacheLifecycle />
       {orgId ? children : (
         <main className="flex min-h-full items-center justify-center p-6">
-          <section className="w-full max-w-lg rounded-2xl border border-black/10 bg-white p-6 text-center shadow-sm dark:border-white/10 dark:bg-card">
+          <section className="w-full max-w-lg rounded-[var(--ui-card-radius)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-6 text-center shadow-[var(--ui-card-shadow)]">
             <h1 className="text-lg font-semibold tracking-tight">No workspace selected</h1>
             <p className="mt-2 text-sm text-muted-foreground">Join the Abi workspace through an invitation link or choose an active workspace.</p>
           </section>

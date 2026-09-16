@@ -122,8 +122,8 @@ export const dashboardCategories = [
     title: "Veranstaltung",
     amount: "$1,740.00 of $3,000.00",
     progress: 58,
-    color: "bg-black dark:bg-white",
-    bubble: "bg-black/[0.04] text-ink dark:bg-white/[0.08]",
+    color: "bg-[var(--chart-2)] dark:bg-[var(--chart-1)]",
+    bubble: "bg-[var(--ui-surface-muted)] text-ink dark:bg-[var(--ui-surface-muted)]",
     icon: CalendarDays,
   },
   {
@@ -167,7 +167,7 @@ function IconBubble({
 export function TransactionHistory() {
   return (
     <Card
-      className={`${dashboardStyles.transactionPanel} h-full rounded-2xl bg-white/85 py-0 shadow-[var(--ui-dashboard-panel-shadow)] backdrop-blur-[3px] dark:bg-card/85`}
+      className={`${dashboardStyles.transactionPanel} h-full rounded-[0.75rem] border border-[var(--ui-border)] bg-[var(--ui-surface)] py-0 shadow-[0_4px_16px_rgb(45_51_40_/_4.5%)] dark:bg-card`}
     >
       <CardHeader className="px-5 pb-0 pt-5 sm:px-6 lg:px-7 lg:pt-6">
         <CardTitle className="text-xl font-semibold tracking-tight lg:text-2xl">
@@ -175,7 +175,7 @@ export function TransactionHistory() {
         </CardTitle>
       </CardHeader>
       <CardContent className="px-4 pb-4 pt-0 sm:px-5 lg:px-6 lg:pb-5">
-        <div className="hidden grid-cols-[minmax(0,1.5fr)_minmax(90px,0.9fr)_100px_110px_24px] gap-3 border-b border-black/10 px-2 pb-2 text-xs text-muted-foreground dark:border-white/15 sm:grid">
+        <div className="hidden grid-cols-[minmax(0,1.5fr)_minmax(90px,0.9fr)_100px_110px_24px] gap-3 border-b border-[var(--ui-border)] px-2 pb-2 text-xs text-muted-foreground dark:border-white/15 sm:grid">
           <span />
           <span>Category</span>
           <span>Date</span>
@@ -186,7 +186,7 @@ export function TransactionHistory() {
           {dashboardTransactions.map((transaction, index) => {
             const Icon = transaction.icon;
             const tone =
-              "bg-black/[0.035] text-ink dark:bg-white/[0.08] dark:text-white/80";
+              "bg-[var(--ui-surface-muted)] text-ink dark:bg-[var(--ui-surface-muted)] dark:text-[var(--ui-muted-ink)]";
             return (
               <div
                 key={transaction.title}
@@ -218,7 +218,7 @@ export function TransactionHistory() {
           href="/dashboard/transactions"
           className="mt-4 inline-flex items-center gap-2 px-2 text-sm font-semibold text-ink transition-transform hover:translate-x-0.5 min-[1280px]:max-[2199px]:mt-2 min-[1280px]:max-[2199px]:translate-y-[13px]"
         >
-          All Transactions anzeigen <ArrowRight className="size-4" />
+          View all transactions <ArrowRight className="size-4" />
         </Link>
       </CardContent>
     </Card>
@@ -228,7 +228,7 @@ export function TransactionHistory() {
 export function GoalsPanel() {
   return (
     <Card
-      className={`${dashboardStyles.goalsPanel} rounded-2xl bg-white/85 py-0 shadow-[var(--ui-dashboard-panel-shadow)] backdrop-blur-[3px] dark:bg-card/85`}
+      className={`${dashboardStyles.goalsPanel} rounded-[0.75rem] border border-[var(--ui-border)] bg-[var(--ui-surface)] py-0 shadow-[0_4px_16px_rgb(45_51_40_/_4.5%)] dark:bg-card`}
     >
       <CardHeader className="flex-row items-center justify-between px-5 pb-0 pt-5 sm:px-6 lg:px-7 lg:pt-6">
         <CardTitle className="text-xl font-semibold tracking-tight lg:text-2xl">
@@ -248,7 +248,7 @@ export function GoalsPanel() {
           {dashboardGoals.slice(0, 3).map((goal) => (
             <div
               key={goal.title}
-              className={`${dashboardStyles.goalItem} rounded-xl border border-black/10 p-4 dark:border-white/15`}
+              className={`${dashboardStyles.goalItem} rounded-[0.6rem] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-4 dark:border-white/15`}
             >
               <h3 className="font-semibold text-ink">{goal.title}</h3>
               <strong className="mt-3 block text-2xl font-semibold tracking-tight text-ink">
@@ -260,9 +260,9 @@ export function GoalsPanel() {
                 {goal.saved}
               </p>
               <div className="mt-4 flex items-center gap-3">
-                <div className="h-2 flex-1 overflow-hidden rounded-full bg-black/[0.08] dark:bg-white/[0.12]">
+                <div className="h-2 flex-1 overflow-hidden rounded-[0.2rem] bg-[var(--ui-surface-muted)] dark:bg-[var(--ui-surface-muted)]">
                   <div
-                    className="h-full rounded-full bg-ink dark:bg-white"
+                    className="h-full rounded-[0.2rem] bg-[var(--primary)] dark:bg-[var(--primary)]"
                     style={{ width: `${goal.progress}%` }}
                   />
                 </div>
@@ -286,7 +286,7 @@ export function GoalsPanel() {
 export function SpendingByCategory() {
   return (
     <Card
-      className={`${dashboardStyles.spendingPanel} rounded-2xl bg-white/85 py-0 shadow-[var(--ui-dashboard-panel-shadow)] backdrop-blur-[3px] dark:bg-card/85`}
+      className={`${dashboardStyles.spendingPanel} rounded-[0.75rem] border border-[var(--ui-border)] bg-[var(--ui-surface)] py-0 shadow-[0_4px_16px_rgb(45_51_40_/_4.5%)] dark:bg-card`}
     >
       <CardHeader className="px-5 pb-0 pt-5 sm:px-6 lg:px-7 lg:pt-6">
         <CardTitle className="text-xl font-semibold tracking-tight lg:text-2xl">
@@ -309,7 +309,7 @@ export function SpendingByCategory() {
               </IconBubble>
               <span className="font-medium text-ink">{category.title}</span>
               <div>
-                <div className="h-2 overflow-hidden rounded-full bg-black/[0.07] dark:bg-white/[0.12] min-[2200px]:h-3">
+                <div className="h-2 overflow-hidden rounded-[0.2rem] bg-[var(--ui-surface-muted)] dark:bg-[var(--ui-surface-muted)] min-[2200px]:h-3">
                   <div
                     className={`h-full rounded-full ${category.color}`}
                     style={{ width: `${category.progress}%` }}
@@ -333,7 +333,7 @@ export function SpendingByCategory() {
 export function ReviewPanel() {
   return (
     <Card
-      className={`${dashboardStyles.reviewPanel} rounded-2xl bg-white/85 py-0 shadow-[var(--ui-dashboard-panel-shadow)] backdrop-blur-[3px] dark:bg-card/85`}
+      className={`${dashboardStyles.reviewPanel} rounded-[0.75rem] border border-[var(--ui-border)] bg-[var(--ui-surface)] py-0 shadow-[0_4px_16px_rgb(45_51_40_/_4.5%)] dark:bg-card`}
     >
       <CardHeader className="px-5 pb-0 pt-5 sm:px-6 lg:px-7 lg:pt-6">
         <CardTitle className="text-xl font-semibold tracking-tight lg:text-2xl">
@@ -343,7 +343,7 @@ export function ReviewPanel() {
       <CardContent className="space-y-2 px-5 pb-7 pt-2 sm:px-6 lg:px-7 min-[1280px]:max-[2199px]:pt-0">
         <Link
           href="/dashboard/receipts"
-          className="flex items-center gap-3 rounded-lg border border-black/[0.08] px-3 py-2.5 text-sm transition-colors hover:bg-black/[0.03] dark:border-white/15 dark:hover:bg-white/[0.06]"
+          className="flex items-center gap-3 rounded-[0.45rem] border border-[var(--ui-border-subtle)] px-3 py-2.5 text-sm transition-colors hover:bg-[var(--ui-surface-muted)] dark:border-white/15 dark:hover:bg-white/[0.06]"
         >
           <AlertTriangle className="size-5 text-[var(--ui-warning)]" />
           <span className="flex-1">3 receipts waiting for review</span>
@@ -351,7 +351,7 @@ export function ReviewPanel() {
         </Link>
         <Link
           href="/dashboard/transactions"
-          className="flex items-center gap-3 rounded-lg border border-black/[0.08] px-3 py-2.5 text-sm transition-colors hover:bg-black/[0.03] dark:border-white/15 dark:hover:bg-white/[0.06]"
+          className="flex items-center gap-3 rounded-[0.45rem] border border-[var(--ui-border-subtle)] px-3 py-2.5 text-sm transition-colors hover:bg-[var(--ui-surface-muted)] dark:border-white/15 dark:hover:bg-white/[0.06]"
         >
           <Info className="size-5" />
           <span className="flex-1">1 cash payment missing</span>
@@ -359,7 +359,7 @@ export function ReviewPanel() {
         </Link>
         <Link
           href="/dashboard/receipts"
-          className="hidden items-center gap-3 rounded-lg border border-black/[0.08] px-3 py-2.5 text-sm transition-colors hover:bg-black/[0.03] min-[2200px]:flex min-[2200px]:py-3 dark:border-white/15 dark:hover:bg-white/[0.06]"
+          className="hidden items-center gap-3 rounded-[0.45rem] border border-[var(--ui-border-subtle)] px-3 py-2.5 text-sm transition-colors hover:bg-[var(--ui-surface-muted)] min-[2200px]:flex min-[2200px]:py-3 dark:border-white/15 dark:hover:bg-white/[0.06]"
         >
           <FileText className="size-5 text-muted-foreground" />
           <span className="flex-1">1 receipt without a category</span>
@@ -367,7 +367,7 @@ export function ReviewPanel() {
         </Link>
         <Link
           href="/dashboard/transactions"
-          className="mt-2 flex h-10 items-center justify-center gap-2 rounded-lg bg-black text-sm font-medium text-white transition-opacity hover:opacity-80 min-[2200px]:mt-3 min-[2200px]:h-12 dark:bg-white dark:text-black"
+          className="mt-2 flex h-10 items-center justify-center gap-2 rounded-[0.45rem] bg-[var(--primary)] text-sm font-medium text-[var(--primary-foreground)] transition-[filter,transform] hover:brightness-[0.97] active:translate-y-px min-[2200px]:mt-3 min-[2200px]:h-12"
         >
           <Plus className="size-5" /> Add transaction
         </Link>

@@ -31,7 +31,7 @@ export function mapWalletToCashRegisterCard(
       cardNumber: wallet.cardNumberVisual ?? undefined,
       holder: wallet.cardHolderVisual ?? undefined,
       expiry: wallet.cardExpiryVisual ?? undefined,
-      color: wallet.cardColorVisual ?? "#111114",
+      color: wallet.cardColorVisual ?? "#242923",
     },
     balance: Number(wallet.balanceMinor) / 100,
   };

@@ -355,7 +355,7 @@ export default function PeoplePage() {
       });
       if (!invitation.ok) {
         setMessage(
-          invitation.error === "INVALID_INPUT"
+          invitation.error.code === "INVALID_INPUT"
             ? "Please enter a valid email address and choose a role."
             : "The invitation could not be sent.",
         );
@@ -380,7 +380,7 @@ export default function PeoplePage() {
       });
       if (!result.ok) {
         setMessage(
-          result.error === "LAST_ADMIN_REQUIRED"
+          result.error.code === "LAST_ADMIN_REQUIRED"
             ? "The last administrator cannot be removed."
             : "The person could not be removed.",
         );
@@ -408,7 +408,7 @@ export default function PeoplePage() {
         setMessage("The invitation link could not be created.");
         return;
       }
-      setRoleLinks((current) => ({ ...current, [role]: result }));
+      setRoleLinks((current) => ({ ...current, [role]: result.data }));
       setMessage(`${role === "admin" ? "Admin" : "Supervisor"} link created.`);
     } catch {
       setMessage("The invitation link could not be created.");

@@ -99,7 +99,7 @@ function PhoneGoalsView({
                 <span>{dollarPrecise.format(goal.target - goal.saved)} pending</span>
               </span>
             </button>
-          )) : <div className={phoneStyles.empty}>Noch keine Savings goals vorhanden.</div>}
+          )) : <div className={phoneStyles.empty}>No savings goals created yet.</div>}
         </LoadingCollection>
       </div>
       <button type="button" className={phoneStyles.addButton} onClick={onAdd} disabled={loading} data-ui-slot="primary-action">
@@ -373,7 +373,7 @@ export default function GoalsPage() {
                   <Target aria-hidden="true" />
                 </span>
                 <div>
-                  <span>Activee Goals</span>
+                  <span>Active goals</span>
                   <strong><LoadingText loading={loading}>{goals.length}</LoadingText></strong>
                 </div>
               </article>
@@ -616,7 +616,7 @@ export default function GoalsPage() {
                       setGoalName(event.target.value);
                       setFormError("");
                     }}
-                    placeholder="z. B. Abiball, Klassenfahrt …"
+                    placeholder="e.g. class trip …"
                   />
                 </label>
 

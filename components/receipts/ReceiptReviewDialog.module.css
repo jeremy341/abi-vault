@@ -6,7 +6,6 @@
   place-items: center;
   padding: 1rem;
   background: var(--ui-review-overlay);
-  backdrop-filter: blur(4px);
 }
 
 .dialog {
@@ -14,7 +13,7 @@
   max-height: min(92dvh, 48rem);
   overflow: auto;
   border: 1px solid var(--ui-border-subtle);
-  border-radius: 1.25rem;
+  border-radius: var(--ui-card-radius);
   background: var(--ui-surface);
   box-shadow: var(--ui-review-dialog-shadow);
   color: var(--ui-ink);

@@ -8,7 +8,9 @@ import {
   walletArchiveSchema,
   walletUpdateSchema,
   type PeriodActionInput,
+  type WalletArchiveInput,
   type WalletCreateInput,
+  type WalletUpdateInput,
 } from "@/features/finance/schemas/wallets";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -44,7 +46,7 @@ export async function createWallet(
   return actionSuccess({ id: String(walletId) });
 }
 
-export async function updateWallet(input: unknown) {
+export async function updateWallet(input: WalletUpdateInput) {
   const parsed = walletUpdateSchema.safeParse(input);
   if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "The cash register data is invalid.");
   const context = await requirePermission("manageWallets");
@@ -66,7 +68,7 @@ export async function updateWallet(input: unknown) {
   return actionSuccess(null);
 }
 
-export async function archiveWallet(input: unknown) {
+export async function archiveWallet(input: WalletArchiveInput) {
   const parsed = walletArchiveSchema.safeParse(input);
   if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "The cash register data is invalid.");
   const context = await requirePermission("manageWallets");

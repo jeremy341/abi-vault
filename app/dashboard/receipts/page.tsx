@@ -465,7 +465,7 @@ function TransactionCombobox({
         >
           <label className={styles.comboboxSearch}>
             <Search aria-hidden="true" />
-            <span className="sr-only">Transactions durchsuchen</span>
+            <span className="sr-only">Search receipts</span>
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
@@ -1464,7 +1464,7 @@ export default function ReceiptsPage() {
               <input
                 value={fileName}
                 onChange={(event) => setFileName(event.target.value)}
-                placeholder="z. B. Rechnung_Mai_2026.pdf"
+                placeholder="e.g. receipt_may_2026.pdf"
               />
             </label>
             {transactionsLoading ? (

@@ -1,12 +1,12 @@
 export function getClerkAppearance(dark: boolean) {
-  const surface = dark ? "#1d1d1f" : "#ffffff";
-  const ink = dark ? "#ffffff" : "#1d1d1f";
-  const muted = dark ? "#ffffff99" : "#00000088";
-  const border = dark ? "!border-white/15" : "!border-black/10";
-  const hover = dark ? "hover:!bg-white/10" : "hover:!bg-black/5";
-  const surfaceClass = dark ? "!bg-[#1d1d1f]" : "!bg-white";
-  const inkClass = dark ? "!text-white" : "!text-ink";
-  const mutedClass = dark ? "!text-white/60" : "!text-black/55";
+  const surface = dark ? "#242923" : "#ffffff";
+  const ink = dark ? "#e0e7d6" : "#242824";
+  const muted = dark ? "#a5aba1" : "#68745e";
+  const border = dark ? "!border-[#3b4335]" : "!border-[#dfe3d9]";
+  const hover = dark ? "hover:!bg-[#333a2f]" : "hover:!bg-[#eef2e7]";
+  const surfaceClass = dark ? "!bg-[#242923]" : "!bg-white";
+  const inkClass = dark ? "!text-[#e0e7d6]" : "!text-[#242824]";
+  const mutedClass = dark ? "!text-[#a5aba1]" : "!text-[#68745e]";
 
   return {
     variables: {
@@ -16,32 +16,32 @@ export function getClerkAppearance(dark: boolean) {
       colorMutedForeground: muted,
       colorInput: surface,
       colorInputForeground: ink,
-      borderRadius: "12px",
-      fontFamily: "var(--font-geist-sans)",
+      borderRadius: "7px",
+      fontFamily: "var(--font-manrope)",
     },
     elements: {
       rootBox: "w-full",
       cardBox: "w-full shadow-none",
-      card: `w-full rounded-2xl ${border} ${surfaceClass} p-2 shadow-[0_16px_50px_rgb(0_0_0/0.08)]`,
+      card: `w-full rounded-[10px] ${border} ${surfaceClass} p-2 shadow-[0_8px_24px_rgb(45_51_40_/_8%)]`,
       header: "hidden",
-      formButtonPrimary: `rounded-xl ${dark ? "!bg-white !text-[#1d1d1f]" : "!bg-ink !text-white"} shadow-sm hover:opacity-85 focus-visible:!ring-2 focus-visible:!ring-offset-2`,
-      formFieldInput: `rounded-xl ${border} ${surfaceClass} ${inkClass} shadow-none`,
-      socialButtonsBlockButton: `rounded-xl ${border} ${surfaceClass} ${inkClass} shadow-none ${hover}`,
-      footer: `rounded-b-2xl ${border} ${surfaceClass}`,
+      formButtonPrimary: `rounded-[7px] ${dark ? "!bg-[#d4ef89] !text-[#26311f]" : "!bg-[#d4ef89] !text-[#26311f]"} shadow-sm hover:brightness-95 focus-visible:!ring-2 focus-visible:!ring-offset-2`,
+      formFieldInput: `rounded-[7px] ${border} ${surfaceClass} ${inkClass} shadow-none`,
+      socialButtonsBlockButton: `rounded-[7px] ${border} ${surfaceClass} ${inkClass} shadow-none ${hover}`,
+      footer: `rounded-b-[10px] ${border} ${surfaceClass}`,
       footerActionLink: `${inkClass} underline underline-offset-4`,
       avatarBox: "size-8 md:size-10",
-      userButtonPopoverCard: `w-72 rounded-2xl ${border} ${surfaceClass} ${inkClass} shadow-[0_16px_50px_rgb(0_0_0/0.16)]`,
+      userButtonPopoverCard: `w-72 rounded-[10px] ${border} ${surfaceClass} ${inkClass} shadow-[0_8px_24px_rgb(45_51_40_/_16%)]`,
       userButtonPopoverMain: inkClass,
       userPreviewMainIdentifier: inkClass,
       userPreviewSecondaryIdentifier: mutedClass,
-      userButtonPopoverActionButton: `rounded-lg ${inkClass} ${hover}`,
+      userButtonPopoverActionButton: `rounded-[6px] ${inkClass} ${hover}`,
       userButtonPopoverActionButtonText: inkClass,
       userButtonPopoverFooter: `${border} ${surfaceClass} ${mutedClass}`,
       userButtonPopoverFooterAction: mutedClass,
       userButtonPopoverFooterActionText: mutedClass,
-      modalContent: `rounded-2xl ${border} ${surfaceClass} ${inkClass}`,
-      userProfileRootBox: `w-[min(52rem,calc(100vw-2rem))] max-h-[min(40rem,calc(100vh-2rem))] overflow-auto rounded-2xl ${border} ${surfaceClass} ${inkClass}`,
-      userProfilePage: `rounded-2xl ${border} ${surfaceClass} ${inkClass}`,
+      modalContent: `rounded-[10px] ${border} ${surfaceClass} ${inkClass}`,
+      userProfileRootBox: `w-[min(52rem,calc(100vw-2rem))] max-h-[min(40rem,calc(100vh-2rem))] overflow-auto rounded-[10px] ${border} ${surfaceClass} ${inkClass}`,
+      userProfilePage: `rounded-[10px] ${border} ${surfaceClass} ${inkClass}`,
       userProfileNavbar: `${border} ${surfaceClass}`,
       userProfileSection: `${border} ${inkClass}`,
       userProfileSection__profile: `${border} ${inkClass}`,

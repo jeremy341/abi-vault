@@ -22,3 +22,6 @@ export const updateGoalSchema = z.object({
 });
 
 export const archiveGoalSchema = z.object({ goalId: z.string().uuid(), reason: z.string().trim().min(1).max(1000) });
+
+export type UpdateGoalInput = z.input<typeof updateGoalSchema>;
+export type ArchiveGoalInput = z.input<typeof archiveGoalSchema>;

@@ -1,4 +1,6 @@
-# Abi Manager UI — Current Design Audit
+# Abi Manager UI - Current Design Audit
+
+> Current authority: the concept-03 reconciliation landed on `open-source-demo` after this historical inventory. See `docs/ui/concept-03-design-system.md` for the active token and copy contract. The sections below are retained as implementation history and risk context.
 
 > Snapshot of the UI as implemented in the repository on 2026-08-14. This is an inventory, not a proposed design system. It records the existing visual behavior so the next pass can normalize it deliberately.
 
@@ -6,13 +8,13 @@
 
 Abi Manager currently uses a quiet, monochrome finance-dashboard language:
 
-- Geist Sans is the primary typeface, with Geist Mono available for numeric/code-like text.
+- Manrope is the primary typeface, with Geist Mono available for numeric/code-like text.
 - White surfaces sit on a very light gray canvas with near-black ink and thin gray rules.
 - The dashboard uses soft rounded cards, restrained shadows, occasional backdrop blur, and a small set of semantic accents: green for positive/income, red for negative/expense, amber for review, violet for selected/category identity.
 - The global shell is a fixed viewport frame with a persistent sidebar, shared page header, and scroll-contained main area.
 - The main dashboard is intentionally dense at desktop sizes, with special layout branches at 1280px, 1600px, 2200px, and short viewport heights.
 - Transactions and Receipts are custom CSS-module surfaces rather than shared table/card primitives. They are visually related but not token-identical.
-- Most interactions use short opacity, color, transform, or shadow transitions. Reduced-motion overrides exist for the global links, card tilt, and modal animation.
+- Most interactions use short opacity, color, transform, or shadow transitions. Reduced-motion overrides exist for the global links, modal animation, and loading feedback. Account-card tilt/light-sweep motion has been removed.
 
 ### Current design direction
 
@@ -23,7 +25,7 @@ Reading this as: a trust-first internal finance dashboard for student committee 
 | Dial             | Current reading | Evidence                                                                               |
 | ---------------- | --------------: | -------------------------------------------------------------------------------------- |
 | Design variance  |            4/10 | Repeated card/grid structures, mostly symmetrical columns, restrained decoration       |
-| Motion intensity |            3/10 | Short hover transitions, modal pop/fade, account-card tilt and light sweep             |
+| Motion intensity |            2/10 | Short hover transitions, modal pop/fade, and restrained loading feedback                |
 | Visual density   |            5/10 | Dense financial rows and dashboards, balanced by generous card padding and white space |
 
 ## Source map
@@ -50,7 +52,7 @@ Reading this as: a trust-first internal finance dashboard for student committee 
 
 #### Font families
 
-- `next/font/google` loads `Geist` into `--font-geist-sans`.
+- `next/font/google` loads `Manrope` into `--font-manrope`.
 - `Geist_Mono` loads into `--font-geist-mono`.
 - `body` explicitly uses `var(--font-geist-sans), sans-serif`.
 - The Tailwind theme exposes `--font-mono: var(--font-geist-mono)`.
@@ -101,7 +103,7 @@ Reading this as: a trust-first internal finance dashboard for student committee 
 | `--card`               | `oklch(1 0 0)`              | Card surface                                            |
 | `--muted-foreground`   | `oklch(0.556 0 0)`          | Secondary text                                          |
 | `--border` / `--input` | `oklch(0.922 0 0)`          | Primitive border/input defaults                         |
-| `--primary`            | `oklch(0.205 0 0)`          | Primary black control                                   |
+| `--primary`            | `#d4ef89`                   | Primary lime control                                    |
 | `--destructive`        | `oklch(0.577 0.245 27.325)` | Generic destructive token                               |
 
 #### Global dark tokens
@@ -122,7 +124,7 @@ Reading this as: a trust-first internal finance dashboard for student committee 
 | Orange identity  | `#e98b00`, `#fff5e8`, Tailwind `orange-50/500`                                                 |
 | Neutral tags     | `#f3f4f6`, `#52525b`                                                                           |
 
-Important: the semantic palette is currently implemented through a mixture of CSS variables, Tailwind colors, hardcoded hex values, and translucent black/white values. This is a major future normalization target.
+The active concept-03 pass centralizes primary action, semantic data, shape, and surface roles. Remaining hardcoded literals are intentional exceptions or legacy secondary-surface details tracked for later cleanup.
 
 ### Shape, border, and depth
 
@@ -232,7 +234,7 @@ At widths below 1280px, columns collapse into ordered content sections. The desk
 
 - Card carousel supports previous/next buttons, touch swipe, add-card flow, edit flow, and delete flow.
 - Account card uses a 340:196 aspect ratio, expanding to max 440px at 2200px.
-- Card is black by default, image-backed, 20px radius, deep shadow, animated light sweep, hover tilt based on pointer position, and a slight lift/scale.
+- Card uses forest-ink concept-03 treatment, 10px radius, restrained shadow, and no pointer tilt/light sweep.
 - Card text is white unless a light custom card color is active.
 - Account number uses wide letter spacing and tabular numerals.
 - The balance panel is separated by a thin vertical divider on desktop.
@@ -253,7 +255,7 @@ At widths below 1280px, columns collapse into ordered content sections. The desk
 
 - Three goal cards in a three-column inner grid.
 - Each nested card uses `rounded-xl`, thin border, `p-4` base spacing, and larger target amount typography.
-- Progress bars are black/white with a light neutral track, 2px-ish thickness, rounded ends.
+- Progress bars use semantic goal/expense/income roles with light neutral tracks and rounded ends.
 - The “Add goal” action is text-first and dims on hover.
 - Adding a fourth goal creates an overflowable minimum-width inner grid rather than changing the outer layout.
 
@@ -270,7 +272,7 @@ At widths below 1280px, columns collapse into ordered content sections. The desk
 - Review links are horizontal bordered rows with icon, flexible text, and arrow.
 - Warning uses amber; informational and file items are neutral.
 - The third “1 Receipt without a category” row is hidden below 2200px and shown at 2200px.
-- Bottom action is black/white depending on theme, rounded-lg, and grows from 40px to 48px at 2200px.
+- Bottom action is lime/dark-ink, uses the 7px control radius, and grows from 40px to 48px at 2200px.
 
 ## Transactions page
 

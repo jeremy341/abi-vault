@@ -8,13 +8,13 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-[var(--ui-ink)] text-[var(--ui-surface)] hover:opacity-80",
+        default: "bg-[var(--primary)] text-[var(--primary-foreground)] hover:brightness-[0.97]",
         outline:
-          "border-[var(--ui-border)] bg-[var(--ui-surface)] hover:bg-black/[0.035] hover:text-[var(--ui-ink)] aria-expanded:bg-black/[0.035] aria-expanded:text-[var(--ui-ink)] dark:border-[var(--ui-border)] dark:bg-[var(--ui-surface)] dark:hover:bg-white/[0.06]",
+          "border-[var(--ui-border)] bg-[var(--ui-surface)] hover:bg-[var(--ui-surface-control-muted)] hover:text-[var(--ui-ink)] aria-expanded:bg-[var(--ui-surface-control-muted)] aria-expanded:text-[var(--ui-ink)] dark:border-[var(--ui-border)] dark:bg-[var(--ui-surface)] dark:hover:bg-[var(--ui-surface-control-muted)]",
         secondary:
-          "bg-black/[0.045] text-[var(--ui-ink)] hover:bg-black/[0.08] aria-expanded:bg-black/[0.08] aria-expanded:text-[var(--ui-ink)] dark:bg-white/[0.1] dark:hover:bg-white/[0.14]",
+          "bg-[var(--ui-surface-muted)] text-[var(--ui-ink)] hover:bg-[var(--ui-surface-control-muted)] aria-expanded:bg-[var(--ui-surface-control-muted)] aria-expanded:text-[var(--ui-ink)] dark:bg-[var(--ui-surface-muted)] dark:hover:bg-[var(--ui-surface-control-muted)]",
         ghost:
-          "hover:bg-black/[0.035] hover:text-[var(--ui-ink)] aria-expanded:bg-black/[0.035] aria-expanded:text-[var(--ui-ink)] dark:hover:bg-white/[0.06]",
+          "hover:bg-[var(--ui-surface-control-muted)] hover:text-[var(--ui-ink)] aria-expanded:bg-[var(--ui-surface-control-muted)] aria-expanded:text-[var(--ui-ink)] dark:hover:bg-[var(--ui-surface-control-muted)]",
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         link: "text-primary underline-offset-4 hover:underline",

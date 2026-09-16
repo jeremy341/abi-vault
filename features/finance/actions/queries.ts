@@ -3,6 +3,13 @@
 import { requireClerkContext } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { requirePermission } from "@/lib/auth/permissions-server";
+import {
+  projectCategoryTotals,
+  projectFlowTotals,
+  projectMonthlyFlow,
+  projectWalletBalances,
+  type ProjectionTransaction,
+} from "@/lib/finance/projections";
 
 export type TransactionListItem = {
   id: string;
@@ -413,23 +420,27 @@ export async function getReportKpisForCurrentOrganization() {
   const effectiveTransactions = (transactions ?? []).filter((transaction) =>
     activeWalletIds.has(transaction.from_wallet_id ?? "") || activeWalletIds.has(transaction.to_wallet_id ?? ""),
   );
-  let income = BigInt(0);
-  let expenses = BigInt(0);
-  for (const transaction of effectiveTransactions) {
-    const amount = BigInt(String(transaction.amount_minor));
-    if (transaction.type === "income") income += amount;
-    if (transaction.type === "expense") expenses += amount;
-  }
+  const projectionTransactions: ProjectionTransaction[] = effectiveTransactions.map((transaction) => ({
+    amountMinor: String(transaction.amount_minor),
+    type: transaction.type,
+    category: "",
+    fromWalletId: transaction.from_wallet_id,
+    toWalletId: transaction.to_wallet_id,
+  }));
+  const totals = projectFlowTotals(projectionTransactions);
   const pendingReceipts = (receipts ?? []).filter((receipt) => receipt.review_status === "pending").length;
   const reviewedReceiptCount = (receipts ?? []).filter((receipt) => receipt.review_status === "approved").length;
   const unassignedReceiptCount = (receipts ?? []).filter((receipt) => !receipt.transaction_id).length;
-  const balances = new Map((wallets ?? []).map((wallet) => [wallet.id, BigInt(String(wallet.opening_balance_minor ?? 0))]));
-  for (const transaction of effectiveTransactions) {
-    const amount = BigInt(String(transaction.amount_minor));
-    if (transaction.type === "income" && transaction.to_wallet_id) balances.set(transaction.to_wallet_id, (balances.get(transaction.to_wallet_id) ?? BigInt(0)) + amount);
-    if (transaction.type === "expense" && transaction.from_wallet_id) balances.set(transaction.from_wallet_id, (balances.get(transaction.from_wallet_id) ?? BigInt(0)) - amount);
-  }
-  const liquid = [...balances.entries()].filter(([walletId]) => activeWalletIds.has(walletId)).reduce((sum, [, amount]) => sum + amount, BigInt(0));
+  const balances = projectWalletBalances(
+    (wallets ?? []).map((wallet) => ({
+      id: wallet.id,
+      openingBalanceMinor: String(wallet.opening_balance_minor ?? 0),
+    })),
+    projectionTransactions,
+  );
+  const liquid = [...balances.entries()]
+    .filter(([walletId]) => activeWalletIds.has(walletId))
+    .reduce((sum, [, amount]) => sum + amount, BigInt(0));
   const latestCounts = new Map<string, { difference_minor: number }>();
   for (const count of cashCounts ?? []) {
     if (activeWalletIds.has(count.wallet_id) && !latestCounts.has(count.wallet_id)) {
@@ -441,9 +452,9 @@ export async function getReportKpisForCurrentOrganization() {
     : null;
   return {
     ok: true as const,
-    incomeMinor: income.toString(),
-    expenseMinor: expenses.toString(),
-    netMinor: (income - expenses).toString(),
+    incomeMinor: totals.incomeMinor.toString(),
+    expenseMinor: totals.expenseMinor.toString(),
+    netMinor: totals.netMinor.toString(),
     liquidMinor: liquid.toString(),
     walletCount: wallets?.length ?? 0,
     reviewCount: pendingReceipts,
@@ -525,31 +536,32 @@ export async function getDashboardSnapshot() {
     }
     return { ok: false as const };
   }
-  const totals = new Map<string, number>();
-  let totalExpense = 0;
-  for (const transaction of transactions.items) {
-    if (transaction.type !== "expense") continue;
-    const amount = Math.abs(Number(transaction.amountMinor));
-    totals.set(transaction.category, (totals.get(transaction.category) ?? 0) + amount);
-    totalExpense += amount;
-  }
-  const categories = [...totals.entries()].map(([name, amountMinor]) => ({
-    name,
-    amountMinor: String(amountMinor),
-    progress: totalExpense ? Math.round((amountMinor / totalExpense) * 100) : 0,
+  const projectionTransactions = transactions.items.map((transaction) => ({
+    amountMinor: transaction.amountMinor,
+    type: transaction.type,
+    category: transaction.category,
+    date: transaction.date,
+    fromWalletId: transaction.fromWalletId ?? null,
+    toWalletId: transaction.toWalletId ?? null,
   }));
-  const balances = new Map(wallets.items.map((wallet) => [wallet.id, BigInt(wallet.openingBalanceMinor)]));
-  for (const transaction of transactions.items) {
-    const amount = BigInt(transaction.amountMinor);
-    if (transaction.type === "income" && transaction.toWalletId) balances.set(transaction.toWalletId, (balances.get(transaction.toWalletId) ?? BigInt(0)) + amount);
-    if (transaction.type === "expense" && transaction.fromWalletId) balances.set(transaction.fromWalletId, (balances.get(transaction.fromWalletId) ?? BigInt(0)) - amount);
-    if (transaction.type === "transfer") {
-      const transferAmount = amount < BigInt(0) ? -amount : amount;
-      if (transaction.fromWalletId) balances.set(transaction.fromWalletId, (balances.get(transaction.fromWalletId) ?? BigInt(0)) - transferAmount);
-      if (transaction.toWalletId) balances.set(transaction.toWalletId, (balances.get(transaction.toWalletId) ?? BigInt(0)) + transferAmount);
-    }
-  }
-  return { ok: true as const, wallets: wallets.items.map((wallet) => ({ ...wallet, balanceMinor: (balances.get(wallet.id) ?? BigInt(0)).toString() })), transactions: transactions.items, goals: goals.items, categories };
+  const categories = projectCategoryTotals(projectionTransactions);
+  const balances = projectWalletBalances(
+    wallets.items.map((wallet) => ({
+      id: wallet.id,
+      openingBalanceMinor: wallet.openingBalanceMinor,
+    })),
+    projectionTransactions,
+  );
+  return {
+    ok: true as const,
+    wallets: wallets.items.map((wallet) => ({
+      ...wallet,
+      balanceMinor: (balances.get(wallet.id) ?? BigInt(0)).toString(),
+    })),
+    transactions: transactions.items,
+    goals: goals.items,
+    categories,
+  };
 }
 
 export async function getReportSnapshot() {
@@ -567,19 +579,15 @@ export async function getReportSnapshot() {
     const label = date.toLocaleDateString("en-GB", { month: "short" }).replace(".", "");
     return { key, label, year: date.getFullYear() };
   });
-  const monthly = new Map(months.map((month) => [month.key, { income: 0, expenses: 0 }]));
-  const categoryTotals = new Map<string, number>();
-  for (const transaction of transactions.items) {
-    const month = transaction.date ? months.find((item) => item.key === transaction.date.slice(0, 7)) : undefined;
-    const amount = Math.abs(Number(transaction.amountMinor)) / 100;
-    if (month && monthly.has(month.key)) {
-      const row = monthly.get(month.key)!;
-      if (transaction.type === "income") row.income += amount;
-      if (transaction.type === "expense") row.expenses += amount;
-    }
-    if (transaction.type === "expense") categoryTotals.set(transaction.category, (categoryTotals.get(transaction.category) ?? 0) + amount);
-  }
-  const cashflow = months.map((month) => ({ month: month.label, ...(monthly.get(month.key) ?? { income: 0, expenses: 0 }) }));
+  const projectionTransactions = transactions.items.map((transaction) => ({
+    amountMinor: transaction.amountMinor,
+    type: transaction.type,
+    category: transaction.category,
+    date: transaction.date,
+    fromWalletId: transaction.fromWalletId ?? null,
+    toWalletId: transaction.toWalletId ?? null,
+  }));
+  const cashflow = projectMonthlyFlow(projectionTransactions, months);
   if (!transactions.items.length) {
     return {
       ok: true as const,
@@ -595,11 +603,11 @@ export async function getReportSnapshot() {
       reviewItems: [],
     };
   }
-  const totalExpenses = [...categoryTotals.values()].reduce((sum, value) => sum + value, 0);
-  const categories = [...categoryTotals.entries()].map(([name, amount]) => ({
-    name,
-    amount,
-    share: totalExpenses ? Math.round((amount / totalExpenses) * 100) : 0,
+  const categoryTotals = projectCategoryTotals(projectionTransactions);
+  const categories = categoryTotals.map((category) => ({
+    name: category.name,
+    amount: Number(category.amountMinor) / 100,
+    share: category.progress,
   }));
   let balance = wallets.items.reduce((sum, wallet) => sum + Number(wallet.openingBalanceMinor) / 100, 0);
   for (const transaction of transactions.items) {

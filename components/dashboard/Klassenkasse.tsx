@@ -83,7 +83,7 @@ export default function Klassenkasse() {
                   type="button"
                   className={dashboardStyles.cashCardButton}
                   onClick={() => setPreviewOpen(true)}
-                  aria-label={`${currentCard.details?.accountName ?? "Cash register"} anzeigen`}
+                  aria-label={`View ${currentCard.details?.accountName ?? "Cash register"}`}
                 >
                   <AccountCard
                     variant="bank"
@@ -192,7 +192,7 @@ function CardPreviewDialog({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[80] flex items-center justify-center bg-black/30 p-4 backdrop-blur-[3px]"
+      className="fixed inset-0 z-[80] flex items-center justify-center bg-[rgb(24_32_21_/_42%)] p-4"
       role="presentation"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
@@ -202,7 +202,7 @@ function CardPreviewDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="dashboard-card-preview-title"
-        className="w-full max-w-[29rem] rounded-2xl border border-black/10 bg-white p-5 shadow-[0_24px_70px_rgb(0_0_0_/_0.22)] dark:border-white/10 dark:bg-card sm:p-6"
+        className="w-full max-w-[29rem] rounded-[10px] border border-[var(--ui-border)] bg-white p-5 shadow-[0_18px_50px_rgb(45_51_40_/_18%)] dark:border-white/10 dark:bg-card sm:p-6"
       >
         <header className="mb-5 flex items-center justify-between gap-4">
           <div>
@@ -216,14 +216,14 @@ function CardPreviewDialog({
           </div>
           <button
             type="button"
-            className="inline-flex size-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-black/[0.04] hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink dark:hover:bg-white/[0.06]"
+            className="inline-flex size-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-[var(--ui-surface-control-muted)] hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ui-border-focus)]"
             aria-label="Close preview"
             onClick={onClose}
           >
             <X className="size-5" />
           </button>
         </header>
-        <div className="flex justify-center rounded-xl bg-black/[0.025] px-4 py-6 dark:bg-white/[0.04]">
+        <div className="flex justify-center rounded-[0.6rem] bg-[var(--ui-surface-muted)] px-4 py-6">
           <AccountCard
             variant="bank"
             details={card.details}

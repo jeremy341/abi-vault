@@ -30,7 +30,7 @@ const pageInformation: Record<string, { title: string; description: string }> =
       description: "Plan savings goals and track progress.",
     },
     "/dashboard/funds": {
-      title: "Cash register & Konten",
+      title: "Cash registers & accounts",
       description: "Manage cash registers and balances.",
     },
     "/dashboard/reports": {
@@ -77,7 +77,7 @@ export default function DashboardHeader() {
       <div className="flex items-center gap-2 md:gap-5">
         <button
           type="button"
-          className={`${styles.cohortButton} hidden h-14 items-center gap-3 rounded-xl border border-black/10 bg-white px-5 text-base font-medium text-ink shadow-sm transition-colors hover:bg-black/[0.03] md:inline-flex dark:border-white/10 dark:bg-card dark:hover:bg-white/[0.08]`}
+          className={`${styles.cohortButton} hidden h-14 items-center gap-3 rounded-[var(--ui-control-radius)] border border-[var(--ui-border)] bg-[var(--ui-surface)] px-5 text-base font-medium text-ink shadow-none transition-colors hover:bg-[var(--ui-surface-control-muted)] md:inline-flex`}
           aria-label="Select graduation year"
         >
           <CalendarDays className="size-5" />
@@ -88,7 +88,7 @@ export default function DashboardHeader() {
         <button
           type="button"
           aria-label="Notifications"
-          className="rounded-lg p-2 hover:bg-black/[0.04] md:size-11 dark:hover:bg-white/[0.08]"
+          className="rounded-[var(--ui-control-radius)] p-2 hover:bg-[var(--ui-surface-control-muted)] md:size-11"
         >
           <Bell className="size-6" />
         </button>

@@ -66,20 +66,20 @@ const reviewItems: Array<{
 const chartConfig = {
   income: {
     label: "Income",
-    theme: { light: "#18181b", dark: "#f4f4f5" },
+    theme: { light: "var(--ui-data-income)", dark: "var(--ui-data-income)" },
   },
   expenses: {
     label: "Expenses",
-    theme: { light: "#a1a1aa", dark: "#71717a" },
+    theme: { light: "var(--ui-data-expense)", dark: "var(--ui-data-expense)" },
   },
 } satisfies ChartConfig;
 
 const analysisChartConfig = {
-  balance: { label: "Kontostand", color: "#18181b" },
-  income: { label: "Income", color: "#18181b" },
-  expenses: { label: "Expenses", color: "#a1a1aa" },
-  current: { label: "Aktuell", color: "#18181b" },
-  target: { label: "Goal", color: "#a1a1aa" },
+  balance: { label: "Balance", color: "var(--ui-data-expense)" },
+  income: { label: "Income", color: "var(--ui-data-income)" },
+  expenses: { label: "Expenses", color: "var(--ui-data-expense)" },
+  current: { label: "Current", color: "var(--ui-data-expense)" },
+  target: { label: "Goal", color: "var(--ui-data-goal)" },
 } satisfies ChartConfig;
 
 const money = new Intl.NumberFormat("en-GB", {
@@ -241,13 +241,13 @@ function PhoneReportsView({
           className={phoneStyles.tabPanel}
         >
           <section className={phoneStyles.hero}>
-            <span>Kontostand</span>
+              <span>Balance</span>
             <strong>{kpis.income}</strong>
             <p>Trend during the selected period</p>
           </section>
           <section className={phoneStyles.section}>
             <header className={phoneStyles.sectionHeader}>
-              <h2>Kontostand-Verlauf</h2>
+              <h2>Balance over time</h2>
               <span>Monatlich</span>
             </header>
             {analysisBalance.length ? <ChartContainer
@@ -760,7 +760,7 @@ export default function ReportsPage() {
             </div>
             <div className={styles.analysisGrid}>
               <ChartPanel
-                title="Kontostand-Verlauf"
+                  title="Balance over time"
                 subtitle="Available balance by month"
                 className={styles.analysisWidePanel}
               >
@@ -827,7 +827,11 @@ export default function ReportsPage() {
                         {liveCategories.map((entry, index) => (
                           <Cell
                             key={entry.name}
-                            fill={["#18181b", "#a1a1aa", "#d4d4d8"][index]}
+                            fill={[
+                              "var(--ui-data-expense)",
+                              "var(--ui-data-income)",
+                              "var(--ui-data-review)",
+                            ][index]}
                           />
                         ))}
                       </Pie>
@@ -839,9 +843,11 @@ export default function ReportsPage() {
                         <span>
                           <i
                             style={{
-                              background: ["#18181b", "#a1a1aa", "#d4d4d8"][
-                                index
-                              ],
+                              background: [
+                                "var(--ui-data-expense)",
+                                "var(--ui-data-income)",
+                                "var(--ui-data-review)",
+                              ][index],
                             }}
                           />
                           {entry.name}

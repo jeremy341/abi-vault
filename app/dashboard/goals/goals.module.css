@@ -128,9 +128,9 @@
   flex: none;
   border: 0;
   border-radius: var(--ui-control-radius);
-  background: var(--ui-ink);
+  background: var(--ui-action-primary);
   padding: 0 1rem;
-  color: var(--ui-surface);
+  color: var(--ui-action-primary-ink);
   cursor: pointer;
   font: inherit;
   font-size: 0.875rem;
@@ -165,7 +165,7 @@
   min-height: 14rem;
   flex-direction: column;
   border: 1px solid var(--ui-border);
-  border-radius: 0.8rem;
+  border-radius: var(--ui-card-radius);
   background: var(--ui-surface);
   padding: 1.1rem;
   cursor: pointer;
@@ -234,7 +234,7 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: var(--ui-ink);
+  background: var(--ui-data-goal);
 }
 .progressLine > strong {
   color: var(--ui-muted-ink);
@@ -348,8 +348,7 @@
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  background: rgb(0 0 0 / 0.24);
-  backdrop-filter: blur(3px);
+  background: rgb(36 41 35 / 42%);
   overscroll-behavior: contain;
   animation: goal-fade-in 0.16s ease-out;
 }
@@ -358,7 +357,7 @@
   max-height: calc(100dvh - 2rem);
   overflow-y: auto;
   border: 1px solid var(--ui-border);
-  border-radius: 1rem;
+  border-radius: var(--ui-card-radius);
   background: var(--ui-surface);
   color: var(--ui-ink);
   box-shadow: var(--ui-modal-shadow);
@@ -434,7 +433,7 @@
   display: grid;
   gap: 0.55rem;
   border: 1px solid var(--ui-border-subtle);
-  border-radius: 0.8rem;
+  border-radius: var(--ui-card-radius);
   background: rgb(0 0 0 / 0.018);
   padding: 1rem;
 }

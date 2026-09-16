@@ -52,7 +52,7 @@
   align-items: center;
   gap: 0.55rem;
   border: 1px solid var(--ui-border);
-  border-radius: 0.75rem;
+  border-radius: var(--ui-control-radius);
   padding: 0 0.8rem;
 }
 
@@ -80,9 +80,9 @@
   align-items: center;
   justify-content: center;
   border: 0;
-  border-radius: 0.75rem;
-  background: var(--ui-ink);
-  color: var(--ui-surface);
+  border-radius: var(--ui-control-radius);
+  background: var(--ui-action-primary);
+  color: var(--ui-action-primary-ink);
 }
 
 .addButton svg {
@@ -187,7 +187,7 @@
   align-content: center;
   gap: 0.15rem;
   border: 1px solid var(--ui-border-subtle);
-  border-radius: 0.75rem;
+  border-radius: var(--ui-card-radius);
   padding: 0.65rem;
 }
 
@@ -213,7 +213,7 @@
   max-width: none !important;
   max-height: 90dvh !important;
   overflow: auto !important;
-  border-radius: 1.25rem 1.25rem 0 0 !important;
+  border-radius: var(--ui-card-radius) var(--ui-card-radius) 0 0 !important;
   padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
   overscroll-behavior: contain;
 }

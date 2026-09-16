@@ -137,9 +137,9 @@
   gap: 0.5rem;
   border: 0;
   border-radius: var(--ui-control-radius);
-  background: var(--ui-ink);
+  background: var(--ui-action-primary);
   padding: 0 1rem;
-  color: var(--ui-surface);
+  color: var(--ui-action-primary-ink);
   cursor: pointer;
   font: inherit;
   font-size: 0.82rem;
@@ -176,7 +176,7 @@
   min-height: 0;
   overflow: hidden;
   border: 1px solid var(--ui-border-subtle);
-  border-radius: 0.85rem;
+  border-radius: var(--ui-card-radius);
   background: var(--ui-surface);
 }
 .cashflowPanel {
@@ -291,7 +291,7 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: var(--ui-ink);
+  background: var(--ui-data-expense);
   transition: opacity 0.14s ease;
 }
 .categoryItem:hover .categoryBar span {
@@ -344,7 +344,7 @@
   align-items: center;
   gap: 0.8rem;
   border: 1px solid var(--ui-border-subtle);
-  border-radius: 0.8rem;
+  border-radius: var(--ui-control-radius);
   background: var(--ui-surface);
   padding: 0.8rem 1rem;
   color: var(--ui-ink);
@@ -417,7 +417,7 @@
   align-items: center;
   gap: 0.8rem;
   border: 1px solid var(--ui-border-subtle);
-  border-radius: 0.8rem;
+  border-radius: var(--ui-card-radius);
   background: var(--ui-surface);
   padding: 1rem;
   color: var(--ui-ink);
@@ -751,7 +751,7 @@
   align-content: center;
   gap: 0.18rem;
   border: 1px solid var(--ui-border-subtle);
-  border-radius: 0.75rem;
+  border-radius: var(--ui-card-radius);
   padding: 0.8rem 1rem;
 }
 .analysisKpi > span {
@@ -809,7 +809,7 @@
   flex-direction: column;
   overflow: hidden;
   border: 1px solid var(--ui-border-subtle);
-  border-radius: 0.75rem;
+  border-radius: var(--ui-card-radius);
 }
 .analysisPanelHeader {
   display: flex;
@@ -969,7 +969,7 @@
   align-content: center;
   gap: 0.18rem;
   border: 1px solid var(--ui-border-subtle);
-  border-radius: 0.75rem;
+  border-radius: var(--ui-card-radius);
   padding: 0.85rem 1rem;
 }
 .reviewSummaryGrid span,
@@ -994,7 +994,7 @@
 .exportHistory {
   overflow: hidden;
   border: 1px solid var(--ui-border-subtle);
-  border-radius: 0.75rem;
+  border-radius: var(--ui-card-radius);
 }
 .reviewQueue,
 .reviewStatusPanel,
@@ -1162,13 +1162,13 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: var(--ui-ink);
+  background: var(--ui-positive);
 }
 .reviewStatusBars > div:nth-child(2) em {
   background: var(--ui-warning);
 }
 .reviewStatusBars > div:nth-child(3) em {
-  background: var(--ui-muted-ink);
+  background: var(--ui-negative);
 }
 .exportWorkspace,
 .exportHistory {

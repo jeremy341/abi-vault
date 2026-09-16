@@ -127,7 +127,7 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: var(--ui-ink);
+  background: var(--ui-data-goal);
 }
 
 .goalFooter {
@@ -149,9 +149,9 @@
   gap: 0.5rem;
   margin-top: 0.85rem;
   border: 0;
-  border-radius: 0.8rem;
-  background: var(--ui-ink);
-  color: var(--ui-surface);
+  border-radius: var(--ui-control-radius);
+  background: var(--ui-action-primary);
+  color: var(--ui-action-primary-ink);
   font: inherit;
   font-size: 0.82rem;
   font-weight: 650;
@@ -172,7 +172,7 @@
   max-width: none !important;
   max-height: 94dvh !important;
   overflow: auto !important;
-  border-radius: 1.25rem 1.25rem 0 0 !important;
+  border-radius: var(--ui-card-radius) var(--ui-card-radius) 0 0 !important;
   padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
   overscroll-behavior: contain;
 }

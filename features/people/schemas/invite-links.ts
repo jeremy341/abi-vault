@@ -5,3 +5,4 @@ export const inviteLinkRoleSchema = z.object({
 });
 
 export type InviteLinkRole = z.infer<typeof inviteLinkRoleSchema>["role"];
+export type InviteLinkRoleInput = z.input<typeof inviteLinkRoleSchema>;

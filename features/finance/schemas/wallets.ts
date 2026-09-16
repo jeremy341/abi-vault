@@ -29,6 +29,9 @@ export const walletArchiveSchema = z.object({
   reason: z.string().trim().min(1).max(500),
 });
 
+export type WalletUpdateInput = z.input<typeof walletUpdateSchema>;
+export type WalletArchiveInput = z.input<typeof walletArchiveSchema>;
+
 export const periodActionSchema = z.object({
   periodId: z.string().uuid(),
   reason: z.string().trim().min(1).max(500),

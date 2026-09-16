@@ -2,11 +2,17 @@
 
 import { requirePermission } from "@/lib/auth/permissions-server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { archiveGoalSchema, updateGoalSchema } from "@/features/goals/schemas/goal-mutations";
+import {
+  archiveGoalSchema,
+  updateGoalSchema,
+  type ArchiveGoalInput,
+  type UpdateGoalInput,
+} from "@/features/goals/schemas/goal-mutations";
+import { actionFailure, actionSuccess, type ActionResult } from "@/lib/api/result";
 
-export async function updateGoal(input: unknown) {
+export async function updateGoal(input: UpdateGoalInput): Promise<ActionResult<null>> {
   const parsed = updateGoalSchema.safeParse(input);
-  if (!parsed.success) return { ok: false as const, error: "INVALID_INPUT" };
+  if (!parsed.success) return actionFailure("INVALID_INPUT", "The goal data is invalid.");
   const context = await requirePermission("manageGoals");
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.rpc("update_fundraising_goal", {
@@ -18,12 +24,14 @@ export async function updateGoal(input: unknown) {
     p_deadline: parsed.data.deadline,
     p_reason: parsed.data.reason,
   });
-  return error ? { ok: false as const, error: "GOAL_UPDATE_FAILED" } : { ok: true as const };
+  return error
+    ? actionFailure("GOAL_UPDATE_FAILED", "The goal could not be saved.")
+    : actionSuccess(null);
 }
 
-export async function archiveGoal(input: unknown) {
+export async function archiveGoal(input: ArchiveGoalInput): Promise<ActionResult<null>> {
   const parsed = archiveGoalSchema.safeParse(input);
-  if (!parsed.success) return { ok: false as const, error: "INVALID_INPUT" };
+  if (!parsed.success) return actionFailure("INVALID_INPUT", "The goal data is invalid.");
   const context = await requirePermission("manageGoals");
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.rpc("archive_fundraising_goal", {
@@ -31,5 +39,7 @@ export async function archiveGoal(input: unknown) {
     p_goal_id: parsed.data.goalId,
     p_reason: parsed.data.reason,
   });
-  return error ? { ok: false as const, error: "GOAL_ARCHIVE_FAILED" } : { ok: true as const };
+  return error
+    ? actionFailure("GOAL_ARCHIVE_FAILED", "The goal could not be archived.")
+    : actionSuccess(null);
 }

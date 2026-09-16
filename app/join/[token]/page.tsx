@@ -35,14 +35,14 @@ export default function JoinPage({ params }: { params: Promise<{ token: string }
         if (!active) return;
         if (!result.ok) {
           setMessage(
-            result.error === "LINK_EXPIRED" || result.error === "LINK_ALREADY_USED"
+            result.error.code === "LINK_EXPIRED" || result.error.code === "LINK_ALREADY_USED"
               ? "This invitation link is no longer valid."
               : "The invitation link could not be accepted.",
           );
           return;
         }
         try {
-          await setActive({ organization: result.organizationId });
+          await setActive({ organization: result.data.organizationId });
           router.replace("/dashboard");
         } catch {
           if (active) setMessage("The workspace could not be activated.");
@@ -64,14 +64,14 @@ export default function JoinPage({ params }: { params: Promise<{ token: string }
     return (
       <main className="soft-grid flex min-h-[100dvh] items-center justify-center overflow-y-auto p-5 text-ink sm:p-8">
         <div className="w-full max-w-md">
-          <div className="rounded-2xl border border-black/10 bg-white p-6 text-center shadow-sm dark:border-white/10 dark:bg-card">
+          <div className="rounded-[var(--ui-card-radius)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-6 text-center shadow-[var(--ui-card-shadow)]">
             <h1 className="text-lg font-semibold tracking-tight">New invitation required</h1>
             <p className="mt-2 text-sm text-muted-foreground">
               This older invitation link can no longer be used to create an account. Please request a new invitation by email.
             </p>
             <Link
               href={`/sign-in?redirect_url=${encodeURIComponent(`/join/${token}`)}`}
-              className="mt-5 inline-flex min-h-11 items-center justify-center rounded-lg bg-ink px-4 text-sm font-semibold text-white"
+              className="mt-5 inline-flex min-h-11 items-center justify-center rounded-[var(--ui-control-radius)] bg-[var(--ui-action-primary)] px-4 text-sm font-semibold text-[var(--ui-action-primary-ink)]"
             >
               Zur Anmeldung
             </Link>

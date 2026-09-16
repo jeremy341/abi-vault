@@ -24,7 +24,7 @@
   justify-items: center;
   gap: 0.25rem;
   border: 1px solid var(--ui-border-subtle);
-  border-radius: 0.8rem;
+  border-radius: var(--ui-control-radius);
   background: var(--ui-surface);
   padding: 0.65rem;
   color: var(--ui-ink);
@@ -54,13 +54,13 @@
 }
 
 .nav .active {
-  border-color: var(--ui-ink);
-  background: var(--ui-ink);
-  color: var(--ui-surface);
+  border-color: var(--ui-action-primary);
+  background: var(--ui-action-primary);
+  color: var(--ui-action-primary-ink);
 }
 
 .nav .active small {
-  color: color-mix(in srgb, var(--ui-surface) 68%, transparent);
+  color: color-mix(in srgb, var(--ui-action-primary-ink) 68%, transparent);
 }
 
 .header {
@@ -131,7 +131,7 @@
   min-height: 3rem;
   align-items: center;
   border: 1px solid var(--ui-border);
-  border-radius: 0.75rem;
+  border-radius: var(--ui-control-radius);
   background: var(--ui-surface);
   padding: 0 0.8rem;
   color: var(--ui-ink);
@@ -233,7 +233,7 @@
 }
 
 .switchOn {
-  background: var(--ui-ink);
+  background: var(--ui-action-primary);
 }
 
 .switchOn i {
@@ -280,9 +280,9 @@
   justify-content: center;
   gap: 0.5rem;
   border: 0;
-  border-radius: 0.8rem;
-  background: var(--ui-ink);
-  color: var(--ui-surface);
+  border-radius: var(--ui-control-radius);
+  background: var(--ui-action-primary);
+  color: var(--ui-action-primary-ink);
   font: inherit;
   font-size: 0.8rem;
   font-weight: 650;

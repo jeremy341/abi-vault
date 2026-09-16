@@ -5,3 +5,5 @@ export const updateCommitteeSettingsSchema = z.object({
   graduationYear: z.number().int().min(2000).max(2200),
   notifications: z.object({ receipts: z.boolean(), payments: z.boolean(), goals: z.boolean() }),
 });
+
+export type UpdateCommitteeSettingsInput = z.input<typeof updateCommitteeSettingsSchema>;

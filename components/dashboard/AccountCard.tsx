@@ -30,31 +30,9 @@ export default function AccountCard({
     : "•••• •••• •••• ••••";
   const holder = details?.holder || "Not set";
   const expiry = details?.expiry || "—";
-  const isLightCard = cardColor === "#e9e9e7";
-  function handlePointerMove(event: React.PointerEvent<HTMLDivElement>) {
-    if (event.pointerType === "touch") return;
-
-    const bounds = event.currentTarget.getBoundingClientRect();
-    const relativeX = (event.clientX - bounds.left) / bounds.width;
-    const relativeY = (event.clientY - bounds.top) / bounds.height;
-    const rotateX = (0.5 - relativeY) * 8;
-    const rotateY = (relativeX - 0.5) * 8;
-
-    event.currentTarget.style.setProperty(
-      "--tilt-x",
-      `${rotateX.toFixed(2)}deg`,
-    );
-    event.currentTarget.style.setProperty(
-      "--tilt-y",
-      `${rotateY.toFixed(2)}deg`,
-    );
-  }
-
-  function resetTilt(event: React.PointerEvent<HTMLDivElement>) {
-    event.currentTarget.style.setProperty("--tilt-x", "0deg");
-    event.currentTarget.style.setProperty("--tilt-y", "0deg");
-  }
-
+  const visualCardColor =
+    cardColor?.toLowerCase() === "#111114" ? "#242923" : cardColor;
+  const isLightCard = visualCardColor === "#e9e9e7";
   return (
     <div
       key={variant}
@@ -71,14 +49,12 @@ export default function AccountCard({
         />
       ) : (
         <div
-          className={`${styles.card} ${isLightCard ? styles.cardLight : ""} relative aspect-[340/196] w-full max-w-[340px] overflow-hidden rounded-[20px] shadow-[0_14px_24px_-5px_rgb(0_0_0_/_30%)] min-[2200px]:max-w-[440px]`}
+          className={`${styles.card} ${isLightCard ? styles.cardLight : ""} relative aspect-[340/196] w-full max-w-[340px] overflow-hidden rounded-[12px] shadow-[0_10px_24px_rgb(45_51_40_/_16%)] min-[2200px]:max-w-[440px]`}
           style={
-            cardColor
-              ? ({ "--card-color": cardColor } as React.CSSProperties)
+            visualCardColor
+              ? ({ "--card-color": visualCardColor } as React.CSSProperties)
               : undefined
           }
-          onPointerMove={handlePointerMove}
-          onPointerLeave={resetTilt}
         >
           <Image
             src="/cards/bank-account.svg"
@@ -90,7 +66,7 @@ export default function AccountCard({
             className="absolute inset-0 h-full w-full object-fill"
           />
 
-          {cardColor ? (
+          {visualCardColor ? (
             <div
               className={`${styles.cardTint} ${isLightCard ? styles.cardTintLight : ""}`}
               aria-hidden="true"

@@ -271,8 +271,7 @@
   display: grid;
   place-items: center;
   padding: 1rem;
-  background: rgb(0 0 0 / 0.24);
-  backdrop-filter: blur(3px);
+  background: rgb(36 41 35 / 42%);
 }
 .dialog {
   width: min(32rem, calc(100vw - 2rem));
@@ -335,7 +334,7 @@
   height: 2.75rem;
   align-items: center;
   justify-content: center;
-  border-radius: 0.8rem;
+  border-radius: var(--ui-icon-radius);
   background: var(--ui-warning-soft);
   color: var(--ui-warning);
 }
@@ -379,8 +378,8 @@
 }
 .confirmButton {
   border: 0;
-  background: var(--ui-ink);
-  color: var(--ui-surface);
+  background: var(--ui-action-primary);
+  color: var(--ui-action-primary-ink);
 }
 .confirmButton:hover {
   opacity: 0.84;
@@ -441,7 +440,7 @@
   .dialog {
     width: 100%;
     align-self: end;
-    border-radius: 1.25rem 1.25rem 0 0;
+    border-radius: var(--ui-card-radius) var(--ui-card-radius) 0 0;
   }
 }
 @media (prefers-reduced-motion: reduce) {

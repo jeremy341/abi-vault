@@ -7,3 +7,5 @@ export const cashCountSchema = z.object({
   note: z.string().trim().max(1000).optional(),
   idempotencyKey: z.string().trim().min(16).max(128),
 });
+
+export type CashCountInput = z.input<typeof cashCountSchema>;

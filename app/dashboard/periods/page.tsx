@@ -124,7 +124,7 @@ export default function PeriodsPage() {
               <CalendarClock aria-hidden="true" />
             </span>
             <span>
-              <small>Activeer Zeitraum</small>
+              <small>Activate period</small>
               <strong>
                 {activePeriod ? periodLabel(activePeriod) : "Nor"}
               </strong>
@@ -146,7 +146,7 @@ export default function PeriodsPage() {
               <Lock aria-hidden="true" />
             </span>
             <span>
-              <small>Lockede Periods</small>
+              <small>Locked periods</small>
               <strong>{lockedCount}</strong>
             </span>
           </div>

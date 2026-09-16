@@ -57,4 +57,3 @@ export type AdaptiveFundsViewProps = {
 };
 
 export type FundsSection = "overview" | "accounts" | "audit";
-

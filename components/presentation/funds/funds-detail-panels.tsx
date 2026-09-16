@@ -331,5 +331,3 @@ export function AccessPanel({ props }: { props: AdaptiveFundsViewProps }) {
     </aside>
   );
 }
-
-

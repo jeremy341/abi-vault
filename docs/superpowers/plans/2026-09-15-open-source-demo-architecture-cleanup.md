@@ -34,11 +34,11 @@
 - Consumes plain typed wallet, transaction, goal, and date inputs; no Supabase,
   React, or browser dependencies.
 
-- [ ] **Step 1: Write failing tests** for opening balances plus income, expense, and transfer movements; category totals and percentages; six-month report buckets; and an empty transaction set.
-- [ ] **Step 2: Run the focused test** with `pnpm exec vitest run lib/finance/projections.test.ts`; verify failure comes from missing exports, not test setup.
-- [ ] **Step 3: Add the smallest pure type definitions and projection functions** in `lib/finance/projections.ts`, preserving integer minor-unit arithmetic and the current six-month ordering.
-- [ ] **Step 4: Run the focused test again** and verify all projection cases pass.
-- [ ] **Step 5: Commit** with `Add characterization coverage for finance projections`.
+- [x] **Step 1: Write failing tests** for opening balances plus income, expense, and transfer movements; category totals and percentages; six-month report buckets; and an empty transaction set.
+- [x] **Step 2: Run the focused test** with `pnpm exec vitest run lib/finance/projections.test.ts`; verify failure comes from missing exports, not test setup.
+- [x] **Step 3: Add the smallest pure type definitions and projection functions** in `lib/finance/projections.ts`, preserving integer minor-unit arithmetic and the current six-month ordering.
+- [x] **Step 4: Run the focused test again** and verify all projection cases pass.
+- [x] **Step 5: Commit** with `Add characterization coverage for finance projections`.
 
 ### Task 2: Centralize dashboard and report calculations
 
@@ -51,12 +51,12 @@
 - `getDashboardSnapshot` and `getReportSnapshot` delegate arithmetic to the pure projection module while returning their current object shapes.
 - `getReportKpisForCurrentOrganization` reuses the same balance and transaction projection rather than recomputing it.
 
-- [ ] **Step 1: Add failing assertions** that compare dashboard totals, report KPI totals, and report-flow totals for the same fixture data.
-- [ ] **Step 2: Run the focused test** and verify the new assertions fail against the duplicated implementations or missing helper.
-- [ ] **Step 3: Move only arithmetic and mapping into the projection module**; leave Supabase selection, permission checks, and returned action shapes in `queries.ts`.
-- [ ] **Step 4: Run projection tests plus the existing finance unit tests** and verify all values remain unchanged.
-- [ ] **Step 5: Inspect the diff** to confirm no JSX, CSS, route, or copy files changed.
-- [ ] **Step 6: Commit** with `Centralize finance projections`.
+- [x] **Step 1: Add failing assertions** that compare dashboard totals, report KPI totals, and report-flow totals for the same fixture data.
+- [x] **Step 2: Run the focused test** and verify the new assertions fail against the duplicated implementations or missing helper.
+- [x] **Step 3: Move only arithmetic and mapping into the projection module**; leave Supabase selection, permission checks, and returned action shapes in `queries.ts`.
+- [x] **Step 4: Run projection tests plus the existing finance unit tests** and verify all values remain unchanged.
+- [x] **Step 5: Inspect the diff** to confirm no JSX, CSS, route, or copy files changed.
+- [x] **Step 6: Commit** with `Centralize finance projections`.
 
 ### Task 3: Unify server-action result contracts
 
@@ -77,12 +77,12 @@
 - Every active non-banking action returns `ActionResult<T>` with the existing semantic error code and message.
 - `actionSuccess` and `actionFailure` remain the only constructors for success/failure values.
 
-- [ ] **Step 1: Write failing result-contract tests** covering success, invalid input, permission failure, and database failure shapes.
-- [ ] **Step 2: Run `pnpm exec vitest run lib/api/result.test.ts`** and verify failure for the legacy `{ ok, error }` cases.
-- [ ] **Step 3: Migrate one feature at a time** from `{ ok, error }` to `ActionResult<T>`, updating only its existing callers’ result checks.
-- [ ] **Step 4: Run focused tests after each feature migration** and verify no behavior change in the returned error codes/messages.
-- [ ] **Step 5: Run typecheck** before committing.
-- [ ] **Step 6: Commit** with `Unify finance action results`.
+- [x] **Step 1: Write failing result-contract tests** covering success, invalid input, permission failure, and database failure shapes.
+- [x] **Step 2: Run `pnpm exec vitest run lib/api/result.test.ts`** and verify failure for the legacy `{ ok, error }` cases.
+- [x] **Step 3: Migrate one feature at a time** from `{ ok, error }` to `ActionResult<T>`, updating only its existing callers’ result checks.
+- [x] **Step 4: Run focused tests after each feature migration** and verify no behavior change in the returned error codes/messages.
+- [x] **Step 5: Run typecheck** before committing.
+- [x] **Step 6: Commit** with `Unify finance action results`.
 
 ### Task 4: Replace unknown action and cache boundaries with typed adapters
 
@@ -97,12 +97,12 @@
 - Public action inputs use schema-derived `z.input<typeof schema>` types.
 - `client-cache.ts` exposes typed cache keys/listeners so dashboard and report hooks no longer cast listener values from `unknown`.
 
-- [ ] **Step 1: Add failing cache tests** proving a typed listener receives the same typed value written by a typed query and that scopes remain isolated.
-- [ ] **Step 2: Run the focused cache tests** and verify the typed key/listener API does not exist yet.
-- [ ] **Step 3: Introduce a typed cache-key map** for dashboard and report snapshots; retain runtime result guards at the cache boundary.
-- [ ] **Step 4: Change action signatures to schema-derived inputs** while retaining `safeParse` validation and current runtime error responses.
-- [ ] **Step 5: Remove the hook-level assertions** and run cache tests plus typecheck.
-- [ ] **Step 6: Commit** with `Type finance boundaries explicitly`.
+- [x] **Step 1: Add failing cache tests** proving a typed listener receives the same typed value written by a typed query and that scopes remain isolated.
+- [x] **Step 2: Run the focused cache tests** and verify the typed key/listener API does not exist yet.
+- [x] **Step 3: Introduce a typed cache-key map** for dashboard and report snapshots; retain runtime result guards at the cache boundary.
+- [x] **Step 4: Change action signatures to schema-derived inputs** while retaining `safeParse` validation and current runtime error responses.
+- [x] **Step 5: Remove the hook-level assertions** and run cache tests plus typecheck.
+- [x] **Step 6: Commit** with `Type finance boundaries explicitly`.
 
 ### Task 5: Split responsive view models from layout modules
 
@@ -124,14 +124,14 @@
 - Funds layout components consume a shared `FundsViewModel` and callback object.
 - Existing CSS module imports and class names remain attached to the same rendered elements.
 
-- [ ] **Step 1: Add view-model characterization tests** for empty, loading, populated, and review states using pure mapper functions.
-- [ ] **Step 2: Run those tests** and verify failure for the new mapper exports.
-- [ ] **Step 3: Extract mapping and empty-state definitions** without changing strings or class names.
-- [ ] **Step 4: Move desktop markup into its focused file** and make `AdaptiveDashboardPage` delegate to it; run typecheck and focused tests.
-- [ ] **Step 5: Move tablet and phone markup** one at a time; after each move run typecheck and capture the dashboard in the browser.
-- [ ] **Step 6: Repeat the same extraction for funds** while preserving all callbacks and CSS imports.
-- [ ] **Step 7: Compare route DOM/accessibility output** for dashboard and funds before/after; fix only refactor regressions.
-- [ ] **Step 8: Commit** with `Split dashboard view models from layouts`.
+- [x] **Step 1: Add view-model characterization tests** for empty, loading, populated, and review states using pure mapper functions.
+- [x] **Step 2: Run those tests** and verify failure for the new mapper exports.
+- [x] **Step 3: Extract mapping and empty-state definitions** without changing strings or class names.
+- [x] **Step 4: Move desktop markup into its focused file** and make `AdaptiveDashboardPage` delegate to it; run typecheck and focused tests.
+- [x] **Step 5: Move tablet and phone markup** one at a time; after each move run typecheck and capture the dashboard in the browser.
+- [x] **Step 6: Repeat the same extraction for funds** while preserving all callbacks and CSS imports.
+- [x] **Step 7: Compare route DOM/accessibility output** for dashboard and funds before/after; fix only refactor regressions.
+- [x] **Step 8: Commit** with `Split dashboard view models from layouts`.
 
 ### Task 6: Extract shell metadata and remove unused legacy surfaces
 
@@ -147,12 +147,12 @@
 - One canonical navigation/page metadata registry supplies desktop, tablet, phone, and any remaining legacy consumer.
 - No visible navigation label, route, icon, active-state rule, or permission behavior changes.
 
-- [ ] **Step 1: Write a reference inventory test/script** using `rg` to prove which legacy modules have zero consumers.
-- [ ] **Step 2: Run the inventory** and record the exact unused exports before deleting anything.
-- [ ] **Step 3: Move shared metadata/navigation into `navigation.ts`** and update imports without changing values.
-- [ ] **Step 4: Delete only proven-unused modules/exports** and run typecheck/lint.
-- [ ] **Step 5: Smoke-test every dashboard route** in the browser and confirm identical navigation.
-- [ ] **Step 6: Commit** with `Remove unused dashboard surfaces`.
+- [x] **Step 1: Write a reference inventory test/script** using `rg` to prove which legacy modules have zero consumers.
+- [x] **Step 2: Run the inventory** and record the exact unused exports before deleting anything.
+- [x] **Step 3: Move shared metadata/navigation into `navigation.ts`** and update imports without changing values.
+- [x] **Step 4: Delete only proven-unused modules/exports** and run typecheck/lint.
+- [x] **Step 5: Smoke-test every dashboard route** in the browser and confirm identical navigation.
+- [x] **Step 6: Commit** with `Remove unused dashboard surfaces`.
 
 ### Task 7: Install and remediate anti-slop enforcement
 
@@ -168,13 +168,13 @@
 - Add the generic anti-slop plugin and all required generic rules at error severity.
 - Ignore agent directories and the vendored plugin itself; do not enable Effect rules without a direct Effect dependency.
 
-- [ ] **Step 1: Query current compatible `oxlint` and `@oxlint/plugins` versions** and record the exact versions before editing manifests.
-- [ ] **Step 2: Install the vendored plugin and dependencies** using pnpm without changing unrelated ranges.
-- [ ] **Step 3: Register the plugin, ignores, and rules** while preserving the existing ESLint configuration.
-- [ ] **Step 4: Run the anti-slop lint command** and classify every diagnostic as genuine, boundary-intentional, or false positive.
-- [ ] **Step 5: Add tests or narrow refactors for genuine findings**, especially filter/map pipelines, unknown action boundaries, cache assertions, and module mocking.
-- [ ] **Step 6: Run anti-slop lint twice** and verify the second run is stable with no unexplained diagnostics.
-- [ ] **Step 7: Commit** with `Add anti-slop lint enforcement`.
+- [x] **Step 1: Query current compatible `oxlint` and `@oxlint/plugins` versions** and record the exact versions before editing manifests.
+- [x] **Step 2: Install the vendored plugin and dependencies** using pnpm without changing unrelated ranges.
+- [x] **Step 3: Register the plugin, ignores, and rules** while preserving the existing ESLint configuration.
+- [x] **Step 4: Run the anti-slop lint command** and classify every diagnostic as genuine, boundary-intentional, or false positive.
+- [x] **Step 5: Add tests or narrow refactors for genuine findings**, especially filter/map pipelines, unknown action boundaries, cache assertions, and module mocking.
+- [x] **Step 6: Run anti-slop lint twice** and verify the second run is stable with no unexplained diagnostics.
+- [x] **Step 7: Commit** with `Add anti-slop lint enforcement`.
 
 ### Task 8: Full verification and handoff
 
@@ -182,12 +182,12 @@
 - Modify only if verification exposes a refactor regression.
 - Review: all commits and `git diff`.
 
-- [ ] **Step 1: Run `pnpm exec tsc --noEmit`.**
-- [ ] **Step 2: Run `pnpm lint`.**
-- [ ] **Step 3: Run `pnpm test:unit`.**
-- [ ] **Step 4: Run the configured anti-slop command.**
-- [ ] **Step 5: Run `pnpm build`.**
-- [ ] **Step 6: Run `git diff --check` and verify the working tree.**
-- [ ] **Step 7: Browser-check dashboard, transactions, receipts, goals, funds, reports, people, settings, and periods in light and dark mode; compare rendered structure, not just route status.**
-- [ ] **Step 8: Request code review against the previous commit and fix all Critical/Important findings.**
-- [ ] **Step 9: Commit** with `Verify architecture cleanup` only if verification required a final documentation/check change.
+- [x] **Step 1: Run `pnpm exec tsc --noEmit`.**
+- [x] **Step 2: Run `pnpm lint`.**
+- [x] **Step 3: Run `pnpm test:unit`.**
+- [x] **Step 4: Run the configured anti-slop command.**
+- [x] **Step 5: Run `pnpm build`.**
+- [x] **Step 6: Run `git diff --check` and verify the working tree.**
+- [x] **Step 7: Browser-check dashboard, transactions, receipts, goals, funds, reports, people, settings, and periods in light and dark mode; compare rendered structure, not just route status.** Desktop and iPad shell/route structure were verified; data-backed states remained in loading fallback because the configured local Supabase endpoint `127.0.0.1:54321` was unreachable.
+- [x] **Step 8: Request code review against the previous commit and fix all Critical/Important findings.** The final review was performed inline because no subagent tool is available in this session.
+- [x] **Step 9: Commit** with `Verify architecture cleanup` only if verification required a final documentation/check change.

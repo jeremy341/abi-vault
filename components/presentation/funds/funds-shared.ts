@@ -3,4 +3,3 @@ export type { AdaptiveFundsViewProps, FundsActivity, FundsAudit, FundsCard, Fund
 export { AccountList, CardStage, FundsTabs, PanelError, PanelLoading, SummaryRail, totalBankBalance } from "./funds-controls";
 
 export { AccessPanel, ActivityPanel, AuditPanel, BankDetail, CashDetail, Reconciliation } from "./funds-detail-panels";
-

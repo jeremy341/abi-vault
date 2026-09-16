@@ -33,12 +33,12 @@ Reading this as: a trust-first internal finance dashboard for student committee 
 | Area                                                           | Source                                                                                                                         |
 | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | Global tokens, body, canvas, theme, selection, motion defaults | `app/globals.css`                                                                                                              |
-| Global dashboard shell/grid breakpoints                        | `app/dashboard/dashboard.module.css`                                                                                           |
-| Shared dashboard header                                        | `components/dashboard-header.tsx`                                                                                              |
-| Shared sidebar/navigation                                      | `components/sidebar.tsx`, `components/ui/sidebar.tsx`                                                                          |
+| Global dashboard shell/grid breakpoints                        | `components/presentation/presentation.module.css`, `app/dashboard/dashboard-desktop.module.css`, and dashboard adaptive modules |
+| Shared dashboard header                                        | `components/presentation/ResponsiveDashboardShell.tsx`                                                                        |
+| Shared sidebar/navigation                                      | `components/presentation/ResponsiveDashboardShell.tsx`, `components/presentation/navigation.ts`                              |
 | Dashboard page composition                                     | `app/dashboard/page.tsx`                                                                                                       |
-| Dashboard panels and responsive density                        | `components/dashboard/DashboardPanels.tsx`                                                                                     |
-| Class account/card interaction                                 | `components/dashboard/Klassenkasse.tsx`, `components/dashboard/AccountCard.tsx`, `components/dashboard/AccountCard.module.css` |
+| Dashboard panels and responsive density                        | `components/presentation/dashboard/DesktopDashboard.tsx`, `TabletDashboard.tsx`, `PhoneDashboard.tsx`, and `dashboard-model.ts` |
+| Class account/card interaction                                 | `components/presentation/dashboard/DashboardCashCarousel.tsx`, `components/dashboard/AccountCard.tsx`, and `AccountCard.module.css` |
 | Transactions page behavior                                     | `app/dashboard/transactions/page.tsx`                                                                                          |
 | Transactions page visual rules                                 | `app/dashboard/transactions/transactions.module.css`                                                                           |
 | Receipts page behavior                                         | `app/dashboard/receipts/page.tsx`                                                                                              |
@@ -74,7 +74,7 @@ Reading this as: a trust-first internal finance dashboard for student committee 
 | ------------------------- | --------------------------------------------------------------------- |
 | Shared desktop page title | `text-4xl`, reduced to `1.875rem` at desktop short-height media query |
 | Shared page description   | `text-base`, reduced to `0.875rem` at short height                    |
-| Dashboard card title      | `text-xl`, `lg:text-2xl`, `1.65rem` at 2200px for Klassenkasse        |
+| Dashboard card title      | `text-xl`, `lg:text-2xl`, `1.65rem` at 2200px for the cash-register card |
 | Transactions KPI label    | `0.875rem`                                                            |
 | Transactions KPI amount   | `clamp(1.5rem, 1.8vw, 2rem)`                                          |
 | Transactions list heading | `1.5rem`                                                              |
@@ -219,8 +219,8 @@ Common layout values:
 
 Two columns at desktop:
 
-- Left: Klassenkasse above Transaktionsverlauf.
-- Right: Goals above Expenses by category above Review needed.
+- Left: cash-register/account panel above Latest transactions.
+- Right: Goals above Expenses by category above Pending review.
 
 At widths below 1280px, columns collapse into ordered content sections. The desktop grid uses a 1.03fr/0.97fr split normally and 1.05fr/0.95fr at 2200px.
 
@@ -230,18 +230,18 @@ At widths below 1280px, columns collapse into ordered content sections. The desk
 - Header titles are `text-xl` by default and `lg:text-2xl`.
 - Header/content spacing is deliberately adjusted at 1280–2199px and 2200px.
 
-### Klassenkasse
+### Cash register/account panel
 
 - Card carousel supports previous/next buttons, touch swipe, add-card flow, edit flow, and delete flow.
 - Account card uses a 340:196 aspect ratio, expanding to max 440px at 2200px.
-- Card uses forest-ink concept-03 treatment, 10px radius, restrained shadow, and no pointer tilt/light sweep.
+- Card uses a neutral charcoal base with configurable card colors, a 10px radius, restrained shadow, and no pointer tilt/light sweep.
 - Card text is white unless a light custom card color is active.
 - Account number uses wide letter spacing and tabular numerals.
 - The balance panel is separated by a thin vertical divider on desktop.
 - Reconciliation banner is pale green with a green circular check, green bold title, and green detail text.
 - At 2200px the card, balance text, banner, icon, and spacing all increase.
 
-### Transaktionsverlauf
+### Latest transactions
 
 - Dashboard uses a custom grid rather than the Transactions page table.
 - Visible rows are resolution-dependent through conditional classes:
@@ -249,7 +249,7 @@ At widths below 1280px, columns collapse into ordered content sections. The desk
   - 2200px shows more rows.
 - Header columns: transaction, category, date, amount, receipt icon.
 - Rows use muted dividing lines, small icon bubbles, medium-weight names, muted metadata, and green/red amounts.
-- The “All transactions anzeigen” link uses a small right translation on hover and a special vertical translation at 1280–2199px.
+- The “View all” link uses a small right translation on hover and a special vertical translation at 1280–2199px.
 
 ### Goals
 

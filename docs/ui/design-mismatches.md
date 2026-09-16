@@ -12,7 +12,7 @@
 
 | Priority | Surface                | Current state                                                              | Suggested future decision                              |
 | -------- | ---------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------ |
-| P2       | Account card animation | The account-card sweep/tilt remains the strongest animation in the product | Keep only if it remains an intentional identity anchor |
+| P2       | Account card motion | The account card is intentionally static; no tilt or sweep animation remains | Keep the card static unless motion becomes a deliberate product requirement |
 
 ## Resolved P0 contracts
 
@@ -23,7 +23,7 @@
 ## Resolved P3 polish
 
 - Root document language now matches the German product copy with `lang="de"`.
-- Secondary pages use the shared `PagePlaceholder` composition and the same page-container, card, typography, border, and shadow language as the Dashboard.
+- Secondary pages use feature-local empty/loading states with the same page-container, card, typography, border, and shadow language as the Dashboard; the former shared placeholder module has been removed.
 
 ## Resolved P1 foundations
 
@@ -52,7 +52,7 @@
 - Browser-checked at 1920×1080 and 2560×1440 for `/dashboard`, `/dashboard/transactions`, and `/dashboard/receipts`.
 - No document-level scrolling was present at either supported desktop size.
 - Dashboard panel shadows/backdrops were visually preserved.
-- `npm run lint` and `git diff --check` pass after the contract pass.
+- `pnpm lint` and `git diff --check` pass after the contract pass.
 
 ## Source of truth
 

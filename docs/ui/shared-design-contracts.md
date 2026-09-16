@@ -81,12 +81,14 @@ Spacing rules:
 
 ## Shared component contracts
 
-### Secondary-page placeholder
+### Secondary-page empty and loading states
 
-Source: `components/dashboard/PagePlaceholder.tsx`
+There is no shared placeholder module. Secondary routes keep their empty
+and loading states close to the feature surface while consuming the shared
+page, card, typography, border, shadow, and muted metadata tokens.
 
 - Secondary routes use the shared page-container inset and a neutral card-based empty state.
-- Placeholder cards use the Dashboard surface, border, radius, shadow, section-title typography, and muted metadata roles.
+- Empty and loading states use the Dashboard surface, border, radius, shadow, section-title typography, and muted metadata roles.
 - The global Dashboard header remains the single page-title source; placeholder content communicates the page’s current readiness without introducing a second navigation pattern.
 
 ### Field dropdown

@@ -8,6 +8,10 @@ type ResponsivePageSizeOptions = {
   wideSize: number;
 };
 
+const FIXED_CHROME_REM = 24;
+
+const ROW_REM = 2.5;
+
 export function useResponsivePageSize({
   defaultSize,
   landscapeSize,
@@ -16,29 +20,19 @@ export function useResponsivePageSize({
   const [pageSize, setPageSize] = useState(defaultSize);
 
   useEffect(() => {
-    const landscape = window.matchMedia(
-      "(min-width: 1100px) and (max-width: 1399px) and (orientation: landscape)",
-    );
+    const update = () => {
+      const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+      const rows = Math.floor((window.innerHeight / rem - FIXED_CHROME_REM) / ROW_REM);
+      const min = Math.min(landscapeSize, defaultSize);
+      const max = Math.max(wideSize, defaultSize, 16);
 
-    const wide = window.matchMedia("(min-width: 2200px)");
-
-    const update = () =>
-      setPageSize(
-        landscape.matches
-          ? landscapeSize
-          : wide.matches
-            ? wideSize
-            : defaultSize,
-      );
+      setPageSize(Math.max(min, Math.min(max, rows)));
+    };
 
     update();
-    landscape.addEventListener("change", update);
-    wide.addEventListener("change", update);
+    window.addEventListener("resize", update);
 
-    return () => {
-      landscape.removeEventListener("change", update);
-      wide.removeEventListener("change", update);
-    };
+    return () => window.removeEventListener("resize", update);
   }, [defaultSize, landscapeSize, wideSize]);
 
   return pageSize;

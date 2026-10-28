@@ -9,6 +9,16 @@ import {
   type ReactNode,
 } from "react";
 
+function applyTheme(isDark: boolean) {
+  const root = document.documentElement;
+
+  root.classList.add("theme-switching");
+  root.classList.toggle("dark", isDark);
+  window.requestAnimationFrame(() =>
+    window.requestAnimationFrame(() => root.classList.remove("theme-switching")),
+  );
+}
+
 type ThemeContextValue = {
   dark: boolean;
   toggleTheme: () => void;
@@ -20,15 +30,21 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [dark, setDark] = useState(false);
 
   useEffect(() => {
-    const isDark = window.localStorage.getItem("abi-theme") === "dark";
+    const stored = window.localStorage.getItem("abi-theme");
+
+    const isDark =
+      stored === null
+        ? window.matchMedia("(prefers-color-scheme: dark)").matches
+        : stored === "dark";
+
     window.setTimeout(() => setDark(isDark), 0);
-    document.documentElement.classList.toggle("dark", isDark);
+    applyTheme(isDark);
   }, []);
 
   function toggleTheme() {
     setDark((current) => {
       const next = !current;
-      document.documentElement.classList.toggle("dark", next);
+      applyTheme(next);
       window.localStorage.setItem("abi-theme", next ? "dark" : "light");
 
       return next;

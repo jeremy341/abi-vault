@@ -1,877 +1,307 @@
-.page {
-  display: flex;
-  width: 100%;
-  max-width: var(--ui-page-max);
-  min-height: 0;
-  flex: 1 1 0%;
-  flex-direction: column;
-  gap: var(--ui-page-gap);
-  margin-inline: auto;
-  padding: 0 var(--ui-page-padding-inline) var(--ui-page-padding-bottom);
+.error {
+  margin: 0 0 var(--space-4);
+  color: var(--danger);
+  font-size: var(--text-sm);
 }
 
-@media (min-width: 768px) and (max-width: 1099px) {
-.tabletPage .tableWrap {
-    flex: 1 1 auto;
-    margin-inline: 1.25rem;
-    overflow: hidden;
-    border: 1px solid var(--ui-border-subtle);
-    border-radius: var(--ui-card-radius);
-    box-shadow: var(--ui-data-shadow);
-  }
-
-  .tabletPage .tableHeader,
-  .tabletPage .row {
-    display: grid;
-    min-width: 0;
-    grid-template-columns: minmax(0, 1.35fr) minmax(7rem, 0.72fr) 5.5rem 6.5rem;
-    gap: 0.75rem;
-  }
-
-  .tabletPage .tableHeader {
-    min-height: 2.5rem;
-  }
-
-  .tabletPage .rows {
-    gap: 0;
-  }
-
-  .tabletPage .row {
-    min-height: 3.6rem;
-    border: 0;
-    border-bottom: 1px solid var(--ui-border-subtle);
-    border-radius: 0;
-    padding: 0.5rem 0.8rem;
-    box-shadow: none;
-  }
-
-  .tabletPage .row > span::before {
-    display: none !important;
-  }
-
-  .tabletPage .transactionName {
-    grid-column: auto;
-  }
-
-  .tabletPage .filters {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .tabletPage .searchField {
-    grid-column: span 2;
-  }
-
-  .tabletPage .controlButton,
-  .tabletPage .filterButton {
-    grid-column: auto;
-  }
-}
-
-.kpiGrid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--ui-card-gap);
-}
-.kpiCard {
-  display: grid;
-  min-height: 8.25rem;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 1.1rem;
-  border: 1px solid var(--ui-border);
-  border-radius: var(--ui-card-radius);
-  background: var(--card);
-  padding: 1.25rem 1.5rem;
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.035);
-}
-.kpiIcon {
+.primaryButton, .secondaryButton {
   display: inline-flex;
-  width: 3rem;
-  height: 3rem;
+  min-height: var(--control-height);
   align-items: center;
   justify-content: center;
-  border-radius: 0;
-  background: transparent !important;
-}
-.kpiIcon svg {
-  width: 1.5rem;
-  height: 1.5rem;
-}
-.incomeIcon {
-  background: var(--ui-positive-soft);
-  color: var(--ui-positive);
-}
-.expenseIcon {
-  background: var(--ui-negative-soft);
-  color: var(--ui-negative);
-}
-.netIcon {
-  background: var(--ui-violet-soft);
-  color: var(--ui-violet);
-}
-.kpiCard > div {
-  display: grid;
-  min-width: 0;
-  gap: 0.25rem;
-}
-.kpiLabel {
-  color: var(--muted-foreground);
-  font-size: 0.875rem;
-}
-.kpiCard strong {
-  overflow: hidden;
-  color: var(--ink);
-  font-size: clamp(1.5rem, 1.8vw, 2rem);
-  font-weight: 600;
-  letter-spacing: -0.035em;
-  line-height: 1.1;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.kpiCard .incomeValue {
-  color: var(--ui-positive);
-}
-.kpiCard .expenseValue {
-  color: var(--ui-negative);
-}
-.trend {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  white-space: nowrap;
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-.trend svg {
-  width: 1rem;
-  height: 1rem;
-}
-.positive {
-  color: var(--ui-positive);
-  font-weight: 600;
-}
-.negative {
-  color: var(--ui-negative);
-  font-weight: 600;
-}
-
-.listCard {
-  display: flex;
-  min-height: 0;
-  flex: 1 1 auto;
-  flex-direction: column;
-  overflow: hidden;
-  border: 1px solid var(--ui-border);
-  border-radius: var(--ui-card-radius);
-  background: var(--card);
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.035);
-}
-.listHeader {
-  display: flex;
-  min-height: 5.25rem;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  border-bottom: 1px solid rgb(0 0 0 / 0.08);
-  padding: 1rem 1.5rem;
-}
-.headingGroup {
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-}
-.headingGroup h2 {
-  margin: 0;
-  font-size: var(--ui-section-title-size);
-  font-weight: 600;
-  letter-spacing: -0.025em;
-}
-.headingGroup > span {
-  border: 1px solid rgb(0 0 0 / 0.065);
-  border-radius: 0.55rem;
-  background: rgb(0 0 0 / 0.035);
-  padding: 0.35rem 0.7rem;
-  color: var(--muted-foreground);
-  font-size: 0.8rem;
-}
-.primaryButton,
-.filterButton,
-.controlButton {
-  display: inline-flex;
-  height: 3rem;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-  border-radius: var(--ui-control-radius);
-  white-space: nowrap;
-  font-size: 0.875rem;
-  font-weight: 600;
-}
-.primaryButton {
-  border: 0;
-  background: var(--ui-action-primary);
-  padding: 0 1.15rem;
-  color: var(--ui-action-primary-ink);
-  cursor: pointer;
-  transition:
-    opacity 0.18s ease,
-    transform 0.18s ease,
-    box-shadow 0.18s ease;
-}
-.primaryButton:hover {
-  opacity: 0.82;
-}
-.primaryButton:active,
-.filterButton:active,
-.controlButton:active {
-  transform: translateY(1px);
-}
-.primaryButton svg,
-.filterButton svg,
-.controlButton svg {
-  width: 1.1rem;
-  height: 1.1rem;
-}
-
-.headingGroup > span {
-  border: 1px solid rgb(0 0 0 / 0.065);
-  border-radius: 0.55rem;
-  background: rgb(0 0 0 / 0.035);
-  padding: 0.35rem 0.7rem;
-  color: var(--muted-foreground);
-  font-size: 0.8rem;
-}
-.primaryButton,
-.filterButton,
-.controlButton {
-  display: inline-flex;
-  height: 3rem;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-  border-radius: var(--ui-control-radius);
-  white-space: nowrap;
-  font-size: 0.875rem;
-  font-weight: 600;
-}
-.primaryButton {
-  border: 0;
-  background: var(--ui-action-primary);
-  padding: 0 1.15rem;
-  color: var(--ui-action-primary-ink);
-  cursor: pointer;
-  transition:
-    opacity 0.18s ease,
-    transform 0.18s ease,
-    box-shadow 0.18s ease;
-}
-.primaryButton:hover {
-  opacity: 0.82;
-}
-.primaryButton:active,
-.filterButton:active,
-.controlButton:active {
-  transform: translateY(1px);
-}
-.primaryButton svg,
-.filterButton svg,
-.controlButton svg {
-  width: 1.1rem;
-  height: 1.1rem;
-}
-
-.filters {
-  display: grid;
-  grid-template-columns:
-    minmax(230px, 1.45fr) minmax(170px, 0.85fr) minmax(160px, 0.8fr)
-    minmax(200px, 0.95fr) auto;
-  gap: 0.8rem;
-  padding: 1rem 1.5rem;
-}
-.searchField,
-.selectField,
-.controlButton {
-  height: var(--ui-control-height);
-  min-width: 0;
-  border: 1px solid var(--ui-border);
-  border-radius: var(--ui-control-radius);
-  background: var(--surface);
-  color: var(--ink);
-}
-.searchField {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-  padding: 0 0.9rem;
-  transition:
-    border-color 0.18s ease,
-    box-shadow 0.18s ease;
-}
-.searchField svg,
-.selectField svg {
-  width: 1.1rem;
-  height: 1.1rem;
-  flex: none;
-}
-.searchField input {
-  min-width: 0;
-  flex: 1;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: var(--ink);
-  font: inherit;
-  font-size: 0.875rem;
-}
-.searchField input::placeholder {
-  color: var(--muted-foreground);
-}
-.selectField {
-  position: relative;
-  display: flex;
-  align-items: center;
-  transition:
-    border-color 0.18s ease,
-    box-shadow 0.18s ease;
-}
-.selectField select {
-  width: 100%;
-  height: 100%;
-  appearance: none;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  padding: 0 2.4rem 0 0.9rem;
-  color: var(--ink);
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  padding: 0 var(--space-4);
   cursor: pointer;
   font: inherit;
-  font-size: 0.875rem;
-}
-.selectField option,
-.formField select option {
-  background: var(--surface);
-  color: var(--ink);
-}
-.selectField svg {
-  position: absolute;
-  right: 0.8rem;
-  pointer-events: none;
-}
-.controlButton {
-  justify-content: space-between;
-  padding: 0 0.9rem;
-  cursor: pointer;
-  font-weight: 400;
-  transition:
-    border-color 0.18s ease,
-    box-shadow 0.18s ease;
-}
-.controlButton span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.filterButton {
-  border: 0;
-  background: var(--ui-action-primary);
-  padding: 0 1.05rem;
-  color: var(--ui-action-primary-ink);
-  cursor: pointer;
-  transition:
-    opacity 0.18s ease,
-    transform 0.18s ease,
-    box-shadow 0.18s ease;
-}
-.filterButton:hover {
-  opacity: 0.82;
-}
-.searchField:hover,
-.selectField:hover,
-.controlButton:hover,
-.pageButtons button:hover:not(:disabled) {
-  border-color: rgb(0 0 0 / 0.22);
-}
-.searchField:focus-within,
-.selectField:focus-within,
-.controlButton:focus-visible,
-.primaryButton:focus-visible,
-.filterButton:focus-visible,
-.pageButtons button:focus-visible,
-.row:focus-visible,
-.iconButton:focus-visible,
-.secondaryButton:focus-visible {
-  border-color: var(--ink);
-  outline: 2px solid rgb(0 0 0 / 0.12);
-  outline-offset: 2px;
-}
-
-.tableWrap {
-  display: flex;
-  min-height: 0;
-  flex: 1 1 auto;
-  flex-direction: column;
-  margin: 0 1.5rem;
-  overflow: hidden;
-  border: 1px solid rgb(0 0 0 / 0.09);
-  border-radius: var(--ui-card-radius);
-}
-.tableHeader,
-.row {
-  display: grid;
-  grid-template-columns:
-    minmax(250px, 1.45fr) minmax(130px, 0.8fr)
-    130px 130px minmax(170px, 0.9fr);
-  align-items: center;
-  gap: 1rem;
-}
-.tableHeader {
-  min-height: 2.5rem;
-  border-bottom: 1px solid rgb(0 0 0 / 0.09);
-  background: rgb(0 0 0 / 0.018);
-  padding: 0 1rem;
-  color: var(--ink);
-  font-size: var(--ui-table-header-size);
+  font-size: var(--text-sm);
   font-weight: 500;
+  white-space: nowrap;
+  transition: background-color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease),
+    opacity var(--dur-fast) var(--ease);
 }
-.rows {
-  display: grid;
-  min-height: 0;
-  flex: 1 1 auto;
-  grid-template-rows: repeat(var(--ui-fixed-table-rows), minmax(0, 1fr));
+
+.primaryButton {
+  background: var(--ink);
+  color: var(--paper);
 }
-.rows > :global([data-loading-collection="true"]) {
-  grid-row: 1 / -1;
-  min-height: 0;
-  height: 100%;
+
+.primaryButton:hover:not(:disabled) {
+  opacity: 0.85;
 }
-.row {
-  width: 100%;
-  min-height: 0;
-  border: 0;
-  border-bottom: 1px solid rgb(0 0 0 / 0.085);
+
+.secondaryButton {
+  border-color: var(--control);
   background: transparent;
-  padding: 0.45rem 1rem;
-  color: var(--ink);
-  cursor: pointer;
-  font: inherit;
-  font-size: var(--ui-table-row-size);
-  text-align: left;
-  transition: background-color 0.16s ease;
-}
-.row:last-child {
-  border-bottom: 0;
-}
-.row:hover {
-  background: rgb(0 0 0 / 0.025);
-}
-
-@media (min-width: 768px) {
-  .tableHeader,
-  .row {
-    grid-template-columns:
-      minmax(0, 1.55fr) minmax(0, 1.25fr)
-      minmax(0, 0.8fr) minmax(0, 0.8fr)
-      minmax(180px, 1.15fr) minmax(0, 0.8fr) 2.5rem;
-  }
-
-  .row > :global([data-slot="dropdown-menu"]) {
-    justify-self: end;
-  }
-}
-.transactionName {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 0.75rem;
-  font-weight: 550;
-}
-.transactionName > span:last-child,
-.receipt span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.transactionIdentity {
-  display: grid;
-  min-width: 0;
-  gap: 0.18rem;
-}
-.transactionIdentity small {
-  display: inline-flex;
-  min-width: 0;
-  align-items: center;
-  gap: 0.25rem;
-  overflow: hidden;
-  color: var(--ui-muted-ink);
-  font-size: 0.68rem;
-  font-weight: 400;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.transactionIdentity small svg {
-  width: 0.75rem;
-  height: 0.75rem;
-  flex: none;
-}
-.iconBubble {
-  display: inline-flex;
-  width: 2rem;
-  height: 2rem;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0;
-  background: transparent !important;
-  color: var(--ui-ink);
-}
-.iconBubble svg {
-  width: 1rem;
-  height: 1rem;
-}
-.categoryTag {
-  display: inline-flex;
-  max-width: 100%;
-  border-radius: 0.25rem;
-  background: transparent !important;
-  color: var(--ui-muted-ink);
-  padding: 0.22rem 0.55rem;
-  font-size: 0.75rem;
-  line-height: 1;
-}
-.violet,
-.green,
-.orange {
-  background: rgb(0 0 0 / 0.035);
-  color: var(--ui-ink);
-}
-.iconBubble svg {
-  stroke-width: 1.7;
-}
-.muted {
-  color: var(--muted-foreground);
-}
-.receipt {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  justify-content: center;
-  gap: 0.55rem;
-  color: var(--muted-foreground);
-}
-.tableHeader > span:nth-child(2),
-.tableHeader > span:nth-child(3),
-.tableHeader > span:nth-child(4),
-.tableHeader > span:nth-child(5),
-.tableHeader > span:nth-child(6),
-.row > [data-label="Category"],
-.row > [data-label="Date"],
-.row > [data-label="Amount"],
-.row > [data-label="Status"] {
-  text-align: center;
-}
-.row > [data-label="Category"],
-.row > [data-label="Date"],
-.row > [data-label="Amount"],
-.row > [data-label="Status"] {
-  justify-self: center;
-}
-.receiptStatusCell {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  justify-content: center;
-}
-.receipt svg {
-  width: 1.05rem;
-  height: 1.05rem;
-  flex: none;
   color: var(--ink);
 }
-.receiptStatusTag {
-  display: inline-flex;
-  flex: none;
-  width: fit-content;
-  overflow: visible;
-  border-radius: 999px;
-  padding: 0.22rem 0.5rem;
-  font-size: 0.68rem;
-  font-weight: 650;
-  line-height: 1;
-  white-space: nowrap;
-}
-.receiptStatusPending {
-  background: #fff5e5;
-  color: #b45309;
-}
-.receiptStatusApproved {
-  background: #eaf8ee;
-  color: #15803d;
-}
-.receiptStatusRejected {
-  background: #fff0f0;
-  color: #b91c1c;
+
+.secondaryButton:hover:not(:disabled) {
+  border-color: var(--ink);
+  background: var(--sunk);
 }
 
-.pagination {
-  display: flex;
-  min-height: 4.5rem;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 1rem;
-  padding: 0.75rem 1.5rem;
-  color: var(--muted-foreground);
-  font-size: 0.8rem;
-}
-.pagination > span {
-  display: none;
-}
-.pageButtons {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-}
-.pageButtons button {
-  display: inline-flex;
-  height: 1.85rem;
-  min-width: 1.85rem;
-  align-items: center;
-  justify-content: center;
-  border: 0;
-  border-radius: 0.6rem;
-  background: transparent;
-  color: var(--muted-foreground);
-}
-.pageButtons button {
-  cursor: pointer;
-}
-.pageButtons button svg {
-  width: 1rem;
-  height: 1rem;
-}
-.pageButtons .currentPage {
-  background: rgb(0 0 0 / 0.045);
-  color: var(--ink);
-}
-.pageButtons button:disabled {
+.primaryButton:disabled, .secondaryButton:disabled {
   cursor: not-allowed;
-  opacity: 0.35;
 }
 
-.emptyState {
-  display: grid;
-  min-height: 17rem;
-  place-items: center;
-  align-content: center;
-  gap: 0.55rem;
-  color: var(--muted-foreground);
-  text-align: center;
+.primaryButton:disabled {
+  background: var(--sunk);
+  color: var(--subtle);
 }
 
-.tableWrap > .rows > .emptyState {
-  grid-row: 1 / -1;
+.secondaryButton:disabled {
+  border-color: var(--rule);
+  color: var(--subtle);
 }
-.emptyState svg {
+
+.iconButton:disabled {
+  cursor: not-allowed;
+  color: var(--subtle);
+}
+
+.iconButton {
+  display: inline-grid;
   width: 2rem;
   height: 2rem;
-}
-.emptyState strong {
-  color: var(--ink);
-}
-.emptyState button {
+  flex: none;
+  place-items: center;
   border: 0;
+  border-radius: var(--radius-control);
   background: transparent;
-  color: var(--ink);
+  color: var(--muted);
   cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 0.2rem;
+}
+
+.iconButton:hover {
+  background: var(--sunk);
+  color: var(--ink);
+}
+
+.iconButton svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.formField input, .formField textarea, .inlineField input, .cashRegisterMenu input {
+  width: 100%;
+  min-height: var(--control-height);
+  border: 1px solid var(--control);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  padding: 0 var(--space-3);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--text-sm);
+}
+
+.formField textarea {
+  min-height: 5rem;
+  padding: var(--space-2) var(--space-3);
+  resize: vertical;
+}
+
+.formField input::placeholder, .formField textarea::placeholder {
+  color: var(--subtle);
+}
+
+.formField input:hover, .formField textarea:hover {
+  border-color: var(--ink);
+}
+
+.filterDropdown {
+  min-width: 0;
 }
 
 .overlay {
   position: fixed;
   z-index: 60;
   inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  background: rgb(36 41 35 / 42%);
-  animation: fade-in 0.16s ease-out;
+  display: grid;
+  place-items: center;
+  background: var(--overlay-scrim);
+  padding: var(--space-4);
 }
+
 .modal {
+  display: flex;
   width: min(32rem, 100%);
-  max-height: min(42rem, calc(100dvh - 2rem));
-  overflow: auto;
-  border: 1px solid rgb(0 0 0 / 0.1);
-  border-radius: var(--ui-card-radius);
-  background: var(--surface);
-  color: var(--ink);
-  box-shadow: 0 1.5rem 3rem rgb(0 0 0 / 0.18);
-  animation: pop-in 0.18s ease-out;
-}
-.filterModal {
-  width: min(43rem, calc(100vw - 2rem));
   max-height: calc(100dvh - 2rem);
-  overflow: visible;
+  flex-direction: column;
+  overflow-y: auto;
+  border-radius: var(--radius-overlay);
+  background: var(--surface);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-overlay);
+  animation: modal-in var(--dur-base) var(--ease);
 }
+
+.filterModal {
+  width: min(48rem, 100%);
+}
+
 .modalHeader {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 1rem;
-  border-bottom: 1px solid rgb(0 0 0 / 0.08);
-  padding: 1.25rem;
+  gap: var(--space-4);
+  padding-bottom: var(--space-4);
 }
+
 .modalHeader h2 {
   margin: 0;
-  font-size: 1.25rem;
-  letter-spacing: -0.02em;
+  font-size: var(--text-md);
+  font-weight: 600;
+  line-height: 1.3;
+  text-wrap: balance;
 }
+
 .modalHeader p {
-  margin: 0.3rem 0 0;
-  color: var(--muted-foreground);
-  font-size: 0.875rem;
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
 }
-.iconButton {
-  display: inline-flex;
-  width: 2rem;
-  height: 2rem;
-  align-items: center;
-  justify-content: center;
-  border: 0;
-  border-radius: 0.5rem;
-  background: transparent;
-  color: var(--ink);
-  cursor: pointer;
-}
-.iconButton:hover {
-  background: rgb(0 0 0 / 0.05);
-}
-.iconButton svg {
-  width: 1.1rem;
-  height: 1.1rem;
-}
+
 .modalBody {
   display: grid;
-  gap: 1rem;
-  padding: 1.25rem;
+  gap: var(--space-4);
+  padding-bottom: var(--space-4);
 }
-.filterModalBody {
-  gap: 0.9rem;
-  padding: 1.05rem 1.25rem;
-  overflow: visible;
-}
-.modalSection {
-  display: grid;
-  gap: 0.55rem;
-}
-.modalSectionLabel,
-.filterGroup legend {
-  color: var(--ink);
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-.filterColumns {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.7rem;
-}
-.filterGroup {
-  min-width: 0;
-  margin: 0;
-  border: 1px solid rgb(0 0 0 / 0.11);
-  border-radius: 0.7rem;
-  padding: 0.65rem 0.75rem 0.5rem;
-}
-.filterGroup legend {
-  padding: 0 0.15rem;
-}
-.checkRow {
+
+.modalFooter {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.25rem 0;
-  color: var(--ink);
-  cursor: pointer;
-  font-size: 0.8rem;
-  font-weight: 400;
+  justify-content: space-between;
+  gap: var(--space-3);
+  border-top: 1px solid var(--rule);
+  padding-top: var(--space-4);
 }
+
+.modalFooter > div {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.formField, .inlineField {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+  font-size: var(--text-sm);
+}
+
+.formField > span, .inlineField > span {
+  font-weight: 500;
+}
+
+.formDropdown {
+  min-width: 0;
+}
+
+.dateFields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.editWalletNote small {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.filterModalBody {
+  gap: var(--space-6);
+}
+
+.filterColumns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-6);
+}
+
+.filterGroup {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: var(--space-2);
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+
+.filterGroup legend {
+  padding: 0 0 var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.checkRow {
+  display: flex;
+  min-height: 2rem;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}
+
 .checkRow input {
   width: 1rem;
   height: 1rem;
-  margin: 0;
   accent-color: var(--ink);
-  cursor: pointer;
 }
-.amountFields {
+
+.modalSection {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.7rem;
+  gap: var(--space-2);
 }
-.inlineField {
-  display: flex;
-  height: 2.6rem;
-  align-items: center;
-  overflow: hidden;
-  border: 1px solid rgb(0 0 0 / 0.11);
-  border-radius: 0.7rem;
-  color: var(--ink);
-  font-size: 0.75rem;
-  transition:
-    border-color 0.18s ease,
-    box-shadow 0.18s ease;
-}
-.inlineField:focus-within {
-  border-color: var(--ink);
-  outline: 2px solid rgb(0 0 0 / 0.12);
-  outline-offset: 2px;
-}
-.inlineField span {
-  display: inline-flex;
-  height: 100%;
-  align-items: center;
-  border-right: 1px solid rgb(0 0 0 / 0.08);
-  padding: 0 0.65rem;
-}
-.inlineField input {
-  min-width: 0;
-  flex: 1;
-  height: 100%;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  padding: 0 0.65rem;
-  color: var(--ink);
-  font: inherit;
-}
-.segmented {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  overflow: hidden;
-  border: 1px solid rgb(0 0 0 / 0.11);
-  border-radius: 0.65rem;
-}
-.segmented button {
-  min-width: 0;
-  height: 2rem;
-  border: 0;
-  border-right: 1px solid rgb(0 0 0 / 0.08);
-  background: var(--surface);
-  color: var(--ink);
-  cursor: pointer;
-  font-size: 0.7rem;
-}
-.segmented button:last-child {
-  border-right: 0;
-}
-.segmented .segmentActive {
-  background: var(--ui-surface-muted);
-  color: var(--ui-ink);
-}
-.formField {
-  display: grid;
-  gap: 0.4rem;
-  color: var(--ink);
-  font-size: 0.8rem;
+
+.modalSectionLabel {
+  font-size: var(--text-sm);
   font-weight: 600;
+}
+
+.segmented {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.segmented button {
+  min-height: 2rem;
+  border: 1px solid var(--control);
+  border-radius: var(--radius-control);
+  background: transparent;
+  padding: 0 var(--space-3);
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--text-sm);
+}
+
+.segmented button:hover {
+  border-color: var(--ink);
+}
+
+.segmented .segmentActive {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: 8rem minmax(0, 1fr);
+  gap: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+}
+
+.detailGrid span {
+  color: var(--muted);
+}
+
+.detailGrid strong {
+  font-weight: 500;
 }
 
 .cashRegisterCombobox {
@@ -881,788 +311,99 @@
 .cashRegisterTrigger {
   display: flex;
   width: 100%;
-  height: 2.75rem;
+  min-height: var(--control-height);
   align-items: center;
   justify-content: space-between;
-  border: 1px solid rgb(0 0 0 / 0.12);
-  border-radius: 0.7rem;
+  border: 1px solid var(--control);
+  border-radius: var(--radius-control);
   background: var(--surface);
-  padding: 0 0.75rem;
+  padding: 0 var(--space-3);
   color: var(--ink);
+  cursor: pointer;
   font: inherit;
+  font-size: var(--text-sm);
   text-align: left;
+}
+
+.comboChevron {
+  width: 0.875rem;
+  height: 0.875rem;
+  flex: none;
+  color: var(--muted);
+}
+
+.cashRegisterTrigger:hover {
+  border-color: var(--ink);
 }
 
 .cashRegisterMenu {
   position: absolute;
-  z-index: 30;
-  top: calc(100% + 0.35rem);
+  z-index: 5;
+  top: calc(100% + 4px);
   right: 0;
   left: 0;
-  overflow: hidden;
-  border: 1px solid rgb(0 0 0 / 0.12);
-  border-radius: 0.7rem;
+  display: grid;
+  gap: 4px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-overlay);
   background: var(--surface);
-  box-shadow: 0 12px 28px rgb(0 0 0 / 0.12);
-}
-
-.cashRegisterMenu input {
-  width: calc(100% - 0.75rem);
-  height: 2.35rem;
-  margin: 0.375rem;
-  border: 1px solid rgb(0 0 0 / 0.12);
-  border-radius: 0.55rem;
-  padding: 0 0.65rem;
-  background: transparent;
-  color: var(--ink);
-  font: inherit;
+  padding: 4px;
+  box-shadow: var(--shadow-overlay);
 }
 
 .cashRegisterMenu [role="listbox"] {
   display: grid;
-  max-height: 12rem;
-  overflow-y: auto;
-  padding: 0.25rem;
 }
 
 .cashRegisterMenu [role="option"] {
+  min-height: 2.25rem;
   border: 0;
-  border-radius: 0.5rem;
+  border-radius: var(--radius-control);
   background: transparent;
-  padding: 0.65rem 0.7rem;
+  padding: 0 var(--space-3);
   color: var(--ink);
+  cursor: pointer;
   font: inherit;
+  font-size: var(--text-sm);
   text-align: left;
 }
 
-.cashRegisterMenu [role="option"]:hover,
-.cashRegisterMenu [role="option"][aria-selected="true"] {
-  background: var(--muted);
+.cashRegisterMenu [role="option"]:hover, .cashRegisterMenu [role="option"][aria-selected="true"] {
+  background: var(--sunk);
 }
 
 .cashRegisterEmpty {
-  padding: 0.7rem;
-  color: var(--muted-foreground);
-  font-size: 0.8rem;
+  padding: var(--space-2) var(--space-3);
+  color: var(--muted);
+  font-size: var(--text-sm);
 }
-.formField select,
-.formField input {
-  height: 2.75rem;
-  border: 1px solid rgb(0 0 0 / 0.12);
-  border-radius: 0.7rem;
-  background: var(--surface);
-  padding: 0 0.75rem;
-  color: var(--ink);
-  font: inherit;
-  font-weight: 400;
-  transition:
-    border-color 0.18s ease,
-    box-shadow 0.18s ease;
-}
-.formField select:hover,
-.formField input:hover {
-  border-color: rgb(0 0 0 / 0.22);
-}
-.formField select:focus-visible,
-.formField input:focus-visible {
-  border-color: var(--ink);
-  outline: 2px solid rgb(0 0 0 / 0.12);
-  outline-offset: 2px;
-}
-.accountSelect {
-  position: relative;
-}
-.accountTrigger {
-  display: flex;
-  width: 100%;
-  height: 2.75rem;
-  align-items: center;
-  justify-content: space-between;
-  border: 1px solid rgb(0 0 0 / 0.12);
-  border-radius: 0.7rem;
-  background: var(--surface);
-  padding: 0 0.75rem;
-  color: var(--ink);
-  cursor: pointer;
-  font: inherit;
-  font-weight: 400;
-  text-align: left;
-}
-.accountTrigger:hover,
-.accountTrigger:focus-visible {
-  border-color: var(--ink);
-  outline: 0;
-}
-.accountTrigger svg {
-  width: 1rem;
-  height: 1rem;
-  transition: transform 0.18s ease;
-}
-.accountTrigger[aria-expanded="true"] svg {
-  transform: rotate(180deg);
-}
-.accountMenu {
-  position: absolute;
-  z-index: 70;
-  top: calc(100% + 0.35rem);
-  right: 0;
-  left: 0;
-  display: grid;
-  gap: 0.2rem;
-  padding: 0.3rem;
-  border: 1px solid rgb(0 0 0 / 0.12);
-  border-radius: 0.7rem;
-  background: var(--surface);
-  box-shadow: 0 0.8rem 2rem rgb(0 0 0 / 0.18);
-  animation: ui-dropdown-fall-down 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.accountMenuTop {
-  top: auto;
-  bottom: calc(100% + 0.35rem);
-  animation-name: ui-dropdown-rise-up;
-}
-.accountOption {
-  display: flex;
-  width: 100%;
-  height: 2.35rem;
-  align-items: center;
-  justify-content: space-between;
-  border: 0;
-  border-radius: 0.45rem;
-  background: transparent;
-  padding: 0 0.65rem;
-  color: var(--ink);
-  cursor: pointer;
-  font: inherit;
-  font-size: 0.8rem;
-  text-align: left;
-}
-.accountOption:hover,
-.accountOptionActive {
-  background: var(--ui-surface-muted);
-  color: var(--ui-ink);
-}
-.accountOption svg {
-  width: 1rem;
-  height: 1rem;
-}
-.dateFields {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
-}
-.modalFooter {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  border-top: 1px solid rgb(0 0 0 / 0.08);
-  padding: 0.85rem 1.25rem 1rem;
-}
-.modalFooter > div {
-  display: flex;
-  gap: 0.6rem;
-}
-.secondaryButton {
-  height: 3rem;
-  border: 1px solid rgb(0 0 0 / 0.12);
-  border-radius: var(--ui-control-radius);
-  background: var(--surface);
-  padding: 0 1rem;
-  color: var(--ink);
-  cursor: pointer;
-  font-size: 0.875rem;
-  font-weight: 600;
-}
-.secondaryButton:hover {
-  background: rgb(0 0 0 / 0.035);
-  border-color: rgb(0 0 0 / 0.22);
-}
-.detailGrid {
-  display: grid;
-  grid-template-columns: 1fr 1.4fr;
-  gap: 0.9rem;
-  padding: 1.25rem;
-  font-size: 0.875rem;
-}
-.detailGrid span {
-  color: var(--muted-foreground);
-}
-@keyframes fade-in {
+
+@keyframes modal-in {
   from {
     opacity: 0;
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
-  }
-}
-@keyframes pop-in {
-  from {
-    opacity: 0;
-    transform: translateY(-0.35rem) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
   }
 }
 
-:global(.dark) .kpiCard,
-:global(.dark) .listCard,
-:global(.dark) .tableWrap,
-:global(.dark) .searchField,
-:global(.dark) .selectField,
-:global(.dark) .controlButton,
-:global(.dark) .modal {
-  border-color: rgb(255 255 255 / 0.14);
-}
-:global(.dark) .listHeader,
-:global(.dark) .tableHeader,
-:global(.dark) .row,
-:global(.dark) .modalHeader,
-:global(.dark) .modalFooter {
-  border-color: rgb(255 255 255 / 0.12);
-}
-:global(.dark) .tableHeader {
-  background: rgb(255 255 255 / 0.035);
-}
-:global(.dark) .row:hover {
-  background: rgb(255 255 255 / 0.045);
-}
-:global(.dark) .primaryButton,
-:global(.dark) .filterButton {
-  background: var(--ui-action-primary);
-  color: var(--ui-action-primary-ink);
-}
-:global(.dark) .searchField:hover,
-:global(.dark) .selectField:hover,
-:global(.dark) .controlButton:hover,
-:global(.dark) .pageButtons button:hover:not(:disabled) {
-  border-color: rgb(255 255 255 / 0.28);
-}
-:global(.dark) .searchField:focus-within,
-:global(.dark) .selectField:focus-within,
-:global(.dark) .controlButton:focus-visible,
-:global(.dark) .primaryButton:focus-visible,
-:global(.dark) .filterButton:focus-visible,
-:global(.dark) .pageButtons button:focus-visible,
-:global(.dark) .row:focus-visible,
-:global(.dark) .iconButton:focus-visible,
-:global(.dark) .secondaryButton:focus-visible,
-:global(.dark) .inlineField:focus-within,
-:global(.dark) .formField select:focus-visible,
-:global(.dark) .formField input:focus-visible {
-  border-color: #f5f5f5;
-  outline-color: rgb(255 255 255 / 0.2);
-}
-:global(.dark) .accountTrigger,
-:global(.dark) .accountMenu,
-:global(.dark) .formField select,
-:global(.dark) .formField input {
-  border-color: rgb(255 255 255 / 0.14);
-}
-:global(.dark) .dropdownTrigger,
-:global(.dark) .dropdownMenu {
-  border-color: rgb(255 255 255 / 0.14);
-}
-
-@media (min-width: 1600px) {
-  .page {
-    max-width: var(--ui-page-max);
-    padding-inline: var(--ui-page-padding-inline);
-  }
-}
-@media (min-width: 2200px) {
-  .page {
-    max-width: var(--ui-page-max);
-    gap: var(--ui-page-gap);
-    padding-inline: var(--ui-page-padding-inline);
-  }
-  .kpiGrid {
-    gap: var(--ui-card-gap);
-  }
-  .kpiCard {
-    min-height: 9.25rem;
-    padding-inline: 2rem;
-  }
-  .listHeader,
-  .filters,
-  .pagination {
-    padding-inline: 2rem;
-  }
-  .tableWrap {
-    margin-inline: 2rem;
-  }
-}
-@media (min-width: 1280px) and (max-height: 850px) {
-  .page {
-    gap: var(--ui-compact-gap);
-  }
-  .kpiCard {
-    min-height: 6.8rem;
-    padding-block: 0.8rem;
-  }
-  .kpiIcon {
-    width: 2.6rem;
-    height: 2.6rem;
-  }
-  .listHeader {
-    min-height: 4rem;
-    padding-block: 0.65rem;
-  }
-  .filters {
-    padding-block: 0.7rem;
-  }
-  .pagination {
-    min-height: 3.75rem;
-  }
-}
-@media (max-width: 760px) {
-  .page {
-    padding-inline: 1rem;
-  }
-  .kpiGrid {
-    grid-template-columns: 1fr;
-  }
-  .listHeader {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-  .filters {
-    grid-template-columns: 1fr;
-  }
-  .filterButton {
-    grid-column: auto;
-  }
-  .tableWrap {
-    overflow-x: auto;
-  }
-  .tableHeader,
-  .row {
-    min-width: 830px;
-  }
-  .pagination {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-  .dateFields {
-    grid-template-columns: 1fr;
-  }
-
-  .tableWrap {
-    margin-inline: 0;
-    overflow: visible;
-    border: 0;
-    border-radius: 0;
-    box-shadow: none;
-  }
-
-  .tableHeader {
-    display: none;
-  }
-
-  .rows {
-    grid-template-rows: none;
-    gap: 0.75rem;
-  }
-
-  .row {
-    display: grid;
-    min-width: 0;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 0.55rem 0.75rem;
-    border: 1px solid var(--ui-border-subtle);
-    border-radius: var(--ui-control-radius);
-    background: var(--ui-surface);
-    padding: 0.85rem;
-    box-shadow: var(--ui-data-shadow);
-  }
-
-  .transactionName,
-  .row > [data-label="Category"],
-  .row > [data-label="Receipt"] {
-    grid-column: 1 / -1;
-  }
-
-  .row > [data-label="Date"] {
-    grid-column: 1;
-  }
-  .row > [data-label="Amount"] {
-    grid-column: 2;
-    justify-self: end;
-  }
-  .row > [data-label="Date"]::before,
-  .row > [data-label="Amount"]::before {
-    display: block;
-    margin-bottom: 0.2rem;
-    color: var(--ui-muted-ink);
-    content: attr(data-label);
-    font-size: 0.65rem;
-    font-weight: 500;
-  }
-}
-
-/* Final phone composition: let the document flow naturally instead of
-   carrying desktop table heights into the narrow layout. */
-@media (max-width: 760px) {
-  .page {
-    flex: 0 0 auto;
-    gap: 0.75rem;
-    padding: 0 0.75rem 1rem;
-  }
-
-  .kpiGrid {
-    gap: 0.65rem;
-  }
-
-  .kpiCard {
-    min-height: 4.75rem !important;
-    gap: 0.6rem;
-    padding: 0.7rem 0.8rem;
-  }
-
-  .kpiCard strong {
-    font-size: 1.25rem;
-  }
-
-  .listCard {
-    min-height: 0 !important;
-    flex: 0 0 auto !important;
-    overflow: visible !important;
-  }
-
-  .listHeader {
-    min-height: 4.25rem;
-    align-items: flex-start;
-    padding: 0.8rem 0.85rem;
-  }
-
-  .listHeader .primaryButton {
-    height: 2.4rem;
-    padding-inline: 0.75rem;
-    font-size: 0.75rem;
-  }
-
-  .filters {
-    min-height: 0 !important;
-    flex: 0 0 auto;
-    gap: 0.6rem;
-    padding: 0.75rem 0.85rem;
-  }
-
-  .filters > * {
-    min-width: 0;
-  }
-}
-@media (max-width: 600px) {
-  .filterColumns,
-  .amountFields {
-    grid-template-columns: 1fr;
-  }
-  .segmented button {
-    font-size: 0.75rem;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .overlay,
-  .modal {
-    animation: none;
-  }
-  .primaryButton,
-  .filterButton,
-  .controlButton {
-    transition: none;
-  }
-}
-
-@media (min-width: 768px) and (max-width: 1399px) {
-  .page {
-    min-height: 0;
-    flex: 1 1 0%;
-    gap: 1.25rem;
-    padding-inline: 1.25rem;
-    padding-bottom: 1.5rem;
-  }
-  .kpiGrid {
-    gap: 1.25rem;
-  }
-  .kpiCard {
-    min-height: 7rem;
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 0.75rem;
-    padding: 1rem;
-  }
-  .kpiIcon {
-    width: 2.5rem;
-    height: 2.5rem;
-  }
-  .kpiIcon svg {
-    width: 1.25rem;
-    height: 1.25rem;
-  }
-  .kpiCard strong {
-    font-size: clamp(1.35rem, 2.8vw, 1.75rem);
-  }
-  .trend {
-    grid-column: 2;
-  }
-  .listCard {
-    min-height: 0;
-    flex: 1 1 auto;
-    overflow: hidden;
-  }
-  .rows {
-    grid-template-rows: none;
-    grid-auto-rows: minmax(3.75rem, auto);
-  }
-  .row {
-    min-height: 3.75rem;
-  }
-  .pagination {
-    min-height: 4rem;
-  }
+@media (max-width: 767px) {
   .overlay {
-    overscroll-behavior: contain;
-  }
-}
-
-@media (min-width: 1100px) and (max-width: 1399px) and (orientation: landscape) {
-  .page {
-    min-height: 0;
-    flex: 1 1 0%;
-    gap: 1rem;
-    padding-bottom: 1rem;
-  }
-  .kpiGrid {
-    gap: 1rem;
-  }
-  .kpiCard {
-    min-height: 6rem;
-    padding: 0.75rem 1rem;
-  }
-  .listCard {
-    min-height: 0;
-    flex: 1 1 auto;
-    overflow: hidden;
-  }
-  .listHeader {
-    min-height: 4rem;
-    padding: 0.625rem 1.25rem;
-  }
-  .filters {
-    min-height: 4.5rem;
-    padding: 0.75rem 1.25rem;
-  }
-  .tableWrap {
-    min-height: 0;
-    flex: 1 1 auto;
-    margin-inline: 1.25rem;
-  }
-  .rows {
-    grid-template-rows: repeat(6, minmax(0, 1fr));
-    grid-auto-rows: unset;
-  }
-  .row {
-    min-height: 0;
-    padding: 0.35rem 1rem;
-  }
-  .pagination {
-    min-height: 3.5rem;
-    padding: 0.5rem 1.25rem;
-  }
-}
-
-@media (min-width: 768px) and (max-width: 1099px) {
-  .listHeader {
-    padding-inline: 1.25rem;
-  }
-  .filters {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    padding-inline: 1.25rem;
-  }
-  .searchField {
-    grid-column: 1 / -1;
-  }
-  .controlButton {
-    grid-column: 1 / -1;
-  }
-  .filterButton {
-    grid-column: 1 / -1;
-    min-height: 2.75rem;
-  }
-  .tableWrap {
-    min-height: 0;
-    flex: 1 1 auto;
-    margin-inline: 1.25rem;
-    overflow: hidden;
-  }
-  .tableHeader {
-    display: none;
-  }
-  .rows {
-    min-height: 14rem;
-    gap: 0.75rem;
-  }
-  .row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 0.65rem 1rem;
-    border: 1px solid var(--ui-border-subtle);
-    border-radius: var(--ui-card-radius);
-    background: var(--ui-surface);
-    padding: 1rem;
-    box-shadow: var(--ui-data-shadow);
-  }
-  .row:last-child {
-    border-bottom: 1px solid var(--ui-border-subtle);
-  }
-  .row > span:not(.transactionName)::before {
-    display: block;
-    margin-bottom: 0.25rem;
-    color: var(--ui-muted-ink);
-    content: attr(data-label);
-    font-size: 0.68rem;
-    font-weight: 500;
-  }
-  .transactionName {
-    grid-column: 1 / -1;
-  }
-  .receipt {
-    min-width: 0;
-    justify-content: flex-end;
-  }
-  .pagination {
-    padding-inline: 1.25rem;
-  }
-}
-
-/* Shared contract overrides: keep page composition while aligning primitives. */
-.tableWrap {
-  border-color: var(--ui-border-subtle);
-  box-shadow: var(--ui-data-shadow);
-}
-.kpiCard,
-.listCard {
-  border-radius: var(--ui-card-radius);
-  background: var(--ui-surface);
-  box-shadow: var(--ui-card-shadow);
-}
-.searchField,
-.controlButton,
-.secondaryButton,
-.formField input,
-.accountTrigger,
-.inlineField {
-  border-radius: var(--ui-control-radius);
-}
-.modal {
-  box-shadow: var(--ui-modal-shadow);
-}
-.tableHeader {
-  border-bottom-color: var(--ui-border-subtle);
-}
-.row {
-  border-bottom-color: var(--ui-border-subtle);
-}
-.pageButtons {
-  gap: 0.55rem;
-}
-
-@media (min-width: 768px) and (max-width: 1099px) {
-  .tabletPage .tableHeader,
-  .tabletPage .row {
-    grid-template-columns:
-      minmax(0, 1.25fr) minmax(0, 1.1fr)
-      minmax(0, 0.8fr) minmax(0, 0.8fr)
-      minmax(0, 1fr) minmax(0, 0.8fr) 2.5rem;
+    place-items: end stretch;
+    padding: 0;
   }
 
-  .tabletPage .row > :global([data-slot="dropdown-menu"]) {
-    justify-self: end;
-  }
-}
-
-@media (max-width: 760px) {
-  .kpiCard {
-    min-height: 5.5rem;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    gap: 0.75rem;
-    padding: 0.85rem 1rem;
-  }
-  .kpiIcon {
-    width: 2.25rem;
-    height: 2.25rem;
-  }
-  .kpiIcon svg {
-    width: 1.15rem;
-    height: 1.15rem;
-  }
-  .kpiCard strong {
-    font-size: 1.35rem;
-  }
-  .trend {
-    gap: 0.2rem;
-    font-size: 0.7rem;
-  }
-  .headingGroup {
+  .modal {
     width: 100%;
-    justify-content: space-between;
-    gap: 0.5rem;
-  }
-  .headingGroup h2 {
-    font-size: 1.25rem;
-    white-space: nowrap;
-  }
-  .headingGroup > span {
-    flex-shrink: 0;
-    padding: 0.3rem 0.55rem;
-    font-size: 0.7rem;
+    max-height: 90dvh;
+    border-radius: var(--radius-overlay) var(--radius-overlay) 0 0;
+    padding: var(--space-4);
+    padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
   }
 
-  .tableWrap {
-    margin-inline: 0;
-    overflow: visible;
-    border: 0;
-    border-radius: 0;
-    box-shadow: none;
-  }
-  .tableHeader {
-    display: none;
-  }
-  .rows {
-    grid-template-rows: none;
-    gap: 0.75rem;
-  }
-  .row {
-    display: grid;
-    min-width: 0;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 0.55rem 0.75rem;
-    border: 1px solid var(--ui-border-subtle);
-    border-radius: var(--ui-control-radius);
-    background: var(--ui-surface);
-    padding: 0.85rem;
-    box-shadow: var(--ui-data-shadow);
-  }
-  .transactionName,
-  .row > [data-label="Category"],
-  .row > [data-label="Receipt"] {
-    grid-column: 1 / -1;
-  }
-  .row > [data-label="Date"] {
-    grid-column: 1;
-  }
-  .row > [data-label="Amount"] {
-    grid-column: 2;
-    justify-self: end;
-  }
-  .row > [data-label="Date"]::before,
-  .row > [data-label="Amount"]::before {
-    display: block;
-    margin-bottom: 0.2rem;
-    color: var(--ui-muted-ink);
-    content: attr(data-label);
-    font-size: 0.65rem;
-    font-weight: 500;
+  .dateFields, .filterColumns {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

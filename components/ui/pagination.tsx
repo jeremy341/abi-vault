@@ -26,7 +26,7 @@ export function Pagination({
       <button
         type="button"
         className="ui-pagination-current"
-        aria-label={`Aktuelle Seite ${page}`}
+        aria-label={`Page ${page}`}
         aria-current="page"
       >
         {page}

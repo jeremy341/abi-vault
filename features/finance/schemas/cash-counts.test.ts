@@ -9,12 +9,12 @@ const base = {
   idempotencyKey: "cash-count-test-key-001",
 };
 
-describe("cash count validation", () => {
-  it("requires a stable idempotency key", () => {
+describe("Cash count validation", () => {
+  it("Rejects an empty idempotency key", () => {
     expect(cashCountSchema.safeParse({ ...base, idempotencyKey: "" }).success).toBe(false);
   });
 
-  it("accepts an optional auditor name", () => {
+  it("Accepts an optional auditor name", () => {
     expect(cashCountSchema.safeParse({ ...base, auditor: undefined }).success).toBe(true);
   });
 });

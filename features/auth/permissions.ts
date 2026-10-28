@@ -27,6 +27,5 @@ export function hasPermission(
   role: AppRole,
   permission: keyof typeof PERMISSIONS,
 ) {
-  // SAFETY: every permission entry is declared as a readonly AppRole array.
   return PERMISSIONS[permission].includes(role as never);
 }

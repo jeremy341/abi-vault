@@ -42,4 +42,3 @@ export type AccountingPeriodListItem = {
   lockReason: string | null;
 };
 
-// SAFETY: Supabase query selections and membership checks establish the row shapes used below.

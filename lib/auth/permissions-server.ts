@@ -27,7 +27,6 @@ export async function requirePermission(
 
   if (error || !membership) throw new AuthorizationError();
 
-  // SAFETY: the membership query is constrained to the database role union used by AppRole.
   const role = membership.role as AppRole;
 
   if (!hasPermission(role, permission)) throw new AuthorizationError();

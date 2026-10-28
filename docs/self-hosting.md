@@ -29,8 +29,7 @@ Use the local Supabase publishable/anon key and service-role key printed by
 pnpm dev
 ```
 
-The local demo uses seeded sample data and a fixed demo administrator. It is
-not intended for real financial data.
+The local demo uses seeded sample data and a fixed demo administrator. It is not meant for real financial data.
 
 ## Docker application image
 
@@ -50,5 +49,4 @@ outside the image and outside source control.
 
 Never point a demo or self-hosted environment at the production database. Use
 separate Supabase projects, Clerk instances, storage buckets, and deployment
-environment variables. Database migrations should be reviewed and applied to
-the intended environment explicitly.
+environment variables. Review database migrations, and apply them only to the intended environment.

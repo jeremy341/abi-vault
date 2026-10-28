@@ -6,8 +6,8 @@ import {
   projectWalletBalances,
 } from "./projections";
 
-describe("finance projections", () => {
-  it("projects wallet balances from opening balances and all transaction directions", () => {
+describe("Finance projections", () => {
+  it("Projects wallet balances from transactions", () => {
     const balances = projectWalletBalances(
       [
         { id: "cash-a", openingBalanceMinor: "10000" },
@@ -26,7 +26,7 @@ describe("finance projections", () => {
     ]));
   });
 
-  it("projects expense categories with stable totals and percentages", () => {
+  it("Projects expense categories with percentages", () => {
     const categories = projectCategoryTotals([
       { amountMinor: "1000", type: "expense", category: "Material", fromWalletId: "cash-a", toWalletId: null },
       { amountMinor: "500", type: "expense", category: "Material", fromWalletId: "cash-a", toWalletId: null },
@@ -40,11 +40,11 @@ describe("finance projections", () => {
     ]);
   });
 
-  it("returns no categories when there are no expenses", () => {
+  it("Returns no categories without expenses", () => {
     expect(projectCategoryTotals([])).toEqual([]);
   });
 
-  it("projects income, expenses, and net totals from ledger movements", () => {
+  it("Projects income, expenses, and net totals", () => {
     expect(projectFlowTotals([
       { amountMinor: "3200", type: "income", category: "Sales", fromWalletId: null, toWalletId: "cash-a" },
       { amountMinor: "800", type: "expense", category: "Material", fromWalletId: "cash-a", toWalletId: null },
@@ -55,7 +55,7 @@ describe("finance projections", () => {
     });
   });
 
-  it("projects six-month income and expense flow into the supplied month buckets", () => {
+  it("Projects monthly flow into supplied months", () => {
     const months = [
       { key: "2026-05", label: "May", year: 2026 },
       { key: "2026-06", label: "Jun", year: 2026 },

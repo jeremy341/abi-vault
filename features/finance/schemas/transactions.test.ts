@@ -19,8 +19,8 @@ const base = {
   idempotencyKey: "transaction-test-key-001",
 };
 
-describe("transaction command validation", () => {
-  it("accepts income routing and returns exact minor units", () => {
+describe("Transaction command validation", () => {
+  it("Accepts income with exact minor units", () => {
     const result = transactionCreateSchema.safeParse({
       ...base,
       type: "income",
@@ -33,7 +33,7 @@ describe("transaction command validation", () => {
     if (result.success) expect(result.data.amount).toBe(BigInt(1250));
   });
 
-  it("rejects transfers that use one wallet on both sides", () => {
+  it("Rejects transfers to the same wallet", () => {
     const result = transactionCreateSchema.safeParse({
       ...base,
       type: "transfer",
@@ -45,7 +45,7 @@ describe("transaction command validation", () => {
     expect(result.success).toBe(false);
   });
 
-  it("requires categories for income and expenses", () => {
+  it("Requires a category for expenses", () => {
     const result = transactionCreateSchema.safeParse({
       ...base,
       type: "expense",

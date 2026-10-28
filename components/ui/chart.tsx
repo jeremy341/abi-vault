@@ -101,7 +101,6 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
 ${prefix} [data-chart=${id}] {
 ${colorConfig
   .map(([key, itemConfig]) => {
-    // SAFETY: theme is limited to the keys declared in THEMES.
     const color =
       itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ??
       itemConfig.color;
@@ -197,7 +196,7 @@ function ChartTooltipContent({
   return (
     <div
       className={cn(
-        "grid min-w-32 items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl",
+        "grid min-w-32 items-start gap-1.5 rounded-[var(--radius-overlay)] border border-border bg-background px-2.5 py-1.5 text-xs shadow-[var(--shadow-overlay)]",
         className,
       )}
     >
@@ -228,8 +227,7 @@ function ChartTooltipContent({
                       !hideIndicator && (
                         <div
                           className={cn(
-                            "shrink-0 rounded-[2px] border-(--color-border) bg-(--color-bg)",
-                            // SAFETY: these custom properties are valid React CSS properties for the chart marker.
+                            "shrink-0 rounded-none border-(--color-border) bg-(--color-bg)",
                             {
                               "h-2.5 w-2.5": indicator === "dot",
                               "w-1": indicator === "line",
@@ -238,7 +236,6 @@ function ChartTooltipContent({
                               "my-0.5": nestLabel && indicator === "dashed",
                             },
                           )}
-                          // SAFETY: these custom properties are valid React CSS properties for the chart marker.
                           style={
                             {
                               "--color-bg": indicatorColor,
@@ -321,7 +318,7 @@ function ChartLegendContent({
                 <itemConfig.icon />
               ) : (
                 <div
-                  className="h-2 w-2 shrink-0 rounded-[2px]"
+                  className="h-2 w-2 shrink-0 rounded-none"
                   style={{
                     backgroundColor: item.color,
                   }}
@@ -346,9 +343,7 @@ function getPayloadConfigFromPayload(
   payload: TooltipPayloadEntry,
   key: string,
 ) {
-  // SAFETY: Recharts provides payload entries with a stable object shape at this boundary.
   const directValue = parseStringValue(payload[key as keyof typeof payload]);
-  // SAFETY: Recharts payload data is the chart row object; only primitive label values are read.
   const payloadPayload = payload.payload as Record<string, string | number | null | undefined> | undefined;
   const nestedValue = payloadPayload ? parseStringValue(payloadPayload[key]) : undefined;
   const configLabelKey = directValue ?? nestedValue ?? key;

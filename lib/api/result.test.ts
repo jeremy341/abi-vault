@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { actionFailure, actionSuccess } from "./result";
 
-describe("action results", () => {
-  it("marks successful results with both canonical status fields", () => {
+describe("Action results", () => {
+  it("Marks successful results as ok and success", () => {
     expect(actionSuccess({ id: "goal-1" })).toMatchObject({
       ok: true,
       success: true,
@@ -10,7 +10,7 @@ describe("action results", () => {
     });
   });
 
-  it("marks failures with a typed error and both canonical status fields", () => {
+  it("Marks failures with a typed error", () => {
     expect(actionFailure("INVALID_PAYLOAD", "The payload is invalid.")).toMatchObject({
       ok: false,
       success: false,

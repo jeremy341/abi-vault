@@ -7,7 +7,7 @@ goals, reports, accounting periods, and member accountability in one place.
 ## Try it
 
 Try the [hosted demo](https://abi-vault-demo.vercel.app). It uses
-sample data only and is completely separate from production.
+sample data only and is separate from production.
 
 ## Features
 
@@ -57,13 +57,12 @@ docker compose -f docker-compose.yaml down
 ```
 
 For an entirely local database, run `supabase start` and `supabase db reset`
-first, then use the local keys printed by `supabase status`. Never use official
-production credentials in the demo.
+first, then use the local keys printed by `supabase status`. Never use production credentials in the demo.
 
 ## Scope
 
 Abi Vault currently focuses on manual class finance. Direct bank connections
-and Open Banking are intentionally deferred.
+and Open Banking are deferred.
 
 ## License
 

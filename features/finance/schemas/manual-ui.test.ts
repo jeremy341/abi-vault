@@ -10,8 +10,8 @@ const validInput = {
   idempotencyKey: "ui-transaction-test-001",
 };
 
-describe("manual UI transaction validation", () => {
-  it("requires a stable idempotency key", () => {
+describe("Manual UI transaction validation", () => {
+  it("Rejects an empty idempotency key", () => {
     const result = manualUiTransactionSchema.safeParse({
       ...validInput,
       idempotencyKey: "",
@@ -20,7 +20,7 @@ describe("manual UI transaction validation", () => {
     expect(result.success).toBe(false);
   });
 
-  it("accepts a wallet-routed transaction with an idempotency key", () => {
+  it("Accepts a wallet-routed transaction", () => {
     const result = manualUiTransactionSchema.safeParse(validInput);
 
     expect(result.success).toBe(true);

@@ -125,7 +125,7 @@ async function bootstrapOrganizationData(session: Awaited<ReturnType<typeof auth
   if (categoriesError) throw categoriesError;
 }
 
-export async function ensureCurrentOrganizationData() {
+export async function syncCurrentOrganization() {
   const session = await auth();
 
   if (!session.userId || !session.orgId) return;

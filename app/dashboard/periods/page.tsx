@@ -1,9 +1,9 @@
 "use client";
 
-import { CalendarClock, Check, Info, Lock, Unlock, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Dialog } from "@/components/ui/dialog";
-import { LoadingStatus } from "@/components/ui/loading-state";
+import { LoadingCollection, LoadingStatus, LoadingText } from "@/components/ui/loading-state";
 import {
   listAccountingPeriodsForCurrentOrganization,
   type AccountingPeriodListItem,
@@ -13,6 +13,8 @@ import {
   unlockAccountingPeriod,
 } from "@/features/finance/actions/wallets";
 import styles from "./periods.module.css";
+import ledger from "../ledger.module.css";
+import { LoadError } from "@/components/ui/load-error";
 
 const monthFormatter = new Intl.DateTimeFormat("en-GB", {
   month: "long",
@@ -44,16 +46,16 @@ export default function PeriodsPage() {
   useEffect(() => {
     let active = true;
     listAccountingPeriodsForCurrentOrganization()
-      .then((result) => {
+      .then((periodList) => {
         if (!active) return;
 
-        if (!result.ok) {
+        if (!periodList.ok) {
           setError("The accounting periods could not be loaded.");
 
           return;
         }
 
-        setPeriods(result.items);
+        setPeriods(periodList.items);
       })
       .catch(() => {
         if (active) setError("The accounting periods could not be loaded.");
@@ -104,125 +106,74 @@ export default function PeriodsPage() {
   }
 
   return (
-    <section className={styles.page} aria-busy={loading}>
-      <LoadingStatus
-        loading={loading}
-        label="Accounting periods are loading…"
-      />
-      {error ? (
-        <p className={styles.error} role="alert">
-          {error}
-        </p>
-      ) : null}
-      <article className={styles.summaryPanel}>
-        <header className={styles.header}>
+    <section className={`${ledger.page} ${ledger.narrow}`} aria-busy={loading}>
+      <LoadingStatus loading={loading} label="Loading periods" />
+      {error ? <LoadError message={error} /> : null}
+
+      <div className={ledger.summary}>
+        <dl className={ledger.figures}>
           <div>
-            <span className={styles.eyebrow}>Workspace</span>
-            <h2>Accounting periods</h2>
-            <p>
-              Close reviewed months so posted transactions remain traceable.
-            </p>
+            <dt>Current period</dt>
+            <dd><LoadingText loading={loading}>{activePeriod ? periodLabel(activePeriod) : "None"}</LoadingText></dd>
           </div>
-          <span className={styles.adminBadge}>
-            <Lock aria-hidden="true" /> Admins only
-          </span>
+          <div>
+            <dt>Open</dt>
+            <dd><LoadingText loading={loading}>{openCount}</LoadingText></dd>
+          </div>
+          <div>
+            <dt>Locked</dt>
+            <dd><LoadingText loading={loading}>{lockedCount}</LoadingText></dd>
+          </div>
+        </dl>
+      </div>
+
+      <section className={ledger.section}>
+        <header className={ledger.sectionHeader}>
+          <h2>Accounting periods</h2>
+          <p>Locked periods cannot be changed. Admins only.</p>
         </header>
-        <div className={styles.summaryStats}>
-          <div className={styles.summaryStat}>
-            <span
-              className={`${styles.summaryIcon} ${styles.summaryIconGreen}`}
-            >
-              <CalendarClock aria-hidden="true" />
-            </span>
-            <span>
-              <small>Activate period</small>
-              <strong>
-                {activePeriod ? periodLabel(activePeriod) : "Nor"}
-              </strong>
-            </span>
-          </div>
-          <div className={styles.summaryStat}>
-            <span
-              className={`${styles.summaryIcon} ${styles.summaryIconGreen}`}
-            >
-              <Check aria-hidden="true" />
-            </span>
-            <span>
-              <small>Open periods</small>
-              <strong>{openCount}</strong>
-            </span>
-          </div>
-          <div className={styles.summaryStat}>
-            <span className={styles.summaryIcon}>
-              <Lock aria-hidden="true" />
-            </span>
-            <span>
-              <small>Locked periods</small>
-              <strong>{lockedCount}</strong>
-            </span>
-          </div>
-        </div>
-      </article>
-      <article className={styles.listPanel}>
-        <header className={styles.listHeader}>
-          <h2>2026</h2>
-        </header>
-        <div className={styles.tableHeader}>
-          <span>Period</span>
-          <span>Status</span>
-          <span>Action</span>
-        </div>
-        <div className={styles.rows}>
-          {!loading && !periods.length ? (
-            <p className={styles.empty}>No Accounting periods gefunden.</p>
-          ) : null}
-          {periods.map((period) => (
-            <div className={styles.row} key={period.id}>
-              <strong>{periodLabel(period)}</strong>
-              <span
-                className={`${styles.status} ${period.status === "open" ? styles.open : styles.locked}`}
-              >
-                {period.status === "open" ? (
-                  <Check aria-hidden="true" />
-                ) : (
-                  <Lock aria-hidden="true" />
-                )}
-                <span>{period.status === "open" ? "Open" : "Locked"}</span>
-                {period.lockedByName ? (
-                  <small>by {period.lockedByName}</small>
-                ) : null}
-              </span>
-              <button
-                type="button"
-                className={styles.actionButton}
-                onClick={() => openPeriodAction(period)}
-              >
-                {period.status === "open" ? (
-                  <Lock aria-hidden="true" />
-                ) : (
-                  <Unlock aria-hidden="true" />
-                )}
-                {period.status === "open" ? "Lock" : "Unlock"}
-              </button>
-            </div>
-          ))}
-        </div>
-        <div className={styles.infoNote}>
-          <Info aria-hidden="true" />
-          <span>
-            Locked periods protect completed bookings from accidental changes.
-          </span>
-        </div>
-      </article>
-      <p className={styles.message} role="status" aria-live="polite">
-        {message}
-      </p>
+        <LoadingCollection loading={loading} knownItemCount={periods.length} rows={4} label="Loading periods">
+        {!loading && !error && !periods.length ? (
+          <p className={ledger.empty}>No accounting periods found.</p>
+        ) : error && !periods.length ? null : (
+          <table className={ledger.table}>
+            <thead>
+              <tr>
+                <th scope="col">Period</th>
+                <th scope="col">Status</th>
+                <th scope="col" className={ledger.hideOnPhone}>Reason</th>
+                <th scope="col" className={ledger.actions}><span className="sr-only">Action</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              {periods.map((period) => (
+                <tr key={period.id}>
+                  <td>{periodLabel(period)}</td>
+                  <td className={period.status === "open" ? ledger.attention : ledger.muted}>
+                    {period.status === "open" ? "Open" : "Locked"}
+                    {period.lockedByName ? <span className={ledger.rowMeta}> by {period.lockedByName}</span> : null}
+                  </td>
+                  <td className={`${ledger.muted} ${ledger.hideOnPhone}`}>{period.lockReason ?? ""}</td>
+                  <td className={ledger.actions}>
+                    <button type="button" className={ledger.secondaryButton} onClick={() => openPeriodAction(period)}>
+                      {period.status === "open" ? "Lock" : "Unlock"}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+        </LoadingCollection>
+      </section>
+
+      <p className={ledger.notice} role="status" aria-live="polite">{message}</p>
       {target ? (
         <Dialog
           label={
             target.status === "open"
-              ? "Accounting period sperren"
-              : "Accounting period entsperren"
+              ? "Lock accounting period"
+              : "Unlock accounting period"
           }
           onClose={() => {
             if (!saving) setTarget(null);
@@ -234,8 +185,8 @@ export default function PeriodsPage() {
             <div>
               <h2>
                 {target.status === "open"
-                  ? "Accounting period sperren?"
-                  : "Accounting period entsperren?"}
+                  ? "Lock accounting period?"
+                  : "Unlock accounting period?"}
               </h2>
               <p>{periodLabel(target)}</p>
             </div>
@@ -246,24 +197,21 @@ export default function PeriodsPage() {
               disabled={saving}
               aria-label="Close dialog"
             >
-              <X />
+              <X aria-hidden="true" />
             </button>
           </header>
           <div className={styles.dialogBody}>
-            <span className={styles.dialogIcon}>
-              {target.status === "open" ? <Lock /> : <Unlock />}
-            </span>
             <p>
               {target.status === "open"
-                ? "Posted transactions cannot be changed after locking."
-                : "The period will be reopened for authorized changes."}
+                ? "Posted transactions cannot be changed after locking. The reason is recorded."
+                : "The period will be reopened for authorized changes. The reason is recorded."}
             </p>
             <label>
               <span>Reason</span>
               <textarea
                 value={reason}
                 onChange={(event) => setReason(event.target.value)}
-                placeholder="e.g. month-end close checked …"
+                placeholder="For example: month-end checks complete"
                 rows={3}
                 autoFocus
               />
@@ -291,10 +239,10 @@ export default function PeriodsPage() {
               aria-busy={saving}
             >
               {saving
-                ? "Saving …"
+                ? "Saving"
                 : target.status === "open"
-                  ? "Zeitraum sperren"
-                  : "Zeitraum entsperren"}
+                  ? "Lock period"
+                  : "Unlock period"}
             </button>
           </footer>
         </Dialog>

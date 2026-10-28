@@ -4,76 +4,74 @@ import { requireClerkContext } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { requirePermission } from "@/lib/auth/permissions-server";
 import type { AccountingPeriodListItem, CashCountListItem } from "./queries-types";
+import { querySuccess, queryFailure } from "@/lib/finance/query-result";
 
 export async function getCommitteeSettingsForCurrentOrganization() {
   const context = await requireClerkContext();
   const supabase = await createSupabaseServerClient();
 
-  const { data, error } = await supabase
+  const { data: committeeSettings, error } = await supabase
     .from("committee_settings")
     .select("school_name, graduation_year, notifications")
     .eq("organization_id", context.organizationId)
     .maybeSingle();
 
-  if (error) return { ok: false as const, error: "DATABASE_ERROR" as const };
+  if (error) return queryFailure("DATABASE_ERROR");
 
-  return { ok: true as const, data };
+  return querySuccess({ data: committeeSettings });
 }
 
 export async function listMembersForCurrentOrganization() {
   const context = await requireClerkContext();
   const supabase = await createSupabaseServerClient();
 
-  const { data, error } = await supabase
+  const { data: memberships, error } = await supabase
     .from("committee_memberships")
     .select("clerk_user_id, role, status, profiles(display_name, email)")
     .eq("organization_id", context.organizationId)
     .order("created_at");
 
-  if (error) return { ok: false as const, error: "DATABASE_ERROR" as const };
+  if (error) return queryFailure("DATABASE_ERROR");
 
-  return {
-    ok: true as const,
-    items: (data ?? []).map((item) => {
-      const profile = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles;
+  return querySuccess({
+    items: (memberships ?? []).map((membership) => {
+      const profile = Array.isArray(membership.profiles) ? membership.profiles[0] : membership.profiles;
 
       return {
-        id: item.clerk_user_id,
+        id: membership.clerk_user_id,
         name: profile?.display_name || profile?.email || "Unbekannt",
-        role: item.role,
-        status: item.status,
+        role: membership.role,
+        status: membership.status,
       };
     }),
-  };
+  });
 }
 
-// SAFETY: the KPI projection consumes only explicitly selected Supabase rows.
 
 export async function listCashCountsForCurrentOrganization() {
   const context = await requireClerkContext();
   const supabase = await createSupabaseServerClient();
 
-  const { data, error } = await supabase
+  const { data: cashCounts, error } = await supabase
     .from("cash_counts")
     .select("id, wallet_id, counted_amount_minor, book_amount_minor, difference_minor, counted_by_name, created_at, note")
     .eq("organization_id", context.organizationId)
     .order("created_at", { ascending: false });
 
-  if (error) return { ok: false as const, error: "DATABASE_ERROR" as const };
+  if (error) return queryFailure("DATABASE_ERROR");
 
-  return {
-    ok: true as const,
-    items: (data ?? []).map((item): CashCountListItem => ({
-      id: item.id,
-      walletId: item.wallet_id,
-      countedAmountMinor: String(item.counted_amount_minor),
-      bookAmountMinor: String(item.book_amount_minor),
-      differenceMinor: String(item.difference_minor),
-      countedByName: item.counted_by_name,
-      createdAt: item.created_at,
-      note: item.note,
+  return querySuccess({
+    items: (cashCounts ?? []).map((cashCount): CashCountListItem => ({
+      id: cashCount.id,
+      walletId: cashCount.wallet_id,
+      countedAmountMinor: String(cashCount.counted_amount_minor),
+      bookAmountMinor: String(cashCount.book_amount_minor),
+      differenceMinor: String(cashCount.difference_minor),
+      countedByName: cashCount.counted_by_name,
+      createdAt: cashCount.created_at,
+      note: cashCount.note,
     })),
-  };
+  });
 }
 
 export async function listAccountingPeriodsForCurrentOrganization() {
@@ -87,7 +85,7 @@ export async function listAccountingPeriodsForCurrentOrganization() {
     .order("year", { ascending: false })
     .order("month", { ascending: false });
 
-  if (error) return { ok: false as const, error: "DATABASE_ERROR" as const };
+  if (error) return queryFailure("DATABASE_ERROR");
 
   const lockedByIds = [...new Set((periods ?? []).map((period) => period.locked_by).filter(Boolean))];
 
@@ -97,11 +95,10 @@ export async function listAccountingPeriodsForCurrentOrganization() {
     ? await supabase.from("profiles").select("clerk_user_id, display_name, email").in("clerk_user_id", lockedByIds)
     : { data: emptyLockedProfiles, error: null };
 
-  if (profileError) return { ok: false as const, error: "DATABASE_ERROR" as const };
+  if (profileError) return queryFailure("DATABASE_ERROR");
   const profileMap = new Map((profiles ?? []).map((profile) => [profile.clerk_user_id, profile.display_name || profile.email || "Unbekannt"]));
 
-  return {
-    ok: true as const,
+  return querySuccess({
     items: (periods ?? []).map((period): AccountingPeriodListItem => ({
       id: period.id,
       year: period.year,
@@ -111,5 +108,5 @@ export async function listAccountingPeriodsForCurrentOrganization() {
       lockedByName: period.locked_by ? profileMap.get(period.locked_by) ?? "Unbekannt" : null,
       lockReason: period.lock_reason,
     })),
-  };
+  });
 }

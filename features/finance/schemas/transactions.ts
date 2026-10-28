@@ -9,9 +9,9 @@ export const transactionCreateSchema = z
       .string()
       .trim()
       .min(1, "Amount is required")
-      .transform((value, context) => {
+      .transform((amountText, context) => {
         try {
-          return parseDollarToMinor(value);
+          return parseDollarToMinor(amountText);
         } catch {
           context.addIssue({
             code: "custom",
@@ -21,7 +21,7 @@ export const transactionCreateSchema = z
           return z.NEVER;
         }
       })
-      .refine((value) => value > BigInt(0), "Amount must be greater than zero"),
+      .refine((amountMinor) => amountMinor > BigInt(0), "Amount must be greater than zero"),
     currency: z.literal("USD"),
     title: z.string().trim().min(1).max(200),
     description: z.string().trim().max(2000).nullable().optional(),
@@ -37,11 +37,11 @@ export const transactionCreateSchema = z
       .optional(),
     idempotencyKey: z.string().trim().min(16).max(128),
   })
-  .superRefine((value, context) => {
-    const from = value.fromWalletId;
-    const to = value.toWalletId;
+  .superRefine((transaction, context) => {
+    const from = transaction.fromWalletId;
+    const to = transaction.toWalletId;
 
-    if (value.type === "income" && (!to || from)) {
+    if (transaction.type === "income" && (!to || from)) {
       context.addIssue({
         code: "custom",
         path: ["toWalletId"],
@@ -49,7 +49,7 @@ export const transactionCreateSchema = z
       });
     }
 
-    if (value.type === "expense" && (!from || to)) {
+    if (transaction.type === "expense" && (!from || to)) {
       context.addIssue({
         code: "custom",
         path: ["fromWalletId"],
@@ -57,7 +57,7 @@ export const transactionCreateSchema = z
       });
     }
 
-    if (value.type === "transfer" && (!from || !to || from === to)) {
+    if (transaction.type === "transfer" && (!from || !to || from === to)) {
       context.addIssue({
         code: "custom",
         path: ["fromWalletId"],
@@ -65,7 +65,7 @@ export const transactionCreateSchema = z
       });
     }
 
-    if ((value.type === "income" || value.type === "expense") && !value.categoryId) {
+    if ((transaction.type === "income" || transaction.type === "expense") && !transaction.categoryId) {
       context.addIssue({
         code: "custom",
         path: ["categoryId"],

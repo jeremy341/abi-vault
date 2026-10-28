@@ -1,27 +1,19 @@
 "use client";
 
-import {
-  ArrowRight,
-  CalendarDays,
-  CheckCircle2,
-  CircleDollarSign,
-  Pencil,
-  Plus,
-  Target,
-  Trash2,
-  X,
-} from "lucide-react";
+import { X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAppAuth } from "@/components/auth/app-auth";
 import { Dialog } from "@/components/ui/dialog";
 import { LoadingCollection, LoadingStatus, LoadingText } from "@/components/ui/loading-state";
+import dlg from "@/components/dashboard/dialog.module.css";
 import styles from "./goals.module.css";
-import phoneStyles from "./goals-phone.module.css";
-import { usePresentationMode } from "@/hooks/use-presentation-mode";
-import { getDashboardSnapshot } from "@/features/finance/actions/queries";
+import ledger from "../ledger.module.css";
+import { LoadError } from "@/components/ui/load-error";
+import { getDashboardSnapshot, type DashboardResult } from "@/features/finance/actions/queries";
 import { createGoal } from "@/features/goals/actions/goals";
 import { archiveGoal, updateGoal } from "@/features/goals/actions/goal-mutations";
-import { cachedFinanceQuery, getFinanceCacheState, invalidateFinanceQuery } from "@/lib/finance/client-cache";
+import { useFinanceQuery } from "@/hooks/use-finance-query";
+import { financeScope, invalidateFinanceQuery } from "@/lib/finance/client-cache";
 
 type Goal = {
   id: string;
@@ -30,7 +22,13 @@ type Goal = {
   saved: number;
   progress: number;
   date: string;
+  deadline: string;
 };
+
+type DashboardGoal = Extract<DashboardResult, { ok: true }>["goals"][number];
+
+const displayGoalDate = (iso: string) =>
+  new Date(`${iso}T00:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 
 const dollar = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -44,97 +42,29 @@ const dollarPrecise = new Intl.NumberFormat("en-US", {
   minimumFractionDigits: 2,
 });
 
-function PhoneGoalsView({
-  loading,
-  goals,
-  totalSaved,
-  totalTarget,
-  progress,
-  onAdd,
-  onEdit,
-}: {
-  loading: boolean;
-  goals: Goal[];
-  totalSaved: number;
-  totalTarget: number;
-  progress: number;
-  onAdd: () => void;
-  onEdit: (goal: Goal, index: number) => void;
-}) {
-  return (
-    <div className={phoneStyles.root} aria-busy={loading}>
-      <section className={phoneStyles.hero} aria-label="Gesamtfortschritt" data-ui-slot="summary">
-        <span>Total saved</span>
-        <strong><LoadingText loading={loading}>{dollar.format(totalSaved)}</LoadingText></strong>
-        <p>by <LoadingText loading={loading}>{dollar.format(totalTarget)}</LoadingText></p>
-        <div className={phoneStyles.heroProgress}>
-          <b><LoadingText loading={loading}>{progress}%</LoadingText></b>
-          <span>erreicht</span>
-        </div>
-      </section>
+function toGoal(goal: DashboardGoal): Goal {
+  const target = Number(goal.target_amount_minor) / 100;
+  const saved = Number(goal.saved_amount_minor) / 100;
 
-      <header className={phoneStyles.sectionHeader} data-ui-slot="list-header">
-        <h2>Savings goals</h2>
-        <span><LoadingText loading={loading}>{goals.length} aktiv</LoadingText></span>
-      </header>
-      <div className={phoneStyles.goals} data-ui-slot="list-body">
-        <LoadingCollection loading={loading} knownItemCount={goals.length} emptyHeight="12rem" label="Goals are loading…">
-          {goals.length ? goals.map((goal, index) => (
-            <button
-              type="button"
-              className={phoneStyles.goal}
-              key={`${goal.title}-${index}`}
-              onClick={() => onEdit(goal, index)}
-            >
-              <strong>{goal.title}</strong>
-              <b>{dollar.format(goal.target)}</b>
-              <span className={phoneStyles.goalMeta}>
-                {dollarPrecise.format(goal.saved)} saved
-              </span>
-              <span className={phoneStyles.goalMeta}>{goal.progress}%</span>
-              <div className={phoneStyles.goalTrack} aria-hidden="true">
-                <i style={{ width: `${goal.progress}%` }} />
-              </div>
-              <span className={phoneStyles.goalFooter}>
-                <span>Goal: {goal.date}</span>
-                <span>{dollarPrecise.format(goal.target - goal.saved)} pending</span>
-              </span>
-            </button>
-          )) : <div className={phoneStyles.empty}>No savings goals created yet.</div>}
-        </LoadingCollection>
-      </div>
-      <button type="button" className={phoneStyles.addButton} onClick={onAdd} disabled={loading} data-ui-slot="primary-action">
-        <Plus aria-hidden="true" /> Add goal
-      </button>
-    </div>
-  );
+  return {
+    id: goal.id,
+    title: goal.title,
+    target,
+    saved,
+    progress: target ? Math.round((saved / target) * 100) : 0,
+    date: displayGoalDate(goal.deadline),
+    deadline: goal.deadline,
+  };
 }
 
 export default function GoalsPage() {
-  const mode = usePresentationMode();
   const { userId, orgId } = useAppAuth();
-  const cacheScope = `${orgId ?? "no-org"}:${userId ?? "anonymous"}`;
+  const cacheScope = financeScope(orgId, userId);
+  const { data: dashboard, loading, failed } = useFinanceQuery("dashboard-snapshot", getDashboardSnapshot, cacheScope);
+  const loadError = failed ? "The goals could not be loaded." : "";
 
-  type DashboardResult = Awaited<ReturnType<typeof getDashboardSnapshot>>;
+  const [goals, setGoals] = useState<Goal[]>(() => (dashboard?.ok ? dashboard.goals.map(toGoal) : []));
 
-  const initialSnapshot = getFinanceCacheState<DashboardResult>("dashboard-snapshot", cacheScope);
-  const initialGoals = initialSnapshot.data?.ok ? initialSnapshot.data.goals : [];
-
-  const [goals, setGoals] = useState<Goal[]>(() => initialGoals.map((goal) => {
-    const target = Number(goal.target_amount_minor) / 100;
-    const saved = Number(goal.saved_amount_minor) / 100;
-
-    return {
-      id: goal.id,
-      title: goal.title,
-      target,
-      saved,
-      progress: target ? Math.round((saved / target) * 100) : 0,
-      date: new Date(`${goal.deadline}T00:00:00`).toLocaleDateString("en-GB"),
-    };
-  }));
-
-  const [loading, setLoading] = useState(!initialSnapshot.data?.ok);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingGoalIndex, setEditingGoalIndex] = useState<number | null>(null);
 
@@ -143,46 +73,14 @@ export default function GoalsPage() {
   const [savedAmount, setSavedAmount] = useState("");
   const [deadline, setDeadline] = useState("");
   const [formError, setFormError] = useState("");
-  const [loadError, setLoadError] = useState("");
   const [saving, setSaving] = useState(false);
   const idempotencyKey = useRef<string | null>(null);
+
   useEffect(() => {
-    let active = true;
-    cachedFinanceQuery("dashboard-snapshot", getDashboardSnapshot, { scope: cacheScope })
-      .then((result) => {
-        if (!active) return;
+    if (!dashboard?.ok) return;
 
-        if (!result.ok) {
-          setLoadError("The goals could not be loaded.");
-
-          return;
-        }
-
-        setGoals(result.goals.map((goal) => {
-          const target = Number(goal.target_amount_minor) / 100;
-          const saved = Number(goal.saved_amount_minor) / 100;
-
-          return {
-            id: goal.id,
-            title: goal.title,
-            target,
-            saved,
-            progress: target ? Math.round((saved / target) * 100) : 0,
-            date: new Date(`${goal.deadline}T00:00:00`).toLocaleDateString("en-GB"),
-          };
-        }));
-      })
-      .catch(() => {
-        if (active) setLoadError("The goals could not be loaded.");
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [cacheScope]);
+    setGoals(dashboard.goals.map(toGoal));
+  }, [dashboard]);
 
   const totalTarget = useMemo(
     () => goals.reduce((sum, goal) => sum + goal.target, 0),
@@ -231,14 +129,7 @@ export default function GoalsPage() {
     setTargetAmount(goal.target.toString());
     setSavedAmount(goal.saved.toString());
 
-    // Convert DD.MM.YYYY to YYYY-MM-DD for date input
-    const parts = goal.date.split(".");
-
-    if (parts.length === 3) {
-      setDeadline(`${parts[2]}-${parts[1]}-${parts[0]}`);
-    } else {
-      setDeadline(goal.date);
-    }
+    setDeadline(goal.deadline);
 
     setFormError("");
     setModalOpen(true);
@@ -253,102 +144,102 @@ export default function GoalsPage() {
     idempotencyKey.current ??= `goal-${crypto.randomUUID()}`;
 
     try {
-    const formData = new FormData(event.currentTarget);
-    const submittedName = String(formData.get("goalName") ?? "").trim();
-    const submittedDeadline = String(formData.get("deadline") ?? "");
-    const submittedTargetAmount = String(formData.get("targetAmount") ?? "");
-    const submittedSavedAmount = String(formData.get("savedAmount") ?? "");
-    const target = Number(submittedTargetAmount.replace(",", "."));
-    const saved = Number(submittedSavedAmount.replace(",", ".")) || 0;
+      const formData = new FormData(event.currentTarget);
+      const submittedName = String(formData.get("goalName") ?? "").trim();
+      const submittedDeadline = String(formData.get("deadline") ?? "");
+      const submittedTargetAmount = String(formData.get("targetAmount") ?? "");
+      const submittedSavedAmount = String(formData.get("savedAmount") ?? "");
+      const target = Number(submittedTargetAmount.replace(",", "."));
+      const saved = Number(submittedSavedAmount.replace(",", ".")) || 0;
 
-    if (!submittedName || !target || target <= 0 || !submittedDeadline) {
-      setFormError(
-        "Please complete the name, target amount, and target date.",
-      );
-
-      return;
-    }
-
-    if (saved < 0 || saved > target) {
-      setFormError(
-        "The amount already saved must be between $0 and the target amount.",
-      );
-
-      return;
-    }
-
-    const [year, month, day] = submittedDeadline.split("-");
-    const formattedDate = `${day}.${month}.${year}`;
-    const progress = Math.round((saved / target) * 100);
-
-    if (editingGoalIndex !== null) {
-      const currentGoal = goals[editingGoalIndex];
-
-      if (currentGoal && /^[0-9a-f-]{36}$/i.test(currentGoal.id)) {
-        const result = await updateGoal({
-          goalId: currentGoal.id,
-          title: submittedName,
-          description: null,
-          targetAmount: submittedTargetAmount,
-          deadline: submittedDeadline,
-          reason: "Goal updated in the goal dialog",
-        });
-
-        if (!result.ok) {
-          setFormError("The goal could not be saved.");
-
-          return;
-        }
-      }
-
-      // Update existing goal
-      setGoals((current) =>
-        current.map((g, idx) =>
-          idx === editingGoalIndex
-            ? {
-              id: g.id,
-              title: submittedName,
-              target,
-              saved,
-              progress,
-              date: formattedDate,
-            }
-            : g,
-        ),
-      );
-    } else {
-      const result = await createGoal({
-        title: submittedName,
-        description: null,
-        targetAmount: submittedTargetAmount,
-        deadline: submittedDeadline,
-        visibility: "private",
-        idempotencyKey: idempotencyKey.current,
-      });
-
-      if (!result.success) {
-        setFormError("The goal could not be saved.");
+      if (!submittedName || !target || target <= 0 || !submittedDeadline) {
+        setFormError(
+          "Complete the name, target amount, and target date.",
+        );
 
         return;
       }
 
-      // Add new goal
-      setGoals((current) => [
-        ...current,
-        {
-          id: result.data.id,
-          title: submittedName,
-          target,
-          saved,
-          progress,
-          date: formattedDate,
-        },
-      ]);
-    }
+      if (saved < 0 || saved > target) {
+        setFormError(
+          "The amount already saved must be between $0 and the target amount.",
+        );
 
-    invalidateFinanceQuery("goals", "dashboard-snapshot", "report-snapshot");
-    idempotencyKey.current = null;
-    closeModal();
+        return;
+      }
+
+      const [year, month, day] = submittedDeadline.split("-");
+      const formattedDate = displayGoalDate(`${year}-${month}-${day}`);
+      const progress = Math.round((saved / target) * 100);
+
+      if (editingGoalIndex !== null) {
+        const currentGoal = goals[editingGoalIndex];
+
+        if (currentGoal && /^[0-9a-f-]{36}$/i.test(currentGoal.id)) {
+          const result = await updateGoal({
+            goalId: currentGoal.id,
+            title: submittedName,
+            description: null,
+            targetAmount: submittedTargetAmount,
+            deadline: submittedDeadline,
+            reason: "Goal updated in the goal dialog",
+          });
+
+          if (!result.ok) {
+            setFormError("The goal could not be saved.");
+
+            return;
+          }
+        }
+
+        setGoals((current) =>
+          current.map((goal, index) =>
+            index === editingGoalIndex
+              ? {
+                id: goal.id,
+                title: submittedName,
+                target,
+                saved,
+                progress,
+                date: formattedDate,
+                deadline: submittedDeadline,
+              }
+              : goal,
+          ),
+        );
+      } else {
+        const result = await createGoal({
+          title: submittedName,
+          description: null,
+          targetAmount: submittedTargetAmount,
+          deadline: submittedDeadline,
+          visibility: "private",
+          idempotencyKey: idempotencyKey.current,
+        });
+
+        if (!result.success) {
+          setFormError("The goal could not be saved.");
+
+          return;
+        }
+
+        setGoals((current) => [
+          ...current,
+          {
+            id: result.data.id,
+            title: submittedName,
+            target,
+            saved,
+            progress,
+            date: formattedDate,
+            deadline: submittedDeadline,
+          },
+        ]);
+      }
+
+      invalidateFinanceQuery("goals", "dashboard-snapshot", "report-snapshot");
+      idempotencyKey.current = null;
+      closeModal();
     } catch {
       setFormError("The goal could not be saved.");
     } finally {
@@ -376,7 +267,7 @@ export default function GoalsPage() {
         }
       }
 
-      setGoals((current) => current.filter((_, idx) => idx !== editingGoalIndex));
+      setGoals((current) => current.filter((_, index) => index !== editingGoalIndex));
       invalidateFinanceQuery("goals", "dashboard-snapshot", "report-snapshot");
       closeModal();
     } finally {
@@ -385,263 +276,98 @@ export default function GoalsPage() {
   }
 
   return (
-    <section className={mode === "phone" ? phoneStyles.pageShell : styles.page} aria-busy={loading}>
-      <LoadingStatus loading={loading} label="Goals are loading…" />
-      {loadError ? <p className={styles.formError} role="alert">{loadError}</p> : null}
-      {mode === "phone" ? (
-        <PhoneGoalsView
-          loading={loading}
-          goals={goals}
-          totalSaved={totalSaved}
-          totalTarget={totalTarget}
-          progress={overallProgress}
-          onAdd={openAddModal}
-          onEdit={openEditModal}
-        />
-      ) : (
-        <>
-          <div className={styles.summaryGrid} data-ui-slot="summary">
-            <div className={styles.summaryLeft}>
-              <article className={styles.summaryCard}>
-                <span className={styles.summaryIcon}>
-                  <Target aria-hidden="true" />
-                </span>
-                <div>
-                  <span>Active goals</span>
-                  <strong><LoadingText loading={loading}>{goals.length}</LoadingText></strong>
-                </div>
-              </article>
-              <article className={styles.summaryCard}>
-                <span className={`${styles.summaryIcon} ${styles.savedIcon}`}>
-                  <CircleDollarSign aria-hidden="true" />
-                </span>
-                <div>
-                  <span>Total saved</span>
-                  <strong><LoadingText loading={loading}>{dollar.format(totalSaved)}</LoadingText></strong>
-                </div>
-              </article>
-            </div>
-            <article className={styles.summaryCard}>
-              <span className={`${styles.summaryIcon} ${styles.progressIcon}`}>
-                <CheckCircle2 aria-hidden="true" />
-              </span>
-              <div>
-                <span>Gesamtfortschritt</span>
-                <strong><LoadingText loading={loading}>{overallProgress}%</LoadingText></strong>
-              </div>
-            </article>
+    <section className={`${ledger.page}`} aria-busy={loading}>
+      <LoadingStatus loading={loading} label="Loading goals" />
+      {loadError ? <LoadError message={loadError} /> : null}
+
+      <div className={ledger.summary}>
+        <dl className={ledger.figures}>
+          <div>
+            <dt>Saved</dt>
+            <dd><LoadingText loading={loading}>{dollar.format(totalSaved)}</LoadingText></dd>
           </div>
-
-          <div className={styles.contentGrid} data-ui-slot="content">
-            <article className={styles.goalsPanel} data-ui-slot="primary-panel">
-              <header className={styles.panelHeader}>
-                <div>
-                  <h2>Meine Goals</h2>
-                  <p>
-                    Select a goal to adjust amounts or deadlines.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  className={styles.primaryButton}
-                  onClick={openAddModal}
-                  disabled={loading}
-                  data-ui-slot="primary-action"
-                >
-                  <Plus aria-hidden="true" />
-                  Add goal
-                </button>
-              </header>
-              <div className={styles.goalGrid} data-ui-slot="list-body">
-                <LoadingCollection loading={loading} knownItemCount={goals.length} emptyHeight="14rem" label="Goals are loading…">
-                  {goals.map((goal, idx) => (
-                    <article
-                      className={styles.goalCard}
-                      key={`${goal.title}-${idx}`}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => openEditModal(goal, idx)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          openEditModal(goal, idx);
-                        }
-                      }}
-                      title="Click to edit"
-                    >
-                      <div className={styles.goalCardHeader}>
-                        <h3>{goal.title}</h3>
-                        <Target aria-hidden="true" />
-                      </div>
-                      <strong className={styles.goalTarget}>
-                        {dollar.format(goal.target)}
-                      </strong>
-                      <p className={styles.goalSaved}>
-                        {dollarPrecise.format(goal.saved)} saved
-                      </p>
-                      <div className={styles.progressLine}>
-                        <div className={styles.progressTrack}>
-                          <span style={{ width: `${goal.progress}%` }} />
-                        </div>
-                        <strong>{goal.progress}%</strong>
-                      </div>
-                      <div className={styles.goalFooter}>
-                        <span>
-                          <CalendarDays aria-hidden="true" />
-                          Goal: {goal.date}
-                        </span>
-                        <span>
-                          {dollarPrecise.format(goal.target - goal.saved)} pending
-                        </span>
-                      </div>
-                    </article>
-                  ))}
-                </LoadingCollection>
-              </div>
-            </article>
-
-            <aside className={styles.sideColumn} data-ui-slot="secondary-panel">
-              <article className={styles.progressPanel}>
-                <header className={styles.panelHeader}>
-                  <div>
-                    <h2>Gesamtfortschritt</h2>
-                    <p>Across all active goals</p>
-                  </div>
-                  <span className={styles.progressPercent}>
-                    <LoadingText loading={loading}>{overallProgress}%</LoadingText>
-                  </span>
-                </header>
-                <div className={styles.largeProgress}>
-                  <span style={{ width: `${overallProgress}%` }} />
-                </div>
-                <div className={styles.progressStats}>
-                  <span><LoadingText loading={loading}>{dollarPrecise.format(totalSaved)} saved</LoadingText></span>
-                  <span>by <LoadingText loading={loading}>{dollar.format(totalTarget)}</LoadingText></span>
-                </div>
-              </article>
-
-              <article className={styles.upcomingPanel}>
-                <header className={styles.panelHeader}>
-                  <div>
-                    <h2>Upcoming goals</h2>
-                    <p>Bevorstehende Fristen</p>
-                  </div>
-                  <CalendarDays aria-hidden="true" />
-                </header>
-                <div className={styles.upcomingList}>
-                  <LoadingCollection loading={loading} knownItemCount={goals.length} emptyHeight="10rem" label="Deadlines are loading…">
-                    {goals
-                      .slice()
-                      .sort((a, b) =>
-                        a.date
-                          .split(".")
-                          .reverse()
-                          .join("")
-                          .localeCompare(b.date.split(".").reverse().join("")),
-                      )
-                      .slice(0, 3)
-                      .map((goal) => {
-                        const originalIndex = goals.findIndex(
-                          (g) => g.title === goal.title,
-                        );
-
-                        return (
-                          <button
-                            type="button"
-                            className={styles.upcomingItem}
-                            key={`upcoming-${goal.title}`}
-                            onClick={() =>
-                              openEditModal(
-                                goal,
-                                originalIndex >= 0 ? originalIndex : 0,
-                              )
-                            }
-                          >
-                            <div>
-                              <strong>{goal.title}</strong>
-                              <span>{goal.date}</span>
-                            </div>
-                            <ArrowRight aria-hidden="true" />
-                          </button>
-                        );
-                      })}
-                  </LoadingCollection>
-                </div>
-              </article>
-            </aside>
+          <div>
+            <dt>Target</dt>
+            <dd><LoadingText loading={loading}>{dollar.format(totalTarget)}</LoadingText></dd>
           </div>
-        </>
-      )}
+          <div>
+            <dt>Progress</dt>
+            <dd><LoadingText loading={loading}>{overallProgress}%</LoadingText></dd>
+          </div>
+        </dl>
+        <button type="button" className={ledger.primaryButton} onClick={openAddModal} disabled={loading}>
+          Add goal
+        </button>
+      </div>
+
+      <section className={ledger.section}>
+        <header className={ledger.sectionHeader}>
+          <h2>Goals</h2>
+          <p><LoadingText loading={loading}>{goals.length} active</LoadingText></p>
+        </header>
+        <div>
+          <LoadingCollection loading={loading} knownItemCount={goals.length} emptyHeight="10rem" label="Loading goals">
+            {goals.length ? (
+              <ul className={ledger.list}>
+                {goals.map((goal, index) => (
+                  <li key={goal.id}>
+                    <button type="button" className={ledger.rowButton} onClick={() => openEditModal(goal, index)}>
+                      <span className={ledger.rowTitle}>
+                        <span>{goal.title}</span>
+                        <span className={ledger.rowMeta}>By {goal.date}</span>
+                      </span>
+                      <span className={ledger.line} role="presentation">
+                        <i style={{ width: `${Math.min(100, goal.progress)}%` }} />
+                      </span>
+                      <span className={ledger.rowEnd}>
+                        <span>{dollarPrecise.format(goal.saved)} of {dollar.format(goal.target)}</span>
+                        <span className={ledger.rowMeta}>{goal.progress}%, {dollarPrecise.format(Math.max(0, goal.target - goal.saved))} to go</span>
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className={ledger.empty}>
+                No goals yet.{" "}
+                <button type="button" className={ledger.textButton} onClick={openAddModal}>Add one</button>
+              </p>
+            )}
+          </LoadingCollection>
+        </div>
+      </section>
 
       {modalOpen && (
         <Dialog
-          label={
-            editingGoalIndex !== null ? "Edit goal" : "Add goal"
-          }
+          label={editingGoalIndex !== null ? "Edit goal" : "Add goal"}
           onClose={closeModal}
-          overlayClassName={styles.overlay}
-          dialogClassName={`${styles.modal} ${mode === "phone" ? phoneStyles.phoneDialog : ""}`}
+          overlayClassName={dlg.overlay}
+          dialogClassName={dlg.modal}
         >
           <form onSubmit={handleSaveGoal} noValidate>
-            <header className={styles.modalHeader}>
-              <div className={styles.modalTitle}>
-                <span>
-                  {editingGoalIndex !== null ? (
-                    <Pencil aria-hidden="true" />
-                  ) : (
-                    <Target aria-hidden="true" />
-                  )}
-                </span>
-                <div>
-                  <h2>
-                    {editingGoalIndex !== null
-                      ? "Edit goal"
-                      : "Add goal"}
-                  </h2>
-                  <p>
-                    {editingGoalIndex !== null
-                      ? "Edit the details, amounts, and progress of this savings goal."
-                      : "Set a new shared savings goal."}
-                  </p>
-                </div>
+            <header className={dlg.header}>
+              <div className={dlg.heading}>
+                <h2>{editingGoalIndex !== null ? "Edit goal" : "Add goal"}</h2>
+                <p>
+                  {editingGoalIndex !== null
+                    ? "Change the name, amounts or target date of this goal."
+                    : "Set a shared savings goal for the class."}
+                </p>
               </div>
               <button
                 type="button"
-                className={styles.closeButton}
+                className={dlg.closeButton}
                 onClick={closeModal}
-                aria-label="Close dialog"
+                aria-label="Close"
               >
                 <X aria-hidden="true" />
               </button>
             </header>
 
-            <div className={styles.modalBody}>
-              <section
-                className={styles.goalPreview}
-                aria-label="Goal preview"
-              >
-                <div className={styles.goalCardHeader}>
-                  <h3>
-                    {goalName.trim() ||
-                      (editingGoalIndex !== null ? "Goalname" : "News Goal")}
-                  </h3>
-                  <Target aria-hidden="true" />
-                </div>
-                <strong>
-                  {previewTarget ? dollar.format(previewTarget) : "0 $"}
-                </strong>
-                <p>{dollarPrecise.format(previewSaved)} saved</p>
-                <div className={styles.progressLine}>
-                  <div className={styles.progressTrack}>
-                    <span style={{ width: `${previewProgress}%` }} />
-                  </div>
-                  <b>{previewProgress}%</b>
-                </div>
-              </section>
-
-              <div className={styles.formGrid}>
-                <label className={styles.formField}>
-                  <span>Goalname</span>
+            <div className={dlg.body}>
+              <div className={dlg.formGrid}>
+                <label className={`${dlg.field} ${dlg.formFull}`}>
+                  <span>Goal name</span>
                   <input
                     name="goalName"
                     autoComplete="off"
@@ -651,12 +377,48 @@ export default function GoalsPage() {
                       setGoalName(event.target.value);
                       setFormError("");
                     }}
-                    placeholder="e.g. class trip …"
+                    placeholder="For example, class trip"
                   />
                 </label>
 
-                <label className={styles.formField}>
-                  <span>Goaldatum</span>
+                <label className={dlg.field}>
+                  <span>Target amount</span>
+                  <div className={dlg.amountField}>
+                    <input
+                      name="targetAmount"
+                      inputMode="decimal"
+                      autoComplete="off"
+                      value={targetAmount}
+                      onChange={(event) => {
+                        setTargetAmount(event.target.value);
+                        setFormError("");
+                      }}
+                      placeholder="0.00"
+                    />
+                    <span>$</span>
+                  </div>
+                </label>
+
+                <label className={dlg.field}>
+                  <span>Already saved</span>
+                  <div className={dlg.amountField}>
+                    <input
+                      name="savedAmount"
+                      inputMode="decimal"
+                      autoComplete="off"
+                      value={savedAmount}
+                      onChange={(event) => {
+                        setSavedAmount(event.target.value);
+                        setFormError("");
+                      }}
+                      placeholder="0.00"
+                    />
+                    <span>$</span>
+                  </div>
+                </label>
+
+                <label className={`${dlg.field} ${dlg.formFull}`}>
+                  <span>Target date</span>
                   <input
                     name="deadline"
                     type="date"
@@ -667,75 +429,48 @@ export default function GoalsPage() {
                     }}
                   />
                 </label>
-
-                <label className={styles.formField}>
-                  <span>Target amount</span>
-                  <div className={styles.amountField}>
-                    <input
-                      name="targetAmount"
-                      inputMode="decimal"
-                      autoComplete="off"
-                      value={targetAmount}
-                      onChange={(event) => {
-                        setTargetAmount(event.target.value);
-                        setFormError("");
-                      }}
-                      placeholder="0,00"
-                    />
-                    <span>$</span>
-                  </div>
-                </label>
-
-                <label className={styles.formField}>
-                  <span>Already saved</span>
-                  <div className={styles.amountField}>
-                    <input
-                      name="savedAmount"
-                      inputMode="decimal"
-                      autoComplete="off"
-                      value={savedAmount}
-                      onChange={(event) => {
-                        setSavedAmount(event.target.value);
-                        setFormError("");
-                      }}
-                      placeholder="0,00"
-                    />
-                    <span>$</span>
-                  </div>
-                </label>
               </div>
 
-              <p className={styles.formError} aria-live="polite">
-                {formError || "\u00a0"}
-              </p>
+              <div className={styles.progressPreview} role="group" aria-label="Progress">
+                <span className={ledger.line} role="presentation">
+                  <i style={{ width: `${previewProgress}%` }} />
+                </span>
+                <p>
+                  {dollarPrecise.format(previewSaved)} of{" "}
+                  {previewTarget ? dollarPrecise.format(previewTarget) : dollarPrecise.format(0)}, {previewProgress}%
+                </p>
+              </div>
+
+              {formError ? (
+                <p className={dlg.error} role="alert">
+                  {formError}
+                </p>
+              ) : null}
             </div>
 
-            <footer className={styles.modalFooter}>
+            <footer className={`${dlg.footer} ${editingGoalIndex !== null ? dlg.footerSplit : ""}`}>
               {editingGoalIndex !== null ? (
                 <button
                   type="button"
-                  className={styles.deleteButton}
+                  className={dlg.destructiveButton}
                   onClick={handleDeleteGoal}
                   disabled={saving}
                 >
-                  <Trash2 className="inline-block size-4 mr-1.5" />
-                  Delete goal
+                  Archive goal
                 </button>
-              ) : (
-                <div />
-              )}
+              ) : null}
 
-              <div className={styles.modalFooterRight}>
+              <div className={dlg.footerActions}>
                 <button
                   type="button"
-                  className={styles.secondaryButton}
+                  className={dlg.secondaryButton}
                   onClick={closeModal}
                   disabled={saving}
                 >
                   Cancel
                 </button>
-                <button type="submit" className={styles.primaryButton} disabled={saving} aria-busy={saving}>
-                  {saving ? "Saving …" : editingGoalIndex !== null
+                <button type="submit" className={dlg.primaryButton} disabled={saving} aria-busy={saving}>
+                  {saving ? "Saving" : editingGoalIndex !== null
                     ? "Save changes"
                     : "Add goal"}
                 </button>

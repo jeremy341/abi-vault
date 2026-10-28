@@ -1,5 +1,4 @@
 import type { AccountCardDetails } from "@/components/dashboard/AccountCard";
-import type { PresentationMode } from "@/hooks/use-presentation-mode";
 
 export type FundsCard = {
   id: string;
@@ -38,7 +37,6 @@ export type FundsActivity = {
 };
 
 export type AdaptiveFundsViewProps = {
-  mode: PresentationMode;
   loading: boolean;
   error: string | null;
   onRetry: () => void;
@@ -56,4 +54,3 @@ export type AdaptiveFundsViewProps = {
   onCountCash: () => void;
 };
 
-export type FundsSection = "overview" | "accounts" | "audit";

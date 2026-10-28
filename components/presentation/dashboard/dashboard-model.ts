@@ -1,42 +1,4 @@
-import {
-  CalendarDays,
-  FileText,
-  HandCoins,
-  MoreHorizontal,
-  Package,
-} from "lucide-react";
-import type {
-  DashboardSnapshot,
-} from "@/hooks/use-dashboard-snapshot";
-
-const dashboardCategories = [
-  {
-    title: "Veranstaltung",
-    amount: "$1,740.00 of $3,000.00",
-    progress: 58,
-    color: "bg-[var(--chart-2)] dark:bg-[var(--chart-1)]",
-    bubble: "bg-[var(--ui-surface-muted)] text-ink dark:bg-[var(--ui-surface-muted)]",
-    icon: CalendarDays,
-  },
-  {
-    title: "Material",
-    amount: "$384.90 of $1,200.00",
-    progress: 32,
-    color: "bg-[var(--ui-positive)]",
-    bubble:
-      "bg-[var(--ui-positive-soft)] text-[var(--ui-positive)] dark:bg-green-500/15",
-    icon: Package,
-  },
-  {
-    title: "Sonstiges",
-    amount: "$185.50 of $1,000.00",
-    progress: 10,
-    color: "bg-[var(--ui-warning)]",
-    bubble:
-      "bg-[var(--ui-warning-soft)] text-[var(--ui-warning)] dark:bg-amber-500/15",
-    icon: MoreHorizontal,
-  },
-];
+import type { DashboardSnapshot } from "@/hooks/use-dashboard-snapshot";
 
 export type DashboardReviewSnapshot = {
   transactions: Array<{
@@ -46,101 +8,89 @@ export type DashboardReviewSnapshot = {
   }>;
 };
 
-export function displayMinor(value: string) {
-  return (Number(value) / 100).toLocaleString("en-US", {
+const MINUS = "−";
+
+export function formatMoney(value: string) {
+  const amount = Number(value) / 100;
+
+  const formatted = Math.abs(amount).toLocaleString("en-US", {
     style: "currency",
     currency: "USD",
   });
+
+  return amount < 0 ? `${MINUS}${formatted}` : formatted;
 }
 
-export function formatLastTransaction(date: string | undefined) {
-  if (!date) return "No transactions yet";
-  const parsed = new Date(date);
+export function formatSignedMoney(value: string) {
+  const amount = Number(value);
 
-  if (Number.isNaN(parsed.getTime())) return "No transactions yet";
+  return `${amount < 0 ? MINUS : "+"}${formatMoney(String(Math.abs(amount)))}`;
+}
 
-  const days = Math.max(
-    0,
-    Math.floor((Date.now() - parsed.getTime()) / 86_400_000),
-  );
+export function formatDate(value: string) {
+  const parsed = new Date(value);
 
-  const time = parsed.toLocaleTimeString("en-GB", {
-    hour: "2-digit",
-    minute: "2-digit",
+  if (Number.isNaN(parsed.getTime())) return value;
+
+  return parsed.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
   });
-
-  if (days === 0) return `${time}, today`;
-
-  if (days === 1) return `${time}, 1 day ago`;
-
-  return `${time}, ${days} days ago`;
 }
 
-export function displayDashboardTransactions(snapshot: DashboardSnapshot | null) {
+export function transactionRows(snapshot: DashboardSnapshot | null) {
   if (!snapshot) return [];
 
-  return snapshot.transactions.map((item) => ({
-    title: item.title,
-    category: item.category,
-    date: item.date,
-    amount: `${Number(item.amountMinor) >= 0 ? "+" : ""}${displayMinor(item.amountMinor)}`,
-    tone: Number(item.amountMinor) >= 0 ? "green" : "violet",
-    icon: Number(item.amountMinor) >= 0 ? HandCoins : FileText,
+  return snapshot.transactions.map((transaction) => ({
+    id: transaction.id,
+    title: transaction.title,
+    category: transaction.category,
+    date: formatDate(transaction.date),
+    amount: formatSignedMoney(transaction.amountMinor),
+    income: Number(transaction.amountMinor) >= 0,
   }));
 }
 
-export function displayDashboardGoals(snapshot: DashboardSnapshot | null) {
+export function goalRows(snapshot: DashboardSnapshot | null) {
   if (!snapshot) return [];
 
   return snapshot.goals.map((goal) => {
-    const target = Number(goal.target_amount_minor) / 100;
-    const saved = Number(goal.saved_amount_minor) / 100;
+    const target = Number(goal.target_amount_minor);
+    const saved = Number(goal.saved_amount_minor);
 
     return {
+      id: goal.id,
       title: goal.title,
-      target: target.toLocaleString("en-US", {
-        style: "currency",
-        currency: "USD",
-        maximumFractionDigits: 0,
-      }),
-      saved: `${saved.toLocaleString("en-US", { style: "currency", currency: "USD" })} saved`,
-      progress: target ? Math.round((saved / target) * 100) : 0,
-      date: new Date(`${goal.deadline}T00:00:00`).toLocaleDateString("en-GB"),
+      detail: `${formatMoney(String(saved))} of ${formatMoney(String(target))}`,
+      progress: target ? Math.min(100, Math.round((saved / target) * 100)) : 0,
+      deadline: formatDate(goal.deadline),
     };
   });
 }
 
-export function displayDashboardCategories(snapshot: DashboardSnapshot | null) {
+export function categoryRows(snapshot: DashboardSnapshot | null) {
   if (!snapshot) return [];
 
-  return snapshot.categories.map((item, index) => ({
-    title: item.name,
-    amount: displayMinor(item.amountMinor),
-    progress: item.progress,
-    color:
-      dashboardCategories[index % dashboardCategories.length]?.color ??
-      "bg-[var(--chart-2)]",
-    bubble:
-      dashboardCategories[index % dashboardCategories.length]?.bubble ??
-      "bg-[var(--ui-surface-muted)] text-ink",
-    icon:
-      dashboardCategories[index % dashboardCategories.length]?.icon ??
-      MoreHorizontal,
+  return snapshot.categories.map((category) => ({
+    title: category.name,
+    amount: formatMoney(category.amountMinor),
+    progress: category.progress,
   }));
 }
 
-export function primaryCashWallet(snapshot: DashboardSnapshot | null) {
-  return snapshot?.wallets.find((wallet) => wallet.type === "cash") ?? null;
+export function cashRegisters(snapshot: DashboardSnapshot | null) {
+  return snapshot?.wallets.filter((wallet) => wallet.type === "cash") ?? [];
 }
 
 export function displayDashboardReviews(snapshot: DashboardReviewSnapshot | null) {
   if (!snapshot) return [];
 
   return snapshot.transactions
-    .filter((item) => item.reviewStatus !== "Approved")
-    .map((item) => ({
-      title: item.title,
-      detail: item.receipt
+    .filter((transaction) => transaction.reviewStatus !== "Approved")
+    .map((transaction) => ({
+      title: transaction.title,
+      detail: transaction.receipt
         ? "Receipt status pending"
         : "Cash payment without receipt",
       href: "/dashboard/transactions",

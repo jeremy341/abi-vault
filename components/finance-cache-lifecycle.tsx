@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { clearFinanceCache } from "@/lib/finance/client-cache";
+import { clearFinanceCache, financeScope } from "@/lib/finance/client-cache";
 import { useAppAuth } from "@/components/auth/app-auth";
 
 export function FinanceCacheLifecycle() {
@@ -9,7 +9,7 @@ export function FinanceCacheLifecycle() {
   const previousScope = useRef<string | null>(null);
   useEffect(() => {
     if (!isLoaded) return;
-    const scope = `${orgId ?? "no-org"}:${userId ?? "anonymous"}`;
+    const scope = financeScope(orgId, userId);
 
     if (previousScope.current && previousScope.current !== scope) clearFinanceCache();
     previousScope.current = scope;

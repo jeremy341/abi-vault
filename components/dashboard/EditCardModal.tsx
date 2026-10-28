@@ -10,19 +10,19 @@ import { Input } from "@/components/ui/input";
 import {
   filterLetters,
   isValidFutureExpiry,
-  previewCardNumber,
 } from "@/lib/card-format";
+import dlg from "./dialog.module.css";
 import styles from "./AccountCardModal.module.css";
 
 const cardColors = [
   { name: "Charcoal", value: "#242426" },
-  { name: "Graphit", value: "#3b3b40" },
+  { name: "Graphite", value: "#3b3b40" },
   { name: "White", value: "#e9e9e7" },
-  { name: "Forest green", value: "#25453b" },
-  { name: "Burgunder", value: "#542f38" },
+  { name: "Forest", value: "#25453b" },
+  { name: "Burgundy", value: "#542f38" },
   { name: "Navy", value: "#26364d" },
   { name: "Sand", value: "#9a8d78" },
-  { name: "Terrakotta", value: "#8b5142" },
+  { name: "Terracotta", value: "#8b5142" },
 ];
 
 type EditCardModalProps = {
@@ -82,7 +82,6 @@ export default function EditCardModal({
   useEffect(() => {
     if (!open) return;
 
-    // SAFETY: document.activeElement is an HTMLElement or null in this browser focus trap.
     const previouslyFocused = document.activeElement as HTMLElement | null;
     const previousOverflow = document.body.style.overflow;
     const form = formRef.current;
@@ -143,7 +142,7 @@ export default function EditCardModal({
     if (invalidMonth || (next.length === 5 && !isValidFutureExpiry(next))) {
       setErrors((current) => ({
         ...current,
-        expiry: "Invalides Expiry date.",
+        expiry: "Enter a future date as MM/YY.",
       }));
     }
   }
@@ -155,19 +154,19 @@ export default function EditCardModal({
     const nextErrors: FormErrors = {};
 
     if (!values.accountName.trim()) {
-      nextErrors.accountName = "Please enter a cash register name.";
+      nextErrors.accountName = "Enter a name for the cash register.";
     }
 
     if (values.cardNumber.replace(/\D/g, "").length !== 16) {
-      nextErrors.cardNumber = "The card number must contain 16 digits.";
+      nextErrors.cardNumber = "The register number needs 16 digits.";
     }
 
     if (!values.holder.trim()) {
-      nextErrors.holder = "Please enter the card holder.";
+      nextErrors.holder = "Enter the person responsible.";
     }
 
     if (!isValidFutureExpiry(values.expiry)) {
-      nextErrors.expiry = "Invalides Expiry date.";
+      nextErrors.expiry = "Enter a future date as MM/YY.";
     }
 
     setErrors(nextErrors);
@@ -198,7 +197,7 @@ export default function EditCardModal({
 
   return createPortal(
     <div
-      className={styles.overlay}
+      className={dlg.overlay}
       role="presentation"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
@@ -206,22 +205,22 @@ export default function EditCardModal({
     >
       <form
         ref={formRef}
-        className={styles.modal}
+        className={dlg.modal}
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-card-title"
         onSubmit={handleSubmit}
         noValidate
       >
-        <header className={styles.header}>
-          <div className={styles.heading}>
-            <h2 id="edit-card-title">Kartendaten edit</h2>
-            <p>Update the name and card view for this cash register.</p>
+        <header className={dlg.header}>
+          <div className={dlg.heading}>
+            <h2 id="edit-card-title">Edit cash register</h2>
+            <p>Change the name, responsible person or color of this cash register.</p>
           </div>
           <button
             type="button"
-            className={styles.closeButton}
-            aria-label="Close dialog"
+            className={dlg.closeButton}
+            aria-label="Close"
             onClick={onClose}
             disabled={saving}
           >
@@ -229,23 +228,20 @@ export default function EditCardModal({
           </button>
         </header>
 
-        <div className={styles.body}>
-          <div className={styles.preview} aria-label="Card preview">
+        <div className={dlg.body}>
+          <div className={styles.preview} aria-label="Preview">
             <AccountCard
               cardColor={selectedColor}
               details={{
                 ...values,
                 accountName: values.accountName || "Cash register",
-                cardNumber: values.cardNumber || previewCardNumber,
-                holder: values.holder || "Mike Smith",
-                expiry: values.expiry || "06/21",
               }}
             />
           </div>
 
-          <section className={styles.section} aria-labelledby="edit-card-colors">
-            <h3 id="edit-card-colors" className={styles.sectionTitle}>
-              Card color
+          <section className={dlg.section} aria-labelledby="edit-card-colors">
+            <h3 id="edit-card-colors" className={dlg.sectionTitle}>
+              Color
             </h3>
             <div className={styles.colorOptions}>
               {cardColors.map((color) => (
@@ -253,9 +249,8 @@ export default function EditCardModal({
                   key={color.value}
                   type="button"
                   className={styles.colorOption}
-                  aria-label={`Select ${color.name}`}
+                  aria-label={color.name}
                   aria-pressed={selectedColor === color.value}
-                  // SAFETY: the swatch custom property is a valid React CSS property.
                   style={
                     { "--swatch": color.value } as React.CSSProperties
                   }
@@ -266,20 +261,20 @@ export default function EditCardModal({
           </section>
 
           <section
-            className={styles.section}
+            className={dlg.section}
             aria-labelledby="edit-card-information"
           >
-            <h3 id="edit-card-information" className={styles.sectionTitle}>
-              Card information
+            <h3 id="edit-card-information" className={dlg.sectionTitle}>
+              Details
             </h3>
-            <div className={styles.formGrid}>
+            <div className={dlg.formGrid}>
               <Field
                 label="Cash register name"
                 error={errors.accountName}
                 errorId="edit-account-name-error"
               >
                 <Input
-                  className={`${styles.input} ${errors.accountName ? styles.inputInvalid : ""}`}
+                  className={`${dlg.input} ${errors.accountName ? dlg.inputInvalid : ""}`}
                   name="accountName"
                   autoComplete="off"
                   required
@@ -293,16 +288,16 @@ export default function EditCardModal({
                       filterLetters(event.target.value, 20),
                     )
                   }
-                  placeholder="For example, drinks cash register"
+                  placeholder="For example, drinks"
                 />
               </Field>
               <Field
-                label="Card number"
+                label="Register number"
                 error={errors.cardNumber}
                 errorId="edit-card-number-error"
               >
                 <Input
-                  className={`${styles.input} ${errors.cardNumber ? styles.inputInvalid : ""}`}
+                  className={`${dlg.input} ${errors.cardNumber ? dlg.inputInvalid : ""}`}
                   name="cardNumber"
                   autoComplete="off"
                   inputMode="numeric"
@@ -321,12 +316,12 @@ export default function EditCardModal({
                 />
               </Field>
               <Field
-                label="Card holder"
+                label="Responsible person"
                 error={errors.holder}
                 errorId="edit-holder-error"
               >
                 <Input
-                  className={`${styles.input} ${errors.holder ? styles.inputInvalid : ""}`}
+                  className={`${dlg.input} ${errors.holder ? dlg.inputInvalid : ""}`}
                   name="holder"
                   autoComplete="name"
                   required
@@ -344,12 +339,12 @@ export default function EditCardModal({
                 />
               </Field>
               <Field
-                label="Expiry date"
+                label="Valid until"
                 error={errors.expiry}
                 errorId="edit-expiry-error"
               >
                 <Input
-                  className={`${styles.input} ${errors.expiry ? styles.inputInvalid : ""}`}
+                  className={`${dlg.input} ${errors.expiry ? dlg.inputInvalid : ""}`}
                   name="expiry"
                   autoComplete="cc-exp"
                   inputMode="numeric"
@@ -366,28 +361,28 @@ export default function EditCardModal({
           </section>
         </div>
 
-        {submitError ? <p className="mt-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{submitError}</p> : null}
+        {submitError ? <p className={dlg.dialogError} role="alert">{submitError}</p> : null}
 
-        <footer className={`${styles.footer} ${styles.footerSplit}`}>
+        <footer className={`${dlg.footer} ${dlg.footerSplit}`}>
           <button
             type="button"
-            className={styles.destructiveButton}
+            className={dlg.destructiveButton}
             onClick={onDelete}
             disabled={saving}
           >
             Archive cash register
           </button>
-          <div className={styles.footerActions}>
+          <div className={dlg.footerActions}>
             <button
               type="button"
-              className={styles.secondaryButton}
+              className={dlg.secondaryButton}
               onClick={onClose}
               disabled={saving}
             >
               Cancel
             </button>
-            <button type="submit" className={styles.primaryButton} disabled={saving} aria-busy={saving}>
-              {saving ? "Saving …" : "Save changes"}
+            <button type="submit" className={dlg.primaryButton} disabled={saving} aria-busy={saving}>
+              {saving ? "Saving" : "Save changes"}
             </button>
           </div>
         </footer>
@@ -409,10 +404,10 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <label className={styles.field}>
+    <label className={dlg.field}>
       <span>{label}</span>
       {children}
-      <span id={errorId} className={styles.fieldError} aria-live="polite">
+      <span id={errorId} className={dlg.fieldError} aria-live="polite">
         {error || "\u00a0"}
       </span>
     </label>

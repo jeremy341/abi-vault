@@ -30,7 +30,7 @@ export async function correctTransactionFromUi(
 ): Promise<ActionResult<{ id: string }>> {
   const parsed = transactionCorrectionSchema.safeParse(input);
 
-  if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "Please complete all change fields.");
+  if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "Complete all change fields.");
   const context = await requirePermission("editOpenTransactions");
   let amountMinor: bigint;
 

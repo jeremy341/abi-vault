@@ -3,44 +3,41 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState, useSyncExternalStore } from "react";
-import {
-  Bell,
-  CalendarDays,
-  ChevronDown,
-  MoreHorizontal,
-  Settings,
-} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ChevronDown } from "lucide-react";
 import AbiLogo from "@/components/AbiLogo";
 import ThemeToggle from "@/components/ThemeToggle";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
-  SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { usePresentationMode } from "@/hooks/use-presentation-mode";
-import { navigationItems, pageInformationFor } from "./navigation";
+import {
+  adminOnlyRoutes,
+  isCurrentRoute,
+  navigationRoutes,
+  pageInformationFor,
+} from "./navigation";
 import styles from "./presentation.module.css";
 
-const subscribeToHydration = () => () => {};
-
-const getClientHydrationState = () => true;
-
-const getServerHydrationState = () => false;
-
 const ClerkUserButton = dynamic(
-  () => import("@clerk/nextjs").then((module) => module.UserButton),
+  () => import("@clerk/nextjs").then((clerkModule) => clerkModule.UserButton),
   { ssr: false },
 );
+
+type NavigationRoute = (typeof navigationRoutes)[number];
+
+const phonePrimaryCount = 3;
+
+const adminGroupStart = 6;
 
 function ShellUserButton({ localMode }: { localMode: boolean }) {
   if (localMode) {
     return (
-      <span className={styles.localUserButton} aria-label="Demo-User">
+      <span className={styles.localUser} aria-label="Demo user">
         A
       </span>
     );
@@ -49,342 +46,178 @@ function ShellUserButton({ localMode }: { localMode: boolean }) {
   return <ClerkUserButton />;
 }
 
-function isCurrentRoute(pathname: string, href: string) {
-  return pathname === href;
-}
+function NavigationLink({
+  route,
+  pathname,
+  className,
+  activeClassName,
+}: {
+  route: NavigationRoute;
+  pathname: string;
+  className: string;
+  activeClassName: string;
+}) {
+  const active = isCurrentRoute(pathname, route.href);
 
-function TabletRail({ pathname, isAdmin }: { pathname: string; isAdmin: boolean }) {
   return (
-    <aside className={`${styles.tabletRail} ${isAdmin ? "" : styles.nonAdminNavigation}`} aria-label="Hauptnavigation">
-      <div className={styles.tabletBrand}>
-        <AbiLogo compact />
-      </div>
-      <nav className={styles.tabletNav}>
-        {navigationItems.map((item) => {
-          const Icon = item.icon;
-          const active = isCurrentRoute(pathname, item.href);
-
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={active ? "page" : undefined}
-              className={`${styles.tabletNavLink} ${active ? styles.tabletNavLinkActive : ""}`}
-            >
-              <Icon aria-hidden="true" />
-              <span>{item.shortLabel}</span>
-            </Link>
-          );
-        })}
-      </nav>
-      <div className={styles.tabletRailFooter}>
-        <ThemeToggle />
-      </div>
-    </aside>
+    <Link
+      href={route.href}
+      aria-current={active ? "page" : undefined}
+      className={`${className} ${active ? activeClassName : ""}`}
+    >
+      {route.label}
+    </Link>
   );
 }
 
-function TabletTopbar({ pathname, localMode }: { pathname: string; localMode: boolean }) {
-  const page = pageInformationFor(pathname);
+function useDismiss(
+  open: boolean,
+  setOpen: (nextOpen: boolean) => void,
+  trigger: React.RefObject<HTMLButtonElement | null>,
+) {
+  useEffect(() => {
+    if (!open) return;
+
+    function onKey(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      setOpen(false);
+      trigger.current?.focus();
+    }
+
+    function onPointer() {
+      setOpen(false);
+    }
+
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("pointerdown", onPointer);
+
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("pointerdown", onPointer);
+    };
+  }, [open, setOpen, trigger]);
+}
+
+function NotificationsMenu() {
+  const [open, setOpen] = useState(false);
+  const trigger = useRef<HTMLButtonElement>(null);
+  useDismiss(open, setOpen, trigger);
 
   return (
-    <header className={styles.tabletTopbar}>
-      <div className={styles.tabletTitle}>
-        <h1>{page.title}</h1>
-        <p>{page.description}</p>
-      </div>
-      <div className={styles.tabletActions}>
-        <button type="button" className={styles.tabletCohort}>
-          <CalendarDays aria-hidden="true" />
-          Class of 2026
-        </button>
-        <button
-          type="button"
-          className={styles.iconButton}
-          aria-label="Notifications"
-        >
-          <Bell aria-hidden="true" />
-        </button>
-        <ShellUserButton localMode={localMode} />
-      </div>
-    </header>
+    <div
+      className={`${styles.menuAnchor} ${styles.notifications}`}
+      onPointerDown={(event) => event.stopPropagation()}
+    >
+      <button
+        ref={trigger}
+        type="button"
+        className={styles.textButton}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        onClick={() => setOpen((isOpen) => !isOpen)}
+      >
+        Notifications
+      </button>
+      {open ? (
+        <div className={styles.menu} role="dialog" aria-label="Notifications">
+          <p className={styles.menuNote}>No new notifications.</p>
+        </div>
+      ) : null}
+    </div>
   );
 }
 
-function PhoneTopbar({ pathname, localMode }: { pathname: string; localMode: boolean }) {
-  const page = pageInformationFor(pathname);
+function CohortMenu() {
+  const [open, setOpen] = useState(false);
+  const trigger = useRef<HTMLButtonElement>(null);
+  useDismiss(open, setOpen, trigger);
 
   return (
-    <header className={styles.phoneTopbar}>
-      <div className={styles.phoneTitle}>
-        <h1>{page.title}</h1>
-        <p>{page.description}</p>
-      </div>
-      <div className={styles.phoneActions}>
-        <Sheet>
-          <SheetTrigger
-            className={styles.iconButton}
-            aria-label="Notifications"
-          >
-            <Bell aria-hidden="true" />
-          </SheetTrigger>
-          <SheetContent side="bottom" className={styles.phoneSheet} dragDismiss dragHandleClassName={styles.phoneSheetHandle}>
-            <SheetHeader>
-              <SheetTitle>Notifications</SheetTitle>
-              <SheetDescription>No new notifications.</SheetDescription>
-            </SheetHeader>
-          </SheetContent>
-        </Sheet>
-        <ShellUserButton localMode={localMode} />
-      </div>
-    </header>
-  );
-}
-
-function PhoneNavigation({ pathname, isAdmin }: { pathname: string; isAdmin: boolean }) {
-  const primary = navigationItems.slice(0, 3).concat(navigationItems[4]);
-  const secondary = [navigationItems[3], ...navigationItems.slice(5)];
-  const secondaryActive = secondary.some((item) => item.href === pathname);
-
-  return (
-    <nav className={`${styles.phoneNav} ${isAdmin ? "" : styles.nonAdminNavigation}`} aria-label="Hauptnavigation">
-      {primary.map((item) => {
-        const Icon = item.icon;
-        const active = isCurrentRoute(pathname, item.href);
-
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            aria-current={active ? "page" : undefined}
-            className={`${styles.phoneNavLink} ${active ? styles.phoneNavLinkActive : ""}`}
-          >
-            <Icon aria-hidden="true" />
-            <span>{item.shortLabel}</span>
+    <div
+      className={styles.menuAnchor}
+      onPointerDown={(event) => event.stopPropagation()}
+    >
+      <button
+        ref={trigger}
+        type="button"
+        className={styles.textButton}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((isOpen) => !isOpen)}
+      >
+        Class of 2026
+        <ChevronDown aria-hidden="true" className={styles.chevron} />
+      </button>
+      {open ? (
+        <div className={styles.menu} role="menu" aria-label="Select class">
+          <button type="button" role="menuitem" onClick={() => setOpen(false)}>
+            <strong>Class of 2026</strong>
+            <small>Active</small>
+          </button>
+          <Link href="/dashboard/settings" role="menuitem" onClick={() => setOpen(false)}>
+            Manage classes
           </Link>
-        );
-      })}
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
+function PhoneNavigation({
+  routes,
+  pathname,
+}: {
+  routes: readonly NavigationRoute[];
+  pathname: string;
+}) {
+  const primary = routes.slice(0, phonePrimaryCount);
+  const secondary = routes.slice(phonePrimaryCount);
+
+  const secondaryActive = secondary.some((route) =>
+    isCurrentRoute(pathname, route.href),
+  );
+
+  return (
+    <nav className={styles.phoneNav} aria-label="Main navigation">
+      {primary.map((route) => (
+        <NavigationLink
+          key={route.href}
+          route={route}
+          pathname={pathname}
+          className={styles.phoneNavLink}
+          activeClassName={styles.phoneNavLinkActive}
+        />
+      ))}
       <Sheet>
         <SheetTrigger
-          className={`${styles.phoneMoreButton} ${secondaryActive ? styles.phoneNavLinkActive : ""}`}
+          className={`${styles.phoneNavLink} ${secondaryActive ? styles.phoneNavLinkActive : ""}`}
         >
-          <MoreHorizontal aria-hidden="true" />
-          <span>Mehr</span>
+          More
         </SheetTrigger>
-        <SheetContent side="bottom" className={styles.phoneSheet} dragDismiss dragHandleClassName={styles.phoneSheetHandle}>
+        <SheetContent side="bottom" className={styles.sheet} dragDismiss dragHandleClassName={styles.sheetHandle}>
           <SheetHeader>
-            <SheetTitle>More areas</SheetTitle>
-            <SheetDescription>
-              Open goals, reports, and administration.
+            <SheetTitle>More</SheetTitle>
+            <SheetDescription className={styles.visuallyHidden}>
+              Other areas of the workspace.
             </SheetDescription>
           </SheetHeader>
-          <div className={styles.phoneSheetGrid}>
-            {secondary.map((item) => {
-              const Icon = item.icon;
-              const active = isCurrentRoute(pathname, item.href);
-
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`${styles.phoneSheetLink} ${active ? styles.phoneSheetLinkActive : ""}`}
-                >
-                  <Icon aria-hidden="true" />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
+          <div className={styles.sheetList}>
+            {secondary.map((route) => (
+              <NavigationLink
+                key={route.href}
+                route={route}
+                pathname={pathname}
+                className={styles.sheetLink}
+                activeClassName={styles.sheetLinkActive}
+              />
+            ))}
           </div>
-          <SheetFooter className={styles.phoneSheetFooter}>
+          <div className={styles.sheetFooter}>
             <ThemeToggle />
-          </SheetFooter>
+          </div>
         </SheetContent>
       </Sheet>
     </nav>
-  );
-}
-
-function DesktopNavGroup({
-  label,
-  items,
-  pathname,
-}: {
-  label: string;
-  items: readonly (typeof navigationItems)[number][];
-  pathname: string;
-}) {
-  return (
-    <section className={styles.desktopNavGroup}>
-      <h2>{label}</h2>
-      <div>
-        {items.map((item) => {
-          const Icon = item.icon;
-          const active = isCurrentRoute(pathname, item.href);
-
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={active ? "page" : undefined}
-              className={`${styles.desktopNavLink} ${active ? styles.desktopNavLinkActive : ""}`}
-            >
-              <Icon aria-hidden="true" />
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
-function DesktopShell({
-  children,
-  pathname,
-  isAdmin,
-  localMode,
-}: {
-  children: React.ReactNode;
-  pathname: string;
-  isAdmin: boolean;
-  localMode: boolean;
-}) {
-  const page = pageInformationFor(pathname);
-
-  const [openMenu, setOpenMenu] = useState<"cohort" | "notifications" | null>(
-    null,
-  );
-
-  useEffect(() => {
-    if (!openMenu) return;
-
-    function closeMenu(event: KeyboardEvent | PointerEvent) {
-      if (event instanceof KeyboardEvent && event.key !== "Escape") return;
-      setOpenMenu(null);
-    }
-
-    document.addEventListener("keydown", closeMenu);
-    document.addEventListener("pointerdown", closeMenu);
-
-    return () => {
-      document.removeEventListener("keydown", closeMenu);
-      document.removeEventListener("pointerdown", closeMenu);
-    };
-  }, [openMenu]);
-
-  return (
-    <div className={`${styles.desktopShell} ${isAdmin ? "" : styles.nonAdminNavigation}`} data-presentation="desktop">
-      <a className={styles.skipLink} href="#dashboard-content">
-        Skip to content
-      </a>
-      <aside className={styles.desktopSidebar} aria-label="Hauptnavigation">
-        <div className={styles.desktopBrand}>
-          <AbiLogo />
-        </div>
-        <nav className={styles.desktopNavigation}>
-          <DesktopNavGroup
-            label="Finance"
-            items={navigationItems.slice(0, 6)}
-            pathname={pathname}
-          />
-          <DesktopNavGroup
-            label="Administration"
-            items={navigationItems.slice(6)}
-            pathname={pathname}
-          />
-        </nav>
-        <div className={styles.desktopSidebarFooter}>
-          <ThemeToggle />
-        </div>
-      </aside>
-
-      <section className={styles.desktopWorkspace}>
-        <header className={styles.desktopTopbar}>
-          <div className={styles.desktopTitle}>
-            <h1>{page.title}</h1>
-            <p>{page.description}</p>
-          </div>
-          <div className={styles.desktopActions}>
-            <div
-              className={styles.desktopActionControl}
-              onPointerDown={(event) => event.stopPropagation()}
-            >
-              <button
-                type="button"
-                className={styles.desktopCohort}
-                aria-haspopup="menu"
-                aria-expanded={openMenu === "cohort"}
-                onClick={() =>
-                  setOpenMenu((current) =>
-                    current === "cohort" ? null : "cohort",
-                  )
-                }
-              >
-                <CalendarDays aria-hidden="true" />
-                Class of 2026
-                <ChevronDown aria-hidden="true" />
-              </button>
-              {openMenu === "cohort" ? (
-                <div
-                  className={styles.desktopActionMenu}
-                  role="menu"
-                  aria-label="Select cohort"
-                >
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={() => setOpenMenu(null)}
-                  >
-                    <CalendarDays aria-hidden="true" />
-                    <span>
-                      <strong>Abi 2026</strong>
-                      <small>Activate cohort</small>
-                    </span>
-                  </button>
-                  <Link href="/dashboard/settings" role="menuitem">
-                    <Settings aria-hidden="true" /> Cohort verwalten
-                  </Link>
-                </div>
-              ) : null}
-            </div>
-            <div
-              className={styles.desktopActionControl}
-              onPointerDown={(event) => event.stopPropagation()}
-            >
-              <button
-                type="button"
-                className={styles.desktopIconButton}
-                aria-label="Notifications"
-                aria-haspopup="dialog"
-                aria-expanded={openMenu === "notifications"}
-                onClick={() =>
-                  setOpenMenu((current) =>
-                    current === "notifications" ? null : "notifications",
-                  )
-                }
-              >
-                <Bell aria-hidden="true" />
-              </button>
-              {openMenu === "notifications" ? (
-                <div
-                  className={styles.desktopNotificationPanel}
-                  role="dialog"
-                  aria-label="Notifications"
-                >
-                  <strong>Notifications</strong>
-                  <p>No new notifications.</p>
-                </div>
-              ) : null}
-            </div>
-            <ShellUserButton localMode={localMode} />
-          </div>
-        </header>
-        <main id="dashboard-content" className={styles.desktopContent}>
-          {children}
-        </main>
-      </section>
-    </div>
   );
 }
 
@@ -397,73 +230,72 @@ export default function ResponsiveDashboardShell({
   isAdmin?: boolean;
   localMode?: boolean;
 }) {
-  const mode = usePresentationMode();
   const pathname = usePathname();
+  const page = pageInformationFor(pathname);
 
-  const shellReady = useSyncExternalStore(
-    subscribeToHydration,
-    getClientHydrationState,
-    getServerHydrationState,
+  const visibleRoutes = navigationRoutes.filter(
+    (route) =>
+      isAdmin || !adminOnlyRoutes.some((adminRoute) => adminRoute === route.href),
   );
 
-  if (!shellReady) {
-    return (
-      <div className={styles.presentationFallback} aria-hidden="true">
-        <div className={styles.presentationFallbackRail}>
-          <span className={styles.presentationFallbackLogo} />
-          <span />
-          <span />
-          <span />
-          <span />
-          <span />
-        </div>
-        <div className={styles.presentationFallbackWorkspace}>
-          <div className={styles.presentationFallbackTopbar}>
-            <span />
-            <span />
-            <span />
-          </div>
-          <div className={styles.presentationFallbackContent}>
-            <span />
-            <span />
-            <span />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (mode === "desktop") {
-    return <DesktopShell pathname={pathname} isAdmin={isAdmin} localMode={localMode}>{children}</DesktopShell>;
-  }
-
-  if (mode === "tablet") {
-    return (
-      <div className={`${styles.adaptiveShell} ${styles.tabletShell}`}>
-        <a className={styles.skipLink} href="#dashboard-content">
-          Skip to content
-        </a>
-        <TabletRail pathname={pathname} isAdmin={isAdmin} />
-        <section className={styles.tabletWorkspace}>
-          <TabletTopbar pathname={pathname} localMode={localMode} />
-          <main id="dashboard-content" className={styles.tabletContent}>
-            {children}
-          </main>
-        </section>
-      </div>
-    );
-  }
+  const mainRoutes = visibleRoutes.slice(0, adminGroupStart);
+  const adminRoutes = visibleRoutes.slice(adminGroupStart);
 
   return (
-    <div className={`${styles.adaptiveShell} ${styles.phoneShell}`}>
+    <div className={styles.shell}>
       <a className={styles.skipLink} href="#dashboard-content">
         Skip to content
       </a>
-      <PhoneTopbar pathname={pathname} localMode={localMode} />
-      <main id="dashboard-content" className={styles.phoneContent}>
-        {children}
-      </main>
-      <PhoneNavigation pathname={pathname} isAdmin={isAdmin} />
+
+      <aside className={styles.sidebar}>
+        <div className={styles.brand}>
+          <AbiLogo />
+        </div>
+        <nav className={styles.nav} aria-label="Main navigation">
+          {mainRoutes.map((route) => (
+            <NavigationLink
+              key={route.href}
+              route={route}
+              pathname={pathname}
+              className={styles.navLink}
+              activeClassName={styles.navLinkActive}
+            />
+          ))}
+          {adminRoutes.length > 0 ? (
+            <>
+              <hr className={styles.navRule} />
+              {adminRoutes.map((route) => (
+                <NavigationLink
+                  key={route.href}
+                  route={route}
+                  pathname={pathname}
+                  className={styles.navLink}
+                  activeClassName={styles.navLinkActive}
+                />
+              ))}
+            </>
+          ) : null}
+        </nav>
+        <div className={styles.sidebarFooter}>
+          <ThemeToggle />
+        </div>
+      </aside>
+
+      <div className={styles.workspace}>
+        <header className={styles.topbar}>
+          <h1 className={styles.title}>{page.title}</h1>
+          <div className={styles.actions}>
+            <CohortMenu />
+            <NotificationsMenu />
+            <ShellUserButton localMode={localMode} />
+          </div>
+        </header>
+        <main id="dashboard-content" className={styles.content}>
+          {children}
+        </main>
+      </div>
+
+      <PhoneNavigation routes={visibleRoutes} pathname={pathname} />
     </div>
   );
 }

@@ -22,16 +22,16 @@ Role checks exist in server actions and database functions. RLS remains the fina
 
 Money is USD-only integer minor units (`bigint`). Transactions are posted through database RPCs that create balanced ledger entries atomically. Manual and bank-imported transactions are distinguished by `origin`. Imported provider IDs are unique per organization/provider and imports are idempotent.
 
-Transfers are posted as one transfer transaction with two wallet sides and two balanced ledger entries. Cash counts are persisted separately with the derived book amount, counted amount, and difference; the count itself does not mutate the ledger.
+Transfers are posted as one transaction with two wallet sides and two balanced, linked ledger entries. Cash counts are persisted separately with the derived book amount, counted amount, and difference; the count itself does not mutate the ledger.
 
-Accounting periods can be locked by administrators. Posted records and their ledger entries cannot be mutated through normal application grants when a period is locked. Transfers use two wallet sides and linked ledger entries.
+Accounting periods can be locked by administrators. Posted records and their ledger entries cannot be mutated through normal application grants when a period is locked.
 
 The active runtime uses one canonical `Barkasse` per committee. Manual transactions, balances, cash counts, reports, and ledger entries resolve to this cash wallet. Historical bank-wallet rows remain in the schema for compatibility but are archived and cannot be created or activated.
 Manual wallets may carry an explicit non-negative opening balance; the cash-only migration consolidates existing opening balances into the canonical `Barkasse` rather than silently discarding them.
 
 ## Open Banking (postponed)
 
-Open Banking/PSD2 integration is intentionally excluded from the current implementation scope. The schema keeps the connection, consent, snapshot, and provider-import boundaries needed for a later German/EU provider, but bank authorization, callbacks, provider imports, bank synchronization, and bank-wallet activation are disabled at runtime. Manual cash transactions remain fully supported.
+Open Banking/PSD2 integration is excluded from the current implementation scope. The schema keeps the connection, consent, snapshot, and provider-import boundaries needed for a later German/EU provider, but bank authorization, callbacks, provider imports, bank synchronization, and bank-wallet activation are disabled at runtime. Manual cash transactions remain fully supported.
 
 ## Receipts and audit
 

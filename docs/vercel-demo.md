@@ -1,51 +1,38 @@
-# Separate Vercel demo deployment
+# Deploying the demo
 
-The public demo must be a separate Vercel project. Do not reuse the linked
-production project or copy its environment variables.
+The demo runs the full interface on sample data. It needs no database and no
+sign-in, so it can be deployed as its own Vercel project.
 
-## Create the demo project
+## Settings
 
-Import the repository into the separate Vercel project `abi-vault-demo`. Use
-the `open-source-demo` branch for the first deployment, then select the public
-default branch after the repository review is complete.
+Create a separate Vercel project for the demo. Do not link it to any project
+that has production credentials.
 
-Create a separate Supabase project for the demo. Apply the migrations and seed
-data there only. The production Supabase project must never be used for this
-deployment.
-
-## Demo environment variables
-
-Configure these variables in the Vercel **Preview** and/or **Production**
-environment for the demo project, using demo values only:
+Set these environment variables for the demo project:
 
 ```text
 ABI_VAULT_LOCAL_MODE=true
 NEXT_PUBLIC_ABI_VAULT_LOCAL_MODE=true
-NEXT_PUBLIC_SUPABASE_URL=https://<demo-project>.supabase.co
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<demo-publishable-key>
-SUPABASE_SERVICE_ROLE_KEY=<demo-server-only-secret-key>
-SUPABASE_JWT_SECRET=<demo-project-jwt-secret>
-NEXT_PUBLIC_APP_URL=https://<demo-domain>
-APP_ENCRYPTION_KEY=<demo-only-64-hex-character-key>
+ABI_VAULT_DEMO_DATA=true
+NEXT_PUBLIC_ABI_VAULT_DEMO_DATA=true
+NEXT_PUBLIC_APP_URL=https://<your-demo-domain>
 ```
 
-Local/demo mode bypasses Clerk and uses a fixed demo administrator. Do not add
-production Clerk variables or production Supabase keys to this project.
+With these values the app serves the sample data from `lib/demo/sample-data.ts`
+and does not connect to Supabase or Clerk.
 
-The verified team-scoped demo URL is:
+## Limits
 
-```text
-https://abi-vault-demo-jerry-team1.vercel.app
-```
+- The demo is read-only. Changes such as adding a transaction or a receipt are
+  not saved.
+- Every visitor sees the same sample data and the same fixed user, who has
+  administrator access.
+- The page header shows a notice that the data is sample data.
 
-## Before sharing the URL
+## Before sharing the link
 
-1. Confirm the Vercel project name and Supabase project are the demo projects.
-2. Confirm the browser network requests use the demo Supabase hostname.
-3. Confirm the demo contains only seeded sample data.
-4. Open the URL in a private browser window.
-5. Test dashboard, transactions, receipts, goals, reports, people, and periods.
-6. Add the verified URL to the README.
-
-If any environment value is uncertain, stop and verify it in the provider
-dashboard. Never troubleshoot a demo by temporarily adding production keys.
+1. Open the URL in a private browser window.
+2. Check the dashboard, transactions, receipts, cash registers, goals, reports,
+   people, periods and settings pages.
+3. Confirm the notice about sample data is shown.
+4. Add the verified URL to the README.

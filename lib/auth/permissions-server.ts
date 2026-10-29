@@ -1,5 +1,6 @@
 import "server-only";
 
+import { isDemoData } from "@/lib/demo/mode";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   AuthorizationError,
@@ -15,6 +16,9 @@ export async function requirePermission(
   permission: keyof typeof PERMISSIONS,
 ) {
   const context = await requireClerkContext();
+
+  if (isDemoData()) return { ...context, role: "admin" as const };
+
   const supabase = await createSupabaseServerClient();
 
   const { data: membership, error } = await supabase

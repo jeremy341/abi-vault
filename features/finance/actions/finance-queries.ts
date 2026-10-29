@@ -1,10 +1,14 @@
 "use server";
 
+import { isDemoData } from "@/lib/demo/mode";
+import { demoData } from "@/lib/demo/sample-data";
+
 import { requireClerkContext } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { querySuccess, queryFailure } from "@/lib/finance/query-result";
 
 export async function listTransactionsForCurrentOrganization() {
+  if (isDemoData()) return demoData.transactions;
   const context = await requireClerkContext();
   const supabase = await createSupabaseServerClient();
 
@@ -141,6 +145,7 @@ export async function listTransactionsForCurrentOrganization() {
 
 
 export async function listReceiptsForCurrentOrganization() {
+  if (isDemoData()) return demoData.receipts;
   const context = await requireClerkContext();
   const supabase = await createSupabaseServerClient();
 
@@ -212,6 +217,7 @@ export async function listReceiptsForCurrentOrganization() {
 
 
 export async function listWalletsForCurrentOrganization(options?: { includeBalances?: boolean }) {
+  if (isDemoData()) return demoData.wallets;
   const context = await requireClerkContext();
   const supabase = await createSupabaseServerClient();
 
@@ -312,6 +318,7 @@ export async function listWalletsForCurrentOrganization(options?: { includeBalan
 }
 
 export async function listGoalsForCurrentOrganization() {
+  if (isDemoData()) return demoData.goals;
   const context = await requireClerkContext();
   const supabase = await createSupabaseServerClient();
 

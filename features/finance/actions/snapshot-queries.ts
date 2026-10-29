@@ -1,5 +1,8 @@
 "use server";
 
+import { isDemoData } from "@/lib/demo/mode";
+import { demoData } from "@/lib/demo/sample-data";
+
 import { requireClerkContext } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { projectCategoryTotals, projectFlowTotals, projectMonthlyFlow, projectWalletBalances, type ProjectionTransaction } from "@/lib/finance/projections";
@@ -7,6 +10,7 @@ import { listGoalsForCurrentOrganization, listTransactionsForCurrentOrganization
 import { querySuccess, queryFailure } from "@/lib/finance/query-result";
 
 export async function getReportKpisForCurrentOrganization() {
+  if (isDemoData()) return demoData.reportKpis;
   const context = await requireClerkContext();
   const supabase = await createSupabaseServerClient();
 

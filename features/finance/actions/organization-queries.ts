@@ -1,5 +1,8 @@
 "use server";
 
+import { isDemoData } from "@/lib/demo/mode";
+import { demoData } from "@/lib/demo/sample-data";
+
 import { requireClerkContext } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { requirePermission } from "@/lib/auth/permissions-server";
@@ -7,6 +10,7 @@ import type { AccountingPeriodListItem, CashCountListItem } from "./queries-type
 import { querySuccess, queryFailure } from "@/lib/finance/query-result";
 
 export async function getCommitteeSettingsForCurrentOrganization() {
+  if (isDemoData()) return demoData.settings;
   const context = await requireClerkContext();
   const supabase = await createSupabaseServerClient();
 
@@ -22,6 +26,7 @@ export async function getCommitteeSettingsForCurrentOrganization() {
 }
 
 export async function listMembersForCurrentOrganization() {
+  if (isDemoData()) return demoData.members;
   const context = await requireClerkContext();
   const supabase = await createSupabaseServerClient();
 
@@ -49,6 +54,7 @@ export async function listMembersForCurrentOrganization() {
 
 
 export async function listCashCountsForCurrentOrganization() {
+  if (isDemoData()) return demoData.cashCounts;
   const context = await requireClerkContext();
   const supabase = await createSupabaseServerClient();
 
@@ -75,6 +81,7 @@ export async function listCashCountsForCurrentOrganization() {
 }
 
 export async function listAccountingPeriodsForCurrentOrganization() {
+  if (isDemoData()) return demoData.periods;
   const context = await requirePermission("lockPeriods");
   const supabase = await createSupabaseServerClient();
 

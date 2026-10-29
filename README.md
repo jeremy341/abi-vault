@@ -6,8 +6,9 @@ goals, reports, accounting periods, and member accountability in one place.
 
 ## Try it
 
-Try the [hosted demo](https://abi-vault-demo.vercel.app). It uses
-sample data only and is separate from production.
+The demo runs the full interface on sample data and needs no database or
+sign-in. Run it locally with `ABI_VAULT_DEMO_DATA=true`, or deploy it as
+described in [docs/vercel-demo.md](docs/vercel-demo.md).
 
 ## Features
 

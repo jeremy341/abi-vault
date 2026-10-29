@@ -282,6 +282,9 @@ export default function ResponsiveDashboardShell({
       </aside>
 
       <div className={styles.workspace}>
+        {process.env.NEXT_PUBLIC_ABI_VAULT_DEMO_DATA === "true" ? (
+          <p className={styles.demoNotice}>Demo with sample data. Changes are not saved.</p>
+        ) : null}
         <header className={styles.topbar}>
           <h1 className={styles.title}>{page.title}</h1>
           <div className={styles.actions}>

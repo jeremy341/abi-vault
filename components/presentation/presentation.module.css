@@ -102,6 +102,14 @@
 }
 
 /* Workspace */
+.demoNotice {
+  margin: 0;
+  border-bottom: 1px solid var(--rule);
+  padding: var(--space-2) var(--page-padding);
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
 .workspace {
   display: flex;
   min-width: 0;

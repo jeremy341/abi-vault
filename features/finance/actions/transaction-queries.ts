@@ -10,6 +10,12 @@ import { signedMinorAmount } from "@/lib/finance/money";
 import { fetchAllRows, fetchRowsInBatches } from "@/lib/supabase/fetch-all-rows";
 import { transactionsForCashWallets } from "./query-filters";
 
+function isPeriodLocked(period: { status: string } | { status: string }[] | null) {
+  const first = Array.isArray(period) ? period[0] : period;
+
+  return first?.status === "locked";
+}
+
 export async function listTransactionsForCurrentOrganization() {
   if (isDemoData()) return demoData.transactions;
   const context = await requireClerkContext();
@@ -60,6 +66,7 @@ export async function listTransactionsForCurrentOrganization() {
         createdBy: null,
         canEdit: false,
         canDelete: false,
+        periodLocked: false,
       })),
     });
   }
@@ -79,7 +86,7 @@ export async function listTransactionsForCurrentOrganization() {
   const { data: transactions, error } = await fetchAllRows((from, to) =>
     supabase
       .from("transactions")
-      .select("id, title, type, booked_at, amount_minor::text, category_id, from_wallet_id, to_wallet_id, created_by, created_at, correction_role, superseded_at")
+      .select("id, title, type, booked_at, amount_minor::text, category_id, from_wallet_id, to_wallet_id, created_by, created_at, correction_role, superseded_at, accounting_periods(status)")
       .eq("organization_id", context.organizationId)
       .eq("status", "posted")
       .is("deleted_at", null)
@@ -204,6 +211,7 @@ export async function listTransactionsForCurrentOrganization() {
         createdBy: transaction.created_by,
         canEdit: membership.role === "admin" || transaction.created_by === context.clerkUserId,
         canDelete: membership.role === "admin",
+        periodLocked: isPeriodLocked(transaction.accounting_periods),
       };
     }),
   });

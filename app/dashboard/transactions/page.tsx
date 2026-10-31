@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAppAuth } from "@/components/auth/app-auth";
 import ledger from "../ledger.module.css";
 import { LoadError } from "@/components/ui/load-error";
@@ -90,6 +90,17 @@ export default function TransactionsPage() {
     setSelected(null);
     transactionEditor.openEdit(transaction);
   }
+
+  useEffect(() => {
+    const editId = new URLSearchParams(window.location.search).get("edit");
+    if (!editId || loading) return;
+
+    const transaction = items.find((item) => String(item.id) === editId);
+    if (!transaction) return;
+
+    window.history.replaceState(null, "", window.location.pathname);
+    if (transaction.canEdit) openEdit(transaction);
+  }, [items, loading]);
 
   function closeTransactionModal() {
     transactionEditor.close();

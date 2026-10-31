@@ -21,6 +21,7 @@ import CardDialogs from "@/app/dashboard/funds/CardDialogs";
 import ArchiveCardDialog from "@/app/dashboard/funds/ArchiveCardDialog";
 import CashCountSection from "@/app/dashboard/funds/CashCountSection";
 import { auditLogsFromQuery, cardsFromDashboard, cashBoxesFromDashboard, createBlankCashBox } from "@/app/dashboard/funds/funds-helpers";
+import { differenceReviewFor } from "@/app/dashboard/funds/difference-review";
 
 const emptyCards: CashRegisterCard[] = [];
 
@@ -98,6 +99,9 @@ export default function FundsPage() {
       cashBoxes[activeCard.id] ??
       createBlankCashBox(activeCard.id, activeCard.details.accountName, activeCard.balance);
   }
+
+  const dashboardData = dashboard.data?.ok ? dashboard.data : null;
+  const differenceReview = dashboardData && activeCard ? differenceReviewFor(dashboardData, activeCard.id) : null;
 
   function switchCard(direction: -1 | 1) {
     if (cards.length <= 1) return;
@@ -289,6 +293,7 @@ export default function FundsPage() {
       <FundsStatus loading={loading} notice={notice} />
 
       <CashRegisterView
+        differenceReview={differenceReview}
         loading={loading}
         loadError={loadError}
         onRetry={retryWallets}

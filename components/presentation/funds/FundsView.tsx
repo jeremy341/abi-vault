@@ -123,6 +123,7 @@ export default function FundsView(props: AdaptiveFundsViewProps) {
                 </dd>
               </div>
             </dl>
+            {props.differencePanel}
           </section>
         ) : null}
 

@@ -69,6 +69,7 @@ const transactions = rows.map(([title, category, date, walletId, amount, type, r
   createdBy: "u1",
   canEdit: true,
   canDelete: true,
+  periodLocked: false,
 }));
 
 const goals = [

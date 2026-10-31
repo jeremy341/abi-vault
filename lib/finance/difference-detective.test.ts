@@ -81,6 +81,12 @@ describe("explainDifference", () => {
     ]);
   });
 
+  it("suggests an unrecorded expense when cash is short and nothing explains it", () => {
+    expect(explainDifference(BigInt(-777), [entry({ id: "t1", amountMinor: BigInt(300) })])).toEqual([
+      { kind: "unrecorded-expense", transactionId: null, periodLocked: false },
+    ]);
+  });
+
   it("carries the locked period flag to the suggestion", () => {
     const transactions = [entry({ id: "t1", amountMinor: BigInt(250), periodLocked: true })];
 

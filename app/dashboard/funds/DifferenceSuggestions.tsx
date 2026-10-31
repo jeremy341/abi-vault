@@ -22,6 +22,8 @@ function messageFor(review: DifferenceReview, suggestion: DifferenceSuggestion) 
     message = `${titleFor(review, suggestion)} may have two digits in the wrong order.`;
   } else if (suggestion.kind === "denomination") {
     message = "The difference matches a coin or note. Recount the register.";
+  } else if (suggestion.kind === "unrecorded-expense") {
+    message = "Cash is missing. An expense may have been paid and not recorded.";
   }
 
   if (suggestion.periodLocked) {

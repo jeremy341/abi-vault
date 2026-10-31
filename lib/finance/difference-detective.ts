@@ -13,6 +13,7 @@ export type DifferenceSuggestionKind =
   | "sign-flip"
   | "digits-swapped"
   | "denomination"
+  | "unrecorded-expense"
   | "no-match";
 
 export type DifferenceSuggestion = {
@@ -123,7 +124,9 @@ export function explainDifference(
   }
 
   if (suggestions.length === 0) {
-    suggestions.push({ kind: "no-match", transactionId: null, periodLocked: false });
+    const kind = direction === "income" ? "unrecorded-expense" : "no-match";
+
+    suggestions.push({ kind, transactionId: null, periodLocked: false });
   }
 
   return suggestions.slice(0, MAX_SUGGESTIONS);

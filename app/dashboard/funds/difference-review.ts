@@ -42,9 +42,9 @@ function directionFor(transaction: ReviewableTransaction, walletId: string) {
 }
 
 function absoluteMinor(amount: string | number) {
-  const value = BigInt(String(amount));
+  const minor = BigInt(String(amount));
 
-  return value < BigInt(0) ? -value : value;
+  return minor < BigInt(0) ? -minor : minor;
 }
 
 export function transactionsSinceCount(

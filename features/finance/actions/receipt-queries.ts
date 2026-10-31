@@ -81,7 +81,7 @@ export async function listReceiptsForCurrentOrganization() {
 
   if (transactionResult.error || profileResult.error) return queryFailure("DATABASE_ERROR");
   const transactionMap = new Map((transactionResult.data ?? []).map((transaction) => [transaction.id, transaction]));
-  const receiptProfileMap = new Map((profileResult.data ?? []).map((profile) => [profile.clerk_user_id, profile.display_name || profile.email || "Unbekannt"]));
+  const receiptProfileMap = new Map((profileResult.data ?? []).map((profile) => [profile.clerk_user_id, profile.display_name || profile.email || "Unknown"]));
 
   return querySuccess({
     items: (receipts ?? []).map((receipt) => {
@@ -105,9 +105,9 @@ export async function listReceiptsForCurrentOrganization() {
         date: transaction?.booked_at ?? receipt.created_at,
         amountMinor: transaction ? signedMinorAmount(transaction.amount_minor, transaction.type) : "0",
         status: receipt.review_status,
-        uploadedByName: receiptProfileMap.get(receipt.uploaded_by) ?? "Unbekannt",
+        uploadedByName: receiptProfileMap.get(receipt.uploaded_by) ?? "Unknown",
         uploadedAt: receipt.created_at,
-        reviewedByName: receipt.reviewed_by ? receiptProfileMap.get(receipt.reviewed_by) ?? "Unbekannt" : null,
+        reviewedByName: receipt.reviewed_by ? receiptProfileMap.get(receipt.reviewed_by) ?? "Unknown" : null,
         reviewedAt: receipt.reviewed_at,
         canEdit: membership.role === "admin" || receipt.uploaded_by === context.clerkUserId,
         canDelete: membership.role === "admin",

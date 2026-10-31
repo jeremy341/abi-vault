@@ -110,10 +110,10 @@ async function bootstrapOrganizationData(session: Awaited<ReturnType<typeof auth
   if (periodsError) throw periodsError;
 
   const defaults = [
-    ["Veranstaltung", "expense", 10],
-    ["Material", "expense", 20],
-    ["Sonstiges", "expense", 30],
-    ["Spenden", "income", 40],
+    ["Event", "expense", 10],
+    ["Supplies", "expense", 20],
+    ["Other", "expense", 30],
+    ["Donations", "income", 40],
     ["Sales", "income", 50],
   ] as const;
 

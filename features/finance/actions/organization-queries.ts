@@ -49,7 +49,7 @@ export async function listMembersForCurrentOrganization() {
 
       return {
         id: membership.clerk_user_id,
-        name: profile?.display_name || profile?.email || "Unbekannt",
+        name: profile?.display_name || profile?.email || "Unknown",
         role: membership.role,
         status: membership.status,
       };
@@ -127,7 +127,7 @@ export async function listAccountingPeriodsForCurrentOrganization() {
   );
 
   if (profileError) return queryFailure("DATABASE_ERROR");
-  const profileMap = new Map((profiles ?? []).map((profile) => [profile.clerk_user_id, profile.display_name || profile.email || "Unbekannt"]));
+  const profileMap = new Map((profiles ?? []).map((profile) => [profile.clerk_user_id, profile.display_name || profile.email || "Unknown"]));
 
   return querySuccess({
     items: (periods ?? []).map((period): AccountingPeriodListItem => ({
@@ -136,7 +136,7 @@ export async function listAccountingPeriodsForCurrentOrganization() {
       month: period.month,
       status: period.status,
       lockedAt: period.locked_at,
-      lockedByName: period.locked_by ? profileMap.get(period.locked_by) ?? "Unbekannt" : null,
+      lockedByName: period.locked_by ? profileMap.get(period.locked_by) ?? "Unknown" : null,
       lockReason: period.lock_reason,
     })),
   });

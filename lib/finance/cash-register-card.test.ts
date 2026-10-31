@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { mapWalletToCashRegisterCard } from "./cash-register-card";
 
 describe("Cash register card mapping", () => {
-  it("Preserves the Kasse presentation data", () => {
+  it("Preserves the cash register presentation data", () => {
     expect(mapWalletToCashRegisterCard({
       id: "cash-1",
       name: "Sportfestkasse",

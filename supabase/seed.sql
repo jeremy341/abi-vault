@@ -32,10 +32,10 @@ on conflict (organization_id, year, month) do nothing;
 
 insert into public.categories (organization_id, name, kind, display_order)
 values
-  ('org_local_demo', 'Veranstaltung', 'expense', 10),
-  ('org_local_demo', 'Material', 'expense', 20),
-  ('org_local_demo', 'Sonstiges', 'expense', 30),
-  ('org_local_demo', 'Spenden', 'income', 40),
+  ('org_local_demo', 'Event', 'expense', 10),
+  ('org_local_demo', 'Supplies', 'expense', 20),
+  ('org_local_demo', 'Other', 'expense', 30),
+  ('org_local_demo', 'Donations', 'income', 40),
   ('org_local_demo', 'Sales', 'income', 50)
 on conflict (organization_id, name, kind) do nothing;
 
@@ -44,7 +44,7 @@ values ('org_local_demo', 2026, 8)
 on conflict (organization_id, year, month) do nothing;
 
 insert into public.wallets (organization_id, name, type, created_by, idempotency_key)
-values ('org_local_demo', 'Klassenkasse', 'cash', 'user_local_admin', 'seed-local-cash')
+values ('org_local_demo', 'Class cash box', 'cash', 'user_local_admin', 'seed-local-cash')
 on conflict (organization_id, idempotency_key) do nothing;
 
 insert into public.ledger_accounts (organization_id, type, name, wallet_id)
@@ -74,7 +74,7 @@ select
   '2026-08-15', 'user_local_admin', 'seed-local-transaction'
 from public.categories category
 join public.wallets wallet
-  on wallet.organization_id = 'org_local_demo' and wallet.name = 'Klassenkasse'
+  on wallet.organization_id = 'org_local_demo' and wallet.name = 'Class cash box'
 join public.accounting_periods period
   on period.organization_id = 'org_local_demo' and period.year = 2026 and period.month = 8
 where category.organization_id = 'org_local_demo'

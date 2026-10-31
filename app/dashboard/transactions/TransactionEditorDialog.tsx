@@ -8,7 +8,7 @@ import styles from "./transactions.module.css";
 
 type CashRegisterOption = { id: string; name: string };
 
-type TransactionType = "Einnahme" | "Ausgabe";
+type TransactionType = "Income" | "Expense";
 
 type CategoryOption = { value: string; label: string };
 
@@ -114,14 +114,14 @@ export function TransactionEditorDialog({
             label="Type"
             value={type}
             onChange={(value) => {
-              if (value === "Einnahme" || value === "Ausgabe") {
+              if (value === "Income" || value === "Expense") {
                 onTypeChange(value);
               }
             }}
             className={styles.formDropdown}
             options={[
-              { value: "Einnahme", label: "Income" },
-              { value: "Ausgabe", label: "Expense" },
+              { value: "Income", label: "Income" },
+              { value: "Expense", label: "Expense" },
             ]}
           />
           <StyledDropdown

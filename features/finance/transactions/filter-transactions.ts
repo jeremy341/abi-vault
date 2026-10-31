@@ -65,9 +65,9 @@ function matchesFilters(
 
   if (filters.maximumAmount !== null && !(absoluteAmount <= filters.maximumAmount)) return false;
 
-  if (filters.receipt === "Vorhanden" && !transaction.receipt) return false;
+  if (filters.receipt === "Present" && !transaction.receipt) return false;
 
-  if (filters.receipt === "Fehlt" && transaction.receipt) return false;
+  if (filters.receipt === "Missing" && transaction.receipt) return false;
 
   if (filters.review !== "All" && transaction.reviewStatus !== filters.review) return false;
 

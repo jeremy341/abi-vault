@@ -19,7 +19,7 @@ const noFilters: TransactionFilters = {
 function transaction(overrides: Partial<Transaction> & Pick<Transaction, "id" | "date">): Transaction {
   return {
     title: "Class purchase",
-    category: "Material",
+    category: "Supplies",
     amount: -10,
     receipt: "receipt.jpg",
     receiptId: "receipt-1",
@@ -83,15 +83,15 @@ describe("filterTransactions", () => {
     const result = filterTransactions(input, {
       ...noFilters,
       query: "  POSTER  ",
-      category: "Material",
-      categories: ["Material"],
+      category: "Supplies",
+      categories: ["Supplies"],
       type: "Expenses",
       types: ["Expenses"],
       start: "2026-10-01",
       end: "2026-10-31",
       minimumAmount: "20,00",
       maximumAmount: "30,00",
-      receipt: "Vorhanden",
+      receipt: "Present",
       review: "Approved",
     });
 
@@ -124,7 +124,7 @@ describe("filterTransactions", () => {
         ...noFilters,
         type: "Income",
         types: ["Income"],
-        receipt: "Fehlt",
+        receipt: "Missing",
         review: "Pending review",
       },
     );

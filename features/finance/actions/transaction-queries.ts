@@ -48,7 +48,7 @@ export async function listTransactionsForCurrentOrganization() {
       items: (transparencyTransactions ?? []).map((transparencyTransaction) => ({
         id: transparencyTransaction.transaction_id,
         title: transparencyTransaction.public_title,
-        category: transparencyTransaction.category_name ?? "Sonstiges",
+        category: transparencyTransaction.category_name ?? "Other",
         date: transparencyTransaction.public_date ?? "",
         amountMinor: signedMinorAmount(transparencyTransaction.amount_minor, transparencyTransaction.public_type),
         type: transparencyTransaction.public_type,
@@ -171,7 +171,7 @@ export async function listTransactionsForCurrentOrganization() {
   if (categoryError || walletError || receiptError || creatorError) return queryFailure("DATABASE_ERROR");
   const categoryMap = new Map((categories ?? []).map((category) => [category.id, category.name]));
   const walletMap = new Map((wallets ?? []).map((wallet) => [wallet.id, wallet.name]));
-  const creatorMap = new Map((creators ?? []).map((creator) => [creator.clerk_user_id, creator.display_name || creator.email || "Unbekannt"]));
+  const creatorMap = new Map((creators ?? []).map((creator) => [creator.clerk_user_id, creator.display_name || creator.email || "Unknown"]));
   const receiptMap = new Map<string, { id: string; fileName: string; type: string; status: string }>(
     (receipts ?? [])
       .filter((receipt): receipt is typeof receipt & { transaction_id: string } => Boolean(receipt.transaction_id))
@@ -193,7 +193,7 @@ export async function listTransactionsForCurrentOrganization() {
       return {
         id: transaction.id,
         title: transaction.title,
-        category: transaction.category_id ? categoryMap.get(transaction.category_id) ?? "Sonstiges" : "Sonstiges",
+        category: transaction.category_id ? categoryMap.get(transaction.category_id) ?? "Other" : "Other",
         date: transaction.booked_at ?? "",
         amountMinor: signedMinorAmount(transaction.amount_minor, transaction.type),
         type: transaction.type,

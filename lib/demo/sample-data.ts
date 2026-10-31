@@ -34,18 +34,18 @@ const wallets = [
 ];
 
 const rows: [string, string, string, string, number, "income" | "expense", boolean, string, string][] = [
-  ["Cake sale, break", "Veranstaltung", "2026-10-24", "w1", 12480, "income", false, "Approved", "Mara Lindner"],
-  ["Poster printing", "Material", "2026-10-22", "w1", -2390, "expense", true, "Approved", "Jonas Albers"],
-  ["Prom deposit, Stadthalle", "Veranstaltung", "2026-10-20", "w2", -50000, "expense", true, "Pending review", "Mara Lindner"],
-  ["Class contributions, October", "Sonstiges", "2026-10-18", "w1", 31000, "income", false, "Approved", "Sven Ostermann"],
-  ["Crepe stand supplies", "Material", "2026-10-15", "w1", -4185, "expense", true, "Approved", "Jonas Albers"],
-  ["Flea market table fee", "Veranstaltung", "2026-10-12", "w1", -1500, "expense", false, "Invalid", "Lea Brandt"],
-  ["Donation, parents' association", "Sonstiges", "2026-10-09", "w2", 25000, "income", false, "Approved", "Sven Ostermann"],
-  ["T-shirt order, deposit", "Material", "2026-10-05", "w2", -18900, "expense", true, "Approved", "Mara Lindner"],
-  ["Cake sale, parents' evening", "Veranstaltung", "2026-10-02", "w1", 9650, "income", false, "Approved", "Lea Brandt"],
-  ["Cash box lock", "Material", "2026-09-28", "w1", -1299, "expense", true, "Approved", "Jonas Albers"],
-  ["Class contributions, September", "Sonstiges", "2026-09-18", "w1", 29000, "income", false, "Approved", "Sven Ostermann"],
-  ["Bake sale ingredients", "Material", "2026-09-14", "w1", -3320, "expense", true, "Pending review", "Lea Brandt"],
+  ["Cake sale, break", "Event", "2026-10-24", "w1", 12480, "income", false, "Approved", "Mara Lindner"],
+  ["Poster printing", "Supplies", "2026-10-22", "w1", -2390, "expense", true, "Approved", "Jonas Albers"],
+  ["Prom deposit, venue", "Event", "2026-10-20", "w2", -50000, "expense", true, "Pending review", "Mara Lindner"],
+  ["Class contributions, October", "Other", "2026-10-18", "w1", 31000, "income", false, "Approved", "Sven Ostermann"],
+  ["Crepe stand supplies", "Supplies", "2026-10-15", "w1", -4185, "expense", true, "Approved", "Jonas Albers"],
+  ["Flea market table fee", "Event", "2026-10-12", "w1", -1500, "expense", false, "Invalid", "Lea Brandt"],
+  ["Donation, parents' association", "Other", "2026-10-09", "w2", 25000, "income", false, "Approved", "Sven Ostermann"],
+  ["T-shirt order, deposit", "Supplies", "2026-10-05", "w2", -18900, "expense", true, "Approved", "Mara Lindner"],
+  ["Cake sale, parents' evening", "Event", "2026-10-02", "w1", 9650, "income", false, "Approved", "Lea Brandt"],
+  ["Cash box lock", "Supplies", "2026-09-28", "w1", -1299, "expense", true, "Approved", "Jonas Albers"],
+  ["Class contributions, September", "Other", "2026-09-18", "w1", 29000, "income", false, "Approved", "Sven Ostermann"],
+  ["Bake sale ingredients", "Supplies", "2026-09-14", "w1", -3320, "expense", true, "Pending review", "Lea Brandt"],
 ];
 
 const transactions = rows.map(([title, category, date, walletId, amount, type, receipt, reviewStatus, createdByName], index) => ({
@@ -125,7 +125,7 @@ export const demoData = {
   receipts: { ok: true as const, items: receipts },
   members: { ok: true as const, items: members },
   cashCounts: { ok: true as const, items: cashCounts },
-  settings: { ok: true as const, data: { school_name: "Gymnasium Rheinau", graduation_year: 2026, notifications: {} } },
+  settings: { ok: true as const, data: { school_name: "Rheinau High School", graduation_year: 2026, notifications: {} } },
   periods: {
     ok: true as const,
     items: [

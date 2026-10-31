@@ -51,7 +51,7 @@ function exportDemoData(format: ExportFormat) {
   }
 
   return csvFile(`abi-vault-transaktionen-${fileDate}.csv`, [
-    ["Titel", "Typ", "Amount (Cent)", "Currency", "Gebucht am", "Category"],
+    ["Title", "Type", "Amount (Cent)", "Currency", "Booked on", "Category"],
     ...demoData.transactions.items.map((transaction) => [
       transaction.title,
       transaction.type,
@@ -155,7 +155,7 @@ export async function exportManualFinanceReport(format: ExportFormat) {
   const categoryNameById = new Map((categories ?? []).map((category) => [category.id, category.name]));
 
   return csvFile(`abi-vault-transaktionen-${fileDate}.csv`, [
-    ["Titel", "Typ", "Amount (Cent)", "Currency", "Gebucht am", "Category"],
+    ["Title", "Type", "Amount (Cent)", "Currency", "Booked on", "Category"],
     ...transactions.map((transaction) => [
       transaction.title,
       transaction.type,

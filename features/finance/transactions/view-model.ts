@@ -2,7 +2,7 @@ export type Category = string;
 
 export type FilterType = "Income" | "Expenses";
 
-export type ReceiptFilter = "All" | "Vorhanden" | "Fehlt";
+export type ReceiptFilter = "All" | "Present" | "Missing";
 
 export type ReviewFilter = "All" | "Approved" | "Pending review" | "Invalid";
 
@@ -48,9 +48,9 @@ type ServerTransaction = {
 };
 
 export const categoryFilterOptions: readonly Category[] = [
-  "Material",
-  "Sonstiges",
-  "Veranstaltung",
+  "Supplies",
+  "Other",
+  "Event",
 ];
 
 export const transactionTypeFilterOptions: readonly FilterType[] = [
@@ -60,8 +60,8 @@ export const transactionTypeFilterOptions: readonly FilterType[] = [
 
 export const receiptFilterOptions: readonly ReceiptFilter[] = [
   "All",
-  "Vorhanden",
-  "Fehlt",
+  "Present",
+  "Missing",
 ];
 
 export const reviewFilterOptions: readonly ReviewFilter[] = [

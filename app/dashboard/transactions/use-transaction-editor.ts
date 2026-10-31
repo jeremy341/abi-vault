@@ -13,7 +13,7 @@ import {
 
 type CashRegister = { id: string; name: string };
 
-type TransactionType = "Einnahme" | "Ausgabe";
+type TransactionType = "Income" | "Expense";
 
 type TransactionDirection = "income" | "expense";
 
@@ -26,7 +26,7 @@ type UseTransactionEditorOptions = {
 };
 
 function directionFor(type: TransactionType): TransactionDirection {
-  if (type === "Einnahme") {
+  if (type === "Income") {
     return "income";
   }
 
@@ -34,15 +34,15 @@ function directionFor(type: TransactionType): TransactionDirection {
 }
 
 function defaultCategoryFor(type: TransactionType): Category {
-  if (type === "Einnahme") {
+  if (type === "Income") {
     return "Sales";
   }
 
-  return "Sonstiges";
+  return "Other";
 }
 
 function signedAmountFor(parsedAmount: number, type: TransactionType) {
-  if (type === "Ausgabe") {
+  if (type === "Expense") {
     return -Math.abs(parsedAmount);
   }
 
@@ -53,7 +53,7 @@ function categoryNamesFor(
   direction: TransactionDirection,
   editing: Transaction | null,
 ): string[] {
-  let names: string[] = ["Material", "Sonstiges", "Veranstaltung"];
+  let names: string[] = ["Supplies", "Other", "Event"];
 
   if (direction === "income") {
     names = ["Sales"];
@@ -92,7 +92,7 @@ export function useTransactionEditor({
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState<Category>("Sales");
-  const [type, setType] = useState<TransactionType>("Einnahme");
+  const [type, setType] = useState<TransactionType>("Income");
   const [correctionReason, setCorrectionReason] = useState("");
   const [selectedCashRegisterId, setSelectedCashRegisterId] = useState(
     () => cashRegisters[0]?.id ?? "",
@@ -139,9 +139,9 @@ export function useTransactionEditor({
     setAmount(amountToInputText(transaction.amount));
 
     if (transaction.type === "income") {
-      setType("Einnahme");
+      setType("Income");
     } else {
-      setType("Ausgabe");
+      setType("Expense");
     }
 
     setCategory(transaction.category);

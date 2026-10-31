@@ -15,7 +15,7 @@ describe("Finance projections", () => {
       ],
       [
         { amountMinor: "3200", type: "income", category: "Sales", fromWalletId: null, toWalletId: "cash-a" },
-        { amountMinor: "800", type: "expense", category: "Material", fromWalletId: "cash-a", toWalletId: null },
+        { amountMinor: "800", type: "expense", category: "Supplies", fromWalletId: "cash-a", toWalletId: null },
         { amountMinor: "500", type: "transfer", category: "Transfer", fromWalletId: "cash-a", toWalletId: "cash-b" },
       ],
     );
@@ -28,14 +28,14 @@ describe("Finance projections", () => {
 
   it("Projects expense categories with percentages", () => {
     const categories = projectCategoryTotals([
-      { amountMinor: "1000", type: "expense", category: "Material", fromWalletId: "cash-a", toWalletId: null },
-      { amountMinor: "500", type: "expense", category: "Material", fromWalletId: "cash-a", toWalletId: null },
+      { amountMinor: "1000", type: "expense", category: "Supplies", fromWalletId: "cash-a", toWalletId: null },
+      { amountMinor: "500", type: "expense", category: "Supplies", fromWalletId: "cash-a", toWalletId: null },
       { amountMinor: "500", type: "expense", category: "Event", fromWalletId: "cash-a", toWalletId: null },
       { amountMinor: "900", type: "income", category: "Sales", fromWalletId: null, toWalletId: "cash-a" },
     ]);
 
     expect(categories).toEqual([
-      { name: "Material", amountMinor: "1500", progress: 75 },
+      { name: "Supplies", amountMinor: "1500", progress: 75 },
       { name: "Event", amountMinor: "500", progress: 25 },
     ]);
   });
@@ -47,7 +47,7 @@ describe("Finance projections", () => {
   it("Projects income, expenses, and net totals", () => {
     expect(projectFlowTotals([
       { amountMinor: "3200", type: "income", category: "Sales", fromWalletId: null, toWalletId: "cash-a" },
-      { amountMinor: "800", type: "expense", category: "Material", fromWalletId: "cash-a", toWalletId: null },
+      { amountMinor: "800", type: "expense", category: "Supplies", fromWalletId: "cash-a", toWalletId: null },
     ])).toEqual({
       incomeMinor: BigInt(3200),
       expenseMinor: BigInt(800),
@@ -64,7 +64,7 @@ describe("Finance projections", () => {
     expect(projectMonthlyFlow(
       [
         { amountMinor: "10000", type: "income", category: "Sales", date: "2026-05-12", fromWalletId: null, toWalletId: "cash-a" },
-        { amountMinor: "2500", type: "expense", category: "Material", date: "2026-06-04", fromWalletId: "cash-a", toWalletId: null },
+        { amountMinor: "2500", type: "expense", category: "Supplies", date: "2026-06-04", fromWalletId: "cash-a", toWalletId: null },
       ],
       months,
     )).toEqual([

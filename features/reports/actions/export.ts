@@ -74,7 +74,7 @@ export async function exportReport(format: "Excel" | "Review log") {
   const categoryMap = new Map((categories ?? []).map((category) => [category.id, category.name]));
 
   const rows = [
-    ["Titel", "Typ", "Amount (Cent)", "Currency", "Gebucht am", "Category", "Herkunft", "Provider-ID"],
+    ["Title", "Type", "Amount (Cent)", "Currency", "Booked on", "Category", "Origin", "Provider-ID"],
     ...(transactions ?? []).map((transaction) => [
       transaction.title,
       transaction.type,

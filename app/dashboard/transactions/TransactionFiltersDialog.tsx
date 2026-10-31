@@ -12,7 +12,6 @@ import {
   type ReviewFilter,
 } from "@/features/finance/transactions/view-model";
 import styles from "./transactions.module.css";
-import { receiptFilterLabel } from "./receipt-filter-label";
 
 type TransactionFiltersDialogProps = {
   open: boolean;
@@ -141,7 +140,7 @@ export function TransactionFiltersDialog({
                   className={receiptFilter === value ? styles.segmentActive : ""}
                   onClick={() => onReceiptFilterChange(value)}
                 >
-                  {receiptFilterLabel(value)}
+                  {value}
                 </button>
               ))}
             </div>

@@ -48,6 +48,24 @@ function toMinor(value: string | number) {
   return BigInt(String(value));
 }
 
+function absoluteValue(value: bigint) {
+  if (value < BigInt(0)) return -value;
+
+  return value;
+}
+
+function addAmount(amounts: Map<string, bigint>, key: string, amount: bigint) {
+  const currentAmount = amounts.get(key) ?? BigInt(0);
+
+  amounts.set(key, currentAmount + amount);
+}
+
+function toPercentOfTotal(amountMinor: bigint, totalMinor: bigint) {
+  if (totalMinor === BigInt(0)) return 0;
+
+  return Number((amountMinor * BigInt(100) + totalMinor / BigInt(2)) / totalMinor);
+}
+
 export function projectFlowTotals(
   transactions: readonly ProjectionTransaction[],
 ): FlowTotals {
@@ -81,34 +99,22 @@ export function projectWalletBalances(
     const amount = toMinor(transaction.amountMinor);
 
     if (transaction.type === "income" && transaction.toWalletId) {
-      balances.set(
-        transaction.toWalletId,
-        (balances.get(transaction.toWalletId) ?? BigInt(0)) + amount,
-      );
+      addAmount(balances, transaction.toWalletId, amount);
     }
 
     if (transaction.type === "expense" && transaction.fromWalletId) {
-      balances.set(
-        transaction.fromWalletId,
-        (balances.get(transaction.fromWalletId) ?? BigInt(0)) - amount,
-      );
+      addAmount(balances, transaction.fromWalletId, -amount);
     }
 
     if (transaction.type === "transfer") {
-      const transferAmount = amount < BigInt(0) ? -amount : amount;
+      const transferAmount = absoluteValue(amount);
 
       if (transaction.fromWalletId) {
-        balances.set(
-          transaction.fromWalletId,
-          (balances.get(transaction.fromWalletId) ?? BigInt(0)) - transferAmount,
-        );
+        addAmount(balances, transaction.fromWalletId, -transferAmount);
       }
 
       if (transaction.toWalletId) {
-        balances.set(
-          transaction.toWalletId,
-          (balances.get(transaction.toWalletId) ?? BigInt(0)) + transferAmount,
-        );
+        addAmount(balances, transaction.toWalletId, transferAmount);
       }
     }
   }
@@ -125,21 +131,17 @@ export function projectCategoryTotals(
   for (const transaction of transactions) {
     if (transaction.type !== "expense") continue;
 
-    const recordedAmount = toMinor(transaction.amountMinor);
-    const amount = recordedAmount < BigInt(0) ? -recordedAmount : recordedAmount;
-    totals.set(
-      transaction.category,
-      (totals.get(transaction.category) ?? BigInt(0)) + amount,
-    );
+    const amount = absoluteValue(toMinor(transaction.amountMinor));
+
+    addAmount(totals, transaction.category, amount);
+
     totalExpenseMinor += amount;
   }
 
   return [...totals.entries()].map(([name, amountMinor]) => ({
     name,
     amountMinor: amountMinor.toString(),
-    progress: totalExpenseMinor
-      ? Number((amountMinor * BigInt(100) + totalExpenseMinor / BigInt(2)) / totalExpenseMinor)
-      : 0,
+    progress: toPercentOfTotal(amountMinor, totalExpenseMinor),
   }));
 }
 
@@ -153,12 +155,14 @@ export function projectMonthlyFlowMinor(
 
   for (const transaction of transactions) {
     const monthKey = transaction.date?.slice(0, 7);
-    const flow = monthKey ? monthly.get(monthKey) : undefined;
+
+    if (!monthKey) continue;
+
+    const flow = monthly.get(monthKey);
 
     if (!flow) continue;
 
-    const recordedAmount = toMinor(transaction.amountMinor);
-    const amount = recordedAmount < BigInt(0) ? -recordedAmount : recordedAmount;
+    const amount = absoluteValue(toMinor(transaction.amountMinor));
 
     if (transaction.type === "income") flow.incomeMinor += amount;
 

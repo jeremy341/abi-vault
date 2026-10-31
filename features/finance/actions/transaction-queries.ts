@@ -12,7 +12,9 @@ import { transactionsForCashWallets } from "./query-filters";
 
 export async function listTransactionsForCurrentOrganization() {
   if (isDemoData()) return demoData.transactions;
+
   const context = await requireClerkContext();
+
   const supabase = await createSupabaseServerClient();
 
   const { data: membership, error: membershipError } = await supabase
@@ -73,9 +75,11 @@ export async function listTransactionsForCurrentOrganization() {
     .eq("status", "active");
 
   if (cashWalletError) return queryFailure("DATABASE_ERROR");
+
   const cashWalletIds = new Set((cashWallets ?? []).map((wallet) => wallet.id));
 
   if (!cashWalletIds.size) return querySuccess({ items: [] });
+
   const cashTransactionFilter = transactionsForCashWallets([...cashWalletIds]);
 
   const { data: transactions, error } = await fetchAllRows((from, to) =>
@@ -159,19 +163,22 @@ export async function listTransactionsForCurrentOrganization() {
     receiptPromise,
     fetchRowsInBatches(creatorIds, (batch) =>
       fetchAllRows((from, to) =>
-          supabase
-            .from("profiles")
-            .select("clerk_user_id, display_name, email")
-            .in("clerk_user_id", batch)
-            .order("clerk_user_id")
-            .range(from, to),
+        supabase
+          .from("profiles")
+          .select("clerk_user_id, display_name, email")
+          .in("clerk_user_id", batch)
+          .order("clerk_user_id")
+          .range(from, to),
       ),
     ),
   ]);
 
   if (categoryError || walletError || receiptError || creatorError) return queryFailure("DATABASE_ERROR");
+
   const categoryMap = new Map((categories ?? []).map((category) => [category.id, category.name]));
+
   const walletMap = new Map((wallets ?? []).map((wallet) => [wallet.id, wallet.name]));
+
   const creatorMap = new Map((creators ?? []).map((creator) => [creator.clerk_user_id, creator.display_name || creator.email || "Unbekannt"]));
 
   const receiptMap = new Map<string, { id: string; fileName: string; type: string; status: string }>(
@@ -181,27 +188,41 @@ export async function listTransactionsForCurrentOrganization() {
   );
 
   return querySuccess({
-    items: cashTransactions.map((transaction) => ({
-      id: transaction.id,
-      title: transaction.title,
-      category: transaction.category_id ? categoryMap.get(transaction.category_id) ?? "Sonstiges" : "Sonstiges",
-      date: transaction.booked_at ?? "",
-      amountMinor: signedMinorAmount(transaction.amount_minor, transaction.type),
-      type: transaction.type,
-      receipt: receiptMap.has(transaction.id),
-      reviewStatus: receiptMap.get(transaction.id)?.status === "approved" ? "Approved" : receiptMap.get(transaction.id)?.status === "rejected" ? "Invalid" : "Pending review",
-      createdByName: creatorMap.get(transaction.created_by) ?? null,
-      createdAt: transaction.created_at,
-      receiptId: receiptMap.get(transaction.id)?.id ?? null,
-      receiptFile: receiptMap.get(transaction.id)?.fileName ?? null,
-      receiptType: receiptMap.get(transaction.id)?.type ?? null,
-      account: walletMap.get(transaction.type === "income" ? transaction.to_wallet_id : transaction.from_wallet_id) ?? "Unassigned",
-      walletId: transaction.type === "income" ? transaction.to_wallet_id : transaction.from_wallet_id,
-      fromWalletId: transaction.from_wallet_id,
-      toWalletId: transaction.to_wallet_id,
-      createdBy: transaction.created_by,
-      canEdit: membership.role === "admin" || transaction.created_by === context.clerkUserId,
-      canDelete: membership.role === "admin",
-    })),
+    items: cashTransactions.map((transaction) => {
+      const receipt = receiptMap.get(transaction.id);
+
+      const walletId = transaction.type === "income" ? transaction.to_wallet_id : transaction.from_wallet_id;
+
+      let reviewStatus = "Pending review";
+
+      if (receipt?.status === "approved") {
+        reviewStatus = "Approved";
+      } else if (receipt?.status === "rejected") {
+        reviewStatus = "Invalid";
+      }
+
+      return {
+        id: transaction.id,
+        title: transaction.title,
+        category: transaction.category_id ? categoryMap.get(transaction.category_id) ?? "Sonstiges" : "Sonstiges",
+        date: transaction.booked_at ?? "",
+        amountMinor: signedMinorAmount(transaction.amount_minor, transaction.type),
+        type: transaction.type,
+        receipt: receiptMap.has(transaction.id),
+        reviewStatus,
+        createdByName: creatorMap.get(transaction.created_by) ?? null,
+        createdAt: transaction.created_at,
+        receiptId: receipt?.id ?? null,
+        receiptFile: receipt?.fileName ?? null,
+        receiptType: receipt?.type ?? null,
+        account: walletMap.get(walletId) ?? "Unassigned",
+        walletId,
+        fromWalletId: transaction.from_wallet_id,
+        toWalletId: transaction.to_wallet_id,
+        createdBy: transaction.created_by,
+        canEdit: membership.role === "admin" || transaction.created_by === context.clerkUserId,
+        canDelete: membership.role === "admin",
+      };
+    }),
   });
 }

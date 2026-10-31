@@ -3,10 +3,10 @@
 import { useRef, useState } from "react";
 import { X } from "lucide-react";
 import { Dialog } from "@/components/ui/dialog";
-import dlg from "@/components/dashboard/dialog.module.css";
+import dialogStyles from "@/components/dashboard/dialog.module.css";
 import { calculateCashDenominationMinor } from "@/lib/finance/cash-count";
 import { parseDollarToMinor } from "@/lib/finance/money";
-import styles from "./funds.module.css";
+import fundsStyles from "./funds.module.css";
 
 export type CashBox = {
   id: string;
@@ -58,6 +58,164 @@ function parseDirectAmountMinor(input: string) {
   }
 }
 
+type CountModeTabsProps = {
+  countMode: CountMode;
+  onChangeMode: (mode: CountMode) => void;
+};
+
+function CountModeTabs({ countMode, onChangeMode }: CountModeTabsProps) {
+  function handleModeKeyDown(event: React.KeyboardEvent<HTMLButtonElement>, currentMode: CountMode) {
+    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+
+    event.preventDefault();
+
+    const nextMode = currentMode === "direct" ? "calculator" : "direct";
+    const nextTabIndex = nextMode === "direct" ? 0 : 1;
+
+    onChangeMode(nextMode);
+
+    event.currentTarget.parentElement
+      ?.querySelectorAll<HTMLElement>('[role="tab"]')
+      [nextTabIndex]?.focus();
+  }
+
+  return (
+    <div className={fundsStyles.modeTabs} role="tablist" aria-label="Counting method">
+      <button
+        type="button"
+        role="tab"
+        aria-selected={countMode === "direct"}
+        aria-controls="count-direct-panel"
+        tabIndex={countMode === "direct" ? 0 : -1}
+        onKeyDown={(event) => handleModeKeyDown(event, "direct")}
+        onClick={() => onChangeMode("direct")}
+      >
+        Total amount
+      </button>
+      <button
+        type="button"
+        role="tab"
+        aria-selected={countMode === "calculator"}
+        aria-controls="count-calculator-panel"
+        tabIndex={countMode === "calculator" ? 0 : -1}
+        onKeyDown={(event) => handleModeKeyDown(event, "calculator")}
+        onClick={() => onChangeMode("calculator")}
+      >
+        Denominations
+      </button>
+    </div>
+  );
+}
+
+type DirectAmountPanelProps = {
+  amountInput: string;
+  hasError: boolean;
+  onAmountChange: (value: string) => void;
+};
+
+function DirectAmountPanel({ amountInput, hasError, onAmountChange }: DirectAmountPanelProps) {
+  return (
+    <div id="count-direct-panel" role="tabpanel" aria-label="Total amount">
+      <label className={dialogStyles.field}>
+        <span>Counted amount</span>
+        <div className={dialogStyles.amountField}>
+          <input
+            name="countedAmount"
+            type="text"
+            inputMode="decimal"
+            autoComplete="off"
+            required
+            aria-invalid={hasError}
+            aria-describedby="count-form-error"
+            value={amountInput}
+            onChange={(event) => onAmountChange(event.target.value)}
+            placeholder="0.00"
+          />
+          <span>$</span>
+        </div>
+      </label>
+    </div>
+  );
+}
+
+type DenominationPanelProps = {
+  counts: Record<string, number>;
+  formatMoney: (value: number) => string;
+  onCountChange: (denomination: string, count: number) => void;
+};
+
+function DenominationPanel({ counts, formatMoney, onCountChange }: DenominationPanelProps) {
+  return (
+    <div
+      id="count-calculator-panel"
+      className={fundsStyles.denominationGrid}
+      role="tabpanel"
+      aria-label="Denominations"
+    >
+      {denominations.map(([value, label]) => (
+        <label className={fundsStyles.denominationItem} key={value}>
+          <span>{label}</span>
+          <input
+            name={`denomination-${value}`}
+            type="number"
+            inputMode="numeric"
+            min="0"
+            autoComplete="off"
+            value={counts[value] || ""}
+            onChange={(event) =>
+              onCountChange(value, Number.parseInt(event.target.value, 10) || 0)
+            }
+            placeholder="0"
+          />
+          <output className={fundsStyles.denominationTotal}>
+            {formatMoney((counts[value] || 0) * Number(value))}
+          </output>
+        </label>
+      ))}
+    </div>
+  );
+}
+
+type CountPreviewProps = {
+  bookBalance: number;
+  countedAmount: number;
+  difference: number;
+  formatMoney: (value: number) => string;
+};
+
+function CountPreview({ bookBalance, countedAmount, difference, formatMoney }: CountPreviewProps) {
+  let differenceClassName = fundsStyles.negative;
+
+  if (Math.abs(difference) < 0.01) {
+    differenceClassName = fundsStyles.positive;
+  }
+
+  let differenceSign = "";
+
+  if (difference > 0) {
+    differenceSign = "+";
+  }
+
+  return (
+    <dl className={fundsStyles.countPreview} aria-label="Count preview">
+      <div>
+        <dt>Book balance</dt>
+        <dd>{formatMoney(bookBalance)}</dd>
+      </div>
+      <div>
+        <dt>Counted</dt>
+        <dd className="total-rule">{formatMoney(countedAmount)}</dd>
+      </div>
+      <div>
+        <dt>Difference</dt>
+        <dd className={differenceClassName}>
+          {differenceSign}{formatMoney(difference)}
+        </dd>
+      </div>
+    </dl>
+  );
+}
+
 export default function CashCountDialog({
   cashBox,
   formatMoney,
@@ -101,18 +259,8 @@ export default function CashCountDialog({
 
   const difference = countedAmount - cashBox.balance;
 
-  function handleModeKeyDown(event: React.KeyboardEvent<HTMLButtonElement>, currentMode: CountMode) {
-    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
-
-    event.preventDefault();
-
-    const nextMode = currentMode === "direct" ? "calculator" : "direct";
-    const nextTabIndex = nextMode === "direct" ? 0 : 1;
-
-    setCountMode(nextMode);
-    event.currentTarget.parentElement
-      ?.querySelectorAll<HTMLElement>('[role="tab"]')
-      [nextTabIndex]?.focus();
+  function handleDenominationCountChange(denomination: string, count: number) {
+    setDenominationCounts((current) => ({ ...current, [denomination]: count }));
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -157,6 +305,7 @@ export default function CashCountDialog({
       }
 
       idempotencyKey.current = null;
+
       onClose();
     } catch {
       setError("The cash count could not be saved.");
@@ -173,18 +322,18 @@ export default function CashCountDialog({
     <Dialog
       label="Record cash count"
       onClose={handleDialogClose}
-      overlayClassName={dlg.overlay}
-      dialogClassName={`${dlg.modal} ${dlg.modalWide}`}
+      overlayClassName={dialogStyles.overlay}
+      dialogClassName={`${dialogStyles.modal} ${dialogStyles.modalWide}`}
     >
       <form onSubmit={handleSubmit} noValidate>
-        <header className={dlg.header}>
-          <div className={dlg.heading}>
+        <header className={dialogStyles.header}>
+          <div className={dialogStyles.heading}>
             <h2>Record cash count</h2>
             <p>Count the cash and compare it with the book balance.</p>
           </div>
           <button
             type="button"
-            className={dlg.closeButton}
+            className={dialogStyles.closeButton}
             onClick={onClose}
             disabled={saving}
             aria-label="Close"
@@ -193,88 +342,25 @@ export default function CashCountDialog({
           </button>
         </header>
 
-        <div className={dlg.body}>
-          <div className={styles.modeTabs} role="tablist" aria-label="Counting method">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={countMode === "direct"}
-              aria-controls="count-direct-panel"
-              tabIndex={countMode === "direct" ? 0 : -1}
-              onKeyDown={(event) => handleModeKeyDown(event, "direct")}
-              onClick={() => setCountMode("direct")}
-            >
-              Total amount
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={countMode === "calculator"}
-              aria-controls="count-calculator-panel"
-              tabIndex={countMode === "calculator" ? 0 : -1}
-              onKeyDown={(event) => handleModeKeyDown(event, "calculator")}
-              onClick={() => setCountMode("calculator")}
-            >
-              Denominations
-            </button>
-          </div>
+        <div className={dialogStyles.body}>
+          <CountModeTabs countMode={countMode} onChangeMode={setCountMode} />
 
           {countMode === "direct" ? (
-            <div id="count-direct-panel" role="tabpanel" aria-label="Total amount">
-              <label className={dlg.field}>
-                <span>Counted amount</span>
-                <div className={dlg.amountField}>
-                  <input
-                    name="countedAmount"
-                    type="text"
-                    inputMode="decimal"
-                    autoComplete="off"
-                    required
-                    aria-invalid={Boolean(error)}
-                    aria-describedby="count-form-error"
-                    value={countedAmountInput}
-                    onChange={(event) => setCountedAmountInput(event.target.value)}
-                    placeholder="0.00"
-                  />
-                  <span>$</span>
-                </div>
-              </label>
-            </div>
+            <DirectAmountPanel
+              amountInput={countedAmountInput}
+              hasError={Boolean(error)}
+              onAmountChange={setCountedAmountInput}
+            />
           ) : (
-            <div
-              id="count-calculator-panel"
-              className={styles.denominationGrid}
-              role="tabpanel"
-              aria-label="Denominations"
-            >
-              {denominations.map(([value, label]) => (
-                <label className={styles.denominationItem} key={value}>
-                  <span>{label}</span>
-                  <input
-                    name={`denomination-${value}`}
-                    type="number"
-                    inputMode="numeric"
-                    min="0"
-                    autoComplete="off"
-                    value={denominationCounts[value] || ""}
-                    onChange={(event) =>
-                      setDenominationCounts((current) => ({
-                        ...current,
-                        [value]: Number.parseInt(event.target.value, 10) || 0,
-                      }))
-                    }
-                    placeholder="0"
-                  />
-                  <output className={styles.denominationTotal}>
-                    {formatMoney((denominationCounts[value] || 0) * Number(value))}
-                  </output>
-                </label>
-              ))}
-            </div>
+            <DenominationPanel
+              counts={denominationCounts}
+              formatMoney={formatMoney}
+              onCountChange={handleDenominationCountChange}
+            />
           )}
 
-          <div className={dlg.formGrid}>
-            <label className={dlg.field}>
+          <div className={dialogStyles.formGrid}>
+            <label className={dialogStyles.field}>
               <span>Counted by</span>
               <input
                 name="auditor"
@@ -286,7 +372,7 @@ export default function CashCountDialog({
                 placeholder="Name of the person checking"
               />
             </label>
-            <label className={dlg.field}>
+            <label className={dialogStyles.field}>
               <span>Note or reason</span>
               <input
                 name="countNote"
@@ -299,31 +385,21 @@ export default function CashCountDialog({
             </label>
           </div>
 
-          <dl className={styles.countPreview} aria-label="Count preview">
-            <div>
-              <dt>Book balance</dt>
-              <dd>{formatMoney(cashBox.balance)}</dd>
-            </div>
-            <div>
-              <dt>Counted</dt>
-              <dd className="total-rule">{formatMoney(countedAmount)}</dd>
-            </div>
-            <div>
-              <dt>Difference</dt>
-              <dd className={Math.abs(difference) < 0.01 ? styles.positive : styles.negative}>
-                {difference > 0 ? "+" : ""}{formatMoney(difference)}
-              </dd>
-            </div>
-          </dl>
+          <CountPreview
+            bookBalance={cashBox.balance}
+            countedAmount={countedAmount}
+            difference={difference}
+            formatMoney={formatMoney}
+          />
 
-          {error ? <p id="count-form-error" className={dlg.error} role="alert">{error}</p> : null}
+          {error ? <p id="count-form-error" className={dialogStyles.error} role="alert">{error}</p> : null}
         </div>
 
-        <footer className={dlg.footer}>
-          <button type="button" className={dlg.secondaryButton} onClick={onClose} disabled={saving}>
+        <footer className={dialogStyles.footer}>
+          <button type="button" className={dialogStyles.secondaryButton} onClick={onClose} disabled={saving}>
             Cancel
           </button>
-          <button type="submit" className={dlg.primaryButton} disabled={saving} aria-busy={saving}>
+          <button type="submit" className={dialogStyles.primaryButton} disabled={saving} aria-busy={saving}>
             {saving ? "Saving" : "Save cash count"}
           </button>
         </footer>

@@ -15,20 +15,37 @@ function transactionIdOrNull(value: string) {
   return /^[0-9a-f-]{36}$/i.test(value) ? value : null;
 }
 
+function refreshReceiptData() {
+  invalidateFinanceQuery("receipts", "transactions", "dashboard-snapshot", "report-snapshot", "report-kpis");
+}
+
 export function useReceiptEditor({ cacheScope, setReceipts }: UseReceiptEditorOptions) {
   const [open, setOpen] = useState(false);
+
   const [editingReceipt, setEditingReceipt] = useState<Receipt | null>(null);
+
   const [fileName, setFileName] = useState("");
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
   const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
+
   const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
+
   const [transaction, setTransaction] = useState("");
+
   const [availableTransactions, setAvailableTransactions] = useState<readonly TransactionOption[]>([]);
+
   const [transactionsLoading, setTransactionsLoading] = useState(true);
+
   const [saving, setSaving] = useState(false);
+
   const [transactionLoadError, setTransactionLoadError] = useState("");
+
   const [editorError, setEditorError] = useState("");
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+
   const filePreviewUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -47,6 +64,7 @@ export function useReceiptEditor({ cacheScope, setReceipts }: UseReceiptEditorOp
         }
 
         setTransactionLoadError("");
+
         setAvailableTransactions([
           { value: "", label: "Unassigned", date: "", amount: "" },
           ...snapshot.transactions.map((item) => ({
@@ -69,19 +87,23 @@ export function useReceiptEditor({ cacheScope, setReceipts }: UseReceiptEditorOp
     };
   }, [cacheScope]);
 
-  useEffect(() => () => {
-    if (filePreviewUrlRef.current) URL.revokeObjectURL(filePreviewUrlRef.current);
+  useEffect(() => {
+    return () => {
+      if (filePreviewUrlRef.current) URL.revokeObjectURL(filePreviewUrlRef.current);
+    };
   }, []);
 
   useEffect(() => {
     if (!imagePreviewOpen) return;
 
     const focusedElement = document.activeElement;
+
     const trigger = focusedElement instanceof HTMLElement ? focusedElement : null;
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         event.stopPropagation();
+
         setImagePreviewOpen(false);
       }
 
@@ -92,13 +114,16 @@ export function useReceiptEditor({ cacheScope, setReceipts }: UseReceiptEditorOp
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown, true);
+
       trigger?.focus();
     };
   }, [imagePreviewOpen]);
 
   function releaseFilePreview() {
     if (filePreviewUrlRef.current) URL.revokeObjectURL(filePreviewUrlRef.current);
+
     filePreviewUrlRef.current = null;
+
     setFilePreviewUrl(null);
   }
 
@@ -111,17 +136,22 @@ export function useReceiptEditor({ cacheScope, setReceipts }: UseReceiptEditorOp
 
     if (file.type.startsWith("image/")) {
       const previewUrl = URL.createObjectURL(file);
+
       filePreviewUrlRef.current = previewUrl;
+
       setFilePreviewUrl(previewUrl);
     }
 
     setSelectedFile(file);
+
     setFileName(file.name);
   }
 
   function clearSelectedFile() {
     releaseFilePreview();
+
     setSelectedFile(null);
+
     setImagePreviewOpen(false);
 
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -129,32 +159,47 @@ export function useReceiptEditor({ cacheScope, setReceipts }: UseReceiptEditorOp
 
   function openAdd() {
     clearSelectedFile();
+
     setEditingReceipt(null);
+
     setFileName("");
+
     setTransaction("");
+
     setEditorError("");
+
     setOpen(true);
   }
 
   function openEdit(receipt: Receipt) {
     clearSelectedFile();
+
     setEditingReceipt(receipt);
+
     setFileName(receipt.file);
+
     setTransaction(receipt.transactionId ?? "");
+
     setEditorError("");
+
     setOpen(true);
   }
 
   function removeSelectedFile() {
     clearSelectedFile();
+
     setFileName("");
   }
 
   function close() {
     clearSelectedFile();
+
     setOpen(false);
+
     setEditingReceipt(null);
+
     setFileName("");
+
     setTransaction("");
   }
 
@@ -168,10 +213,11 @@ export function useReceiptEditor({ cacheScope, setReceipts }: UseReceiptEditorOp
     }
 
     setSaving(true);
+
     setEditorError("");
 
     try {
-      if (editingReceipt) await updateMetadata();
+      if (editingReceipt) await updateMetadata(editingReceipt);
       else await uploadNewFile();
     } catch {
       setEditorError("The receipt could not be saved. Try again.");
@@ -180,14 +226,14 @@ export function useReceiptEditor({ cacheScope, setReceipts }: UseReceiptEditorOp
     }
   }
 
-  async function updateMetadata() {
-    if (!editingReceipt) return;
-
+  async function updateMetadata(receipt: Receipt) {
     const transactionId = transactionIdOrNull(transaction);
 
+    const newFileName = fileName.trim();
+
     const result = await updateReceiptMetadata({
-      receiptId: editingReceipt.id.toString(),
-      fileName: fileName.trim(),
+      receiptId: receipt.id.toString(),
+      fileName: newFileName,
       transactionId,
     });
 
@@ -201,18 +247,22 @@ export function useReceiptEditor({ cacheScope, setReceipts }: UseReceiptEditorOp
       (option) => option.value === transactionId,
     );
 
-    setReceipts((current) => current.map((receipt) =>
-      receipt.id === editingReceipt.id
-        ? {
-            ...receipt,
-            file: fileName.trim(),
-            transactionId,
-            transaction: selectedTransaction?.label ?? "Unassigned",
-            status: transactionId ? receipt.status : "Unassigned",
-          }
-        : receipt,
-    ));
-    invalidateFinanceQuery("receipts", "transactions", "dashboard-snapshot", "report-snapshot", "report-kpis");
+    const transactionLabel = selectedTransaction?.label ?? "Unassigned";
+
+    setReceipts((current) => current.map((item) => {
+      if (item.id !== receipt.id) return item;
+
+      return {
+        ...item,
+        file: newFileName,
+        transactionId,
+        transaction: transactionLabel,
+        status: transactionId ? item.status : "Unassigned",
+      };
+    }));
+
+    refreshReceiptData();
+
     close();
   }
 
@@ -226,7 +276,9 @@ export function useReceiptEditor({ cacheScope, setReceipts }: UseReceiptEditorOp
     }
 
     const formData = new FormData();
+
     formData.append("file", file);
+
     formData.append("fileName", fileName.trim());
 
     const transactionId = transactionIdOrNull(transaction);
@@ -241,8 +293,17 @@ export function useReceiptEditor({ cacheScope, setReceipts }: UseReceiptEditorOp
       return;
     }
 
-    invalidateFinanceQuery("receipts", "transactions", "dashboard-snapshot", "report-snapshot", "report-kpis");
+    refreshReceiptData();
+
     close();
+  }
+
+  function openImagePreview() {
+    setImagePreviewOpen(true);
+  }
+
+  function closeImagePreview() {
+    setImagePreviewOpen(false);
   }
 
   return {
@@ -263,8 +324,8 @@ export function useReceiptEditor({ cacheScope, setReceipts }: UseReceiptEditorOp
     handleFileChange,
     setFileName,
     setTransaction,
-    openImagePreview: () => setImagePreviewOpen(true),
-    closeImagePreview: () => setImagePreviewOpen(false),
+    openImagePreview,
+    closeImagePreview,
     removeSelectedFile,
     close,
     save,

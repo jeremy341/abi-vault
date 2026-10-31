@@ -24,13 +24,17 @@ type CachedQueryState<T> = {
   fresh: boolean;
 };
 
+function isSameQuery<T extends QueryResult>(state: QueryState<T>, key: string, scope: string) {
+  return state.key === key && state.scope === scope;
+}
+
 export function selectQueryState<T extends QueryResult>(
   state: QueryState<T>,
   key: string,
   scope: string,
   cached: CachedQueryState<T>,
 ) {
-  if (state.key === key && state.scope === scope) {
+  if (isSameQuery(state, key, scope)) {
     return {
       data: state.data,
       loading: state.loading,
@@ -39,10 +43,12 @@ export function selectQueryState<T extends QueryResult>(
     };
   }
 
+  const hasCachedData = cached.data !== undefined;
+
   return {
     data: cached.data,
-    loading: cached.data === undefined,
-    refreshing: cached.data !== undefined && !cached.fresh,
+    loading: !hasCachedData,
+    refreshing: hasCachedData && !cached.fresh,
     failed: false,
   };
 }
@@ -53,13 +59,14 @@ export function useFinanceQuery<T extends QueryResult>(
   scope: string,
 ) {
   const cached = getFinanceCacheState<T>(key, scope);
+  const hasCachedData = cached.data !== undefined;
 
   const [state, setState] = useState<QueryState<T>>(() => ({
     key,
     scope,
     data: cached.data,
-    loading: cached.data === undefined,
-    refreshing: cached.data !== undefined && !cached.fresh,
+    loading: !hasCachedData,
+    refreshing: hasCachedData && !cached.fresh,
     failed: false,
   }));
 
@@ -71,25 +78,33 @@ export function useFinanceQuery<T extends QueryResult>(
     function applyResult(result: T) {
       if (!active) return;
 
-      setState((current) => ({
-        key,
-        scope,
-        data: result.ok
-          ? result
-          : current.key === key && current.scope === scope
-            ? current.data
-            : undefined,
-        loading: false,
-        refreshing: false,
-        failed: !result.ok,
-      }));
+      setState((current) => {
+        let data: T | undefined;
+
+        if (result.ok) {
+          data = result;
+        } else if (isSameQuery(current, key, scope)) {
+          data = current.data;
+        } else {
+          data = undefined;
+        }
+
+        return {
+          key,
+          scope,
+          data,
+          loading: false,
+          refreshing: false,
+          failed: !result.ok,
+        };
+      });
     }
 
     function markFailed() {
       if (!active) return;
 
       setState((current) => {
-        if (current.key !== key || current.scope !== scope) return current;
+        if (!isSameQuery(current, key, scope)) return current;
 
         return { ...current, loading: false, refreshing: false, failed: true };
       });
@@ -109,31 +124,40 @@ export function useFinanceQuery<T extends QueryResult>(
 
   const refetch = useCallback(() => {
     invalidateFinanceQuery(key);
-    setState((current) =>
-      current.key === key && current.scope === scope
-        ? { ...current, refreshing: true, failed: false }
-        : current,
-    );
+
+    setState((current) => {
+      if (!isSameQuery(current, key, scope)) return current;
+
+      return { ...current, refreshing: true, failed: false };
+    });
 
     cachedFinanceQuery(key, query, { scope })
       .then((result) => {
         setState((current) => {
-          if (current.key !== key || current.scope !== scope) return current;
+          if (!isSameQuery(current, key, scope)) return current;
+
+          let data: T | undefined;
+
+          if (result.ok) {
+            data = result;
+          } else {
+            data = current.data;
+          }
 
           return {
             ...current,
-            data: result.ok ? result : current.data,
+            data,
             refreshing: false,
             failed: !result.ok,
           };
         });
       })
       .catch(() => {
-        setState((current) =>
-          current.key === key && current.scope === scope
-            ? { ...current, refreshing: false, failed: true }
-            : current,
-        );
+        setState((current) => {
+          if (!isSameQuery(current, key, scope)) return current;
+
+          return { ...current, refreshing: false, failed: true };
+        });
       });
   }, [key, query, scope]);
 

@@ -62,9 +62,17 @@ type RoleInviteLink = {
   expiresAt: string;
 };
 
+type RoleLinks = Partial<Record<RoleInviteLink["role"], RoleInviteLink>>;
+
 type RoleLinksState = {
   scope: string;
-  links: Partial<Record<RoleInviteLink["role"], RoleInviteLink>>;
+  links: RoleLinks;
+};
+
+type RoleCounts = {
+  administrators: number;
+  supervisors: number;
+  members: number;
 };
 
 type MemberListData = Extract<Awaited<ReturnType<typeof listMembersForCurrentOrganization>>, { ok: true }>;
@@ -117,8 +125,256 @@ function peopleFromMemberList(data: MemberListData): Person[] {
   }));
 }
 
+type MemberTableProps = {
+  loading: boolean;
+  people: Person[];
+  filteredPeople: Person[];
+  busyPersonId: string | null;
+  onChangeRole: (personId: string) => void;
+  onRemove: (personId: string) => void;
+};
+
+function MemberTable({
+  loading,
+  people,
+  filteredPeople,
+  busyPersonId,
+  onChangeRole,
+  onRemove,
+}: MemberTableProps) {
+  return (
+    <div className={ledger.tableWrap}>
+      <LoadingCollection loading={loading} knownItemCount={people.length} emptyHeight="12rem" label="Loading members">
+        {!loading && !filteredPeople.length ? (
+          <p className={ledger.empty}>No members found.</p>
+        ) : (
+          <table className={ledger.table}>
+            <thead>
+              <tr>
+                <th scope="col">Name</th>
+                <th scope="col" className={ledger.hideOnPhone}>Role</th>
+                <th scope="col" className={ledger.hideOnPhone}>Access</th>
+                <th scope="col">Status</th>
+                <th scope="col" className={ledger.actions}><span className="sr-only">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredPeople.map((person) => (
+                <tr key={person.id}>
+                  <td>
+                    <span className={ledger.title}>{person.name}</span>
+                    <span className={ledger.phoneMeta}>{person.role}</span>
+                  </td>
+                  <td className={ledger.hideOnPhone}>{person.role}</td>
+                  <td className={`${ledger.muted} ${ledger.hideOnPhone}`}>{person.access}</td>
+                  <td className={person.status === "Active" ? ledger.muted : ledger.attention}>{person.status}</td>
+                  <td className={ledger.actions}>
+                    {person.status !== "Active" ? (
+                      <span className={ledger.rowMeta} title="Only active members can be managed here.">
+                        No actions
+                      </span>
+                    ) : (
+                      <span className={ledger.inlineActions}>
+                        <button type="button" className={`${ledger.textButton} ${styles.rowAction}`} onClick={() => onChangeRole(person.id)} disabled={busyPersonId === person.id} aria-label={`Change role for ${person.name}`}>
+                          Change role
+                        </button>
+                        <button type="button" className={`${ledger.textButton} ${styles.rowAction}`} onClick={() => void onRemove(person.id)} disabled={busyPersonId === person.id} aria-label={`Remove ${person.name}`}>
+                          Remove
+                        </button>
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </LoadingCollection>
+    </div>
+  );
+}
+
+type RolesSummaryProps = {
+  counts: RoleCounts;
+};
+
+function RolesSummary({ counts }: RolesSummaryProps) {
+  return (
+    <section className={ledger.section}>
+      <header className={ledger.sectionHeader}>
+        <h2>Roles</h2>
+      </header>
+      <dl className={`${ledger.definitions} ${styles.roles}`}>
+        <div>
+          <dt>Administrator ({counts.administrators})</dt>
+          <dd>Full access to everything</dd>
+        </div>
+        <div>
+          <dt>Supervisor ({counts.supervisors})</dt>
+          <dd>Manages finances and reviews receipts</dd>
+        </div>
+        <div>
+          <dt>Member ({counts.members})</dt>
+          <dd>Read-only view of totals and goals</dd>
+        </div>
+      </dl>
+    </section>
+  );
+}
+
+type InviteLinksProps = {
+  roleLinks: RoleLinks;
+  linkSaving: RoleInviteLink["role"] | null;
+  onCreateLink: (role: RoleInviteLink["role"]) => void;
+  onCopyLink: (role: RoleInviteLink["role"]) => void;
+};
+
+function InviteLinks({ roleLinks, linkSaving, onCreateLink, onCopyLink }: InviteLinksProps) {
+  return (
+    <section className={ledger.section}>
+      <header className={ledger.sectionHeader}>
+        <h2>Invitation links</h2>
+        <p>Share a link instead of an email invitation.</p>
+      </header>
+      <ul className={ledger.list}>
+        {(["supervisor", "admin"] as const).map((role) => {
+          const link = roleLinks[role];
+
+          return (
+            <li key={role} className={ledger.row} data-columns="link">
+              <span className={ledger.rowTitle}>
+                <span>{role === "admin" ? "Admin link" : "Supervisor link"}</span>
+                <span className={ledger.rowMeta}>
+                  {role === "admin" ? "Full access to the workspace and settings." : "Manage finances and review reports."}
+                </span>
+                {link ? <code className={ledger.code}>{link.url}</code> : null}
+              </span>
+              {link ? (
+                <button type="button" className={ledger.secondaryButton} onClick={() => void onCopyLink(role)} aria-label={`Copy ${role} link`}>
+                  Copy
+                </button>
+              ) : (
+                <button type="button" className={ledger.secondaryButton} onClick={() => void onCreateLink(role)} disabled={linkSaving !== null} aria-busy={linkSaving === role}>
+                  {linkSaving === role ? "Creating" : "Create link"}
+                </button>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
+type InviteDialogProps = {
+  inviteEmail: string;
+  newRole: InviteRole;
+  message: string;
+  inviteSaving: boolean;
+  onEmailChange: (value: string) => void;
+  onRoleChange: (role: InviteRole) => void;
+  onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
+  onClose: () => void;
+};
+
+function InviteDialog({
+  inviteEmail,
+  newRole,
+  message,
+  inviteSaving,
+  onEmailChange,
+  onRoleChange,
+  onSubmit,
+  onClose,
+}: InviteDialogProps) {
+  return (
+    <Dialog
+      label="Add person"
+      onClose={onClose}
+      overlayClassName={styles.overlay}
+      dialogClassName={styles.modal}
+    >
+      <form onSubmit={onSubmit}>
+        <header className={styles.modalHeader}>
+          <div>
+            <h2>Invite member</h2>
+            <p>
+              The person receives an invitation by email and joins your
+              Abi Vault workspace.
+            </p>
+          </div>
+          <button
+            type="button"
+            className={styles.closeButton}
+            onClick={onClose}
+            disabled={inviteSaving}
+            aria-label="Close dialog"
+          >
+            <X aria-hidden="true" />
+          </button>
+        </header>
+        <div className={styles.modalBody}>
+          <label className={styles.formField}>
+            <span>Email address</span>
+            <input
+              name="inviteEmail"
+              type="email"
+              autoComplete="email"
+              required
+              value={inviteEmail}
+              onChange={(event) => onEmailChange(event.target.value)}
+              placeholder="name@example.com"
+            />
+          </label>
+          <label className={styles.formField}>
+            <span>Role</span>
+            <select
+              name="personRole"
+              value={newRole}
+              onChange={(event) => {
+                const value = event.target.value;
+
+                if (value === "Administrator" || value === "Supervisor") {
+                  onRoleChange(value);
+                }
+              }}
+            >
+              <option>Supervisor</option>
+              <option>Administrator</option>
+            </select>
+          </label>
+          {message ? (
+            <p className={styles.formMessage} role="status">
+              {message}
+            </p>
+          ) : null}
+        </div>
+        <footer className={styles.modalFooter}>
+          <button
+            type="button"
+            className={styles.secondaryButton}
+            onClick={onClose}
+            disabled={inviteSaving}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className={styles.primaryButton}
+            disabled={inviteSaving}
+            aria-busy={inviteSaving}
+          >
+            {inviteSaving ? "Sending" : "Send invitation"}
+          </button>
+        </footer>
+      </form>
+    </Dialog>
+  );
+}
+
 export default function PeoplePage() {
   const { orgId, userId } = useAppAuth();
+
   const scope = financeScope(orgId, userId);
 
   const memberQuery = useFinanceQuery(
@@ -134,19 +390,31 @@ export default function PeoplePage() {
   );
 
   const loading = memberQuery.loading;
+
   const loadError = memberQuery.failed ? "The members could not be loaded." : "";
+
   const people = loading || memberQuery.failed ? emptyPeople : loadedPeople;
 
   const [query, setQuery] = useState("");
+
   const [modalOpen, setModalOpen] = useState(false);
+
   const [newRole, setNewRole] = useState<InviteRole>("Supervisor");
+
   const [inviteEmail, setInviteEmail] = useState("");
+
   const [messageState, setMessageState] = useState<{ scope: string; value: string } | null>(null);
+
   const message = messageState?.scope === scope ? messageState.value : "";
+
   const [busyPersonId, setBusyPersonId] = useState<string | null>(null);
+
   const [inviteSaving, setInviteSaving] = useState(false);
+
   const [linkSaving, setLinkSaving] = useState<"admin" | "supervisor" | null>(null);
+
   const [roleLinkState, setRoleLinkState] = useState<RoleLinksState | null>(null);
+
   const roleLinks = roleLinkState?.scope === scope ? roleLinkState.links : {};
 
   function setMessage(value: string) {
@@ -168,15 +436,21 @@ export default function PeoplePage() {
 
   function openInviteModal() {
     setInviteEmail("");
+
     setNewRole("Supervisor");
+
     setMessage("");
+
     setModalOpen(true);
   }
 
   function closeModal() {
     setModalOpen(false);
+
     setNewRole("Supervisor");
+
     setInviteEmail("");
+
     setMessage("");
   }
 
@@ -218,6 +492,7 @@ export default function PeoplePage() {
           : item,
       ),
     );
+
     setMessage("Role updated.");
   }
 
@@ -252,6 +527,7 @@ export default function PeoplePage() {
       }
 
       setInviteEmail("");
+
       setMessage(`Invitation sent to ${email}.`);
     } catch {
       setMessage("The invitation could not be sent.");
@@ -282,6 +558,7 @@ export default function PeoplePage() {
       }
 
       setPeople((current) => current.filter((person) => person.id !== personId));
+
       setMessage("Person removed.");
     } catch {
       setMessage("The person could not be removed.");
@@ -294,6 +571,7 @@ export default function PeoplePage() {
     if (linkSaving) return;
 
     setLinkSaving(role);
+
     setMessage("");
 
     try {
@@ -310,6 +588,7 @@ export default function PeoplePage() {
 
         return { scope, links: { ...previousLinks, [role]: result.data } };
       });
+
       setMessage(`${role === "admin" ? "Admin" : "Supervisor"} link created.`);
     } catch {
       setMessage("The invitation link could not be created.");
@@ -325,6 +604,7 @@ export default function PeoplePage() {
 
     try {
       await navigator.clipboard.writeText(link.url);
+
       setMessage("Invitation link copied.");
     } catch {
       setMessage("The link could not be copied. Select and copy it manually.");
@@ -371,189 +651,39 @@ export default function PeoplePage() {
             </label>
           </div>
 
-          <div className={ledger.tableWrap}>
-            <LoadingCollection loading={loading} knownItemCount={people.length} emptyHeight="12rem" label="Loading members">
-              {!loading && !filteredPeople.length ? (
-                <p className={ledger.empty}>No members found.</p>
-              ) : (
-                <table className={ledger.table}>
-                  <thead>
-                    <tr>
-                      <th scope="col">Name</th>
-                      <th scope="col" className={ledger.hideOnPhone}>Role</th>
-                      <th scope="col" className={ledger.hideOnPhone}>Access</th>
-                      <th scope="col">Status</th>
-                      <th scope="col" className={ledger.actions}><span className="sr-only">Actions</span></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredPeople.map((person) => (
-                      <tr key={person.id}>
-                        <td>
-                          <span className={ledger.title}>{person.name}</span>
-                          <span className={ledger.phoneMeta}>{person.role}</span>
-                        </td>
-                        <td className={ledger.hideOnPhone}>{person.role}</td>
-                        <td className={`${ledger.muted} ${ledger.hideOnPhone}`}>{person.access}</td>
-                        <td className={person.status === "Active" ? ledger.muted : ledger.attention}>{person.status}</td>
-                        <td className={ledger.actions}>
-                          {person.status !== "Active" ? (
-                            <span className={ledger.rowMeta} title="Only active members can be managed here.">
-                              No actions
-                            </span>
-                          ) : (
-                            <span className={ledger.inlineActions}>
-                              <button type="button" className={`${ledger.textButton} ${styles.rowAction}`} onClick={() => changeRole(person.id)} disabled={busyPersonId === person.id} aria-label={`Change role for ${person.name}`}>
-                                Change role
-                              </button>
-                              <button type="button" className={`${ledger.textButton} ${styles.rowAction}`} onClick={() => void removePerson(person.id)} disabled={busyPersonId === person.id} aria-label={`Remove ${person.name}`}>
-                                Remove
-                              </button>
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </LoadingCollection>
-          </div>
+          <MemberTable
+            loading={loading}
+            people={people}
+            filteredPeople={filteredPeople}
+            busyPersonId={busyPersonId}
+            onChangeRole={changeRole}
+            onRemove={removePerson}
+          />
           <p className={`${ledger.notice} ${styles.notice}`} aria-live="polite">{message}</p>
         </div>
 
         <div className={ledger.col}>
-          <section className={ledger.section}>
-            <header className={ledger.sectionHeader}>
-              <h2>Roles</h2>
-            </header>
-            <dl className={`${ledger.definitions} ${styles.roles}`}>
-              <div>
-                <dt>Administrator ({counts.administrators})</dt>
-                <dd>Full access to everything</dd>
-              </div>
-              <div>
-                <dt>Supervisor ({counts.supervisors})</dt>
-                <dd>Manages finances and reviews receipts</dd>
-              </div>
-              <div>
-                <dt>Member ({counts.members})</dt>
-                <dd>Read-only view of totals and goals</dd>
-              </div>
-            </dl>
-          </section>
-
-          <section className={ledger.section}>
-            <header className={ledger.sectionHeader}>
-              <h2>Invitation links</h2>
-              <p>Share a link instead of an email invitation.</p>
-            </header>
-            <ul className={ledger.list}>
-              {(["supervisor", "admin"] as const).map((role) => {
-                const link = roleLinks[role];
-
-                return (
-                  <li key={role} className={ledger.row} data-columns="link">
-                    <span className={ledger.rowTitle}>
-                      <span>{role === "admin" ? "Admin link" : "Supervisor link"}</span>
-                      <span className={ledger.rowMeta}>
-                        {role === "admin" ? "Full access to the workspace and settings." : "Manage finances and review reports."}
-                      </span>
-                      {link ? <code className={ledger.code}>{link.url}</code> : null}
-                    </span>
-                    {link ? (
-                      <button type="button" className={ledger.secondaryButton} onClick={() => void copyLink(role)} aria-label={`Copy ${role} link`}>
-                        Copy
-                      </button>
-                    ) : (
-                      <button type="button" className={ledger.secondaryButton} onClick={() => void createLink(role)} disabled={linkSaving !== null} aria-busy={linkSaving === role}>
-                        {linkSaving === role ? "Creating" : "Create link"}
-                      </button>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
+          <RolesSummary counts={counts} />
+          <InviteLinks
+            roleLinks={roleLinks}
+            linkSaving={linkSaving}
+            onCreateLink={createLink}
+            onCopyLink={copyLink}
+          />
         </div>
       </div>
 
       {modalOpen ? (
-        <Dialog
-          label="Add person"
+        <InviteDialog
+          inviteEmail={inviteEmail}
+          newRole={newRole}
+          message={message}
+          inviteSaving={inviteSaving}
+          onEmailChange={setInviteEmail}
+          onRoleChange={setNewRole}
+          onSubmit={addPerson}
           onClose={closeModal}
-          overlayClassName={styles.overlay}
-          dialogClassName={styles.modal}
-        >
-          <form onSubmit={addPerson}>
-            <header className={styles.modalHeader}>
-              <div>
-                <h2>Invite member</h2>
-                <p>
-                  The person receives an invitation by email and joins your
-                  Abi Vault workspace.
-                </p>
-              </div>
-              <button
-                type="button"
-                className={styles.closeButton}
-                onClick={closeModal}
-                disabled={inviteSaving}
-                aria-label="Close dialog"
-              >
-                <X aria-hidden="true" />
-              </button>
-            </header>
-            <div className={styles.modalBody}>
-              <label className={styles.formField}>
-                <span>Email address</span>
-                <input
-                  name="inviteEmail"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={inviteEmail}
-                  onChange={(event) => setInviteEmail(event.target.value)}
-                  placeholder="name@example.com"
-                />
-              </label>
-              <label className={styles.formField}>
-                <span>Role</span>
-                <select
-                  name="personRole"
-                  value={newRole}
-                  onChange={(event) => setNewRole(event.target.value as InviteRole)}
-                >
-                  <option>Supervisor</option>
-                  <option>Administrator</option>
-                </select>
-              </label>
-              {message ? (
-                <p className={styles.formMessage} role="status">
-                  {message}
-                </p>
-              ) : null}
-            </div>
-            <footer className={styles.modalFooter}>
-              <button
-                type="button"
-                className={styles.secondaryButton}
-                onClick={closeModal}
-                disabled={inviteSaving}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className={styles.primaryButton}
-                disabled={inviteSaving}
-                aria-busy={inviteSaving}
-              >
-                {inviteSaving ? "Sending" : "Send invitation"}
-              </button>
-            </footer>
-          </form>
-        </Dialog>
+        />
       ) : null}
     </section>
   );

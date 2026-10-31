@@ -15,6 +15,8 @@ type CashRegister = { id: string; name: string };
 
 type TransactionType = "Einnahme" | "Ausgabe";
 
+type TransactionDirection = "income" | "expense";
+
 type UseTransactionEditorOptions = {
   cashRegisters: readonly CashRegister[];
   userId: string | null;
@@ -23,7 +25,7 @@ type UseTransactionEditorOptions = {
   onCreated: () => void;
 };
 
-function directionFor(type: TransactionType): "income" | "expense" {
+function directionFor(type: TransactionType): TransactionDirection {
   if (type === "Einnahme") {
     return "income";
   }
@@ -45,6 +47,35 @@ function signedAmountFor(parsedAmount: number, type: TransactionType) {
   }
 
   return Math.abs(parsedAmount);
+}
+
+function categoryNamesFor(
+  direction: TransactionDirection,
+  editing: Transaction | null,
+): string[] {
+  let names: string[] = ["Material", "Sonstiges", "Veranstaltung"];
+
+  if (direction === "income") {
+    names = ["Sales"];
+  }
+
+  if (editing && editing.type === direction && !names.includes(editing.category)) {
+    names = [editing.category, ...names];
+  }
+
+  return names;
+}
+
+function amountToInputText(amount: number) {
+  return Math.abs(amount).toFixed(2).replace(".", ",");
+}
+
+function parseAmountInput(text: string) {
+  return Number(text.replace(",", "."));
+}
+
+function refreshFinanceQueries() {
+  invalidateFinanceQuery("transactions", "wallets", "dashboard-snapshot", "report-snapshot", "report-kpis");
 }
 
 export function useTransactionEditor({
@@ -70,82 +101,127 @@ export function useTransactionEditor({
 
   const idempotencyKey = useRef<string | null>(null);
 
-  const activeCashRegisterId = selectedCashRegisterId || cashRegisters[0]?.id || "";
+  const firstCashRegisterId = cashRegisters[0]?.id ?? "";
+  const activeCashRegisterId = selectedCashRegisterId || firstCashRegisterId;
 
   const transactionDirection = directionFor(type);
-
-  const categoryOptionNames: string[] = transactionDirection === "income"
-    ? ["Sales"]
-    : ["Material", "Sonstiges", "Veranstaltung"];
-
-  if (editing?.type === transactionDirection && !categoryOptionNames.includes(editing.category)) {
-    categoryOptionNames.unshift(editing.category);
-  }
-
+  const categoryOptionNames = categoryNamesFor(transactionDirection, editing);
   const categoryOptions = categoryOptionNames.map((value) => ({ value, label: value }));
 
   function clearIdempotencyKey() {
     idempotencyKey.current = null;
   }
 
+  function getRequestKey(): string {
+    const existingKey = idempotencyKey.current;
+
+    if (existingKey !== null) {
+      return existingKey;
+    }
+
+    const newKey = `ui-${crypto.randomUUID()}`;
+
+    idempotencyKey.current = newKey;
+
+    return newKey;
+  }
+
   function openAdd() {
     clearIdempotencyKey();
+
     setEditing(null);
+
     setTitle("");
+
     setAmount("");
+
     setCategory(defaultCategoryFor(type));
+
     setCorrectionReason("");
+
     setError("");
+
     setOpen(true);
   }
 
   function openEdit(transaction: Transaction) {
     clearIdempotencyKey();
+
     setEditing(transaction);
+
     setTitle(transaction.title);
-    setAmount(Math.abs(transaction.amount).toFixed(2).replace(".", ","));
-    setType(transaction.type === "income" ? "Einnahme" : "Ausgabe");
+
+    setAmount(amountToInputText(transaction.amount));
+
+    if (transaction.type === "income") {
+      setType("Einnahme");
+    } else {
+      setType("Ausgabe");
+    }
+
     setCategory(transaction.category);
+
     setCorrectionReason("");
+
     setError("");
+
     setOpen(true);
   }
 
   function close() {
-    if (saving) return;
+    if (saving) {
+      return;
+    }
 
     clearIdempotencyKey();
+
     setOpen(false);
+
     setEditing(null);
+
     setCorrectionReason("");
+
     setError("");
   }
 
+  function hasCompleteInput(parsedAmount: number) {
+    if (title.trim() === "") {
+      return false;
+    }
+
+    if (!Number.isFinite(parsedAmount)) {
+      return false;
+    }
+
+    if (editing) {
+      return correctionReason.trim().length > 0;
+    }
+
+    return activeCashRegisterId.length > 0;
+  }
+
   async function save() {
-    if (saving) return;
+    if (saving) {
+      return;
+    }
 
-    const parsedAmount = Number(amount.replace(",", "."));
+    const parsedAmount = parseAmountInput(amount);
 
-    if (
-      !title.trim() ||
-      !Number.isFinite(parsedAmount) ||
-      (!editing && !activeCashRegisterId) ||
-      (editing && !correctionReason.trim())
-    ) {
-      setError(
-        editing
-          ? "Complete the description, amount, and correction reason."
-          : "Complete the cash register, description, and amount.",
-      );
+    if (!hasCompleteInput(parsedAmount)) {
+      if (editing) {
+        setError("Complete the description, amount, and correction reason.");
+      } else {
+        setError("Complete the cash register, description, and amount.");
+      }
 
       return;
     }
 
     setSaving(true);
+
     setError("");
 
-    const requestKey = idempotencyKey.current ?? `ui-${crypto.randomUUID()}`;
-    idempotencyKey.current = requestKey;
+    const requestKey = getRequestKey();
 
     try {
       if (editing) {
@@ -161,7 +237,9 @@ export function useTransactionEditor({
   }
 
   async function saveCorrection(parsedAmount: number, requestKey: string) {
-    if (!editing) return;
+    if (!editing) {
+      return;
+    }
 
     const result = await correctTransactionFromUi({
       transactionId: editing.id.toString(),
@@ -179,8 +257,10 @@ export function useTransactionEditor({
       return;
     }
 
+    const editedTransactionId = editing.id;
+
     setItems((current) => current.map((transaction) => {
-      if (transaction.id !== editing.id) {
+      if (transaction.id !== editedTransactionId) {
         return transaction;
       }
 
@@ -203,11 +283,14 @@ export function useTransactionEditor({
     }));
 
     setOpen(false);
+
     setEditing(null);
+
     setCorrectionReason("");
+
     clearIdempotencyKey();
 
-    invalidateFinanceQuery("transactions", "wallets", "dashboard-snapshot", "report-snapshot", "report-kpis");
+    refreshFinanceQueries();
 
     refetch();
   }
@@ -253,42 +336,53 @@ export function useTransactionEditor({
     ]);
 
     setTitle("");
+
     setAmount("");
+
     setOpen(false);
+
     clearIdempotencyKey();
+
     onCreated();
 
-    invalidateFinanceQuery("transactions", "wallets", "dashboard-snapshot", "report-snapshot", "report-kpis");
+    refreshFinanceQueries();
   }
 
   function changeTitle(value: string) {
     clearIdempotencyKey();
+
     setTitle(value);
   }
 
   function changeAmount(value: string) {
     clearIdempotencyKey();
+
     setAmount(value);
   }
 
   function changeCategory(value: Category) {
     clearIdempotencyKey();
+
     setCategory(value);
   }
 
   function changeType(value: TransactionType) {
     clearIdempotencyKey();
+
     setType(value);
+
     setCategory(defaultCategoryFor(value));
   }
 
   function changeCorrectionReason(value: string) {
     clearIdempotencyKey();
+
     setCorrectionReason(value);
   }
 
   function changeCashRegister(value: string) {
     clearIdempotencyKey();
+
     setSelectedCashRegisterId(value);
   }
 

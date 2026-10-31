@@ -30,9 +30,19 @@ const ClerkUserButton = dynamic(
 
 type NavigationRoute = (typeof navigationRoutes)[number];
 
+type MenuKind = "dialog" | "menu";
+
 const phonePrimaryCount = 3;
 
 const adminGroupStart = 6;
+
+function joinClasses(...classes: Array<string | false | null | undefined>) {
+  return classes.filter(Boolean).join(" ");
+}
+
+function isAdminOnlyRoute(route: NavigationRoute) {
+  return adminOnlyRoutes.some((adminRoute) => adminRoute === route.href);
+}
 
 function ShellUserButton({ localMode }: { localMode: boolean }) {
   if (localMode) {
@@ -59,11 +69,17 @@ function NavigationLink({
 }) {
   const active = isCurrentRoute(pathname, route.href);
 
+  let linkClassName = className;
+
+  if (active) {
+    linkClassName = joinClasses(className, activeClassName);
+  }
+
   return (
     <Link
       href={route.href}
       aria-current={active ? "page" : undefined}
-      className={`${className} ${active ? activeClassName : ""}`}
+      className={linkClassName}
     >
       {route.label}
     </Link>
@@ -80,7 +96,9 @@ function useDismiss(
 
     function onKey(event: KeyboardEvent) {
       if (event.key !== "Escape") return;
+
       setOpen(false);
+
       trigger.current?.focus();
     }
 
@@ -89,74 +107,67 @@ function useDismiss(
     }
 
     document.addEventListener("keydown", onKey);
+
     document.addEventListener("pointerdown", onPointer);
 
     return () => {
       document.removeEventListener("keydown", onKey);
+
       document.removeEventListener("pointerdown", onPointer);
     };
   }, [open, setOpen, trigger]);
 }
 
-function NotificationsMenu() {
+function TopbarMenu({
+  anchorClassName,
+  label,
+  showChevron = false,
+  kind,
+  popupLabel,
+  renderPopup,
+}: {
+  anchorClassName: string;
+  label: string;
+  showChevron?: boolean;
+  kind: MenuKind;
+  popupLabel: string;
+  renderPopup: (close: () => void) => React.ReactNode;
+}) {
   const [open, setOpen] = useState(false);
+
   const trigger = useRef<HTMLButtonElement>(null);
+
   useDismiss(open, setOpen, trigger);
+
+  function close() {
+    setOpen(false);
+  }
+
+  function toggle() {
+    setOpen((isOpen) => !isOpen);
+  }
 
   return (
     <div
-      className={`${styles.menuAnchor} ${styles.notifications}`}
+      className={anchorClassName}
       onPointerDown={(event) => event.stopPropagation()}
     >
       <button
         ref={trigger}
         type="button"
         className={styles.textButton}
-        aria-haspopup="dialog"
+        aria-haspopup={kind}
         aria-expanded={open}
-        onClick={() => setOpen((isOpen) => !isOpen)}
+        onClick={toggle}
       >
-        Notifications
+        {label}
+        {showChevron ? (
+          <ChevronDown aria-hidden="true" className={styles.chevron} />
+        ) : null}
       </button>
       {open ? (
-        <div className={styles.menu} role="dialog" aria-label="Notifications">
-          <p className={styles.menuNote}>No new notifications.</p>
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-function CohortMenu() {
-  const [open, setOpen] = useState(false);
-  const trigger = useRef<HTMLButtonElement>(null);
-  useDismiss(open, setOpen, trigger);
-
-  return (
-    <div
-      className={styles.menuAnchor}
-      onPointerDown={(event) => event.stopPropagation()}
-    >
-      <button
-        ref={trigger}
-        type="button"
-        className={styles.textButton}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        onClick={() => setOpen((isOpen) => !isOpen)}
-      >
-        Class of 2026
-        <ChevronDown aria-hidden="true" className={styles.chevron} />
-      </button>
-      {open ? (
-        <div className={styles.menu} role="menu" aria-label="Select class">
-          <button type="button" role="menuitem" onClick={() => setOpen(false)}>
-            <strong>Class of 2026</strong>
-            <small>Active</small>
-          </button>
-          <Link href="/dashboard/settings" role="menuitem" onClick={() => setOpen(false)}>
-            Manage classes
-          </Link>
+        <div className={styles.menu} role={kind} aria-label={popupLabel}>
+          {renderPopup(close)}
         </div>
       ) : null}
     </div>
@@ -171,10 +182,16 @@ function PhoneNavigation({
   pathname: string;
 }) {
   const primary = routes.slice(0, phonePrimaryCount);
+
   const secondary = routes.slice(phonePrimaryCount);
 
   const secondaryActive = secondary.some((route) =>
     isCurrentRoute(pathname, route.href),
+  );
+
+  const moreClassName = joinClasses(
+    styles.phoneNavLink,
+    secondaryActive && styles.phoneNavLinkActive,
   );
 
   return (
@@ -189,12 +206,13 @@ function PhoneNavigation({
         />
       ))}
       <Sheet>
-        <SheetTrigger
-          className={`${styles.phoneNavLink} ${secondaryActive ? styles.phoneNavLinkActive : ""}`}
+        <SheetTrigger className={moreClassName}>More</SheetTrigger>
+        <SheetContent
+          side="bottom"
+          className={styles.sheet}
+          dragDismiss
+          dragHandleClassName={styles.sheetHandle}
         >
-          More
-        </SheetTrigger>
-        <SheetContent side="bottom" className={styles.sheet} dragDismiss dragHandleClassName={styles.sheetHandle}>
           <SheetHeader>
             <SheetTitle>More</SheetTitle>
             <SheetDescription className={styles.visuallyHidden}>
@@ -233,14 +251,19 @@ export default function ResponsiveDashboardShell({
   demoMode?: boolean;
 }) {
   const pathname = usePathname();
+
   const page = pageInformationFor(pathname);
 
-  const visibleRoutes = navigationRoutes.filter(
-    (route) =>
-      isAdmin || !adminOnlyRoutes.some((adminRoute) => adminRoute === route.href),
-  );
+  const visibleRoutes = navigationRoutes.filter((route) => {
+    if (isAdmin) {
+      return true;
+    }
+
+    return !isAdminOnlyRoute(route);
+  });
 
   const mainRoutes = visibleRoutes.slice(0, adminGroupStart);
+
   const adminRoutes = visibleRoutes.slice(adminGroupStart);
 
   return (
@@ -285,13 +308,47 @@ export default function ResponsiveDashboardShell({
 
       <div className={styles.workspace}>
         {demoMode ? (
-          <p className={styles.demoNotice}>Demo with sample data. Changes are not saved.</p>
+          <p className={styles.demoNotice}>
+            Demo with sample data. Changes are not saved.
+          </p>
         ) : null}
         <header className={styles.topbar}>
           <h1 className={styles.title}>{page.title}</h1>
           <div className={styles.actions}>
-            <CohortMenu />
-            <NotificationsMenu />
+            <TopbarMenu
+              anchorClassName={styles.menuAnchor}
+              label="Class of 2026"
+              showChevron
+              kind="menu"
+              popupLabel="Select class"
+              renderPopup={(close) => (
+                <>
+                  <button type="button" role="menuitem" onClick={close}>
+                    <strong>Class of 2026</strong>
+                    <small>Active</small>
+                  </button>
+                  <Link
+                    href="/dashboard/settings"
+                    role="menuitem"
+                    onClick={close}
+                  >
+                    Manage classes
+                  </Link>
+                </>
+              )}
+            />
+            <TopbarMenu
+              anchorClassName={joinClasses(
+                styles.menuAnchor,
+                styles.notifications,
+              )}
+              label="Notifications"
+              kind="dialog"
+              popupLabel="Notifications"
+              renderPopup={() => (
+                <p className={styles.menuNote}>No new notifications.</p>
+              )}
+            />
             <ShellUserButton localMode={localMode} />
           </div>
         </header>

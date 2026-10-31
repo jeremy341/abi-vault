@@ -11,10 +11,17 @@ import { querySuccess } from "@/lib/finance/query-result";
 import { financeDateKey } from "@/lib/finance/date-keys";
 import { mapFinanceSnapshotWallet, readFinanceSnapshot } from "./finance-snapshot";
 
+function formatShortMonth(date: Date) {
+  return date.toLocaleDateString("en-GB", { month: "short", timeZone: "UTC" }).replace(".", "");
+}
+
 export async function getReportKpisForCurrentOrganization() {
   if (isDemoData()) return demoData.reportKpis;
+
   await requireClerkContext();
+
   const supabase = await createSupabaseServerClient();
+
   const snapshot = await readFinanceSnapshot(supabase);
 
   if (!snapshot.ok) return snapshot;
@@ -54,13 +61,13 @@ export async function getDashboardSnapshot() {
 
   if (financeSnapshot && !financeSnapshot.ok) return { ok: false as const };
 
-  const wallets = financeSnapshot?.ok && financeSnapshot.wallets.length > 0
+  const hasFinanceWallets = financeSnapshot?.ok && financeSnapshot.wallets.length > 0;
+
+  const wallets = hasFinanceWallets
     ? querySuccess({ items: financeSnapshot.wallets.map(mapFinanceSnapshotWallet) })
     : await listWalletsForCurrentOrganization({ includeBalances: false });
 
   if (!wallets.ok) return { ok: false as const };
-
-  const hasFinanceWallets = financeSnapshot?.ok && financeSnapshot.wallets.length > 0;
 
   const projectionTransactions = hasFinanceWallets
     ? []
@@ -98,7 +105,6 @@ export async function getDashboardSnapshot() {
   });
 }
 
-
 export async function getReportSnapshot() {
   const [goals, financeSnapshot] = await Promise.all([
     listGoalsForCurrentOrganization(),
@@ -111,13 +117,13 @@ export async function getReportSnapshot() {
 
   if (financeSnapshot && !financeSnapshot.ok) return { ok: false as const };
 
-  if (financeSnapshot?.ok && financeSnapshot.wallets.length > 0) {
-    const goalItems = goals.items.map((goal) => ({
-      name: goal.title,
-      saved: Number(goal.saved_amount_minor) / 100,
-      target: Number(goal.target_amount_minor) / 100,
-    }));
+  const goalItems = goals.items.map((goal) => ({
+    name: goal.title,
+    saved: Number(goal.saved_amount_minor) / 100,
+    target: Number(goal.target_amount_minor) / 100,
+  }));
 
+  if (financeSnapshot?.ok && financeSnapshot.wallets.length > 0) {
     if (!financeSnapshot.transactionCount) {
       return querySuccess({
         cashflow: [],
@@ -131,7 +137,7 @@ export async function getReportSnapshot() {
 
     const cashflow = financeSnapshot.monthlyFlow.map((month) => {
       const date = new Date(`${month.monthKey}-01T00:00:00.000Z`);
-      const monthLabel = date.toLocaleDateString("en-GB", { month: "short", timeZone: "UTC" }).replace(".", "");
+      const monthLabel = formatShortMonth(date);
 
       return {
         month: monthLabel,
@@ -149,7 +155,7 @@ export async function getReportSnapshot() {
 
     const analysisBalance = financeSnapshot.analysisBalance.map((month) => {
       const date = new Date(`${month.monthKey}-01T00:00:00.000Z`);
-      const monthLabel = date.toLocaleDateString("en-GB", { month: "short", timeZone: "UTC" }).replace(".", "");
+      const monthLabel = formatShortMonth(date);
 
       return {
         month: `${monthLabel} ${date.getUTCFullYear()}`,
@@ -176,12 +182,13 @@ export async function getReportSnapshot() {
   if (!transactions.ok) return { ok: false as const };
 
   const currentDateKey = financeDateKey(new Date());
+
   const [currentYear, currentMonth] = currentDateKey.split("-").map(Number);
 
   const months = Array.from({ length: 6 }, (_, monthIndex) => {
     const date = new Date(Date.UTC(currentYear, currentMonth - 6 + monthIndex, 1));
     const key = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
-    const label = date.toLocaleDateString("en-GB", { month: "short", timeZone: "UTC" }).replace(".", "");
+    const label = formatShortMonth(date);
 
     return { key, label, year: date.getUTCFullYear() };
   });
@@ -208,11 +215,7 @@ export async function getReportSnapshot() {
     return querySuccess({
       cashflow: [],
       categories: [],
-      goals: goals.items.map((goal) => ({
-        name: goal.title,
-        saved: Number(goal.saved_amount_minor) / 100,
-        target: Number(goal.target_amount_minor) / 100,
-      })),
+      goals: goalItems,
       analysisBalance: [],
       analysisFlow: [],
       reviewItems: [],
@@ -227,14 +230,17 @@ export async function getReportSnapshot() {
     share: category.progress,
   }));
 
-  let balanceMinor = wallets.items.reduce(
-    (sum, wallet) => sum + BigInt(String(wallet.openingBalanceMinor)),
-    BigInt(0),
-  );
+  let balanceMinor = BigInt(0);
+
+  for (const wallet of wallets.items) {
+    balanceMinor += BigInt(String(wallet.openingBalanceMinor));
+  }
 
   for (const transaction of transactions.items) {
     if (transaction.date && transaction.date.slice(0, 7) >= months[0].key) continue;
+
     const recordedAmount = BigInt(transaction.amountMinor);
+
     const amountMinor = recordedAmount < BigInt(0) ? -recordedAmount : recordedAmount;
 
     if (transaction.type === "income") balanceMinor += amountMinor;
@@ -254,11 +260,7 @@ export async function getReportSnapshot() {
   return querySuccess({
     cashflow,
     categories,
-    goals: goals.items.map((goal) => ({
-      name: goal.title,
-      saved: Number(goal.saved_amount_minor) / 100,
-      target: Number(goal.target_amount_minor) / 100,
-    })),
+    goals: goalItems,
     analysisBalance,
     analysisFlow: cashflow,
     reviewItems: [],

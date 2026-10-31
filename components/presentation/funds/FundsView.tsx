@@ -10,7 +10,12 @@ export type { AdaptiveFundsViewProps } from "./funds-types";
 export default function FundsView(props: AdaptiveFundsViewProps) {
   const { loading, error, cards, activeCard, activeCardIndex, cashBox, auditLogs, activities, dollar } = props;
 
-  const total = cards.reduce((sum, card) => sum + card.balance, 0);
+  let total = 0;
+
+  for (const card of cards) {
+    total += card.balance;
+  }
+
   const hasCount = Boolean(cashBox.lastCountDate);
   const matched = hasCount && cashBox.countStatus === "matched";
 

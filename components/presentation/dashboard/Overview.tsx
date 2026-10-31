@@ -42,15 +42,24 @@ export default function Overview() {
   const categories = categoryRows(snapshot);
   const reviews = displayDashboardReviews(snapshot);
 
-  const balance = registers.reduce((sum, wallet) => sum + Number(wallet.balanceMinor), 0);
+  let balance = 0;
 
-  const income = (snapshot?.transactions ?? [])
-    .filter((transaction) => Number(transaction.amountMinor) >= 0)
-    .reduce((sum, transaction) => sum + Number(transaction.amountMinor), 0);
+  for (const wallet of registers) {
+    balance += Number(wallet.balanceMinor);
+  }
 
-  const expenses = (snapshot?.transactions ?? [])
-    .filter((transaction) => Number(transaction.amountMinor) < 0)
-    .reduce((sum, transaction) => sum + Math.abs(Number(transaction.amountMinor)), 0);
+  let income = 0;
+  let expenses = 0;
+
+  for (const transaction of snapshot?.transactions ?? []) {
+    const amount = Number(transaction.amountMinor);
+
+    if (amount >= 0) {
+      income += amount;
+    } else {
+      expenses += Math.abs(amount);
+    }
+  }
 
   return (
     <section className={styles.page} aria-label="Financial overview" aria-busy={loading}>
@@ -169,7 +178,7 @@ export default function Overview() {
           <section>
             <Section title="Goals" href="/dashboard/goals" action="All goals" />
             {!loading && goals.length === 0 ? (
-              <EmptyLink text="No goals yet."href="/dashboard/goals" action="Create a goal" />
+              <EmptyLink text="No goals yet." href="/dashboard/goals" action="Create a goal" />
             ) : (
               <LoadingCollection loading={loading} knownItemCount={goals.length} emptyHeight="6rem" label="Loading goals">
                 <ul className={styles.list}>

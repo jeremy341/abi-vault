@@ -29,6 +29,10 @@ const emptyCashBoxes: Record<string, CashBox> = {};
 
 const emptyAuditLogs: CashAuditEntry[] = [];
 
+function invalidateWalletQueries() {
+  invalidateFinanceQuery("wallets", "dashboard-snapshot", "transactions", "report-snapshot", "report-kpis");
+}
+
 export default function FundsPage() {
   const { userId, orgId } = useAppAuth();
   const cacheScope = financeScope(orgId, userId);
@@ -144,7 +148,7 @@ export default function FundsPage() {
       }));
       setActiveCardIndex(cards.length);
       setIsAddCardOpen(false);
-      invalidateFinanceQuery("wallets", "dashboard-snapshot", "transactions", "report-snapshot", "report-kpis");
+      invalidateWalletQueries();
       setNotice("Cash register added.");
 
       return true;
@@ -183,7 +187,7 @@ export default function FundsPage() {
         [activeCard.id]: { ...cashBox, name: details.accountName },
       }));
       setIsEditCardOpen(false);
-      invalidateFinanceQuery("wallets", "dashboard-snapshot", "transactions", "report-snapshot", "report-kpis");
+      invalidateWalletQueries();
       setNotice("Cash register saved.");
 
       return true;
@@ -228,7 +232,7 @@ export default function FundsPage() {
       });
       setActiveCardIndex((current) => Math.max(0, current - 1));
       setIsDeleteOpen(false);
-      invalidateFinanceQuery("wallets", "dashboard-snapshot", "transactions", "report-snapshot", "report-kpis");
+      invalidateWalletQueries();
       setNotice("Cash register archived.");
     } catch {
       setNotice("The cash register could not be archived.");

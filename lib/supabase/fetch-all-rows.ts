@@ -9,7 +9,6 @@ type PageResponse<T> = {
 
 type PageQuery<T> = (from: number, to: number) => PromiseLike<PageResponse<T>>;
 
-/** Reads past the API row cap; the separate page requests do not share a database snapshot. */
 export async function fetchAllRows<T>(queryPage: PageQuery<T>) {
   const rows: T[] = [];
 

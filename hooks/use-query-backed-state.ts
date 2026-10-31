@@ -7,7 +7,6 @@ type LocalValue<TQuery, TValue> = {
   value: TValue;
 };
 
-/** Use query data as the baseline, then keep local edits until a new result arrives. */
 export function useQueryBackedState<TQuery, TValue>(
   query: TQuery | null,
   select: (query: TQuery) => TValue,

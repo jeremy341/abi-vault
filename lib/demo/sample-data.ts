@@ -1,5 +1,3 @@
-// Sample data is used in explicit demo mode or on the open-source-demo branch,
-// so the app can run without a database.
 const wallets = [
   {
     id: "w1",

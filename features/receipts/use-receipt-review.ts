@@ -55,7 +55,6 @@ export function useReceiptReview({ onStatusChange }: UseReceiptReviewOptions) {
     try {
       const result = await createReceiptDownloadUrl(receipt.id);
 
-      // Ignore an older request if another receipt was opened first.
       if (previewRequestId.current !== requestId) return;
 
       if (result.success) {

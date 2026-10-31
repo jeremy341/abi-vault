@@ -141,8 +141,6 @@ export async function acceptRoleInviteLink(token: string): Promise<ActionResult<
           userId: session.userId,
         });
       } catch {
-        // The failed link claim must not block the response. The membership
-        // webhook remains the final reconciliation path if cleanup fails.
       }
     }
 
@@ -181,7 +179,6 @@ export async function acceptRoleInviteLink(token: string): Promise<ActionResult<
           userId: session.userId,
         });
       } catch {
-        // The membership webhook remains the final reconciliation path.
       }
     }
 

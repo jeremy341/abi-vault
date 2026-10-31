@@ -45,19 +45,16 @@ export default function EditCardModal({
   const [selectedColor, setSelectedColor] = useState(
     card?.color ?? cardColors[0].value,
   );
-
   const [values, setValues] = useState<CardFormValues>({
     accountName: card?.accountName ?? "",
     cardNumber: card?.cardNumber ?? "",
     holder: card?.holder ?? "",
     expiry: card?.expiry ?? "",
   });
-
   const [errors, setErrors] = useState<CardFormErrors>({});
   const [saving, setSaving] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
-
   useCardModalFocus(open, formRef, onClose);
 
   if (!open || !card || typeof document === "undefined") return null;
@@ -80,7 +77,6 @@ export default function EditCardModal({
 
   function validate() {
     const nextErrors = getCardErrors(values);
-
     setErrors(nextErrors);
 
     if (hasCardErrors(nextErrors)) {
@@ -96,7 +92,6 @@ export default function EditCardModal({
     if (saving) return;
 
     if (!validate()) return;
-
     setSaving(true);
     setSubmitError("");
 

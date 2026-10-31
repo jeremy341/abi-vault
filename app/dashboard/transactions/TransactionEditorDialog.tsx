@@ -58,7 +58,6 @@ export function TransactionEditorDialog({
   onSave,
 }: TransactionEditorDialogProps) {
   if (!open) return null;
-
   const heading = editing ? "Edit transaction" : "Add transaction";
 
   return (

@@ -58,7 +58,6 @@ export function subscribeFinanceQuery<T>(
   const cacheKey = scopedKey(key, scope);
   const keyListeners = listeners.get(cacheKey) ?? new Set<CacheListener<FinanceCacheValue>>();
   const typedListener: CacheListener<FinanceCacheValue> = (queryResult) => listener(queryResult as T);
-
   keyListeners.add(typedListener);
   listeners.set(cacheKey, keyListeners);
 
@@ -95,15 +94,12 @@ export function cachedFinanceQuery<T extends FinanceCacheValue>(key: string, que
 
   const startedAt = typeof performance === "undefined" ? 0 : performance.now();
   const promise = query();
-
   entries.set(cacheKey, { data: existing?.data, updatedAt: existing?.updatedAt ?? 0, promise });
-
   void promise
     .then((queryResult) => {
       const latest = entries.get(cacheKey) as CacheEntry<T> | undefined;
 
       if (!latest || latest.promise !== promise) return;
-
       latest.promise = undefined;
 
       if (isSuccessfulResult(queryResult)) {
@@ -147,7 +143,6 @@ export function invalidateFinanceQuery(...keys: string[]) {
 
 export function clearFinanceCache() {
   entries.clear();
-
   listeners.clear();
 }
 

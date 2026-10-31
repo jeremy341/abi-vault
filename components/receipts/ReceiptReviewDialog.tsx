@@ -30,7 +30,6 @@ function formatReceiptDate(dateText: string) {
   const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(dateText);
 
   if (!match) return dateText;
-
   const date = new Date(Number(match[3]), Number(match[2]) - 1, Number(match[1]));
 
   if (Number.isNaN(date.getTime())) return dateText;
@@ -40,7 +39,6 @@ function formatReceiptDate(dateText: string) {
 
 function formatTimestamp(timestamp: string | null | undefined) {
   if (!timestamp) return "";
-
   const date = new Date(timestamp);
 
   if (Number.isNaN(date.getTime())) return timestamp;
@@ -81,7 +79,6 @@ export function ReceiptReviewDialog({
 
   function decide(decision: ReceiptReviewDecision) {
     setPendingDecision(decision);
-
     onDecision(decision);
   }
 

@@ -52,7 +52,6 @@ export default function AddCardModal({
   const [saving, setSaving] = useState(false);
   const idempotencyKey = useRef<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
-
   useCardModalFocus(open, formRef, onClose);
 
   if (!open || typeof document === "undefined") return null;
@@ -75,7 +74,6 @@ export default function AddCardModal({
 
   function validate() {
     const nextErrors = getCardErrors(values);
-
     setErrors(nextErrors);
 
     if (hasCardErrors(nextErrors)) {
@@ -91,7 +89,6 @@ export default function AddCardModal({
     if (saving) return;
 
     if (!validate()) return;
-
     idempotencyKey.current ??= `wallet-${crypto.randomUUID()}`;
     setSaving(true);
     setSubmitError("");

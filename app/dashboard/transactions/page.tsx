@@ -78,13 +78,11 @@ export default function TransactionsPage() {
   const { userId, orgId } = useAppAuth();
   const cacheScope = financeScope(orgId, userId);
   const { data, loading: queryLoading, refreshing, failed, refetch } = useFinanceQuery("dashboard-snapshot", getDashboardSnapshot, cacheScope);
-
   const [items, setItems] = useQueryBackedState(
     data?.ok ? data : null,
     transactionsFromDashboard,
     emptyTransactions,
   );
-
   const receiptReview = useReceiptReview({
     onStatusChange: (receiptId, status) => {
       setItems((current) =>
@@ -96,11 +94,8 @@ export default function TransactionsPage() {
       );
     },
   });
-
   const transactionCategoryOptions = [...new Set([...categoryFilterOptions, ...items.map((item) => item.category)])];
-
   const cashRegisters = data?.ok ? cashRegistersFromDashboard(data) : [];
-
   const [saving, setSaving] = useState(false);
   const archiveIdempotencyKey = useRef<string | null>(null);
   const loadError = failed ? "Transactions could not be loaded." : "";
@@ -108,15 +103,12 @@ export default function TransactionsPage() {
   const [archiveTarget, setArchiveTarget] = useState<Transaction | null>(null);
   const [archiveReason, setArchiveReason] = useState("");
   const [actionError, setActionError] = useState("");
-
   const pageSize = useResponsivePageSize({
     defaultSize: 10,
     landscapeSize: 6,
     wideSize: 10,
   });
-
   const filters = useTransactionFilters(items, pageSize);
-
   const transactionEditor = useTransactionEditor({
     cashRegisters,
     userId,
@@ -124,11 +116,8 @@ export default function TransactionsPage() {
     refetch,
     onCreated: () => filters.setPage(1),
   });
-
   const { totalIncome, totalExpense } = sumIncomeAndExpense(items);
-
   const netBalance = totalIncome - totalExpense;
-
   const loading = queryLoading || !data;
 
   function openAddTransaction() {
@@ -155,7 +144,6 @@ export default function TransactionsPage() {
 
   function openReceiptReview(transaction: Transaction) {
     if (!transaction.receiptId) return;
-
     void receiptReview.open({
       id: transaction.receiptId,
       receipt: {

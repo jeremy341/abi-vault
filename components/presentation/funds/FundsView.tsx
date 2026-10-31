@@ -9,7 +9,6 @@ export type { AdaptiveFundsViewProps } from "./funds-types";
 
 export default function FundsView(props: AdaptiveFundsViewProps) {
   const { loading, error, cards, activeCard, activeCardIndex, cashBox, auditLogs, activities, dollar } = props;
-
   let total = 0;
 
   for (const card of cards) {

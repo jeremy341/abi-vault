@@ -43,7 +43,6 @@ function receiptsFromQuery(data: ReceiptQueryData) {
 
 function matchesSearch(receipt: Receipt, searchTerm: string) {
   if (!searchTerm) return true;
-
   const text = `${receipt.file} ${receipt.transaction}`.toLowerCase();
 
   return text.includes(searchTerm);
@@ -79,24 +78,20 @@ function Dropdown({
 export default function ReceiptsPage() {
   const { userId, orgId } = useAppAuth();
   const cacheScope = financeScope(orgId, userId);
-
   const { data, loading: queryLoading, refreshing, failed } = useFinanceQuery(
     "receipts",
     listReceiptsForCurrentOrganization,
     cacheScope,
   );
-
   const [items, setItems] = useQueryBackedState(
     data?.ok ? data : null,
     receiptsFromQuery,
     emptyReceipts,
   );
-
   const receiptEditor = useReceiptEditor({
     cacheScope,
     setReceipts: setItems,
   });
-
   const receiptReview = useReceiptReview({
     onStatusChange: (receiptId, status) => {
       setItems((current) =>
@@ -106,7 +101,6 @@ export default function ReceiptsPage() {
       );
     },
   });
-
   const loadError = failed ? "Receipts could not be loaded." : "";
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("All");
@@ -117,7 +111,6 @@ export default function ReceiptsPage() {
   const [actionError, setActionError] = useState("");
   const [archiveSaving, setArchiveSaving] = useState(false);
   const archiveIdempotencyKey = useRef<string | null>(null);
-
   const currentDateKey = financeDateKey(new Date());
   const currentMonthKey = currentDateKey.slice(0, 7);
   const previousMonthKey = previousFinanceMonthKey(currentMonthKey);
@@ -146,39 +139,30 @@ export default function ReceiptsPage() {
 
     return matchesPeriod(receipt);
   });
-
   const pendingCount = items.filter((receipt) => receipt.status === "Pending review").length;
   const unassignedCount = items.filter((receipt) => receipt.status === "Unassigned").length;
-
   const pageSize = useResponsivePageSize({
     defaultSize: 9,
     landscapeSize: 6,
     wideSize: 10,
   });
-
   const { pageCount, currentPage, offset, rangeStart, rangeEnd } = pageWindow(
     filtered.length,
     pageSize,
     page,
   );
-
   const visible = filtered.slice(offset, offset + pageSize);
 
   function openArchiveReceipt(receipt: Receipt) {
     setArchiveTarget(receipt);
-
     setArchiveReason("");
-
     setActionError("");
-
     archiveIdempotencyKey.current = `archive-receipt-${receipt.id}-${crypto.randomUUID()}`;
   }
 
   async function confirmArchiveReceipt() {
     if (!archiveTarget || archiveSaving || !archiveReason.trim()) return;
-
     setArchiveSaving(true);
-
     setActionError("");
 
     try {
@@ -199,13 +183,9 @@ export default function ReceiptsPage() {
       setItems((current) =>
         current.filter((receipt) => receipt.id !== archiveTarget.id),
       );
-
       setArchiveTarget(null);
-
       setArchiveReason("");
-
       archiveIdempotencyKey.current = null;
-
       invalidateFinanceQuery(
         "receipts",
         "transactions",

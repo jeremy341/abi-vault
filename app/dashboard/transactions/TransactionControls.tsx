@@ -51,7 +51,6 @@ export function CashRegisterCombobox({
   const [query, setQuery] = useState("");
   const selected = options.find((option) => option.id === value);
   const searchText = query.trim().toLowerCase();
-
   const filtered = options.filter((option) => option.name.toLowerCase().includes(searchText));
 
   function chooseOption(optionId: string) {

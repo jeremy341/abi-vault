@@ -49,7 +49,6 @@ const dollarPrecise = new Intl.NumberFormat("en-US", {
 
 function toGoal(goal: DashboardGoal): Goal {
   const target = Number(goal.target_amount_minor) / 100;
-
   const saved = Number(goal.saved_amount_minor) / 100;
 
   return {
@@ -298,98 +297,63 @@ function GoalForm({
 
 export default function GoalsPage() {
   const { userId, orgId } = useAppAuth();
-
   const cacheScope = financeScope(orgId, userId);
-
   const { data: dashboard, loading, failed } = useFinanceQuery("dashboard-snapshot", getDashboardSnapshot, cacheScope);
-
   const loadError = failed ? "The goals could not be loaded." : "";
-
   const [goals, setGoals] = useQueryBackedState(
     dashboard?.ok ? dashboard : null,
     goalsFromDashboard,
     emptyGoals,
   );
-
   const [modalOpen, setModalOpen] = useState(false);
-
   const [editingGoalIndex, setEditingGoalIndex] = useState<number | null>(null);
-
   const [goalName, setGoalName] = useState("");
-
   const [targetAmount, setTargetAmount] = useState("");
-
   const [deadline, setDeadline] = useState("");
-
   const [formError, setFormError] = useState("");
-
   const [saving, setSaving] = useState(false);
-
   const idempotencyKey = useRef<string | null>(null);
-
   const editingGoal = editingGoalIndex === null ? null : goals[editingGoalIndex] ?? null;
-
   const totalTarget = goals.reduce((sum, goal) => sum + goal.target, 0);
-
   const totalSaved = goals.reduce((sum, goal) => sum + goal.saved, 0);
-
   const overallProgress = totalTarget ? Math.round((totalSaved / totalTarget) * 100) : 0;
-
   const previewTarget = Number(targetAmount.replace(",", ".")) || 0;
-
   const previewSaved = editingGoal?.saved ?? 0;
-
   const previewProgress = previewTarget ? Math.min(100, Math.round((previewSaved / previewTarget) * 100)) : 0;
 
   function resetForm() {
     idempotencyKey.current = null;
-
     setGoalName("");
-
     setTargetAmount("");
-
     setDeadline("");
-
     setFormError("");
   }
 
   function closeModal() {
     resetForm();
-
     setModalOpen(false);
-
     setEditingGoalIndex(null);
   }
 
   function openAddModal() {
     resetForm();
-
     setEditingGoalIndex(null);
-
     setModalOpen(true);
   }
 
   function openEditModal(goal: Goal, index: number) {
     idempotencyKey.current = null;
-
     setEditingGoalIndex(index);
-
     setGoalName(goal.title);
-
     setTargetAmount(goal.target.toString());
-
     setDeadline(goal.deadline);
-
     setFormError("");
-
     setModalOpen(true);
   }
 
   function changeField(update: () => void) {
     idempotencyKey.current = null;
-
     update();
-
     setFormError("");
   }
 
@@ -397,20 +361,14 @@ export default function GoalsPage() {
     event.preventDefault();
 
     if (saving) return;
-
     setSaving(true);
-
     setFormError("");
 
     try {
       const formData = new FormData(event.currentTarget);
-
       const submittedName = String(formData.get("goalName") ?? "").trim();
-
       const submittedDeadline = String(formData.get("deadline") ?? "");
-
       const submittedTargetAmount = String(formData.get("targetAmount") ?? "");
-
       const target = Number(submittedTargetAmount.replace(",", "."));
 
       if (!submittedName || !Number.isFinite(target) || target <= 0 || !submittedDeadline) {
@@ -420,11 +378,8 @@ export default function GoalsPage() {
       }
 
       const [year, month, day] = submittedDeadline.split("-");
-
       const formattedDate = displayGoalDate(`${year}-${month}-${day}`);
-
       const saved = editingGoal?.saved ?? 0;
-
       const progress = target ? Math.round((saved / target) * 100) : 0;
 
       if (editingGoalIndex !== null) {
@@ -468,9 +423,7 @@ export default function GoalsPage() {
         );
       } else {
         const requestKey = idempotencyKey.current ?? `goal-${crypto.randomUUID()}`;
-
         idempotencyKey.current = requestKey;
-
         const result = await createGoal({
           title: submittedName,
           description: null,
@@ -501,7 +454,6 @@ export default function GoalsPage() {
       }
 
       invalidateFinanceQuery("goals", "dashboard-snapshot", "report-snapshot");
-
       closeModal();
     } catch {
       setFormError("The goal could not be saved.");
@@ -512,7 +464,6 @@ export default function GoalsPage() {
 
   async function handleDeleteGoal() {
     if (editingGoalIndex === null || saving) return;
-
     const currentGoal = goals[editingGoalIndex];
 
     if (!currentGoal) {
@@ -536,9 +487,7 @@ export default function GoalsPage() {
       }
 
       setGoals((current) => current.filter((_, index) => index !== editingGoalIndex));
-
       invalidateFinanceQuery("goals", "dashboard-snapshot", "report-snapshot");
-
       closeModal();
     } catch {
       setFormError("The goal could not be archived.");

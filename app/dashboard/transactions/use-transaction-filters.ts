@@ -96,18 +96,13 @@ export function useTransactionFilters(
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
   const [dateDialogOpen, setDateDialogOpen] = useState(false);
   const [page, setPage] = useState(1);
-
   const filteredTransactions = filterTransactions(transactions, filters);
-
   const pagination = pageWindow(filteredTransactions.length, pageSize, page);
-
   const visibleTransactions = filteredTransactions.slice(
     pagination.offset,
     pagination.offset + pageSize,
   );
-
   const activeFilterCount = countActiveFilters(filters);
-
   const dateLabel = dateRangeLabel(filters.start, filters.end);
 
   function setQuery(query: string) {
@@ -144,7 +139,6 @@ export function useTransactionFilters(
 
   function resetFilters() {
     const defaults = emptyFilters();
-
     setFilters(defaults);
     setDraft(draftFrom(defaults));
     setPage(1);

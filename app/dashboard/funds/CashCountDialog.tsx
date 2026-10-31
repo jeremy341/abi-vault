@@ -66,14 +66,10 @@ type CountModeTabsProps = {
 function CountModeTabs({ countMode, onChangeMode }: CountModeTabsProps) {
   function handleModeKeyDown(event: React.KeyboardEvent<HTMLButtonElement>, currentMode: CountMode) {
     if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
-
     event.preventDefault();
-
     const nextMode = currentMode === "direct" ? "calculator" : "direct";
     const nextTabIndex = nextMode === "direct" ? 0 : 1;
-
     onChangeMode(nextMode);
-
     event.currentTarget.parentElement
       ?.querySelectorAll<HTMLElement>('[role="tab"]')
       [nextTabIndex]?.focus();
@@ -223,17 +219,14 @@ export default function CashCountDialog({
   onSave,
 }: CashCountDialogProps) {
   const [countMode, setCountMode] = useState<CountMode>("direct");
-
   const [countedAmountInput, setCountedAmountInput] = useState(() =>
     cashBox.balance.toFixed(2).replace(".", ","),
   );
-
   const [countedBy, setCountedBy] = useState(cashBox.responsible);
   const [note, setNote] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const idempotencyKey = useRef<string | null>(null);
-
   const [denominationCounts, setDenominationCounts] = useState<Record<string, number>>({
     "50": 0,
     "20": 0,
@@ -245,10 +238,8 @@ export default function CashCountDialog({
     "0.2": 0,
     "0.1": 0,
   });
-
   const denominationTotalMinor = calculateCashDenominationMinor(denominationCounts);
   const directAmountMinor = parseDirectAmountMinor(countedAmountInput);
-
   let countedAmount = 0;
 
   if (countMode === "calculator") {
@@ -267,14 +258,11 @@ export default function CashCountDialog({
     event.preventDefault();
 
     if (saving) return;
-
     const isInvalidDirectAmount = directAmountMinor === null && countMode === "direct";
 
     if (isInvalidDirectAmount || countedAmount < 0) {
       setError("Enter a valid counted amount.");
-
       const form = event.currentTarget;
-
       window.requestAnimationFrame(() => {
         const field = form.elements.namedItem("countedAmount");
 
@@ -305,7 +293,6 @@ export default function CashCountDialog({
       }
 
       idempotencyKey.current = null;
-
       onClose();
     } catch {
       setError("The cash count could not be saved.");

@@ -17,11 +17,8 @@ function formatShortMonth(date: Date) {
 
 export async function getReportKpisForCurrentOrganization() {
   if (isDemoData()) return demoData.reportKpis;
-
   await requireClerkContext();
-
   const supabase = await createSupabaseServerClient();
-
   const snapshot = await readFinanceSnapshot(supabase);
 
   if (!snapshot.ok) return snapshot;
@@ -60,15 +57,12 @@ export async function getDashboardSnapshot() {
   }
 
   if (financeSnapshot && !financeSnapshot.ok) return { ok: false as const };
-
   const hasFinanceWallets = financeSnapshot?.ok && financeSnapshot.wallets.length > 0;
-
   const wallets = hasFinanceWallets
     ? querySuccess({ items: financeSnapshot.wallets.map(mapFinanceSnapshotWallet) })
     : await listWalletsForCurrentOrganization({ includeBalances: false });
 
   if (!wallets.ok) return { ok: false as const };
-
   const projectionTransactions = hasFinanceWallets
     ? []
     : transactions.items.map((transaction) => ({
@@ -116,7 +110,6 @@ export async function getReportSnapshot() {
   if (!goals.ok) return { ok: false as const };
 
   if (financeSnapshot && !financeSnapshot.ok) return { ok: false as const };
-
   const goalItems = goals.items.map((goal) => ({
     name: goal.title,
     saved: Number(goal.saved_amount_minor) / 100,
@@ -146,13 +139,11 @@ export async function getReportSnapshot() {
         expenses: Number(month.expensesMinor) / 100,
       };
     });
-
     const categories = financeSnapshot.categories.map((category) => ({
       name: category.name,
       amount: Number(category.amountMinor) / 100,
       share: category.progress,
     }));
-
     const analysisBalance = financeSnapshot.analysisBalance.map((month) => {
       const date = new Date(`${month.monthKey}-01T00:00:00.000Z`);
       const monthLabel = formatShortMonth(date);
@@ -176,15 +167,11 @@ export async function getReportSnapshot() {
   const wallets = await listWalletsForCurrentOrganization({ includeBalances: false });
 
   if (!wallets.ok) return { ok: false as const };
-
   const transactions = await listTransactionsForCurrentOrganization();
 
   if (!transactions.ok) return { ok: false as const };
-
   const currentDateKey = financeDateKey(new Date());
-
   const [currentYear, currentMonth] = currentDateKey.split("-").map(Number);
-
   const months = Array.from({ length: 6 }, (_, monthIndex) => {
     const date = new Date(Date.UTC(currentYear, currentMonth - 6 + monthIndex, 1));
     const key = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
@@ -192,7 +179,6 @@ export async function getReportSnapshot() {
 
     return { key, label, year: date.getUTCFullYear() };
   });
-
   const projectionTransactions = transactions.items.map((transaction) => ({
     amountMinor: transaction.amountMinor,
     type: transaction.type,
@@ -201,9 +187,7 @@ export async function getReportSnapshot() {
     fromWalletId: transaction.fromWalletId ?? null,
     toWalletId: transaction.toWalletId ?? null,
   }));
-
   const monthlyFlow = projectMonthlyFlowMinor(projectionTransactions, months);
-
   const cashflow = monthlyFlow.map((month) => ({
     month: month.month,
     year: month.year,
@@ -223,13 +207,11 @@ export async function getReportSnapshot() {
   }
 
   const categoryTotals = projectCategoryTotals(projectionTransactions);
-
   const categories = categoryTotals.map((category) => ({
     name: category.name,
     amount: Number(category.amountMinor) / 100,
     share: category.progress,
   }));
-
   let balanceMinor = BigInt(0);
 
   for (const wallet of wallets.items) {
@@ -238,9 +220,7 @@ export async function getReportSnapshot() {
 
   for (const transaction of transactions.items) {
     if (transaction.date && transaction.date.slice(0, 7) >= months[0].key) continue;
-
     const recordedAmount = BigInt(transaction.amountMinor);
-
     const amountMinor = recordedAmount < BigInt(0) ? -recordedAmount : recordedAmount;
 
     if (transaction.type === "income") balanceMinor += amountMinor;

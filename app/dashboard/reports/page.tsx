@@ -308,7 +308,6 @@ export default function ReportsPage() {
   const goals = snapshot?.goals ?? [];
   const [kpiLoading, setKpiLoading] = useState(true);
   const [kpiError, setKpiError] = useState("");
-
   const [kpis, setKpis] = useState<Kpis>({
     liquidity: "$0.00",
     expenses: "$0.00",
@@ -318,13 +317,10 @@ export default function ReportsPage() {
     unassigned: "0",
     reconciliation: NOT_REVIEWED_YET,
   });
-
   const loading = snapshotLoading || kpiLoading;
   const error = snapshotError ?? kpiError;
-
   useEffect(() => {
     let active = true;
-
     cachedFinanceQuery("report-kpis", getReportKpisForCurrentOrganization, { scope: cacheScope })
       .then((reportKpis) => {
         if (!active) return;

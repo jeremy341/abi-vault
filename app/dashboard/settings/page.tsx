@@ -35,23 +35,18 @@ function keepDigits(value: string) {
 export default function SettingsPage() {
   const [workspaceName, setWorkspaceName] = useState("Abi 2026");
   const [school, setSchool] = useState("");
-
   const [notifications, setNotifications] = useState({
     receipts: true,
     payments: true,
     goals: false,
   });
-
   const [statusMessage, setStatusMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [saving, setSaving] = useState(false);
-
   const graduationYearDigits = keepDigits(workspaceName);
-
   useEffect(() => {
     let active = true;
-
     getCommitteeSettingsForCurrentOrganization()
       .then((committeeSettings) => {
         if (!active) return;
@@ -64,7 +59,6 @@ export default function SettingsPage() {
 
         setSchool(committeeSettings.data.school_name);
         setWorkspaceName(`Abi ${committeeSettings.data.graduation_year}`);
-
         const parsedNotifications = updateCommitteeSettingsSchema.shape.notifications.safeParse(
           committeeSettings.data.notifications,
         );
@@ -85,7 +79,6 @@ export default function SettingsPage() {
 
   async function saveSettings() {
     if (saving) return;
-
     setSaving(true);
 
     try {
@@ -94,7 +87,6 @@ export default function SettingsPage() {
         graduationYear: Number(graduationYearDigits) || 2026,
         notifications,
       });
-
       setStatusMessage(result.ok ? "Changes saved." : "Changes could not be saved.");
     } catch {
       setStatusMessage("Changes could not be saved.");

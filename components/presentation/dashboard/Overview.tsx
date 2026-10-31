@@ -35,13 +35,11 @@ function Section({ title, href, action }: { title: string; href?: string; action
 
 export default function Overview() {
   const { snapshot, loading, error } = useDashboardSnapshot();
-
   const registers = cashRegisters(snapshot);
   const transactions = transactionRows(snapshot).slice(0, RECENT_LIMIT);
   const goals = goalRows(snapshot);
   const categories = categoryRows(snapshot);
   const reviews = displayDashboardReviews(snapshot);
-
   let balance = 0;
 
   for (const wallet of registers) {

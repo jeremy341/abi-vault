@@ -122,9 +122,7 @@ function formatCountDate(value: string) {
 
 function toCashBox(wallet: WalletWithCount): CashBox {
   const difference = Number(String(wallet.lastCountDifferenceMinor ?? 0)) / 100;
-
   const hasCount = Boolean(wallet.lastCountAt);
-
   const countStatus = Math.abs(difference) < 0.01 ? "matched" : "discrepancy";
 
   return {
@@ -340,52 +338,36 @@ function CashCountSection({ isOpen, activeCardId, cashBox, onClose, onSave }: Ca
 
 export default function FundsPage() {
   const { userId, orgId } = useAppAuth();
-
   const cacheScope = financeScope(orgId, userId);
-
   const dashboard = useFinanceQuery("dashboard-snapshot", getDashboardSnapshot, cacheScope);
-
   const cashCounts = useFinanceQuery("cash-counts", listCashCountsForCurrentOrganization, cacheScope);
-
   const [cards, setCards] = useQueryBackedState(
     dashboard.data?.ok ? dashboard.data : null,
     cardsFromDashboard,
     emptyCards,
   );
-
   const [activeCardIndex, setActiveCardIndex] = useState(0);
-
   const [cashBoxes, setCashBoxes] = useQueryBackedState(
     dashboard.data?.ok ? dashboard.data : null,
     cashBoxesFromDashboard,
     emptyCashBoxes,
   );
-
   const [auditLogs, setAuditLogs] = useQueryBackedState(
     cashCounts.data?.ok ? cashCounts.data : null,
     auditLogsFromQuery,
     emptyAuditLogs,
   );
-
   const [notice, setNotice] = useState("");
-
   const loading = dashboard.loading;
-
   const loadError = dashboard.failed ? "Cash registers could not be loaded." : "";
-
   const [isAddCardOpen, setIsAddCardOpen] = useState(false);
-
   const [isEditCardOpen, setIsEditCardOpen] = useState(false);
-
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-
   const [isCountOpen, setIsCountOpen] = useState(false);
-
   const [deleteSaving, setDeleteSaving] = useState(false);
 
   function retryWallets() {
     dashboard.refetch();
-
     cashCounts.refetch();
   }
 
@@ -407,7 +389,6 @@ export default function FundsPage() {
 
   useEffect(() => {
     if (!isDeleteOpen && !isCountOpen) return;
-
     const previousOverflow = document.body.style.overflow;
 
     document.body.style.overflow = "hidden";
@@ -416,11 +397,8 @@ export default function FundsPage() {
       document.body.style.overflow = previousOverflow;
     };
   }, [isCountOpen, isDeleteOpen]);
-
   const safeIndex = Math.min(activeCardIndex, Math.max(0, cards.length - 1));
-
   const activeCard = cards[safeIndex] ?? cards[0];
-
   let cashBox: CashBox = createBlankCashBox("", "", 0);
 
   if (activeCard) {
@@ -431,7 +409,6 @@ export default function FundsPage() {
 
   function switchCard(direction: -1 | 1) {
     if (cards.length <= 1) return;
-
     setActiveCardIndex((current) => (current + direction + cards.length) % cards.length);
   }
 
@@ -464,20 +441,14 @@ export default function FundsPage() {
         details,
         balance: 0,
       };
-
       setCards((current: CashRegisterCard[]) => [...current, newCard]);
-
       setCashBoxes((current: Record<string, CashBox>) => ({
         ...current,
         [newCard.id]: createBlankCashBox(newCard.id, details.accountName, 0),
       }));
-
       setActiveCardIndex(cards.length);
-
       setIsAddCardOpen(false);
-
       invalidateFinanceQuery("wallets", "dashboard-snapshot", "transactions", "report-snapshot", "report-kpis");
-
       setNotice("Cash register added.");
 
       return true;
@@ -511,16 +482,12 @@ export default function FundsPage() {
       setCards((current: CashRegisterCard[]) =>
         current.map((card, index) => (index === safeIndex ? { ...card, details } : card)),
       );
-
       setCashBoxes((current: Record<string, CashBox>) => ({
         ...current,
         [activeCard.id]: { ...cashBox, name: details.accountName },
       }));
-
       setIsEditCardOpen(false);
-
       invalidateFinanceQuery("wallets", "dashboard-snapshot", "transactions", "report-snapshot", "report-kpis");
-
       setNotice("Cash register saved.");
 
       return true;
@@ -533,7 +500,6 @@ export default function FundsPage() {
 
   function requestDeleteCard() {
     setIsEditCardOpen(false);
-
     setIsDeleteOpen(true);
   }
 
@@ -543,7 +509,6 @@ export default function FundsPage() {
 
   async function confirmDeleteCard() {
     if (!activeCard || deleteSaving) return;
-
     setDeleteSaving(true);
 
     try {
@@ -559,21 +524,15 @@ export default function FundsPage() {
       }
 
       setCards((current: CashRegisterCard[]) => current.filter((_, index) => index !== safeIndex));
-
       setCashBoxes((current: Record<string, CashBox>) => {
         const next = { ...current };
-
         delete next[activeCard.id];
 
         return next;
       });
-
       setActiveCardIndex((current) => Math.max(0, current - 1));
-
       setIsDeleteOpen(false);
-
       invalidateFinanceQuery("wallets", "dashboard-snapshot", "transactions", "report-snapshot", "report-kpis");
-
       setNotice("Cash register archived.");
     } catch {
       setNotice("The cash register could not be archived.");
@@ -589,11 +548,8 @@ export default function FundsPage() {
     idempotencyKey,
   }: CashCountInput): Promise<SaveCashCountResult> {
     const difference = countedAmount - cashBox.balance;
-
     const status = Math.abs(difference) < 0.01 ? "matched" : "discrepancy";
-
     const auditor = countedBy || cashBox.responsible;
-
     const persisted = await recordCashCount({
       walletId: cashBox.id,
       countedAmount: String(countedAmount).replace(".", ","),
@@ -616,7 +572,6 @@ export default function FundsPage() {
         responsible: auditor,
       },
     }));
-
     setAuditLogs((current: CashAuditEntry[]) => [
       {
         id: `audit-${Date.now()}`,
@@ -629,13 +584,9 @@ export default function FundsPage() {
       },
       ...current.slice(0, 4),
     ]);
-
     invalidateFinanceQuery("wallets", "cash-counts", "dashboard-snapshot", "transactions", "report-snapshot", "report-kpis");
-
     dashboard.refetch();
-
     cashCounts.refetch();
-
     setNotice("Cash count saved.");
 
     return { success: true };

@@ -374,47 +374,30 @@ function InviteDialog({
 
 export default function PeoplePage() {
   const { orgId, userId } = useAppAuth();
-
   const scope = financeScope(orgId, userId);
-
   const memberQuery = useFinanceQuery(
     "members",
     listMembersForCurrentOrganization,
     scope,
   );
-
   const [loadedPeople, setPeople] = useQueryBackedState(
     memberQuery.data?.ok ? memberQuery.data : null,
     peopleFromMemberList,
     emptyPeople,
   );
-
   const loading = memberQuery.loading;
-
   const loadError = memberQuery.failed ? "The members could not be loaded." : "";
-
   const people = loading || memberQuery.failed ? emptyPeople : loadedPeople;
-
   const [query, setQuery] = useState("");
-
   const [modalOpen, setModalOpen] = useState(false);
-
   const [newRole, setNewRole] = useState<InviteRole>("Supervisor");
-
   const [inviteEmail, setInviteEmail] = useState("");
-
   const [messageState, setMessageState] = useState<{ scope: string; value: string } | null>(null);
-
   const message = messageState?.scope === scope ? messageState.value : "";
-
   const [busyPersonId, setBusyPersonId] = useState<string | null>(null);
-
   const [inviteSaving, setInviteSaving] = useState(false);
-
   const [linkSaving, setLinkSaving] = useState<"admin" | "supervisor" | null>(null);
-
   const [roleLinkState, setRoleLinkState] = useState<RoleLinksState | null>(null);
-
   const roleLinks = roleLinkState?.scope === scope ? roleLinkState.links : {};
 
   function setMessage(value: string) {
@@ -422,11 +405,9 @@ export default function PeoplePage() {
   }
 
   const searchTerm = query.trim().toLowerCase();
-
   const filteredPeople = people.filter((person) =>
     `${person.name} ${person.role}`.toLowerCase().includes(searchTerm),
   );
-
   const counts = {
     active: people.filter((person) => person.status === "Active").length,
     administrators: people.filter((person) => person.role === "Administrator").length,
@@ -436,33 +417,24 @@ export default function PeoplePage() {
 
   function openInviteModal() {
     setInviteEmail("");
-
     setNewRole("Supervisor");
-
     setMessage("");
-
     setModalOpen(true);
   }
 
   function closeModal() {
     setModalOpen(false);
-
     setNewRole("Supervisor");
-
     setInviteEmail("");
-
     setMessage("");
   }
 
   async function changeRole(personId: string) {
     if (busyPersonId !== null) return;
-
     const person = people.find((item) => item.id === personId);
 
     if (!person) return;
-
     const next = nextRoleFor[person.role];
-
     setBusyPersonId(personId);
 
     try {
@@ -492,7 +464,6 @@ export default function PeoplePage() {
           : item,
       ),
     );
-
     setMessage("Role updated.");
   }
 
@@ -500,7 +471,6 @@ export default function PeoplePage() {
     event.preventDefault();
 
     if (inviteSaving) return;
-
     const email = inviteEmail.trim();
 
     if (!email) {
@@ -510,7 +480,6 @@ export default function PeoplePage() {
     }
 
     setInviteSaving(true);
-
     const role = newRole === "Administrator" ? "admin" : "supervisor";
 
     try {
@@ -527,7 +496,6 @@ export default function PeoplePage() {
       }
 
       setInviteEmail("");
-
       setMessage(`Invitation sent to ${email}.`);
     } catch {
       setMessage("The invitation could not be sent.");
@@ -538,7 +506,6 @@ export default function PeoplePage() {
 
   async function removePerson(personId: string) {
     if (busyPersonId !== null) return;
-
     setBusyPersonId(personId);
 
     try {
@@ -558,7 +525,6 @@ export default function PeoplePage() {
       }
 
       setPeople((current) => current.filter((person) => person.id !== personId));
-
       setMessage("Person removed.");
     } catch {
       setMessage("The person could not be removed.");
@@ -569,9 +535,7 @@ export default function PeoplePage() {
 
   async function createLink(role: RoleInviteLink["role"]) {
     if (linkSaving) return;
-
     setLinkSaving(role);
-
     setMessage("");
 
     try {
@@ -588,7 +552,6 @@ export default function PeoplePage() {
 
         return { scope, links: { ...previousLinks, [role]: result.data } };
       });
-
       setMessage(`${role === "admin" ? "Admin" : "Supervisor"} link created.`);
     } catch {
       setMessage("The invitation link could not be created.");
@@ -604,7 +567,6 @@ export default function PeoplePage() {
 
     try {
       await navigator.clipboard.writeText(link.url);
-
       setMessage("Invitation link copied.");
     } catch {
       setMessage("The link could not be copied. Select and copy it manually.");

@@ -35,13 +35,10 @@ export default function PeriodsPage() {
   const [target, setTarget] = useState<AccountingPeriodListItem | null>(null);
   const [reason, setReason] = useState("");
   const [saving, setSaving] = useState(false);
-
   const activePeriod = periods.find((period) => period.status === "open");
   const openCount = periods.filter((period) => period.status === "open").length;
   const lockedCount = periods.filter((period) => period.status === "locked").length;
-
   const isLocking = target !== null && target.status === "open";
-
   let dialogTitle = "Unlock accounting period";
   let dialogQuestion = "Unlock accounting period?";
   let dialogExplanation = "The period will be reopened for authorized changes. The reason is recorded.";
@@ -100,9 +97,7 @@ export default function PeriodsPage() {
 
   async function confirmPeriodAction() {
     if (!target || saving || !reason.trim()) return;
-
     setSaving(true);
-
     const targetWasOpen = target.status === "open";
     const action = targetWasOpen ? lockAccountingPeriod : unlockAccountingPeriod;
 
@@ -113,16 +108,13 @@ export default function PeriodsPage() {
         setMessage(result.error.message);
       } else {
         const newStatus = targetWasOpen ? "locked" : "open";
-
         setPeriods((current) =>
           current.map((period) =>
             period.id === target.id ? { ...period, status: newStatus } : period,
           ),
         );
         setTarget(null);
-
         const newStateWord = targetWasOpen ? "locked" : "unlocked";
-
         setMessage(`${periodLabel(target)} was ${newStateWord}.`);
       }
     } catch {

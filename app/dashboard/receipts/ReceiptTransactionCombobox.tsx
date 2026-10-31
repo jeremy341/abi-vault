@@ -30,7 +30,6 @@ export function ReceiptTransactionCombobox({
   const [search, setSearch] = useState("");
   const selected = options.find((option) => option.value === value);
   const searchTerm = search.trim().toLowerCase();
-
   const filteredOptions = options.filter((option) =>
     `${option.label} ${option.date} ${option.amount}`
       .toLowerCase()
@@ -89,9 +88,7 @@ export function ReceiptTransactionCombobox({
                   className={styles.comboboxOption}
                   onClick={() => {
                     onChange(option.value);
-
                     setSearch("");
-
                     setOpen(false);
                   }}
                 >

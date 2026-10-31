@@ -60,7 +60,6 @@ export function useFinanceQuery<T extends QueryResult>(
 ) {
   const cached = getFinanceCacheState<T>(key, scope);
   const hasCachedData = cached.data !== undefined;
-
   const [state, setState] = useState<QueryState<T>>(() => ({
     key,
     scope,
@@ -69,15 +68,12 @@ export function useFinanceQuery<T extends QueryResult>(
     refreshing: hasCachedData && !cached.fresh,
     failed: false,
   }));
-
   const currentState = selectQueryState(state, key, scope, cached);
-
   useEffect(() => {
     let active = true;
 
     function applyResult(result: T) {
       if (!active) return;
-
       setState((current) => {
         let data: T | undefined;
 
@@ -102,7 +98,6 @@ export function useFinanceQuery<T extends QueryResult>(
 
     function markFailed() {
       if (!active) return;
-
       setState((current) => {
         if (!isSameQuery(current, key, scope)) return current;
 
@@ -111,7 +106,6 @@ export function useFinanceQuery<T extends QueryResult>(
     }
 
     const unsubscribe = subscribeFinanceQuery<T>(key, applyResult, scope);
-
     cachedFinanceQuery(key, query, { scope })
       .then(applyResult)
       .catch(markFailed);
@@ -121,21 +115,17 @@ export function useFinanceQuery<T extends QueryResult>(
       unsubscribe();
     };
   }, [key, query, scope]);
-
   const refetch = useCallback(() => {
     invalidateFinanceQuery(key);
-
     setState((current) => {
       if (!isSameQuery(current, key, scope)) return current;
 
       return { ...current, refreshing: true, failed: false };
     });
-
     cachedFinanceQuery(key, query, { scope })
       .then((result) => {
         setState((current) => {
           if (!isSameQuery(current, key, scope)) return current;
-
           let data: T | undefined;
 
           if (result.ok) {

@@ -12,11 +12,8 @@ import { transactionsForCashWallets } from "./query-filters";
 
 export async function listTransactionsForCurrentOrganization() {
   if (isDemoData()) return demoData.transactions;
-
   const context = await requireClerkContext();
-
   const supabase = await createSupabaseServerClient();
-
   const { data: membership, error: membershipError } = await supabase
     .from("committee_memberships")
     .select("role")
@@ -75,13 +72,10 @@ export async function listTransactionsForCurrentOrganization() {
     .eq("status", "active");
 
   if (cashWalletError) return queryFailure("DATABASE_ERROR");
-
   const cashWalletIds = new Set((cashWallets ?? []).map((wallet) => wallet.id));
 
   if (!cashWalletIds.size) return querySuccess({ items: [] });
-
   const cashTransactionFilter = transactionsForCashWallets([...cashWalletIds]);
-
   const { data: transactions, error } = await fetchAllRows((from, to) =>
     supabase
       .from("transactions")
@@ -97,27 +91,22 @@ export async function listTransactionsForCurrentOrganization() {
   );
 
   if (error) return queryFailure("DATABASE_ERROR");
-
   const cashTransactions = transactions ?? [];
-
   const categoryIds = [...new Set(
     cashTransactions
       .map((transaction) => transaction.category_id)
       .filter((id): id is string => Boolean(id)),
   )];
-
   const walletIds = [...new Set(
     cashTransactions
       .flatMap((transaction) => [transaction.from_wallet_id, transaction.to_wallet_id])
       .filter((id): id is string => Boolean(id)),
   )];
-
   const creatorIds = [...new Set(
     cashTransactions
       .map((transaction) => transaction.created_by)
       .filter((id): id is string => Boolean(id)),
   )];
-
   const receiptPromise = fetchRowsInBatches(
     cashTransactions.map((transaction) => transaction.id),
     (transactionIds) =>
@@ -133,7 +122,6 @@ export async function listTransactionsForCurrentOrganization() {
           .range(from, to),
       ),
   );
-
   const [
     { data: categories, error: categoryError },
     { data: wallets, error: walletError },
@@ -174,13 +162,9 @@ export async function listTransactionsForCurrentOrganization() {
   ]);
 
   if (categoryError || walletError || receiptError || creatorError) return queryFailure("DATABASE_ERROR");
-
   const categoryMap = new Map((categories ?? []).map((category) => [category.id, category.name]));
-
   const walletMap = new Map((wallets ?? []).map((wallet) => [wallet.id, wallet.name]));
-
   const creatorMap = new Map((creators ?? []).map((creator) => [creator.clerk_user_id, creator.display_name || creator.email || "Unbekannt"]));
-
   const receiptMap = new Map<string, { id: string; fileName: string; type: string; status: string }>(
     (receipts ?? [])
       .filter((receipt): receipt is typeof receipt & { transaction_id: string } => Boolean(receipt.transaction_id))
@@ -190,9 +174,7 @@ export async function listTransactionsForCurrentOrganization() {
   return querySuccess({
     items: cashTransactions.map((transaction) => {
       const receipt = receiptMap.get(transaction.id);
-
       const walletId = transaction.type === "income" ? transaction.to_wallet_id : transaction.from_wallet_id;
-
       let reviewStatus = "Pending review";
 
       if (receipt?.status === "approved") {

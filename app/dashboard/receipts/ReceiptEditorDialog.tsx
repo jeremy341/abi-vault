@@ -64,7 +64,6 @@ export function ReceiptEditorDialog({
   onSubmit,
 }: ReceiptEditorDialogProps) {
   if (!open) return null;
-
   const heading = editingReceipt ? "Edit receipt" : "Add receipt";
   const submitLabel = submitButtonLabel(saving, editingReceipt);
 

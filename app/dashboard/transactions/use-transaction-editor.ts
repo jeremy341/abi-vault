@@ -94,16 +94,12 @@ export function useTransactionEditor({
   const [category, setCategory] = useState<Category>("Sales");
   const [type, setType] = useState<TransactionType>("Einnahme");
   const [correctionReason, setCorrectionReason] = useState("");
-
   const [selectedCashRegisterId, setSelectedCashRegisterId] = useState(
     () => cashRegisters[0]?.id ?? "",
   );
-
   const idempotencyKey = useRef<string | null>(null);
-
   const firstCashRegisterId = cashRegisters[0]?.id ?? "";
   const activeCashRegisterId = selectedCashRegisterId || firstCashRegisterId;
-
   const transactionDirection = directionFor(type);
   const categoryOptionNames = categoryNamesFor(transactionDirection, editing);
   const categoryOptions = categoryOptionNames.map((value) => ({ value, label: value }));
@@ -120,7 +116,6 @@ export function useTransactionEditor({
     }
 
     const newKey = `ui-${crypto.randomUUID()}`;
-
     idempotencyKey.current = newKey;
 
     return newKey;
@@ -128,29 +123,19 @@ export function useTransactionEditor({
 
   function openAdd() {
     clearIdempotencyKey();
-
     setEditing(null);
-
     setTitle("");
-
     setAmount("");
-
     setCategory(defaultCategoryFor(type));
-
     setCorrectionReason("");
-
     setError("");
-
     setOpen(true);
   }
 
   function openEdit(transaction: Transaction) {
     clearIdempotencyKey();
-
     setEditing(transaction);
-
     setTitle(transaction.title);
-
     setAmount(amountToInputText(transaction.amount));
 
     if (transaction.type === "income") {
@@ -160,11 +145,8 @@ export function useTransactionEditor({
     }
 
     setCategory(transaction.category);
-
     setCorrectionReason("");
-
     setError("");
-
     setOpen(true);
   }
 
@@ -174,13 +156,9 @@ export function useTransactionEditor({
     }
 
     clearIdempotencyKey();
-
     setOpen(false);
-
     setEditing(null);
-
     setCorrectionReason("");
-
     setError("");
   }
 
@@ -218,9 +196,7 @@ export function useTransactionEditor({
     }
 
     setSaving(true);
-
     setError("");
-
     const requestKey = getRequestKey();
 
     try {
@@ -258,7 +234,6 @@ export function useTransactionEditor({
     }
 
     const editedTransactionId = editing.id;
-
     setItems((current) => current.map((transaction) => {
       if (transaction.id !== editedTransactionId) {
         return transaction;
@@ -281,17 +256,11 @@ export function useTransactionEditor({
         canEdit: true,
       };
     }));
-
     setOpen(false);
-
     setEditing(null);
-
     setCorrectionReason("");
-
     clearIdempotencyKey();
-
     refreshFinanceQueries();
-
     refetch();
   }
 
@@ -312,7 +281,6 @@ export function useTransactionEditor({
     }
 
     const cashRegister = cashRegisters.find((item) => item.id === activeCashRegisterId);
-
     setItems((current) => [
       {
         id: result.data.id,
@@ -334,55 +302,42 @@ export function useTransactionEditor({
       },
       ...current,
     ]);
-
     setTitle("");
-
     setAmount("");
-
     setOpen(false);
-
     clearIdempotencyKey();
-
     onCreated();
-
     refreshFinanceQueries();
   }
 
   function changeTitle(value: string) {
     clearIdempotencyKey();
-
     setTitle(value);
   }
 
   function changeAmount(value: string) {
     clearIdempotencyKey();
-
     setAmount(value);
   }
 
   function changeCategory(value: Category) {
     clearIdempotencyKey();
-
     setCategory(value);
   }
 
   function changeType(value: TransactionType) {
     clearIdempotencyKey();
-
     setType(value);
-
     setCategory(defaultCategoryFor(value));
   }
 
   function changeCorrectionReason(value: string) {
     clearIdempotencyKey();
-
     setCorrectionReason(value);
   }
 
   function changeCashRegister(value: string) {
     clearIdempotencyKey();
-
     setSelectedCashRegisterId(value);
   }
 

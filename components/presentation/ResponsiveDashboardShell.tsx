@@ -68,7 +68,6 @@ function NavigationLink({
   activeClassName: string;
 }) {
   const active = isCurrentRoute(pathname, route.href);
-
   let linkClassName = className;
 
   if (active) {
@@ -96,9 +95,7 @@ function useDismiss(
 
     function onKey(event: KeyboardEvent) {
       if (event.key !== "Escape") return;
-
       setOpen(false);
-
       trigger.current?.focus();
     }
 
@@ -134,9 +131,7 @@ function TopbarMenu({
   renderPopup: (close: () => void) => React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
-
   const trigger = useRef<HTMLButtonElement>(null);
-
   useDismiss(open, setOpen, trigger);
 
   function close() {
@@ -182,13 +177,10 @@ function PhoneNavigation({
   pathname: string;
 }) {
   const primary = routes.slice(0, phonePrimaryCount);
-
   const secondary = routes.slice(phonePrimaryCount);
-
   const secondaryActive = secondary.some((route) =>
     isCurrentRoute(pathname, route.href),
   );
-
   const moreClassName = joinClasses(
     styles.phoneNavLink,
     secondaryActive && styles.phoneNavLinkActive,
@@ -251,9 +243,7 @@ export default function ResponsiveDashboardShell({
   demoMode?: boolean;
 }) {
   const pathname = usePathname();
-
   const page = pageInformationFor(pathname);
-
   const visibleRoutes = navigationRoutes.filter((route) => {
     if (isAdmin) {
       return true;
@@ -261,9 +251,7 @@ export default function ResponsiveDashboardShell({
 
     return !isAdminOnlyRoute(route);
   });
-
   const mainRoutes = visibleRoutes.slice(0, adminGroupStart);
-
   const adminRoutes = visibleRoutes.slice(adminGroupStart);
 
   return (

@@ -56,7 +56,6 @@ function absoluteValue(value: bigint) {
 
 function addAmount(amounts: Map<string, bigint>, key: string, amount: bigint) {
   const currentAmount = amounts.get(key) ?? BigInt(0);
-
   amounts.set(key, currentAmount + amount);
 }
 
@@ -130,11 +129,8 @@ export function projectCategoryTotals(
 
   for (const transaction of transactions) {
     if (transaction.type !== "expense") continue;
-
     const amount = absoluteValue(toMinor(transaction.amountMinor));
-
     addAmount(totals, transaction.category, amount);
-
     totalExpenseMinor += amount;
   }
 
@@ -157,11 +153,9 @@ export function projectMonthlyFlowMinor(
     const monthKey = transaction.date?.slice(0, 7);
 
     if (!monthKey) continue;
-
     const flow = monthly.get(monthKey);
 
     if (!flow) continue;
-
     const amount = absoluteValue(toMinor(transaction.amountMinor));
 
     if (transaction.type === "income") flow.incomeMinor += amount;

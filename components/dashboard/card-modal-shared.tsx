@@ -38,7 +38,6 @@ export function formatExpiry(value: string) {
 export function hasExpiryInputError(value: string) {
   const digits = value.replace(/\D/g, "").slice(0, 4);
   const month = digits.slice(0, 2);
-
   const invalidMonth =
     (digits.length > 0 && !["0", "1"].includes(digits[0])) ||
     (month.length === 2 && (month === "00" || Number(month) > 12));
@@ -94,22 +93,17 @@ export function useCardModalFocus(
   onClose: () => void,
 ) {
   const onCloseRef = useRef(onClose);
-
   useEffect(() => {
     onCloseRef.current = onClose;
   }, [onClose]);
-
   useEffect(() => {
     if (!open) return;
-
     const previouslyFocused = document.activeElement as HTMLElement | null;
     const previousOverflow = document.body.style.overflow;
     const form = formRef.current;
-
     const focusable = form?.querySelectorAll<HTMLElement>(
       'button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
     );
-
     const first = focusable?.[0];
     const last = focusable?.[focusable.length - 1];
     const firstInput = form?.querySelector<HTMLElement>("input");

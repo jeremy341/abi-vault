@@ -13,8 +13,6 @@ type ExportFormat = "Excel" | "Review log";
 
 type CsvValue = string | number | null | undefined;
 
-type FinanceTransactionType = "income" | "expense" | "transfer";
-
 function csvCell(value: CsvValue, userText = false) {
   let text = String(value ?? "");
 
@@ -126,7 +124,7 @@ export async function exportManualFinanceReport(format: ExportFormat) {
           .order("id", { ascending: false })
           .range(from, to),
       )
-    : { data: [] as Array<{ id: string; title: string; type: FinanceTransactionType; amount_minor: string; currency: string; booked_at: string | null; category_id: string | null }>, error: null };
+    : { data: [], error: null };
 
   if (transactionsResult.error) return { ok: false as const, error: "EXPORT_FAILED" };
 

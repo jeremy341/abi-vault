@@ -1,8 +1,36 @@
 // Sample data is used in explicit demo mode or on the open-source-demo branch,
 // so the app can run without a database.
 const wallets = [
-  { id: "w1", name: "Class cash box", type: "cash", openingBalanceMinor: "15000", cardNumberVisual: "0001", cardHolderVisual: "Abi 2026", cardExpiryVisual: "06/26", cardColorVisual: "#141414", lastCountAt: "2026-10-12T14:00:00Z", lastCountedAmountMinor: "48250", lastCountDifferenceMinor: "-200", lastCountedByName: "Mara Lindner", connected: { display_name: null, iban_last4: null, bic: null, account_holder: null } },
-  { id: "w2", name: "Prom fund", type: "cash", openingBalanceMinor: "0", cardNumberVisual: "0002", cardHolderVisual: "Abi 2026", cardExpiryVisual: "06/26", cardColorVisual: "#5a5a5a", lastCountAt: null, lastCountedAmountMinor: null, lastCountDifferenceMinor: null, lastCountedByName: null, connected: { display_name: null, iban_last4: null, bic: null, account_holder: null } },
+  {
+    id: "w1",
+    name: "Class cash box",
+    type: "cash",
+    openingBalanceMinor: "15000",
+    cardNumberVisual: "0001",
+    cardHolderVisual: "Abi 2026",
+    cardExpiryVisual: "06/26",
+    cardColorVisual: "#141414",
+    lastCountAt: "2026-10-12T14:00:00Z",
+    lastCountedAmountMinor: "48250",
+    lastCountDifferenceMinor: "-200",
+    lastCountedByName: "Mara Lindner",
+    connected: { display_name: null, iban_last4: null, bic: null, account_holder: null },
+  },
+  {
+    id: "w2",
+    name: "Prom fund",
+    type: "cash",
+    openingBalanceMinor: "0",
+    cardNumberVisual: "0002",
+    cardHolderVisual: "Abi 2026",
+    cardExpiryVisual: "06/26",
+    cardColorVisual: "#5a5a5a",
+    lastCountAt: null,
+    lastCountedAmountMinor: null,
+    lastCountDifferenceMinor: null,
+    lastCountedByName: null,
+    connected: { display_name: null, iban_last4: null, bic: null, account_holder: null },
+  },
 ];
 
 const rows: [string, string, string, string, number, "income" | "expense", boolean, string, string][] = [
@@ -50,20 +78,20 @@ const goals = [
 ];
 
 const receipts = transactions.flatMap((t, index) => t.receipt ? [{
-  id: t.receiptId as string,
+  id: `r${index}`,
   file: `receipt-${t.id.slice(1)}.${index % 4 === 3 ? "pdf" : "jpg"}`,
   type: index % 4 === 3 ? "PDF" as const : "JPG" as const,
   sizeBytes: 180000 + index * 21000,
   transaction: t.title,
-  transactionId: t.id as string | null,
+  transactionId: t.id,
   assigned: true,
   date: t.date,
   amountMinor: t.amountMinor,
   status: t.reviewStatus === "Approved" ? "approved" : t.reviewStatus === "Invalid" ? "rejected" : "pending",
   uploadedByName: t.createdByName,
   uploadedAt: t.createdAt,
-  reviewedByName: (t.reviewStatus === "Approved" ? "Mara Lindner" : null) as string | null,
-  reviewedAt: (t.reviewStatus === "Approved" ? t.createdAt : null) as string | null,
+  reviewedByName: t.reviewStatus === "Approved" ? "Mara Lindner" : null,
+  reviewedAt: t.reviewStatus === "Approved" ? t.createdAt : null,
   canEdit: true,
   canDelete: true,
 }] : []);
@@ -77,7 +105,16 @@ const members = [
 ];
 
 const cashCounts = [
-  { id: "c1", walletId: "w1", countedAmountMinor: "48250", bookAmountMinor: "48450", differenceMinor: "-200", countedByName: "Mara Lindner", createdAt: "2026-10-12T14:00:00Z", note: "Two coins missing" },
+  {
+    id: "c1",
+    walletId: "w1",
+    countedAmountMinor: "48250",
+    bookAmountMinor: "48450",
+    differenceMinor: "-200",
+    countedByName: "Mara Lindner",
+    createdAt: "2026-10-12T14:00:00Z",
+    note: "Two coins missing",
+  },
 ];
 
 export const demoData = {
@@ -92,8 +129,24 @@ export const demoData = {
     ok: true as const,
     items: [
       { id: "p1", year: 2026, month: 10, status: "open" as const, lockedAt: null, lockedByName: null, lockReason: null },
-      { id: "p2", year: 2026, month: 9, status: "locked" as const, lockedAt: "2026-10-02T10:00:00Z", lockedByName: "Mara Lindner", lockReason: "Month closed after cash count" },
-      { id: "p3", year: 2026, month: 8, status: "locked" as const, lockedAt: "2026-09-03T10:00:00Z", lockedByName: "Mara Lindner", lockReason: "Month closed" },
+      {
+        id: "p2",
+        year: 2026,
+        month: 9,
+        status: "locked" as const,
+        lockedAt: "2026-10-02T10:00:00Z",
+        lockedByName: "Mara Lindner",
+        lockReason: "Month closed after cash count",
+      },
+      {
+        id: "p3",
+        year: 2026,
+        month: 8,
+        status: "locked" as const,
+        lockedAt: "2026-09-03T10:00:00Z",
+        lockedByName: "Mara Lindner",
+        lockReason: "Month closed",
+      },
     ],
   },
   reportKpis: {

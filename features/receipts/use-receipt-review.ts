@@ -16,6 +16,14 @@ type UseReceiptReviewOptions = {
   onStatusChange: (receiptId: string, status: ReceiptStatus) => void;
 };
 
+function statusForDecision(decision: ReceiptReviewDecision): ReceiptStatus {
+  if (decision === "approved") return "Approved";
+
+  if (decision === "rejected") return "Invalid";
+
+  return "Pending review";
+}
+
 export function useReceiptReview({ onStatusChange }: UseReceiptReviewOptions) {
   const [target, setTarget] = useState<ReceiptReviewTarget | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -27,8 +35,10 @@ export function useReceiptReview({ onStatusChange }: UseReceiptReviewOptions) {
   const [saving, setSaving] = useState(false);
   const previewRequestId = useRef(0);
 
-  useEffect(() => () => {
-    previewRequestId.current += 1;
+  useEffect(() => {
+    return () => {
+      previewRequestId.current += 1;
+    };
   }, []);
 
   async function open(receipt: ReceiptReviewTarget) {
@@ -93,14 +103,7 @@ export function useReceiptReview({ onStatusChange }: UseReceiptReviewOptions) {
         return;
       }
 
-      const nextStatus: ReceiptStatus =
-        decision === "approved"
-          ? "Approved"
-          : decision === "rejected"
-            ? "Invalid"
-            : "Pending review";
-
-      onStatusChange(target.id, nextStatus);
+      onStatusChange(target.id, statusForDecision(decision));
       invalidateFinanceQuery(
         "receipts",
         "transactions",

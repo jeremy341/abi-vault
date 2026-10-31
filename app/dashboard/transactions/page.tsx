@@ -2,17 +2,11 @@
 
 import { useRef, useState } from "react";
 import { useAppAuth } from "@/components/auth/app-auth";
-import { X } from "lucide-react";
-import styles from "./transactions.module.css";
 import ledger from "../ledger.module.css";
 import { LoadError } from "@/components/ui/load-error";
-import { Dialog } from "@/components/ui/dialog";
-import {
-  LoadingStatus,
-  LoadingText,
-} from "@/components/ui/loading-state";
+import { LoadingStatus } from "@/components/ui/loading-state";
 import { useResponsivePageSize } from "@/hooks/use-responsive-page-size";
-import { getDashboardSnapshot, type DashboardResult } from "@/features/finance/actions/queries";
+import { getDashboardSnapshot } from "@/features/finance/actions/queries";
 import { archiveTransaction as archiveTransactionAction } from "@/features/finance/actions/corrections";
 import { financeScope, invalidateFinanceQuery } from "@/lib/finance/client-cache";
 import { useFinanceQuery } from "@/hooks/use-finance-query";
@@ -22,57 +16,24 @@ import { useReceiptReview } from "@/features/receipts/use-receipt-review";
 
 import {
   categoryFilterOptions,
-  formatAmount,
-  formatLongDate,
-  formatTotal,
-  toTransaction,
   type Transaction,
 } from "@/features/finance/transactions/view-model";
-import { StyledDropdown } from "./TransactionControls";
-import { DateRangeDialog, TransactionFiltersDialog } from "./TransactionFilterDialogs";
+import { DateRangeDialog } from "./DateRangeDialog";
+import { TransactionFiltersDialog } from "./TransactionFiltersDialog";
 import { TransactionEditorDialog } from "./TransactionEditorDialog";
 import { TransactionsTable } from "./TransactionsTable";
 import { useTransactionEditor } from "./use-transaction-editor";
 import { useTransactionFilters } from "./use-transaction-filters";
-
-type DashboardData = Extract<DashboardResult, { ok: true }>;
+import { TransactionsSummary } from "./TransactionsSummary";
+import { TransactionsToolbar } from "./TransactionsToolbar";
+import { TransactionDetailsDialog } from "./TransactionDetailsDialog";
+import { ArchiveTransactionDialog } from "./ArchiveTransactionDialog";
+import { transactionsFromDashboard } from "./transactions-from-dashboard";
+import { cashRegistersFromDashboard } from "./cash-registers-from-dashboard";
+import { receiptTypeLabel } from "./receipt-type-label";
+import { sumIncomeAndExpense } from "./sum-income-and-expense";
 
 const emptyTransactions: Transaction[] = [];
-
-function transactionsFromDashboard(data: DashboardData) {
-  return data.transactions.map(toTransaction);
-}
-
-function cashRegistersFromDashboard(data: DashboardData) {
-  return data.wallets.map((wallet) => ({ id: wallet.id, name: wallet.name }));
-}
-
-function receiptTypeLabel(receiptType: string | null): "PDF" | "PNG" | "JPG" {
-  if (receiptType === "application/pdf") {
-    return "PDF";
-  }
-
-  if (receiptType === "image/png") {
-    return "PNG";
-  }
-
-  return "JPG";
-}
-
-function sumIncomeAndExpense(transactions: Transaction[]) {
-  let income = 0;
-  let expense = 0;
-
-  for (const transaction of transactions) {
-    if (transaction.amount >= 0) {
-      income += transaction.amount;
-    } else {
-      expense += Math.abs(transaction.amount);
-    }
-  }
-
-  return { totalIncome: income, totalExpense: expense };
-}
 
 export default function TransactionsPage() {
   const { userId, orgId } = useAppAuth();
@@ -195,77 +156,29 @@ export default function TransactionsPage() {
       {refreshing && !loading ? <span className="sr-only" role="status">Updating transactions</span> : null}
       {loadError ? <LoadError message={loadError} /> : null}
 
-      <div className={ledger.summary}>
-        <dl className={ledger.figures}>
-          <div>
-            <dt>Income</dt>
-            <dd><LoadingText loading={loading}>{formatTotal(totalIncome)}</LoadingText></dd>
-          </div>
-          <div>
-            <dt>Expenses</dt>
-            <dd><LoadingText loading={loading}>{formatTotal(totalExpense)}</LoadingText></dd>
-          </div>
-          <div>
-            <dt>Net</dt>
-            <dd className={`${ledger.net} total-rule`}><LoadingText loading={loading}>{formatAmount(netBalance)}</LoadingText></dd>
-          </div>
-        </dl>
-        <button
-          type="button"
-          className={ledger.primaryButton}
-          onClick={openAddTransaction}
-          disabled={loading || !transactionEditor.activeCashRegisterId || Boolean(loadError)}
-        >
-          Add transaction
-        </button>
-      </div>
+      <TransactionsSummary
+        loading={loading}
+        totalIncome={totalIncome}
+        totalExpense={totalExpense}
+        netBalance={netBalance}
+        addDisabled={loading || !transactionEditor.activeCashRegisterId || Boolean(loadError)}
+        onAddTransaction={openAddTransaction}
+      />
 
-      <div className={`${ledger.toolbar} ${ledger.toolbarWide}`}>
-        <label className={ledger.searchField}>
-          <span className="sr-only">Search transactions</span>
-          <input
-            value={filters.filters.query}
-            disabled={loading}
-            onChange={(event) => filters.setQuery(event.target.value)}
-            placeholder="Search transactions"
-          />
-        </label>
-        <StyledDropdown
-          ariaLabel="Select category"
-          value={filters.filters.category}
-          onChange={filters.setCategory}
-          className={styles.filterDropdown}
-          options={[
-            { value: "All", label: "All categories" },
-            ...transactionCategoryOptions.map((value) => ({ value, label: value })),
-          ]}
-        />
-        <StyledDropdown
-          ariaLabel="Select type"
-          value={filters.filters.type}
-          onChange={(value) => {
-            if (value === "All" || value === "Income" || value === "Expenses") {
-              filters.setType(value);
-            }
-          }}
-          className={styles.filterDropdown}
-          options={[
-            { value: "All", label: "All types" },
-            { value: "Income", label: "Income" },
-            { value: "Expenses", label: "Expenses" },
-          ]}
-        />
-        <button
-          type="button"
-          className={ledger.secondaryButton}
-          onClick={filters.openDateDialog}
-        >
-          {filters.dateLabel}
-        </button>
-        <button type="button" className={ledger.secondaryButton} onClick={filters.openFilterDialog}>
-          {filters.activeFilterCount ? `Filters (${filters.activeFilterCount})` : "Filters"}
-        </button>
-      </div>
+      <TransactionsToolbar
+        loading={loading}
+        query={filters.filters.query}
+        onQueryChange={filters.setQuery}
+        category={filters.filters.category}
+        categoryOptions={transactionCategoryOptions}
+        onCategoryChange={filters.setCategory}
+        type={filters.filters.type}
+        onTypeChange={filters.setType}
+        dateLabel={filters.dateLabel}
+        onOpenDateDialog={filters.openDateDialog}
+        activeFilterCount={filters.activeFilterCount}
+        onOpenFilterDialog={filters.openFilterDialog}
+      />
 
       <TransactionsTable
         loading={loading}
@@ -339,37 +252,10 @@ export default function TransactionsPage() {
       />
 
       {selected ? (
-        <Dialog
-          overlayClassName={styles.overlay}
-          dialogClassName={styles.modal}
-          label="Transaction details"
+        <TransactionDetailsDialog
+          transaction={selected}
           onClose={() => setSelected(null)}
-        >
-          <div className={styles.modalHeader}>
-            <div>
-              <h2>{selected.title}</h2>
-              <p>Transaction details</p>
-            </div>
-            <button
-              type="button"
-              className={styles.iconButton}
-              onClick={() => setSelected(null)}
-              aria-label="Close details"
-            >
-              <X />
-            </button>
-          </div>
-          <div className={styles.detailGrid}>
-            <span>Category</span>
-            <strong>{selected.category}</strong>
-            <span>Date</span>
-            <strong>{formatLongDate(selected.date)}</strong>
-            <span>Amount</span>
-            <strong>{formatAmount(selected.amount)}</strong>
-            <span>Receipt</span>
-            <strong>{selected.receipt ?? "No receipt"}</strong>
-          </div>
-        </Dialog>
+        />
       ) : null}
 
       {receiptReview.target ? (
@@ -388,34 +274,15 @@ export default function TransactionsPage() {
       ) : null}
 
       {archiveTarget ? (
-        <Dialog
-          overlayClassName={styles.overlay}
-          dialogClassName={styles.modal}
-          label="Archive transaction"
-          onClose={() => { if (!saving) setArchiveTarget(null); }}
-        >
-          <div className={styles.modalHeader}>
-            <div>
-              <h2>Archive transaction?</h2>
-              <p>It stays in the review log but no longer counts in totals.</p>
-            </div>
-            <button type="button" className={styles.iconButton} onClick={() => setArchiveTarget(null)} disabled={saving} aria-label="Close dialog"><X /></button>
-          </div>
-          <div className={styles.modalBody}>
-            <label className={styles.formField}>
-              <span>Reason</span>
-              <textarea value={archiveReason} onChange={(event) => setArchiveReason(event.target.value)} placeholder="Why should the transaction be archived?" rows={3} autoFocus />
-            </label>
-            {actionError ? <p className={styles.error} role="alert">{actionError}</p> : null}
-          </div>
-          <div className={styles.modalFooter}>
-            <span />
-            <div>
-              <button type="button" className={styles.secondaryButton} onClick={() => setArchiveTarget(null)} disabled={saving}>Cancel</button>
-              <button type="button" className={styles.primaryButton} onClick={confirmArchiveTransaction} disabled={saving || !archiveReason.trim()} aria-busy={saving}>{saving ? "Archiving" : "Archive"}</button>
-            </div>
-          </div>
-        </Dialog>
+        <ArchiveTransactionDialog
+          reason={archiveReason}
+          actionError={actionError}
+          saving={saving}
+          onReasonChange={setArchiveReason}
+          onDismiss={() => { if (!saving) setArchiveTarget(null); }}
+          onCancel={() => setArchiveTarget(null)}
+          onConfirm={confirmArchiveTransaction}
+        />
       ) : null}
     </section>
   );

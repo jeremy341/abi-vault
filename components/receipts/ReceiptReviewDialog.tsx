@@ -8,6 +8,8 @@ import type {
   ReceiptReviewDialogReceipt,
 } from "@/features/receipts/view-model";
 import styles from "./ReceiptReviewDialog.module.css";
+import { formatReceiptDate } from "./format-receipt-date";
+import { renderActivityRow } from "./render-activity-row";
 
 export type { ReceiptReviewDecision } from "@/features/receipts/view-model";
 
@@ -25,42 +27,6 @@ type ReceiptReviewDialogProps = {
   onClose: () => void;
   onDecision: (decision: ReceiptReviewDecision) => void;
 };
-
-function formatReceiptDate(dateText: string) {
-  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(dateText);
-
-  if (!match) return dateText;
-  const date = new Date(Number(match[3]), Number(match[2]) - 1, Number(match[1]));
-
-  if (Number.isNaN(date.getTime())) return dateText;
-
-  return date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-}
-
-function formatTimestamp(timestamp: string | null | undefined) {
-  if (!timestamp) return "";
-  const date = new Date(timestamp);
-
-  if (Number.isNaN(date.getTime())) return timestamp;
-
-  return date.toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" });
-}
-
-function renderActivityRow(
-  label: string,
-  name: string | null | undefined,
-  timestamp: string | null | undefined,
-) {
-  if (!name) return null;
-
-  return (
-    <div>
-      <dt>{label}</dt>
-      <dd>{name}</dd>
-      {timestamp ? <dd className={styles.when}>{formatTimestamp(timestamp)}</dd> : null}
-    </div>
-  );
-}
 
 export function ReceiptReviewDialog({
   receipt,

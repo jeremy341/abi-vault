@@ -10,18 +10,7 @@ import {
   type FilterType,
   type Transaction,
 } from "@/features/finance/transactions/view-model";
-
-type DraftFilters = Pick<
-  TransactionFilters,
-  | "categories"
-  | "types"
-  | "start"
-  | "end"
-  | "minimumAmount"
-  | "maximumAmount"
-  | "receipt"
-  | "review"
->;
+import type { DraftFilters } from "./types";
 
 function emptyFilters(): TransactionFilters {
   return {
@@ -53,19 +42,45 @@ function draftFrom(filters: TransactionFilters): DraftFilters {
 }
 
 function countActiveFilters(filters: TransactionFilters) {
-  const activeChecks = [
-    Boolean(filters.query.trim()),
-    filters.category !== "All",
-    filters.type !== "All",
-    filters.categories.length > 0,
-    filters.types.length > 0,
-    Boolean(filters.start || filters.end),
-    Boolean(filters.minimumAmount || filters.maximumAmount),
-    filters.receipt !== "All",
-    filters.review !== "All",
-  ];
+  let count = 0;
 
-  return activeChecks.filter(Boolean).length;
+  if (filters.query.trim()) {
+    count += 1;
+  }
+
+  if (filters.category !== "All") {
+    count += 1;
+  }
+
+  if (filters.type !== "All") {
+    count += 1;
+  }
+
+  if (filters.categories.length > 0) {
+    count += 1;
+  }
+
+  if (filters.types.length > 0) {
+    count += 1;
+  }
+
+  if (filters.start || filters.end) {
+    count += 1;
+  }
+
+  if (filters.minimumAmount || filters.maximumAmount) {
+    count += 1;
+  }
+
+  if (filters.receipt !== "All") {
+    count += 1;
+  }
+
+  if (filters.review !== "All") {
+    count += 1;
+  }
+
+  return count;
 }
 
 function dateRangeLabel(start: string, end: string) {
@@ -73,8 +88,15 @@ function dateRangeLabel(start: string, end: string) {
     return "Select period";
   }
 
-  const startLabel = start ? formatLongDate(formatShortDate(fromIso(start))) : "Start";
-  const endLabel = end ? formatLongDate(formatShortDate(fromIso(end))) : "today";
+  let startLabel = "Start";
+  if (start) {
+    startLabel = formatLongDate(formatShortDate(fromIso(start)));
+  }
+
+  let endLabel = "today";
+  if (end) {
+    endLabel = formatLongDate(formatShortDate(fromIso(end)));
+  }
 
   return `${startLabel} to ${endLabel}`;
 }
@@ -120,6 +142,10 @@ export function useTransactionFilters(
     setPage(1);
   }
 
+  function updateDraft(changes: Partial<DraftFilters>) {
+    setDraft((current) => ({ ...current, ...changes }));
+  }
+
   function openDateDialog() {
     setDraft(draftFrom(filters));
     setDateDialogOpen(true);
@@ -147,31 +173,31 @@ export function useTransactionFilters(
   }
 
   function resetDraftDateRange() {
-    setDraft((current) => ({ ...current, start: "", end: "" }));
+    updateDraft({ start: "", end: "" });
   }
 
   function setDraftStart(start: string) {
-    setDraft((current) => ({ ...current, start }));
+    updateDraft({ start });
   }
 
   function setDraftEnd(end: string) {
-    setDraft((current) => ({ ...current, end }));
+    updateDraft({ end });
   }
 
   function setDraftMinimumAmount(minimumAmount: string) {
-    setDraft((current) => ({ ...current, minimumAmount }));
+    updateDraft({ minimumAmount });
   }
 
   function setDraftMaximumAmount(maximumAmount: string) {
-    setDraft((current) => ({ ...current, maximumAmount }));
+    updateDraft({ maximumAmount });
   }
 
   function setDraftReceiptFilter(receipt: TransactionFilters["receipt"]) {
-    setDraft((current) => ({ ...current, receipt }));
+    updateDraft({ receipt });
   }
 
   function setDraftReviewFilter(review: TransactionFilters["review"]) {
-    setDraft((current) => ({ ...current, review }));
+    updateDraft({ review });
   }
 
   function toggleDraftCategory(category: string) {

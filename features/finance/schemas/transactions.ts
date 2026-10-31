@@ -76,4 +76,3 @@ export const transactionCreateSchema = z
 
 export type TransactionCreateInput = z.input<typeof transactionCreateSchema>;
 
-export type TransactionCreateCommand = z.output<typeof transactionCreateSchema>;

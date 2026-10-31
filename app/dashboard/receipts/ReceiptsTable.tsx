@@ -13,6 +13,7 @@ import {
   type Receipt,
 } from "@/features/receipts/view-model";
 import ledger from "../ledger.module.css";
+import { statusClassName } from "./status-class-name";
 
 type ReceiptsTableProps = {
   loading: boolean;
@@ -30,14 +31,6 @@ type ReceiptsTableProps = {
   onDelete: (receipt: Receipt) => void;
   onReview: (receipt: Receipt) => void;
 };
-
-function statusClassName(status: Receipt["status"]) {
-  if (status === "Approved") return ledger.muted;
-
-  if (status === "Invalid") return ledger.invalid;
-
-  return ledger.attention;
-}
 
 export function ReceiptsTable({
   loading,

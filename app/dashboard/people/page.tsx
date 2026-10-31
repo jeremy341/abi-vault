@@ -1,11 +1,8 @@
 "use client";
 
-import { X } from "lucide-react";
 import { useState } from "react";
 import { useAppAuth } from "@/components/auth/app-auth";
-import { Dialog } from "@/components/ui/dialog";
 import {
-  LoadingCollection,
   LoadingStatus,
   LoadingText,
 } from "@/components/ui/loading-state";
@@ -22,18 +19,24 @@ import {
   updateMemberRole,
 } from "@/features/people/actions/memberships";
 import { financeScope } from "@/lib/finance/client-cache";
+import { MemberTable } from "./MemberTable";
+import { RolesSummary } from "./RolesSummary";
+import { InviteLinks } from "./InviteLinks";
+import { InviteDialog } from "./InviteDialog";
+import type {
+  InviteRole,
+  Person,
+  PersonRole,
+  RoleInviteLink,
+  RoleLinks,
+} from "./people-types";
 
-type PersonRole = "Administrator" | "Supervisor" | "Member";
-
-type InviteRole = "Administrator" | "Supervisor";
-
-type Person = {
-  id: string;
-  name: string;
-  role: PersonRole;
-  access: string;
-  status: "Active" | "Invitation pending" | "Inactive";
+type RoleLinksState = {
+  scope: string;
+  links: RoleLinks;
 };
+
+type MemberListData = Extract<Awaited<ReturnType<typeof listMembersForCurrentOrganization>>, { ok: true }>;
 
 const nextRoleFor: Record<
   PersonRole,
@@ -55,27 +58,6 @@ const nextRoleFor: Record<
     access: "Manages finances",
   },
 };
-
-type RoleInviteLink = {
-  role: "admin" | "supervisor";
-  url: string;
-  expiresAt: string;
-};
-
-type RoleLinks = Partial<Record<RoleInviteLink["role"], RoleInviteLink>>;
-
-type RoleLinksState = {
-  scope: string;
-  links: RoleLinks;
-};
-
-type RoleCounts = {
-  administrators: number;
-  supervisors: number;
-  members: number;
-};
-
-type MemberListData = Extract<Awaited<ReturnType<typeof listMembersForCurrentOrganization>>, { ok: true }>;
 
 const emptyPeople: Person[] = [];
 
@@ -123,253 +105,6 @@ function peopleFromMemberList(data: MemberListData): Person[] {
     access: accessFor(member.role),
     status: statusNameFor(member.status),
   }));
-}
-
-type MemberTableProps = {
-  loading: boolean;
-  people: Person[];
-  filteredPeople: Person[];
-  busyPersonId: string | null;
-  onChangeRole: (personId: string) => void;
-  onRemove: (personId: string) => void;
-};
-
-function MemberTable({
-  loading,
-  people,
-  filteredPeople,
-  busyPersonId,
-  onChangeRole,
-  onRemove,
-}: MemberTableProps) {
-  return (
-    <div className={ledger.tableWrap}>
-      <LoadingCollection loading={loading} knownItemCount={people.length} emptyHeight="12rem" label="Loading members">
-        {!loading && !filteredPeople.length ? (
-          <p className={ledger.empty}>No members found.</p>
-        ) : (
-          <table className={ledger.table}>
-            <thead>
-              <tr>
-                <th scope="col">Name</th>
-                <th scope="col" className={ledger.hideOnPhone}>Role</th>
-                <th scope="col" className={ledger.hideOnPhone}>Access</th>
-                <th scope="col">Status</th>
-                <th scope="col" className={ledger.actions}><span className="sr-only">Actions</span></th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredPeople.map((person) => (
-                <tr key={person.id}>
-                  <td>
-                    <span className={ledger.title}>{person.name}</span>
-                    <span className={ledger.phoneMeta}>{person.role}</span>
-                  </td>
-                  <td className={ledger.hideOnPhone}>{person.role}</td>
-                  <td className={`${ledger.muted} ${ledger.hideOnPhone}`}>{person.access}</td>
-                  <td className={person.status === "Active" ? ledger.muted : ledger.attention}>{person.status}</td>
-                  <td className={ledger.actions}>
-                    {person.status !== "Active" ? (
-                      <span className={ledger.rowMeta} title="Only active members can be managed here.">
-                        No actions
-                      </span>
-                    ) : (
-                      <span className={ledger.inlineActions}>
-                        <button type="button" className={`${ledger.textButton} ${styles.rowAction}`} onClick={() => onChangeRole(person.id)} disabled={busyPersonId === person.id} aria-label={`Change role for ${person.name}`}>
-                          Change role
-                        </button>
-                        <button type="button" className={`${ledger.textButton} ${styles.rowAction}`} onClick={() => void onRemove(person.id)} disabled={busyPersonId === person.id} aria-label={`Remove ${person.name}`}>
-                          Remove
-                        </button>
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </LoadingCollection>
-    </div>
-  );
-}
-
-type RolesSummaryProps = {
-  counts: RoleCounts;
-};
-
-function RolesSummary({ counts }: RolesSummaryProps) {
-  return (
-    <section className={ledger.section}>
-      <header className={ledger.sectionHeader}>
-        <h2>Roles</h2>
-      </header>
-      <dl className={`${ledger.definitions} ${styles.roles}`}>
-        <div>
-          <dt>Administrator ({counts.administrators})</dt>
-          <dd>Full access to everything</dd>
-        </div>
-        <div>
-          <dt>Supervisor ({counts.supervisors})</dt>
-          <dd>Manages finances and reviews receipts</dd>
-        </div>
-        <div>
-          <dt>Member ({counts.members})</dt>
-          <dd>Read-only view of totals and goals</dd>
-        </div>
-      </dl>
-    </section>
-  );
-}
-
-type InviteLinksProps = {
-  roleLinks: RoleLinks;
-  linkSaving: RoleInviteLink["role"] | null;
-  onCreateLink: (role: RoleInviteLink["role"]) => void;
-  onCopyLink: (role: RoleInviteLink["role"]) => void;
-};
-
-function InviteLinks({ roleLinks, linkSaving, onCreateLink, onCopyLink }: InviteLinksProps) {
-  return (
-    <section className={ledger.section}>
-      <header className={ledger.sectionHeader}>
-        <h2>Invitation links</h2>
-        <p>Share a link instead of an email invitation.</p>
-      </header>
-      <ul className={ledger.list}>
-        {(["supervisor", "admin"] as const).map((role) => {
-          const link = roleLinks[role];
-
-          return (
-            <li key={role} className={ledger.row} data-columns="link">
-              <span className={ledger.rowTitle}>
-                <span>{role === "admin" ? "Admin link" : "Supervisor link"}</span>
-                <span className={ledger.rowMeta}>
-                  {role === "admin" ? "Full access to the workspace and settings." : "Manage finances and review reports."}
-                </span>
-                {link ? <code className={ledger.code}>{link.url}</code> : null}
-              </span>
-              {link ? (
-                <button type="button" className={ledger.secondaryButton} onClick={() => void onCopyLink(role)} aria-label={`Copy ${role} link`}>
-                  Copy
-                </button>
-              ) : (
-                <button type="button" className={ledger.secondaryButton} onClick={() => void onCreateLink(role)} disabled={linkSaving !== null} aria-busy={linkSaving === role}>
-                  {linkSaving === role ? "Creating" : "Create link"}
-                </button>
-              )}
-            </li>
-          );
-        })}
-      </ul>
-    </section>
-  );
-}
-
-type InviteDialogProps = {
-  inviteEmail: string;
-  newRole: InviteRole;
-  message: string;
-  inviteSaving: boolean;
-  onEmailChange: (value: string) => void;
-  onRoleChange: (role: InviteRole) => void;
-  onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
-  onClose: () => void;
-};
-
-function InviteDialog({
-  inviteEmail,
-  newRole,
-  message,
-  inviteSaving,
-  onEmailChange,
-  onRoleChange,
-  onSubmit,
-  onClose,
-}: InviteDialogProps) {
-  return (
-    <Dialog
-      label="Add person"
-      onClose={onClose}
-      overlayClassName={styles.overlay}
-      dialogClassName={styles.modal}
-    >
-      <form onSubmit={onSubmit}>
-        <header className={styles.modalHeader}>
-          <div>
-            <h2>Invite member</h2>
-            <p>
-              The person receives an invitation by email and joins your
-              Abi Vault workspace.
-            </p>
-          </div>
-          <button
-            type="button"
-            className={styles.closeButton}
-            onClick={onClose}
-            disabled={inviteSaving}
-            aria-label="Close dialog"
-          >
-            <X aria-hidden="true" />
-          </button>
-        </header>
-        <div className={styles.modalBody}>
-          <label className={styles.formField}>
-            <span>Email address</span>
-            <input
-              name="inviteEmail"
-              type="email"
-              autoComplete="email"
-              required
-              value={inviteEmail}
-              onChange={(event) => onEmailChange(event.target.value)}
-              placeholder="name@example.com"
-            />
-          </label>
-          <label className={styles.formField}>
-            <span>Role</span>
-            <select
-              name="personRole"
-              value={newRole}
-              onChange={(event) => {
-                const value = event.target.value;
-
-                if (value === "Administrator" || value === "Supervisor") {
-                  onRoleChange(value);
-                }
-              }}
-            >
-              <option>Supervisor</option>
-              <option>Administrator</option>
-            </select>
-          </label>
-          {message ? (
-            <p className={styles.formMessage} role="status">
-              {message}
-            </p>
-          ) : null}
-        </div>
-        <footer className={styles.modalFooter}>
-          <button
-            type="button"
-            className={styles.secondaryButton}
-            onClick={onClose}
-            disabled={inviteSaving}
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className={styles.primaryButton}
-            disabled={inviteSaving}
-            aria-busy={inviteSaving}
-          >
-            {inviteSaving ? "Sending" : "Send invitation"}
-          </button>
-        </footer>
-      </form>
-    </Dialog>
-  );
 }
 
 export default function PeoplePage() {

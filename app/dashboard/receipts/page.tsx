@@ -3,9 +3,7 @@
 import { useRef, useState } from "react";
 import { useAppAuth } from "@/components/auth/app-auth";
 import { X } from "lucide-react";
-import styles from "./receipts.module.css";
 import { Dialog } from "@/components/ui/dialog";
-import { FieldDropdown } from "@/components/ui/field-dropdown";
 import {
   LoadingStatus,
   LoadingText,
@@ -24,7 +22,6 @@ import { financeDateKey, previousFinanceMonthKey } from "@/lib/finance/date-keys
 import {
   periodOptions,
   statusOptions,
-  toReceipt,
   type Receipt,
 } from "@/features/receipts/view-model";
 import { useReceiptReview } from "@/features/receipts/use-receipt-review";
@@ -32,48 +29,11 @@ import { useReceiptEditor } from "@/features/receipts/use-receipt-editor";
 import { ReceiptEditorDialog } from "./ReceiptEditorDialog";
 import { ReceiptReviewDialog } from "@/components/receipts/ReceiptReviewDialog";
 import { ReceiptsTable } from "./ReceiptsTable";
-
-type ReceiptQueryData = Extract<Awaited<ReturnType<typeof listReceiptsForCurrentOrganization>>, { ok: true }>;
+import { ReceiptsDropdown } from "./ReceiptsDropdown";
+import { matchesSearch } from "./matches-search";
+import { receiptsFromQuery } from "./receipts-from-query";
 
 const emptyReceipts: Receipt[] = [];
-
-function receiptsFromQuery(data: ReceiptQueryData) {
-  return data.items.map(toReceipt);
-}
-
-function matchesSearch(receipt: Receipt, searchTerm: string) {
-  if (!searchTerm) return true;
-  const text = `${receipt.file} ${receipt.transaction}`.toLowerCase();
-
-  return text.includes(searchTerm);
-}
-
-function Dropdown({
-  value,
-  options,
-  onChange,
-  ariaLabel,
-}: {
-  value: string;
-  options: readonly string[];
-  onChange: (value: string) => void;
-  ariaLabel: string;
-}) {
-  const dropdownOptions = options.map((option) => ({
-    value: option,
-    label: option === "All" ? `${ariaLabel}: All` : option,
-  }));
-
-  return (
-    <FieldDropdown
-      ariaLabel={ariaLabel}
-      value={value}
-      options={dropdownOptions}
-      onChange={onChange}
-      className={styles.dropdown}
-    />
-  );
-}
 
 export default function ReceiptsPage() {
   const { userId, orgId } = useAppAuth();
@@ -248,7 +208,7 @@ export default function ReceiptsPage() {
             placeholder="Search by file or transaction"
           />
         </label>
-        <Dropdown
+        <ReceiptsDropdown
           ariaLabel="Status"
           value={status}
           options={statusOptions}
@@ -257,7 +217,7 @@ export default function ReceiptsPage() {
             setPage(1);
           }}
         />
-        <Dropdown
+        <ReceiptsDropdown
           ariaLabel="Period"
           value={period}
           options={periodOptions}

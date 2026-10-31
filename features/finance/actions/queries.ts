@@ -28,4 +28,3 @@ import type { getDashboardSnapshot, getReportSnapshot } from "./snapshot-queries
 
 export type DashboardResult = Awaited<ReturnType<typeof getDashboardSnapshot>>;
 
-export type ReportResult = Awaited<ReturnType<typeof getReportSnapshot>>;

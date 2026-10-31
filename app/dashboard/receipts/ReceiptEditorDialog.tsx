@@ -9,6 +9,7 @@ import type { Receipt, TransactionOption } from "@/features/receipts/view-model"
 import dlg from "@/components/dashboard/dialog.module.css";
 import styles from "./receipts.module.css";
 import { ReceiptTransactionCombobox } from "./ReceiptTransactionCombobox";
+import { submitButtonLabel } from "./submit-button-label";
 
 type ReceiptEditorDialogProps = {
   open: boolean;
@@ -32,14 +33,6 @@ type ReceiptEditorDialogProps = {
   onClose: () => void;
   onSubmit: () => void;
 };
-
-function submitButtonLabel(saving: boolean, editingReceipt: Receipt | null) {
-  if (editingReceipt) {
-    return saving ? "Saving" : "Save changes";
-  }
-
-  return saving ? "Uploading" : "Add receipt";
-}
 
 export function ReceiptEditorDialog({
   open,

@@ -6,22 +6,25 @@ import { createPortal } from "react-dom";
 import AccountCard, {
   type AccountCardDetails,
 } from "@/components/dashboard/AccountCard";
+import { CardColorPicker, cardColors } from "@/components/dashboard/card-color-picker";
 import {
-  CardColorPicker,
-  type CardFormErrors,
-  type CardFormValues,
-  Field,
-  cardColors,
-  focusFirstInvalidField,
   formatCardNumber,
   formatExpiry,
+  hasExpiryInputError,
+} from "@/components/dashboard/card-form-format";
+import {
+  type CardFormErrors,
+  type CardFormValues,
+  expiryErrorMessage,
   getCardErrors,
   hasCardErrors,
-  hasExpiryInputError,
-  inputClassName,
   saveFailedMessage,
+} from "@/components/dashboard/card-form-validation";
+import {
+  focusFirstInvalidField,
   useCardModalFocus,
-} from "@/components/dashboard/card-modal-shared";
+} from "@/components/dashboard/card-modal-focus";
+import { Field, inputClassName } from "@/components/dashboard/card-modal-field";
 import { Input } from "@/components/ui/input";
 import { filterLetters } from "@/lib/card-format";
 import dlg from "./dialog.module.css";
@@ -35,6 +38,15 @@ type EditCardModalProps = {
   onDelete: () => void;
 };
 
+function getStartValues(card: Partial<AccountCardDetails> | null): CardFormValues {
+  return {
+    accountName: card?.accountName ?? "",
+    cardNumber: card?.cardNumber ?? "",
+    holder: card?.holder ?? "",
+    expiry: card?.expiry ?? "",
+  };
+}
+
 export default function EditCardModal({
   open,
   card,
@@ -45,12 +57,7 @@ export default function EditCardModal({
   const [selectedColor, setSelectedColor] = useState(
     card?.color ?? cardColors[0].value,
   );
-  const [values, setValues] = useState<CardFormValues>({
-    accountName: card?.accountName ?? "",
-    cardNumber: card?.cardNumber ?? "",
-    holder: card?.holder ?? "",
-    expiry: card?.expiry ?? "",
-  });
+  const [values, setValues] = useState<CardFormValues>(getStartValues(card));
   const [errors, setErrors] = useState<CardFormErrors>({});
   const [saving, setSaving] = useState(false);
   const [submitError, setSubmitError] = useState("");
@@ -70,7 +77,7 @@ export default function EditCardModal({
     if (hasExpiryInputError(value)) {
       setErrors((current) => ({
         ...current,
-        expiry: "Enter a future date as MM/YY.",
+        expiry: expiryErrorMessage,
       }));
     }
   }
@@ -92,6 +99,7 @@ export default function EditCardModal({
     if (saving) return;
 
     if (!validate()) return;
+
     setSaving(true);
     setSubmitError("");
 
@@ -107,6 +115,108 @@ export default function EditCardModal({
       setSaving(false);
     }
   }
+
+  function renderNameField() {
+    return (
+      <Field
+        label="Cash register name"
+        error={errors.accountName}
+        errorId="edit-account-name-error"
+      >
+        <Input
+          className={inputClassName(errors.accountName)}
+          name="accountName"
+          autoComplete="off"
+          required
+          aria-invalid={Boolean(errors.accountName)}
+          aria-describedby="edit-account-name-error"
+          maxLength={20}
+          value={values.accountName}
+          onChange={(event) =>
+            updateValue("accountName", filterLetters(event.target.value, 20))
+          }
+          placeholder="For example, drinks"
+        />
+      </Field>
+    );
+  }
+
+  function renderNumberField() {
+    return (
+      <Field
+        label="Register number"
+        error={errors.cardNumber}
+        errorId="edit-card-number-error"
+      >
+        <Input
+          className={inputClassName(errors.cardNumber)}
+          name="cardNumber"
+          autoComplete="off"
+          inputMode="numeric"
+          required
+          aria-invalid={Boolean(errors.cardNumber)}
+          aria-describedby="edit-card-number-error"
+          maxLength={19}
+          value={values.cardNumber}
+          onChange={(event) =>
+            updateValue("cardNumber", formatCardNumber(event.target.value))
+          }
+          placeholder="1234 5678 9012 3456"
+        />
+      </Field>
+    );
+  }
+
+  function renderHolderField() {
+    return (
+      <Field
+        label="Responsible person"
+        error={errors.holder}
+        errorId="edit-holder-error"
+      >
+        <Input
+          className={inputClassName(errors.holder)}
+          name="holder"
+          autoComplete="name"
+          required
+          aria-invalid={Boolean(errors.holder)}
+          aria-describedby="edit-holder-error"
+          maxLength={20}
+          value={values.holder}
+          onChange={(event) =>
+            updateValue("holder", filterLetters(event.target.value, 20))
+          }
+          placeholder="First and last name"
+        />
+      </Field>
+    );
+  }
+
+  function renderExpiryField() {
+    return (
+      <Field
+        label="Valid until"
+        error={errors.expiry}
+        errorId="edit-expiry-error"
+      >
+        <Input
+          className={inputClassName(errors.expiry)}
+          name="expiry"
+          autoComplete="cc-exp"
+          inputMode="numeric"
+          required
+          aria-invalid={Boolean(errors.expiry)}
+          aria-describedby="edit-expiry-error"
+          maxLength={5}
+          value={values.expiry}
+          onChange={(event) => handleExpiryChange(event.target.value)}
+          placeholder="MM/YY"
+        />
+      </Field>
+    );
+  }
+
+  const previewName = values.accountName || "Cash register";
 
   return createPortal(
     <div
@@ -145,10 +255,7 @@ export default function EditCardModal({
           <div className={styles.preview} aria-label="Preview">
             <AccountCard
               cardColor={selectedColor}
-              details={{
-                ...values,
-                accountName: values.accountName || "Cash register",
-              }}
+              details={{ ...values, accountName: previewName }}
             />
           </div>
 
@@ -166,95 +273,10 @@ export default function EditCardModal({
               Details
             </h3>
             <div className={dlg.formGrid}>
-              <Field
-                label="Cash register name"
-                error={errors.accountName}
-                errorId="edit-account-name-error"
-              >
-                <Input
-                  className={inputClassName(errors.accountName)}
-                  name="accountName"
-                  autoComplete="off"
-                  required
-                  aria-invalid={Boolean(errors.accountName)}
-                  aria-describedby="edit-account-name-error"
-                  maxLength={20}
-                  value={values.accountName}
-                  onChange={(event) =>
-                    updateValue(
-                      "accountName",
-                      filterLetters(event.target.value, 20),
-                    )
-                  }
-                  placeholder="For example, drinks"
-                />
-              </Field>
-              <Field
-                label="Register number"
-                error={errors.cardNumber}
-                errorId="edit-card-number-error"
-              >
-                <Input
-                  className={inputClassName(errors.cardNumber)}
-                  name="cardNumber"
-                  autoComplete="off"
-                  inputMode="numeric"
-                  required
-                  aria-invalid={Boolean(errors.cardNumber)}
-                  aria-describedby="edit-card-number-error"
-                  maxLength={19}
-                  value={values.cardNumber}
-                  onChange={(event) =>
-                    updateValue(
-                      "cardNumber",
-                      formatCardNumber(event.target.value),
-                    )
-                  }
-                  placeholder="1234 5678 9012 3456"
-                />
-              </Field>
-              <Field
-                label="Responsible person"
-                error={errors.holder}
-                errorId="edit-holder-error"
-              >
-                <Input
-                  className={inputClassName(errors.holder)}
-                  name="holder"
-                  autoComplete="name"
-                  required
-                  aria-invalid={Boolean(errors.holder)}
-                  aria-describedby="edit-holder-error"
-                  maxLength={20}
-                  value={values.holder}
-                  onChange={(event) =>
-                    updateValue(
-                      "holder",
-                      filterLetters(event.target.value, 20),
-                    )
-                  }
-                  placeholder="First and last name"
-                />
-              </Field>
-              <Field
-                label="Valid until"
-                error={errors.expiry}
-                errorId="edit-expiry-error"
-              >
-                <Input
-                  className={inputClassName(errors.expiry)}
-                  name="expiry"
-                  autoComplete="cc-exp"
-                  inputMode="numeric"
-                  required
-                  aria-invalid={Boolean(errors.expiry)}
-                  aria-describedby="edit-expiry-error"
-                  maxLength={5}
-                  value={values.expiry}
-                  onChange={(event) => handleExpiryChange(event.target.value)}
-                  placeholder="MM/YY"
-                />
-              </Field>
+              {renderNameField()}
+              {renderNumberField()}
+              {renderHolderField()}
+              {renderExpiryField()}
             </div>
           </section>
         </div>

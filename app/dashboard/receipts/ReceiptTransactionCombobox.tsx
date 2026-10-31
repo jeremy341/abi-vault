@@ -10,12 +10,7 @@ import {
 import dlg from "@/components/dashboard/dialog.module.css";
 import styles from "./receipts.module.css";
 import type { TransactionOption } from "@/features/receipts/view-model";
-
-function amountClassName(amount: string) {
-  if (amount.startsWith("+")) return styles.positive;
-
-  return styles.negative;
-}
+import { amountClassName } from "./amount-class-name";
 
 export function ReceiptTransactionCombobox({
   value,

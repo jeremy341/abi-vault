@@ -11,12 +11,71 @@ type UseReceiptEditorOptions = {
   setReceipts: Dispatch<SetStateAction<Receipt[]>>;
 };
 
+type DashboardSnapshot = Extract<Awaited<ReturnType<typeof getDashboardSnapshot>>, { ok: true }>;
+type SnapshotTransaction = DashboardSnapshot["transactions"][number];
+
 function transactionIdOrNull(value: string) {
   return /^[0-9a-f-]{36}$/i.test(value) ? value : null;
 }
 
 function refreshReceiptData() {
   invalidateFinanceQuery("receipts", "transactions", "dashboard-snapshot", "report-snapshot", "report-kpis");
+}
+
+function transactionOptionFor(item: SnapshotTransaction): TransactionOption {
+  return {
+    value: item.id,
+    label: item.title,
+    date: item.date ? formatShortDate(item.date) : "",
+    amount: formatAmount(Number(item.amountMinor) / 100),
+  };
+}
+
+function transactionOptionsFor(snapshot: DashboardSnapshot): TransactionOption[] {
+  const unassigned: TransactionOption = { value: "", label: "Unassigned", date: "", amount: "" };
+
+  return [unassigned, ...snapshot.transactions.map(transactionOptionFor)];
+}
+
+function receiptWithMetadata(
+  item: Receipt,
+  fileName: string,
+  transactionId: string | null,
+  transactionLabel: string,
+): Receipt {
+  return {
+    ...item,
+    file: fileName,
+    transactionId,
+    transaction: transactionLabel,
+    status: transactionId ? item.status : "Unassigned",
+  };
+}
+
+function buildUploadForm(file: File, fileName: string, transactionId: string | null) {
+  const formData = new FormData();
+
+  formData.append("file", file);
+  formData.append("fileName", fileName);
+
+  if (transactionId) formData.append("transactionId", transactionId);
+
+  return formData;
+}
+
+function focusedElementOrNull() {
+  const focusedElement = document.activeElement;
+
+  return focusedElement instanceof HTMLElement ? focusedElement : null;
+}
+
+function handleImagePreviewKey(event: KeyboardEvent, closePreview: () => void) {
+  if (event.key === "Escape") {
+    event.stopPropagation();
+    closePreview();
+  }
+
+  if (event.key === "Tab") event.preventDefault();
 }
 
 export function useReceiptEditor({ cacheScope, setReceipts }: UseReceiptEditorOptions) {
@@ -34,6 +93,7 @@ export function useReceiptEditor({ cacheScope, setReceipts }: UseReceiptEditorOp
   const [editorError, setEditorError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const filePreviewUrlRef = useRef<string | null>(null);
+
   useEffect(() => {
     let active = true;
     cachedFinanceQuery("dashboard-snapshot", getDashboardSnapshot, {
@@ -49,15 +109,7 @@ export function useReceiptEditor({ cacheScope, setReceipts }: UseReceiptEditorOp
         }
 
         setTransactionLoadError("");
-        setAvailableTransactions([
-          { value: "", label: "Unassigned", date: "", amount: "" },
-          ...snapshot.transactions.map((item) => ({
-            value: item.id,
-            label: item.title,
-            date: item.date ? formatShortDate(item.date) : "",
-            amount: formatAmount(Number(item.amountMinor) / 100),
-          })),
-        ]);
+        setAvailableTransactions(transactionOptionsFor(snapshot));
       })
       .catch(() => {
         if (active) setTransactionLoadError("Transactions could not be loaded.");
@@ -70,29 +122,25 @@ export function useReceiptEditor({ cacheScope, setReceipts }: UseReceiptEditorOp
       active = false;
     };
   }, [cacheScope]);
+
   useEffect(() => {
     return () => {
       if (filePreviewUrlRef.current) URL.revokeObjectURL(filePreviewUrlRef.current);
     };
   }, []);
+
   useEffect(() => {
     if (!imagePreviewOpen) return;
-    const focusedElement = document.activeElement;
-    const trigger = focusedElement instanceof HTMLElement ? focusedElement : null;
+    const trigger = focusedElementOrNull();
 
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        event.stopPropagation();
-        setImagePreviewOpen(false);
-      }
-
-      if (event.key === "Tab") event.preventDefault();
+    function onKeyDown(event: KeyboardEvent) {
+      handleImagePreviewKey(event, () => setImagePreviewOpen(false));
     }
 
-    window.addEventListener("keydown", handleKeyDown, true);
+    window.addEventListener("keydown", onKeyDown, true);
 
     return () => {
-      window.removeEventListener("keydown", handleKeyDown, true);
+      window.removeEventListener("keydown", onKeyDown, true);
       trigger?.focus();
     };
   }, [imagePreviewOpen]);
@@ -171,13 +219,24 @@ export function useReceiptEditor({ cacheScope, setReceipts }: UseReceiptEditorOp
     setEditorError("");
 
     try {
-      if (editingReceipt) await updateMetadata(editingReceipt);
-      else await uploadNewFile();
+      if (editingReceipt) {
+        await updateMetadata(editingReceipt);
+      } else {
+        await uploadNewFile();
+      }
     } catch {
       setEditorError("The receipt could not be saved. Try again.");
     } finally {
       setSaving(false);
     }
+  }
+
+  function transactionLabelFor(transactionId: string | null) {
+    const selectedTransaction = availableTransactions.find(
+      (option) => option.value === transactionId,
+    );
+
+    return selectedTransaction?.label ?? "Unassigned";
   }
 
   async function updateMetadata(receipt: Receipt) {
@@ -195,20 +254,11 @@ export function useReceiptEditor({ cacheScope, setReceipts }: UseReceiptEditorOp
       return;
     }
 
-    const selectedTransaction = availableTransactions.find(
-      (option) => option.value === transactionId,
-    );
-    const transactionLabel = selectedTransaction?.label ?? "Unassigned";
+    const transactionLabel = transactionLabelFor(transactionId);
     setReceipts((current) => current.map((item) => {
       if (item.id !== receipt.id) return item;
 
-      return {
-        ...item,
-        file: newFileName,
-        transactionId,
-        transaction: transactionLabel,
-        status: transactionId ? item.status : "Unassigned",
-      };
+      return receiptWithMetadata(item, newFileName, transactionId, transactionLabel);
     }));
     refreshReceiptData();
     close();
@@ -223,14 +273,8 @@ export function useReceiptEditor({ cacheScope, setReceipts }: UseReceiptEditorOp
       return;
     }
 
-    const formData = new FormData();
-
-    formData.append("file", file);
-
-    formData.append("fileName", fileName.trim());
     const transactionId = transactionIdOrNull(transaction);
-
-    if (transactionId) formData.append("transactionId", transactionId);
+    const formData = buildUploadForm(file, fileName.trim(), transactionId);
     const result = await uploadReceipt(formData);
 
     if (!result.success) {

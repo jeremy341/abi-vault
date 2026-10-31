@@ -27,5 +27,7 @@ export function hasPermission(
   role: AppRole,
   permission: keyof typeof PERMISSIONS,
 ) {
-  return PERMISSIONS[permission].includes(role as never);
+  const allowedRoles: readonly AppRole[] = PERMISSIONS[permission];
+
+  return allowedRoles.includes(role);
 }

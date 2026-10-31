@@ -225,10 +225,12 @@ export default function ResponsiveDashboardShell({
   children,
   isAdmin = false,
   localMode = false,
+  demoMode = false,
 }: {
   children: React.ReactNode;
   isAdmin?: boolean;
   localMode?: boolean;
+  demoMode?: boolean;
 }) {
   const pathname = usePathname();
   const page = pageInformationFor(pathname);
@@ -282,7 +284,7 @@ export default function ResponsiveDashboardShell({
       </aside>
 
       <div className={styles.workspace}>
-        {process.env.NEXT_PUBLIC_ABI_VAULT_DEMO_DATA === "true" ? (
+        {demoMode ? (
           <p className={styles.demoNotice}>Demo with sample data. Changes are not saved.</p>
         ) : null}
         <header className={styles.topbar}>

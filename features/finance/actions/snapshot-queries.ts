@@ -5,98 +5,45 @@ import { demoData } from "@/lib/demo/sample-data";
 
 import { requireClerkContext } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { projectCategoryTotals, projectFlowTotals, projectMonthlyFlow, projectWalletBalances, type ProjectionTransaction } from "@/lib/finance/projections";
+import { projectCategoryTotals, projectMonthlyFlowMinor, projectWalletBalances } from "@/lib/finance/projections";
 import { listGoalsForCurrentOrganization, listTransactionsForCurrentOrganization, listWalletsForCurrentOrganization } from "./finance-queries";
-import { querySuccess, queryFailure } from "@/lib/finance/query-result";
+import { querySuccess } from "@/lib/finance/query-result";
+import { financeDateKey } from "@/lib/finance/date-keys";
+import { mapFinanceSnapshotWallet, readFinanceSnapshot } from "./finance-snapshot";
 
 export async function getReportKpisForCurrentOrganization() {
   if (isDemoData()) return demoData.reportKpis;
-  const context = await requireClerkContext();
+  await requireClerkContext();
   const supabase = await createSupabaseServerClient();
+  const snapshot = await readFinanceSnapshot(supabase);
 
-  const [
-    { data: transactions, error: transactionError },
-    { data: wallets, error: walletError },
-    { data: receipts, error: receiptError },
-    { data: cashCounts, error: cashCountError },
-  ] = await Promise.all([
-    supabase.from("transactions").select("amount_minor, type, from_wallet_id, to_wallet_id").eq("organization_id", context.organizationId).eq("status", "posted").is("deleted_at", null).is("superseded_at", null).or("correction_role.is.null,correction_role.neq.reversal"),
-    supabase.from("wallets").select("id, opening_balance_minor").eq("organization_id", context.organizationId).eq("type", "cash").eq("status", "active"),
-    supabase.from("receipts").select("review_status, transaction_id").eq("organization_id", context.organizationId).is("archived_at", null),
-    supabase.from("cash_counts").select("wallet_id, difference_minor, created_at").eq("organization_id", context.organizationId).order("created_at", { ascending: false }),
-  ]);
-
-  if (transactionError || walletError || receiptError || cashCountError) {
-    return queryFailure("DATABASE_ERROR");
-  }
-
-  const activeWalletIds = new Set((wallets ?? []).map((wallet) => wallet.id));
-
-  const effectiveTransactions = (transactions ?? []).filter((transaction) =>
-    activeWalletIds.has(transaction.from_wallet_id ?? "") || activeWalletIds.has(transaction.to_wallet_id ?? ""),
-  );
-
-  const projectionTransactions: ProjectionTransaction[] = effectiveTransactions.map((transaction) => ({
-    amountMinor: String(transaction.amount_minor),
-    type: transaction.type,
-    category: "",
-    fromWalletId: transaction.from_wallet_id,
-    toWalletId: transaction.to_wallet_id,
-  }));
-
-  const totals = projectFlowTotals(projectionTransactions);
-  const pendingReceipts = (receipts ?? []).filter((receipt) => receipt.review_status === "pending").length;
-  const reviewedReceiptCount = (receipts ?? []).filter((receipt) => receipt.review_status === "approved").length;
-  const unassignedReceiptCount = (receipts ?? []).filter((receipt) => !receipt.transaction_id).length;
-
-  const balances = projectWalletBalances(
-    (wallets ?? []).map((wallet) => ({
-      id: wallet.id,
-      openingBalanceMinor: String(wallet.opening_balance_minor ?? 0),
-    })),
-    projectionTransactions,
-  );
-
-  const liquid = [...balances.entries()]
-    .filter(([walletId]) => activeWalletIds.has(walletId))
-    .reduce((sum, [, walletBalance]) => sum + walletBalance, BigInt(0));
-
-  const latestCounts = new Map<string, { difference_minor: number }>();
-
-  for (const cashCount of cashCounts ?? []) {
-    if (activeWalletIds.has(cashCount.wallet_id) && !latestCounts.has(cashCount.wallet_id)) {
-      latestCounts.set(cashCount.wallet_id, { difference_minor: cashCount.difference_minor });
-    }
-  }
-
-  const reconciliationPercent = activeWalletIds.size > 0 && latestCounts.size === activeWalletIds.size
-    ? Math.round((([...latestCounts.values()].filter((latestCount) => Number(latestCount.difference_minor) === 0).length / activeWalletIds.size) * 100))
-    : null;
+  if (!snapshot.ok) return snapshot;
 
   return querySuccess({
-    incomeMinor: totals.incomeMinor.toString(),
-    expenseMinor: totals.expenseMinor.toString(),
-    netMinor: totals.netMinor.toString(),
-    liquidMinor: liquid.toString(),
-    walletCount: wallets?.length ?? 0,
-    reviewCount: pendingReceipts,
-    reviewedReceiptCount,
-    unassignedReceiptCount,
-    reconciliationPercent,
+    incomeMinor: snapshot.incomeMinor,
+    expenseMinor: snapshot.expenseMinor,
+    netMinor: snapshot.netMinor,
+    liquidMinor: snapshot.liquidMinor,
+    walletCount: snapshot.walletCount,
+    reviewCount: snapshot.pendingReceiptCount,
+    reviewedReceiptCount: snapshot.reviewedReceiptCount,
+    unassignedReceiptCount: snapshot.unassignedReceiptCount,
+    reconciliationPercent: snapshot.reconciliationPercent,
   });
 }
 
 export async function getDashboardSnapshot() {
-  const [wallets, transactions, goals] = await Promise.all([
-    listWalletsForCurrentOrganization({ includeBalances: false }),
+  const [transactions, goals, financeSnapshot] = await Promise.all([
     listTransactionsForCurrentOrganization(),
     listGoalsForCurrentOrganization(),
+    isDemoData()
+      ? Promise.resolve(null)
+      : createSupabaseServerClient().then(readFinanceSnapshot),
   ]);
 
-  if (!wallets.ok || !transactions.ok || !goals.ok) {
+  if (!transactions.ok || !goals.ok) {
     if (process.env.NODE_ENV === "development") {
       console.error("Dashboard snapshot query failed", {
-        wallets: wallets.ok ? "ok" : wallets.error,
         transactions: transactions.ok ? "ok" : transactions.error,
         goals: goals.ok ? "ok" : goals.error,
       });
@@ -105,24 +52,40 @@ export async function getDashboardSnapshot() {
     return { ok: false as const };
   }
 
-  const projectionTransactions = transactions.items.map((transaction) => ({
-    amountMinor: transaction.amountMinor,
-    type: transaction.type,
-    category: transaction.category,
-    date: transaction.date,
-    fromWalletId: transaction.fromWalletId ?? null,
-    toWalletId: transaction.toWalletId ?? null,
-  }));
+  if (financeSnapshot && !financeSnapshot.ok) return { ok: false as const };
 
-  const categories = projectCategoryTotals(projectionTransactions);
+  const wallets = financeSnapshot?.ok && financeSnapshot.wallets.length > 0
+    ? querySuccess({ items: financeSnapshot.wallets.map(mapFinanceSnapshotWallet) })
+    : await listWalletsForCurrentOrganization({ includeBalances: false });
 
-  const balances = projectWalletBalances(
-    wallets.items.map((wallet) => ({
-      id: wallet.id,
-      openingBalanceMinor: wallet.openingBalanceMinor,
-    })),
-    projectionTransactions,
-  );
+  if (!wallets.ok) return { ok: false as const };
+
+  const hasFinanceWallets = financeSnapshot?.ok && financeSnapshot.wallets.length > 0;
+
+  const projectionTransactions = hasFinanceWallets
+    ? []
+    : transactions.items.map((transaction) => ({
+        amountMinor: transaction.amountMinor,
+        type: transaction.type,
+        category: transaction.category,
+        date: transaction.date,
+        fromWalletId: transaction.fromWalletId ?? null,
+        toWalletId: transaction.toWalletId ?? null,
+      }));
+
+  const categories = hasFinanceWallets
+    ? financeSnapshot.categories
+    : projectCategoryTotals(projectionTransactions);
+
+  const balances = hasFinanceWallets
+    ? new Map(financeSnapshot.wallets.map((wallet) => [wallet.id, BigInt(wallet.balanceMinor)]))
+    : projectWalletBalances(
+        wallets.items.map((wallet) => ({
+          id: wallet.id,
+          openingBalanceMinor: wallet.openingBalanceMinor,
+        })),
+        projectionTransactions,
+      );
 
   return querySuccess({
     wallets: wallets.items.map((wallet) => ({
@@ -137,22 +100,90 @@ export async function getDashboardSnapshot() {
 
 
 export async function getReportSnapshot() {
-  const [transactions, goals, wallets] = await Promise.all([
-    listTransactionsForCurrentOrganization(),
+  const [goals, financeSnapshot] = await Promise.all([
     listGoalsForCurrentOrganization(),
-    listWalletsForCurrentOrganization({ includeBalances: false }),
+    isDemoData()
+      ? Promise.resolve(null)
+      : createSupabaseServerClient().then(readFinanceSnapshot),
   ]);
 
-  if (!transactions.ok || !goals.ok || !wallets.ok) return { ok: false as const };
+  if (!goals.ok) return { ok: false as const };
 
-  const now = new Date();
+  if (financeSnapshot && !financeSnapshot.ok) return { ok: false as const };
+
+  if (financeSnapshot?.ok && financeSnapshot.wallets.length > 0) {
+    const goalItems = goals.items.map((goal) => ({
+      name: goal.title,
+      saved: Number(goal.saved_amount_minor) / 100,
+      target: Number(goal.target_amount_minor) / 100,
+    }));
+
+    if (!financeSnapshot.transactionCount) {
+      return querySuccess({
+        cashflow: [],
+        categories: [],
+        goals: goalItems,
+        analysisBalance: [],
+        analysisFlow: [],
+        reviewItems: [],
+      });
+    }
+
+    const cashflow = financeSnapshot.monthlyFlow.map((month) => {
+      const date = new Date(`${month.monthKey}-01T00:00:00.000Z`);
+      const monthLabel = date.toLocaleDateString("en-GB", { month: "short", timeZone: "UTC" }).replace(".", "");
+
+      return {
+        month: monthLabel,
+        year: month.year,
+        income: Number(month.incomeMinor) / 100,
+        expenses: Number(month.expensesMinor) / 100,
+      };
+    });
+
+    const categories = financeSnapshot.categories.map((category) => ({
+      name: category.name,
+      amount: Number(category.amountMinor) / 100,
+      share: category.progress,
+    }));
+
+    const analysisBalance = financeSnapshot.analysisBalance.map((month) => {
+      const date = new Date(`${month.monthKey}-01T00:00:00.000Z`);
+      const monthLabel = date.toLocaleDateString("en-GB", { month: "short", timeZone: "UTC" }).replace(".", "");
+
+      return {
+        month: `${monthLabel} ${date.getUTCFullYear()}`,
+        balance: Number(month.balanceMinor) / 100,
+      };
+    });
+
+    return querySuccess({
+      cashflow,
+      categories,
+      goals: goalItems,
+      analysisBalance,
+      analysisFlow: cashflow,
+      reviewItems: [],
+    });
+  }
+
+  const wallets = await listWalletsForCurrentOrganization({ includeBalances: false });
+
+  if (!wallets.ok) return { ok: false as const };
+
+  const transactions = await listTransactionsForCurrentOrganization();
+
+  if (!transactions.ok) return { ok: false as const };
+
+  const currentDateKey = financeDateKey(new Date());
+  const [currentYear, currentMonth] = currentDateKey.split("-").map(Number);
 
   const months = Array.from({ length: 6 }, (_, monthIndex) => {
-    const date = new Date(now.getFullYear(), now.getMonth() - 5 + monthIndex, 1);
-    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-    const label = date.toLocaleDateString("en-GB", { month: "short" }).replace(".", "");
+    const date = new Date(Date.UTC(currentYear, currentMonth - 6 + monthIndex, 1));
+    const key = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
+    const label = date.toLocaleDateString("en-GB", { month: "short", timeZone: "UTC" }).replace(".", "");
 
-    return { key, label, year: date.getFullYear() };
+    return { key, label, year: date.getUTCFullYear() };
   });
 
   const projectionTransactions = transactions.items.map((transaction) => ({
@@ -164,7 +195,14 @@ export async function getReportSnapshot() {
     toWalletId: transaction.toWalletId ?? null,
   }));
 
-  const cashflow = projectMonthlyFlow(projectionTransactions, months);
+  const monthlyFlow = projectMonthlyFlowMinor(projectionTransactions, months);
+
+  const cashflow = monthlyFlow.map((month) => ({
+    month: month.month,
+    year: month.year,
+    income: Number(month.incomeMinor) / 100,
+    expenses: Number(month.expensesMinor) / 100,
+  }));
 
   if (!transactions.items.length) {
     return querySuccess({
@@ -189,21 +227,28 @@ export async function getReportSnapshot() {
     share: category.progress,
   }));
 
-  let balance = wallets.items.reduce((sum, wallet) => sum + Number(wallet.openingBalanceMinor) / 100, 0);
+  let balanceMinor = wallets.items.reduce(
+    (sum, wallet) => sum + BigInt(String(wallet.openingBalanceMinor)),
+    BigInt(0),
+  );
 
   for (const transaction of transactions.items) {
     if (transaction.date && transaction.date.slice(0, 7) >= months[0].key) continue;
-    const amount = Math.abs(Number(transaction.amountMinor)) / 100;
+    const recordedAmount = BigInt(transaction.amountMinor);
+    const amountMinor = recordedAmount < BigInt(0) ? -recordedAmount : recordedAmount;
 
-    if (transaction.type === "income") balance += amount;
+    if (transaction.type === "income") balanceMinor += amountMinor;
 
-    if (transaction.type === "expense") balance -= amount;
+    if (transaction.type === "expense") balanceMinor -= amountMinor;
   }
 
-  const analysisBalance = cashflow.map((month, monthIndex) => {
-    balance += month.income - month.expenses;
+  const analysisBalance = monthlyFlow.map((month) => {
+    balanceMinor += month.incomeMinor - month.expensesMinor;
 
-    return { month: `${month.month} ${months[monthIndex]?.year ?? now.getFullYear()}`, balance };
+    return {
+      month: `${month.month} ${month.year}`,
+      balance: Number(balanceMinor) / 100,
+    };
   });
 
   return querySuccess({

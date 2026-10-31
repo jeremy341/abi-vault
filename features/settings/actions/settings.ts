@@ -7,8 +7,12 @@ import {
   type UpdateCommitteeSettingsInput,
 } from "@/features/settings/schemas/settings";
 import { actionFailure, actionSuccess, type ActionResult } from "@/lib/api/result";
+import { isDemoData } from "@/lib/demo/mode";
+import { demoReadOnlyFailure } from "@/lib/demo/read-only-action";
 
 export async function updateCommitteeSettings(input: UpdateCommitteeSettingsInput): Promise<ActionResult<null>> {
+  if (isDemoData()) return demoReadOnlyFailure();
+
   const parsed = updateCommitteeSettingsSchema.safeParse(input);
 
   if (!parsed.success) return actionFailure("INVALID_INPUT", "The settings data is invalid.");

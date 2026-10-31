@@ -21,6 +21,8 @@ const monthFormatter = new Intl.DateTimeFormat("en-GB", {
   year: "numeric",
 });
 
+const loadErrorMessage = "The accounting periods could not be loaded.";
+
 function periodLabel(period: AccountingPeriodListItem) {
   return monthFormatter.format(new Date(period.year, period.month - 1, 1));
 }
@@ -34,35 +36,56 @@ export default function PeriodsPage() {
   const [reason, setReason] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const activePeriod =
-    periods.find((period) => period.status === "open") ?? null;
-
+  const activePeriod = periods.find((period) => period.status === "open");
   const openCount = periods.filter((period) => period.status === "open").length;
+  const lockedCount = periods.filter((period) => period.status === "locked").length;
 
-  const lockedCount = periods.filter(
-    (period) => period.status === "locked",
-  ).length;
+  const isLocking = target !== null && target.status === "open";
+
+  let dialogTitle = "Unlock accounting period";
+  let dialogQuestion = "Unlock accounting period?";
+  let dialogExplanation = "The period will be reopened for authorized changes. The reason is recorded.";
+
+  if (isLocking) {
+    dialogTitle = "Lock accounting period";
+    dialogQuestion = "Lock accounting period?";
+    dialogExplanation = "Posted transactions cannot be changed after locking. The reason is recorded.";
+  }
+
+  let confirmLabel = "Unlock period";
+
+  if (isLocking) {
+    confirmLabel = "Lock period";
+  }
+
+  if (saving) {
+    confirmLabel = "Saving";
+  }
 
   useEffect(() => {
     let active = true;
-    listAccountingPeriodsForCurrentOrganization()
-      .then((periodList) => {
+
+    async function loadPeriods() {
+      try {
+        const periodList = await listAccountingPeriodsForCurrentOrganization();
+
         if (!active) return;
 
         if (!periodList.ok) {
-          setError("The accounting periods could not be loaded.");
+          setError(loadErrorMessage);
 
           return;
         }
 
         setPeriods(periodList.items);
-      })
-      .catch(() => {
-        if (active) setError("The accounting periods could not be loaded.");
-      })
-      .finally(() => {
+      } catch {
+        if (active) setError(loadErrorMessage);
+      } finally {
         if (active) setLoading(false);
-      });
+      }
+    }
+
+    loadPeriods();
 
     return () => {
       active = false;
@@ -77,32 +100,82 @@ export default function PeriodsPage() {
 
   async function confirmPeriodAction() {
     if (!target || saving || !reason.trim()) return;
+
     setSaving(true);
 
-    const action =
-      target.status === "open" ? lockAccountingPeriod : unlockAccountingPeriod;
+    const targetWasOpen = target.status === "open";
+    const action = targetWasOpen ? lockAccountingPeriod : unlockAccountingPeriod;
 
-    const result = await action({ periodId: target.id, reason: reason.trim() });
+    try {
+      const result = await action({ periodId: target.id, reason: reason.trim() });
 
-    if (!result.success) setMessage(result.error.message);
-    else {
-      setPeriods((current) =>
-        current.map((period) =>
-          period.id === target.id
-            ? {
-                ...period,
-                status: target.status === "open" ? "locked" : "open",
-              }
-            : period,
-        ),
-      );
-      setTarget(null);
-      setMessage(
-        `${periodLabel(target)} was ${target.status === "open" ? "locked" : "unlocked"}.`,
-      );
+      if (!result.success) {
+        setMessage(result.error.message);
+      } else {
+        const newStatus = targetWasOpen ? "locked" : "open";
+
+        setPeriods((current) =>
+          current.map((period) =>
+            period.id === target.id ? { ...period, status: newStatus } : period,
+          ),
+        );
+        setTarget(null);
+
+        const newStateWord = targetWasOpen ? "locked" : "unlocked";
+
+        setMessage(`${periodLabel(target)} was ${newStateWord}.`);
+      }
+    } catch {
+      setMessage("The accounting period could not be updated. Try again.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function renderPeriodTable() {
+    if (!loading && !error && periods.length === 0) {
+      return <p className={ledger.empty}>No accounting periods found.</p>;
     }
 
-    setSaving(false);
+    if (error && periods.length === 0) {
+      return null;
+    }
+
+    return (
+      <table className={ledger.table}>
+        <thead>
+          <tr>
+            <th scope="col">Period</th>
+            <th scope="col">Status</th>
+            <th scope="col" className={ledger.hideOnPhone}>Reason</th>
+            <th scope="col" className={ledger.actions}><span className="sr-only">Action</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {periods.map((period) => {
+            const isOpen = period.status === "open";
+            const statusClassName = isOpen ? ledger.attention : ledger.muted;
+            const actionLabel = isOpen ? "Lock" : "Unlock";
+
+            return (
+              <tr key={period.id}>
+                <td>{periodLabel(period)}</td>
+                <td className={statusClassName}>
+                  {isOpen ? "Open" : "Locked"}
+                  {period.lockedByName ? <span className={ledger.rowMeta}> by {period.lockedByName}</span> : null}
+                </td>
+                <td className={`${ledger.muted} ${ledger.hideOnPhone}`}>{period.lockReason ?? ""}</td>
+                <td className={ledger.actions}>
+                  <button type="button" className={ledger.secondaryButton} onClick={() => openPeriodAction(period)}>
+                    {actionLabel}
+                  </button>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    );
   }
 
   return (
@@ -114,7 +187,9 @@ export default function PeriodsPage() {
         <dl className={ledger.figures}>
           <div>
             <dt>Current period</dt>
-            <dd><LoadingText loading={loading}>{activePeriod ? periodLabel(activePeriod) : "None"}</LoadingText></dd>
+            <dd>
+              <LoadingText loading={loading}>{activePeriod ? periodLabel(activePeriod) : "None"}</LoadingText>
+            </dd>
           </div>
           <div>
             <dt>Open</dt>
@@ -133,48 +208,14 @@ export default function PeriodsPage() {
           <p>Locked periods cannot be changed. Admins only.</p>
         </header>
         <LoadingCollection loading={loading} knownItemCount={periods.length} rows={4} label="Loading periods">
-        {!loading && !error && !periods.length ? (
-          <p className={ledger.empty}>No accounting periods found.</p>
-        ) : error && !periods.length ? null : (
-          <table className={ledger.table}>
-            <thead>
-              <tr>
-                <th scope="col">Period</th>
-                <th scope="col">Status</th>
-                <th scope="col" className={ledger.hideOnPhone}>Reason</th>
-                <th scope="col" className={ledger.actions}><span className="sr-only">Action</span></th>
-              </tr>
-            </thead>
-            <tbody>
-              {periods.map((period) => (
-                <tr key={period.id}>
-                  <td>{periodLabel(period)}</td>
-                  <td className={period.status === "open" ? ledger.attention : ledger.muted}>
-                    {period.status === "open" ? "Open" : "Locked"}
-                    {period.lockedByName ? <span className={ledger.rowMeta}> by {period.lockedByName}</span> : null}
-                  </td>
-                  <td className={`${ledger.muted} ${ledger.hideOnPhone}`}>{period.lockReason ?? ""}</td>
-                  <td className={ledger.actions}>
-                    <button type="button" className={ledger.secondaryButton} onClick={() => openPeriodAction(period)}>
-                      {period.status === "open" ? "Lock" : "Unlock"}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+          {renderPeriodTable()}
         </LoadingCollection>
       </section>
 
       <p className={ledger.notice} role="status" aria-live="polite">{message}</p>
       {target ? (
         <Dialog
-          label={
-            target.status === "open"
-              ? "Lock accounting period"
-              : "Unlock accounting period"
-          }
+          label={dialogTitle}
           onClose={() => {
             if (!saving) setTarget(null);
           }}
@@ -183,11 +224,7 @@ export default function PeriodsPage() {
         >
           <header className={styles.dialogHeader}>
             <div>
-              <h2>
-                {target.status === "open"
-                  ? "Lock accounting period?"
-                  : "Unlock accounting period?"}
-              </h2>
+              <h2>{dialogQuestion}</h2>
               <p>{periodLabel(target)}</p>
             </div>
             <button
@@ -201,11 +238,7 @@ export default function PeriodsPage() {
             </button>
           </header>
           <div className={styles.dialogBody}>
-            <p>
-              {target.status === "open"
-                ? "Posted transactions cannot be changed after locking. The reason is recorded."
-                : "The period will be reopened for authorized changes. The reason is recorded."}
-            </p>
+            <p>{dialogExplanation}</p>
             <label>
               <span>Reason</span>
               <textarea
@@ -238,11 +271,7 @@ export default function PeriodsPage() {
               disabled={saving || !reason.trim()}
               aria-busy={saving}
             >
-              {saving
-                ? "Saving"
-                : target.status === "open"
-                  ? "Lock period"
-                  : "Unlock period"}
+              {confirmLabel}
             </button>
           </footer>
         </Dialog>

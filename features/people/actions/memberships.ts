@@ -10,8 +10,12 @@ import {
   type UpdateMemberRoleInput,
 } from "@/features/people/schemas/memberships";
 import { actionFailure, actionSuccess, type ActionResult } from "@/lib/api/result";
+import { isDemoData } from "@/lib/demo/mode";
+import { demoReadOnlyFailure } from "@/lib/demo/read-only-action";
 
 export async function updateMemberRole(input: UpdateMemberRoleInput): Promise<ActionResult<null>> {
+  if (isDemoData()) return demoReadOnlyFailure();
+
   const parsed = updateMemberRoleSchema.safeParse(input);
 
   if (!parsed.success) return actionFailure("INVALID_INPUT", "The member role data is invalid.");
@@ -63,6 +67,8 @@ export async function updateMemberRole(input: UpdateMemberRoleInput): Promise<Ac
 }
 
 export async function removeMember(input: RemoveMemberInput): Promise<ActionResult<null>> {
+  if (isDemoData()) return demoReadOnlyFailure();
+
   const parsed = removeMemberSchema.safeParse(input);
 
   if (!parsed.success) return actionFailure("INVALID_INPUT", "The member data is invalid.");

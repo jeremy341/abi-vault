@@ -5,8 +5,12 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { parseDollarToMinor } from "@/lib/finance/money";
 import { cashCountSchema, type CashCountInput } from "@/features/finance/schemas/cash-counts";
 import { actionFailure, actionSuccess, type ActionResult } from "@/lib/api/result";
+import { isDemoData } from "@/lib/demo/mode";
+import { demoReadOnlyFailure } from "@/lib/demo/read-only-action";
 
 export async function recordCashCount(input: CashCountInput): Promise<ActionResult<{ id: string }>> {
+  if (isDemoData()) return demoReadOnlyFailure();
+
   const parsed = cashCountSchema.safeParse(input);
 
   if (!parsed.success) return actionFailure("INVALID_INPUT", "The cash count data is invalid.");

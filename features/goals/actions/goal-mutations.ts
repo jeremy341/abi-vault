@@ -9,8 +9,12 @@ import {
   type UpdateGoalInput,
 } from "@/features/goals/schemas/goal-mutations";
 import { actionFailure, actionSuccess, type ActionResult } from "@/lib/api/result";
+import { isDemoData } from "@/lib/demo/mode";
+import { demoReadOnlyFailure } from "@/lib/demo/read-only-action";
 
 export async function updateGoal(input: UpdateGoalInput): Promise<ActionResult<null>> {
+  if (isDemoData()) return demoReadOnlyFailure();
+
   const parsed = updateGoalSchema.safeParse(input);
 
   if (!parsed.success) return actionFailure("INVALID_INPUT", "The goal data is invalid.");
@@ -33,6 +37,8 @@ export async function updateGoal(input: UpdateGoalInput): Promise<ActionResult<n
 }
 
 export async function archiveGoal(input: ArchiveGoalInput): Promise<ActionResult<null>> {
+  if (isDemoData()) return demoReadOnlyFailure();
+
   const parsed = archiveGoalSchema.safeParse(input);
 
   if (!parsed.success) return actionFailure("INVALID_INPUT", "The goal data is invalid.");

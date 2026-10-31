@@ -13,6 +13,8 @@ import {
   type WalletUpdateInput,
 } from "@/features/finance/schemas/wallets";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { isDemoData } from "@/lib/demo/mode";
+import { demoReadOnlyFailure } from "@/lib/demo/read-only-action";
 
 function mapWalletError(code?: string) {
   if (code === "42501") return actionFailure("FORBIDDEN", "You do not have permission for this action.");
@@ -27,6 +29,8 @@ function mapWalletError(code?: string) {
 export async function createWallet(
   input: WalletCreateInput,
 ): Promise<ActionResult<{ id: string }>> {
+  if (isDemoData()) return demoReadOnlyFailure();
+
   const parsed = walletCreateSchema.safeParse(input);
 
   if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "The cash register data is invalid.");
@@ -55,6 +59,8 @@ export async function createWallet(
 }
 
 export async function updateWallet(input: WalletUpdateInput) {
+  if (isDemoData()) return demoReadOnlyFailure();
+
   const parsed = walletUpdateSchema.safeParse(input);
 
   if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "The cash register data is invalid.");
@@ -82,6 +88,8 @@ export async function updateWallet(input: WalletUpdateInput) {
 }
 
 export async function archiveWallet(input: WalletArchiveInput) {
+  if (isDemoData()) return demoReadOnlyFailure();
+
   const parsed = walletArchiveSchema.safeParse(input);
 
   if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "The cash register data is invalid.");
@@ -107,6 +115,8 @@ async function changePeriod(
   input: PeriodActionInput,
   operation: "lock_accounting_period" | "unlock_accounting_period",
 ): Promise<ActionResult<null>> {
+  if (isDemoData()) return demoReadOnlyFailure();
+
   const parsed = periodActionSchema.safeParse(input);
 
   if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "The accounting period action is invalid.");

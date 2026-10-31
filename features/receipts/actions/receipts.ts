@@ -16,6 +16,9 @@ import {
 } from "@/features/receipts/schemas/mutations";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { isDemoData } from "@/lib/demo/mode";
+import { demoReadOnlyFailure } from "@/lib/demo/read-only-action";
+import { demoData } from "@/lib/demo/sample-data";
 
 const MIME_EXTENSIONS = {
   "application/pdf": "pdf",
@@ -30,8 +33,11 @@ function invalidReceipt(message = "The receipt data is invalid.") {
 export async function uploadReceipt(
   formData: FormData,
 ): Promise<ActionResult<{ id: string }>> {
+  if (isDemoData()) return demoReadOnlyFailure();
+
   const context = await requirePermission("uploadReceipts");
   const file = formData.get("file");
+  const fileNameValue = formData.get("fileName");
   const transactionValue = formData.get("transactionId");
 
   if (!(file instanceof File)) return invalidReceipt("A receipt file is required.");
@@ -40,7 +46,7 @@ export async function uploadReceipt(
 
   const parsed = receiptMetadataSchema.safeParse({
     transactionId: transactionValue ? String(transactionValue) : null,
-    fileName: file.name,
+    fileName: fileNameValue === null || fileNameValue instanceof File ? file.name : fileNameValue,
     mimeType: file.type,
     fileSizeBytes: file.size,
   });
@@ -104,6 +110,8 @@ export async function uploadReceipt(
 export async function reviewReceipt(
   input: ReceiptReviewInput,
 ): Promise<ActionResult<null>> {
+  if (isDemoData()) return demoReadOnlyFailure();
+
   const context = await requirePermission("reviewReceipts");
   const parsed = receiptReviewSchema.safeParse(input);
 
@@ -131,6 +139,8 @@ export async function reviewReceipt(
 export async function updateReceiptMetadata(
   input: ReceiptUpdateInput,
 ): Promise<ActionResult<null>> {
+  if (isDemoData()) return demoReadOnlyFailure();
+
   const parsed = receiptUpdateSchema.safeParse(input);
 
   if (!parsed.success) return invalidReceipt("The receipt data is invalid.");
@@ -160,6 +170,8 @@ export async function updateReceiptMetadata(
 export async function archiveReceipt(
   input: ReceiptArchiveInput,
 ): Promise<ActionResult<null>> {
+  if (isDemoData()) return demoReadOnlyFailure();
+
   const parsed = receiptArchiveSchema.safeParse(input);
 
   if (!parsed.success) return invalidReceipt("An archive reason is required.");
@@ -186,11 +198,30 @@ export async function archiveReceipt(
 
 export async function createReceiptDownloadUrl(
   receiptId: string,
-): Promise<ActionResult<{ url: string }>> {
-  const context = await requirePermission("viewReceipts");
+): Promise<ActionResult<{
+  url: string;
+  previewUrl?: string;
+  previewAsImage?: boolean;
+}>> {
   const id = receiptId.trim();
 
+  if (isDemoData()) {
+    const receipt = demoData.receipts.items.find((item) => item.id === id);
+
+    if (!receipt) return actionFailure("NOT_FOUND", "The receipt was not found.");
+
+    const pdfUrl = "/demo-receipts/sample-receipt.pdf";
+    const imageUrl = "/demo-receipts/sample-receipt.jpg";
+
+    return actionSuccess({
+      url: receipt.file.endsWith(".pdf") ? pdfUrl : imageUrl,
+      previewUrl: imageUrl,
+      previewAsImage: true,
+    });
+  }
+
   if (!/^[0-9a-f-]{36}$/i.test(id)) return invalidReceipt();
+  const context = await requirePermission("viewReceipts");
 
   const supabase = await createSupabaseServerClient();
 

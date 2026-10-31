@@ -37,6 +37,13 @@ export type MonthlyFlow = {
   expenses: number;
 };
 
+export type MonthlyFlowMinor = {
+  month: string;
+  year: number;
+  incomeMinor: bigint;
+  expensesMinor: bigint;
+};
+
 function toMinor(value: string | number) {
   return BigInt(String(value));
 }
@@ -112,35 +119,36 @@ export function projectWalletBalances(
 export function projectCategoryTotals(
   transactions: readonly ProjectionTransaction[],
 ): CategoryTotal[] {
-  const totals = new Map<string, number>();
-  let totalExpense = 0;
+  const totals = new Map<string, bigint>();
+  let totalExpenseMinor = BigInt(0);
 
   for (const transaction of transactions) {
     if (transaction.type !== "expense") continue;
 
-    const amount = Math.abs(Number(transaction.amountMinor));
+    const recordedAmount = toMinor(transaction.amountMinor);
+    const amount = recordedAmount < BigInt(0) ? -recordedAmount : recordedAmount;
     totals.set(
       transaction.category,
-      (totals.get(transaction.category) ?? 0) + amount,
+      (totals.get(transaction.category) ?? BigInt(0)) + amount,
     );
-    totalExpense += amount;
+    totalExpenseMinor += amount;
   }
 
   return [...totals.entries()].map(([name, amountMinor]) => ({
     name,
-    amountMinor: String(amountMinor),
-    progress: totalExpense
-      ? Math.round((amountMinor / totalExpense) * 100)
+    amountMinor: amountMinor.toString(),
+    progress: totalExpenseMinor
+      ? Number((amountMinor * BigInt(100) + totalExpenseMinor / BigInt(2)) / totalExpenseMinor)
       : 0,
   }));
 }
 
-export function projectMonthlyFlow(
+export function projectMonthlyFlowMinor(
   transactions: readonly ProjectionTransaction[],
   months: readonly ReportMonth[],
-): MonthlyFlow[] {
+): MonthlyFlowMinor[] {
   const monthly = new Map(
-    months.map((month) => [month.key, { income: 0, expenses: 0 }]),
+    months.map((month) => [month.key, { incomeMinor: BigInt(0), expensesMinor: BigInt(0) }]),
   );
 
   for (const transaction of transactions) {
@@ -149,16 +157,29 @@ export function projectMonthlyFlow(
 
     if (!flow) continue;
 
-    const amount = Math.abs(Number(transaction.amountMinor)) / 100;
+    const recordedAmount = toMinor(transaction.amountMinor);
+    const amount = recordedAmount < BigInt(0) ? -recordedAmount : recordedAmount;
 
-    if (transaction.type === "income") flow.income += amount;
+    if (transaction.type === "income") flow.incomeMinor += amount;
 
-    if (transaction.type === "expense") flow.expenses += amount;
+    if (transaction.type === "expense") flow.expensesMinor += amount;
   }
 
   return months.map((month) => ({
     month: month.label,
     year: month.year,
-    ...(monthly.get(month.key) ?? { income: 0, expenses: 0 }),
+    ...(monthly.get(month.key) ?? { incomeMinor: BigInt(0), expensesMinor: BigInt(0) }),
+  }));
+}
+
+export function projectMonthlyFlow(
+  transactions: readonly ProjectionTransaction[],
+  months: readonly ReportMonth[],
+): MonthlyFlow[] {
+  return projectMonthlyFlowMinor(transactions, months).map((month) => ({
+    month: month.month,
+    year: month.year,
+    income: Number(month.incomeMinor) / 100,
+    expenses: Number(month.expensesMinor) / 100,
   }));
 }

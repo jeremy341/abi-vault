@@ -1,4 +1,4 @@
-// Sample data for demo mode. Used only when ABI_VAULT_DEMO_DATA is "true",
+// Sample data is used in explicit demo mode or on the open-source-demo branch,
 // so the app can run without a database.
 const wallets = [
   { id: "w1", name: "Class cash box", type: "cash", openingBalanceMinor: "15000", cardNumberVisual: "0001", cardHolderVisual: "Abi 2026", cardExpiryVisual: "06/26", cardColorVisual: "#141414", lastCountAt: "2026-10-12T14:00:00Z", lastCountedAmountMinor: "48250", lastCountDifferenceMinor: "-200", lastCountedByName: "Mara Lindner", connected: { display_name: null, iban_last4: null, bic: null, account_holder: null } },
@@ -52,7 +52,7 @@ const goals = [
 const receipts = transactions.flatMap((t, index) => t.receipt ? [{
   id: t.receiptId as string,
   file: `receipt-${t.id.slice(1)}.${index % 4 === 3 ? "pdf" : "jpg"}`,
-  type: index % 4 === 3 ? "PDF" : "JPG",
+  type: index % 4 === 3 ? "PDF" as const : "JPG" as const,
   sizeBytes: 180000 + index * 21000,
   transaction: t.title,
   transactionId: t.id as string | null,

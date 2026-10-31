@@ -8,6 +8,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { requirePermission } from "@/lib/auth/permissions-server";
 import type { AccountingPeriodListItem, CashCountListItem } from "./queries-types";
 import { querySuccess, queryFailure } from "@/lib/finance/query-result";
+import { fetchAllRows, fetchRowsInBatches } from "@/lib/supabase/fetch-all-rows";
 
 export async function getCommitteeSettingsForCurrentOrganization() {
   if (isDemoData()) return demoData.settings;
@@ -30,11 +31,15 @@ export async function listMembersForCurrentOrganization() {
   const context = await requireClerkContext();
   const supabase = await createSupabaseServerClient();
 
-  const { data: memberships, error } = await supabase
-    .from("committee_memberships")
-    .select("clerk_user_id, role, status, profiles(display_name, email)")
-    .eq("organization_id", context.organizationId)
-    .order("created_at");
+  const { data: memberships, error } = await fetchAllRows((from, to) =>
+    supabase
+      .from("committee_memberships")
+      .select("clerk_user_id, role, status, profiles(display_name, email)")
+      .eq("organization_id", context.organizationId)
+      .order("created_at")
+      .order("clerk_user_id")
+      .range(from, to),
+  );
 
   if (error) return queryFailure("DATABASE_ERROR");
 
@@ -58,11 +63,15 @@ export async function listCashCountsForCurrentOrganization() {
   const context = await requireClerkContext();
   const supabase = await createSupabaseServerClient();
 
-  const { data: cashCounts, error } = await supabase
-    .from("cash_counts")
-    .select("id, wallet_id, counted_amount_minor, book_amount_minor, difference_minor, counted_by_name, created_at, note")
-    .eq("organization_id", context.organizationId)
-    .order("created_at", { ascending: false });
+  const { data: cashCounts, error } = await fetchAllRows((from, to) =>
+    supabase
+      .from("cash_counts")
+      .select("id, wallet_id, counted_amount_minor::text, book_amount_minor::text, difference_minor::text, counted_by_name, created_at, note")
+      .eq("organization_id", context.organizationId)
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .range(from, to),
+  );
 
   if (error) return queryFailure("DATABASE_ERROR");
 
@@ -85,22 +94,37 @@ export async function listAccountingPeriodsForCurrentOrganization() {
   const context = await requirePermission("lockPeriods");
   const supabase = await createSupabaseServerClient();
 
-  const { data: periods, error } = await supabase
-    .from("accounting_periods")
-    .select("id, year, month, status, locked_at, locked_by, lock_reason")
-    .eq("organization_id", context.organizationId)
-    .order("year", { ascending: false })
-    .order("month", { ascending: false });
+  const { data: periods, error } = await fetchAllRows((from, to) =>
+    supabase
+      .from("accounting_periods")
+      .select("id, year, month, status, locked_at, locked_by, lock_reason")
+      .eq("organization_id", context.organizationId)
+      .order("year", { ascending: false })
+      .order("month", { ascending: false })
+      .order("id", { ascending: false })
+      .range(from, to),
+  );
 
   if (error) return queryFailure("DATABASE_ERROR");
 
-  const lockedByIds = [...new Set((periods ?? []).map((period) => period.locked_by).filter(Boolean))];
+  const lockedByIds = [...new Set(
+    (periods ?? [])
+      .map((period) => period.locked_by)
+      .filter((id): id is string => Boolean(id)),
+  )];
 
-  const emptyLockedProfiles: Array<{ clerk_user_id: string; display_name: string; email: string }> = [];
-
-  const { data: profiles, error: profileError } = lockedByIds.length
-    ? await supabase.from("profiles").select("clerk_user_id, display_name, email").in("clerk_user_id", lockedByIds)
-    : { data: emptyLockedProfiles, error: null };
+  const { data: profiles, error: profileError } = await fetchRowsInBatches(
+    lockedByIds,
+    (batch) =>
+      fetchAllRows((from, to) =>
+        supabase
+          .from("profiles")
+          .select("clerk_user_id, display_name, email")
+          .in("clerk_user_id", batch)
+          .order("clerk_user_id")
+          .range(from, to),
+      ),
+  );
 
   if (profileError) return queryFailure("DATABASE_ERROR");
   const profileMap = new Map((profiles ?? []).map((profile) => [profile.clerk_user_id, profile.display_name || profile.email || "Unbekannt"]));

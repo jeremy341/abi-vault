@@ -7,6 +7,9 @@ import {
   type TransactionCreateInput,
 } from "@/features/finance/schemas/transactions";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { financeDateKey } from "@/lib/finance/date-keys";
+import { isDemoData } from "@/lib/demo/mode";
+import { demoReadOnlyFailure } from "@/lib/demo/read-only-action";
 
 function mapDatabaseError(code?: string) {
   if (code === "42501") return actionFailure("FORBIDDEN", "You do not have permission for this action.");
@@ -25,6 +28,8 @@ function mapDatabaseError(code?: string) {
 export async function createManualTransaction(
   input: TransactionCreateInput,
 ): Promise<ActionResult<{ id: string }>> {
+  if (isDemoData()) return demoReadOnlyFailure();
+
   const parsed = transactionCreateSchema.safeParse(input);
 
   if (!parsed.success) {
@@ -54,7 +59,7 @@ export async function createManualTransaction(
   const supabase = await createSupabaseServerClient();
   const walletId = command.type === "income" ? command.toWalletId : command.fromWalletId;
 
-  const { data: wallet } = await supabase
+  const { data: wallet, error: walletError } = await supabase
     .from("wallets")
     .select("id")
     .eq("id", walletId)
@@ -62,6 +67,10 @@ export async function createManualTransaction(
     .eq("type", "cash")
     .eq("status", "active")
     .maybeSingle();
+
+  if (walletError) {
+    return actionFailure("DATABASE_ERROR", "The cash register could not be checked.");
+  }
 
   if (!wallet) {
     return actionFailure("INVALID_PAYLOAD", "Only one active cash register can contain transactions.");
@@ -77,7 +86,7 @@ export async function createManualTransaction(
     p_from_wallet_id: command.fromWalletId ?? null,
     p_to_wallet_id: command.toWalletId ?? null,
     p_period_id: command.periodId,
-    p_booked_at: command.bookedAt ?? new Date().toISOString().slice(0, 10),
+    p_booked_at: command.bookedAt ?? financeDateKey(new Date()),
     p_idempotency_key: command.idempotencyKey,
   });
 

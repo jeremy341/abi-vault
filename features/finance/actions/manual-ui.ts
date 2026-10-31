@@ -8,8 +8,13 @@ import {
   type ManualUiTransactionInput,
 } from "@/features/finance/schemas/manual-ui";
 import { actionFailure, actionSuccess, type ActionResult } from "@/lib/api/result";
+import { financeDateKey } from "@/lib/finance/date-keys";
+import { isDemoData } from "@/lib/demo/mode";
+import { demoReadOnlyFailure } from "@/lib/demo/read-only-action";
 
-export async function createManualTransactionFromUi(input: ManualUiTransactionInput): Promise<ActionResult<{ id: string }>> {
+export async function createManualTransactionFromUi(input: ManualUiTransactionInput): Promise<ActionResult<{ id: string; bookedAt: string }>> {
+  if (isDemoData()) return demoReadOnlyFailure();
+
   const parsed = manualUiTransactionSchema.safeParse(input);
 
   if (!parsed.success) return actionFailure("INVALID_INPUT", "The transaction data is invalid.");
@@ -25,14 +30,25 @@ export async function createManualTransactionFromUi(input: ManualUiTransactionIn
 
   const type = parsed.data.direction;
 
-  const [{ data: wallet }, { data: category }] = await Promise.all([
+  const [
+    { data: wallet, error: walletError },
+    { data: category, error: categoryError },
+  ] = await Promise.all([
     supabase.from("wallets").select("id").eq("organization_id", context.organizationId).eq("id", parsed.data.walletId).eq("type", "cash").eq("status", "active").maybeSingle(),
     supabase.from("categories").select("id").eq("organization_id", context.organizationId).eq("name", parsed.data.categoryName).eq("kind", type).is("archived_at", null).maybeSingle(),
   ]);
 
-  const today = new Date().toISOString().slice(0, 10);
+  if (walletError || categoryError) {
+    return actionFailure("DATABASE_ERROR", "The cash register setup could not be checked.");
+  }
+
+  const today = financeDateKey(new Date());
   const [year, month] = today.split("-").map(Number);
-  const { data: period } = await supabase.from("accounting_periods").select("id").eq("organization_id", context.organizationId).eq("year", year).eq("month", month).eq("status", "open").maybeSingle();
+  const { data: period, error: periodError } = await supabase.from("accounting_periods").select("id").eq("organization_id", context.organizationId).eq("year", year).eq("month", month).eq("status", "open").maybeSingle();
+
+  if (periodError) {
+    return actionFailure("DATABASE_ERROR", "The accounting period could not be checked.");
+  }
 
   if (!wallet || !category || !period) {
     return actionFailure("ACCOUNT_SETUP_INCOMPLETE", "The cash register setup is incomplete.");
@@ -54,5 +70,5 @@ export async function createManualTransactionFromUi(input: ManualUiTransactionIn
 
   return error
     ? actionFailure("TRANSACTION_CREATE_FAILED", "The transaction could not be saved.")
-    : actionSuccess({ id: String(data) });
+    : actionSuccess({ id: String(data), bookedAt: today });
 }

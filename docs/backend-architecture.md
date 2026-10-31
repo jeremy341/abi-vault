@@ -22,12 +22,38 @@ Role checks exist in server actions and database functions. RLS remains the fina
 
 Money is USD-only integer minor units (`bigint`). Transactions are posted through database RPCs that create balanced ledger entries atomically. Manual and bank-imported transactions are distinguished by `origin`. Imported provider IDs are unique per organization/provider and imports are idempotent.
 
-Transfers are posted as one transaction with two wallet sides and two balanced, linked ledger entries. Cash counts are persisted separately with the derived book amount, counted amount, and difference; the count itself does not mutate the ledger.
+The current cash-only runtime accepts income and expense transactions. Transfer transactions are rejected by a database trigger. Cash counts store the book amount, counted amount, and difference without changing the ledger.
 
 Accounting periods can be locked by administrators. Posted records and their ledger entries cannot be mutated through normal application grants when a period is locked.
 
-The active runtime uses one canonical `Barkasse` per committee. Manual transactions, balances, cash counts, reports, and ledger entries resolve to this cash wallet. Historical bank-wallet rows remain in the schema for compatibility but are archived and cannot be created or activated.
-Manual wallets may carry an explicit non-negative opening balance; the cash-only migration consolidates existing opening balances into the canonical `Barkasse` rather than silently discarding them.
+The active runtime supports multiple cash registers per committee. Manual transactions, balances, cash counts, reports, and ledger entries resolve to the selected active cash register. Historical bank-wallet rows remain in the schema for compatibility but are archived and cannot be created or activated.
+Each cash register stores its own non-negative opening balance in minor units.
+
+## Follow one manual transaction
+
+To understand the main write path, start at the **Add transaction** form in
+[`app/dashboard/transactions/page.tsx`](../app/dashboard/transactions/page.tsx).
+The form sends its values to
+[`createManualTransactionFromUi`](../features/finance/actions/manual-ui.ts),
+which validates the input with
+[`manualUiTransactionSchema`](../features/finance/schemas/manual-ui.ts),
+checks the user's permission, and looks up the active cash register, matching
+category, and open Berlin accounting period.
+
+The action calls `public.create_manual_transaction` with the amount as integer
+minor units. The database function checks the organization, role, and period,
+then writes the posted transaction and its balanced ledger entries in one
+database transaction. Its definition is in
+[`supabase/migrations/20260823000100_initial_schema.sql`](../supabase/migrations/20260823000100_initial_schema.sql).
+
+After the save, the page refreshes its cached query. Detailed rows come from
+[`transaction-queries.ts`](../features/finance/actions/transaction-queries.ts);
+dashboard and report totals come from
+[`snapshot-queries.ts`](../features/finance/actions/snapshot-queries.ts) and
+the read-only SQL function in
+[`20261029000100_finance_read_snapshot.sql`](../supabase/migrations/20261029000100_finance_read_snapshot.sql).
+The snapshot returns minor-unit amounts as text so JavaScript does not round
+large database integers.
 
 ## Open Banking (postponed)
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatMinorDollar, parseDollarToMinor } from "./money";
+import { formatMinorDollar, parseDollarToMinor, signedMinorAmount } from "./money";
 
 describe("USD minor-unit money", () => {
   it("Parses decimal commas as exact minor units", () => {
@@ -16,5 +16,17 @@ describe("USD minor-unit money", () => {
   it("Formats signed amounts for English display", () => {
     expect(formatMinorDollar(BigInt(139550))).toBe("$1,395.50");
     expect(formatMinorDollar(BigInt(-7500))).toBe("-$75.00");
+  });
+
+  it("Applies the expected sign to each transaction type", () => {
+    expect(signedMinorAmount("1250", "income")).toBe("1250");
+    expect(signedMinorAmount("1250", "expense")).toBe("-1250");
+    expect(signedMinorAmount("1250", "transfer")).toBe("1250");
+  });
+
+  it("Rejects an unknown transaction type instead of treating it as income", () => {
+    expect(() => signedMinorAmount("1250", "expnese")).toThrow(
+      "INVALID_TRANSACTION_TYPE",
+    );
   });
 });

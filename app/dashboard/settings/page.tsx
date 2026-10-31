@@ -28,6 +28,10 @@ const notificationOptions = [
   },
 ];
 
+function keepDigits(value: string) {
+  return value.replace(/\D/g, "");
+}
+
 export default function SettingsPage() {
   const [workspaceName, setWorkspaceName] = useState("Abi 2026");
   const [school, setSchool] = useState("");
@@ -43,8 +47,11 @@ export default function SettingsPage() {
   const [loadError, setLoadError] = useState("");
   const [saving, setSaving] = useState(false);
 
+  const graduationYearDigits = keepDigits(workspaceName);
+
   useEffect(() => {
     let active = true;
+
     getCommitteeSettingsForCurrentOrganization()
       .then((committeeSettings) => {
         if (!active) return;
@@ -78,12 +85,13 @@ export default function SettingsPage() {
 
   async function saveSettings() {
     if (saving) return;
+
     setSaving(true);
 
     try {
       const result = await updateCommitteeSettings({
         schoolName: school,
-        graduationYear: Number(workspaceName.replace(/\D/g, "")) || 2026,
+        graduationYear: Number(graduationYearDigits) || 2026,
         notifications,
       });
 
@@ -139,7 +147,12 @@ export default function SettingsPage() {
           </label>
           <label className={ledger.field}>
             <span>Graduation year</span>
-            <input name="graduationYear" inputMode="numeric" value={workspaceName.replace(/\D/g, "") || "2026"} readOnly />
+            <input
+              name="graduationYear"
+              inputMode="numeric"
+              value={graduationYearDigits || "2026"}
+              readOnly
+            />
           </label>
           <label className={ledger.field}>
             <span>Currency</span>
@@ -185,7 +198,12 @@ export default function SettingsPage() {
 
       <footer className={styles.footer}>
         <p aria-live="polite">{statusMessage}</p>
-        <button type="button" className={ledger.primaryButton} onClick={saveSettings} disabled={loading || saving}>
+        <button
+          type="button"
+          className={ledger.primaryButton}
+          onClick={saveSettings}
+          disabled={loading || saving}
+        >
           {saving ? "Saving" : "Save changes"}
         </button>
       </footer>

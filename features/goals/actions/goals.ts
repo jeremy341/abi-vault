@@ -9,6 +9,8 @@ import {
   type GoalCreateInput,
 } from "@/features/goals/schemas/goals";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { isDemoData } from "@/lib/demo/mode";
+import { demoReadOnlyFailure } from "@/lib/demo/read-only-action";
 
 function mapGoalError(code?: string) {
   if (code === "42501") return actionFailure("FORBIDDEN", "You do not have permission to manage goals.");
@@ -25,6 +27,8 @@ function mapGoalError(code?: string) {
 export async function createGoal(
   input: GoalCreateInput,
 ): Promise<ActionResult<{ id: string }>> {
+  if (isDemoData()) return demoReadOnlyFailure();
+
   const parsed = goalCreateSchema.safeParse(input);
 
   if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "The goal data is invalid.");
@@ -50,6 +54,8 @@ export async function createGoal(
 export async function createGoalContribution(
   input: GoalContributionInput,
 ): Promise<ActionResult<{ id: string }>> {
+  if (isDemoData()) return demoReadOnlyFailure();
+
   const parsed = goalContributionSchema.safeParse(input);
 
   if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "The contribution data is invalid.");

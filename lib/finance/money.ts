@@ -24,3 +24,14 @@ export function formatMinorDollar(amountMinor: bigint) {
 
   return `${sign}$${whole.toLocaleString("en-US")}.${fraction}`;
 }
+
+export function signedMinorAmount(amountMinor: string, type: string) {
+  const amount = BigInt(amountMinor);
+  const absoluteAmount = amount < BigInt(0) ? -amount : amount;
+
+  if (type === "expense") return (-absoluteAmount).toString();
+
+  if (type === "income" || type === "transfer") return absoluteAmount.toString();
+
+  throw new Error("INVALID_TRANSACTION_TYPE");
+}

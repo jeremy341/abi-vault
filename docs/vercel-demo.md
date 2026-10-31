@@ -1,25 +1,30 @@
 # Deploying the demo
 
 The demo runs the full interface on sample data. It needs no database and no
-sign-in, so it can be deployed as its own Vercel project.
+sign-in. It can use an existing Vercel project if the demo branch has isolated
+Preview settings, or a separate project if Preview settings share credentials
+that should not be available to the demo.
 
 ## Settings
 
-Create a separate Vercel project for the demo. Do not link it to any project
-that has production credentials.
+Use the existing project only when you can scope these variables to the
+`open-source-demo` Preview branch and confirm its Preview environment does not
+expose production credentials. Otherwise, create a separate Vercel project for
+the demo. Do not set these values for Production or for every Preview branch.
 
-Set these environment variables for the demo project:
+Set these environment variables for the demo branch's Preview environment:
 
 ```text
 ABI_VAULT_LOCAL_MODE=true
 NEXT_PUBLIC_ABI_VAULT_LOCAL_MODE=true
 ABI_VAULT_DEMO_DATA=true
-NEXT_PUBLIC_ABI_VAULT_DEMO_DATA=true
 NEXT_PUBLIC_APP_URL=https://<your-demo-domain>
 ```
 
 With these values the app serves the sample data from `lib/demo/sample-data.ts`
 and does not connect to Supabase or Clerk.
+Vercel deployments from the `open-source-demo` branch also select sample data
+automatically when Vercel system environment variables are available.
 
 ## Limits
 

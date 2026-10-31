@@ -4,8 +4,12 @@ import { clerkClient } from "@clerk/nextjs/server";
 import { requirePermission } from "@/lib/auth/permissions-server";
 import { inviteMemberSchema, type InviteMemberInput } from "@/features/people/schemas/invitations";
 import { actionFailure, actionSuccess, type ActionResult } from "@/lib/api/result";
+import { isDemoData } from "@/lib/demo/mode";
+import { demoReadOnlyFailure } from "@/lib/demo/read-only-action";
 
 export async function inviteMember(input: InviteMemberInput): Promise<ActionResult<{ id: string }>> {
+  if (isDemoData()) return demoReadOnlyFailure();
+
   const parsed = inviteMemberSchema.safeParse(input);
 
   if (!parsed.success) return actionFailure("INVALID_INPUT", "The invitation data is invalid.");

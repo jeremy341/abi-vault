@@ -6,35 +6,48 @@ goals, reports, accounting periods, and member accountability in one place.
 
 ## Try it
 
-The demo runs the full interface on sample data and needs no database or
-sign-in. Run it locally with `ABI_VAULT_DEMO_DATA=true`, or deploy it as
-described in [docs/vercel-demo.md](docs/vercel-demo.md).
+The sample-data demo runs the full interface without a database or sign-in. It
+is read-only. To run it locally, copy `.env.example` to `.env.local` and set:
+
+```text
+ABI_VAULT_LOCAL_MODE=true
+NEXT_PUBLIC_ABI_VAULT_LOCAL_MODE=true
+ABI_VAULT_DEMO_DATA=true
+```
+
+Then run `pnpm install` and `pnpm dev`. For a public deployment, follow
+[docs/vercel-demo.md](docs/vercel-demo.md).
 
 ## Features
 
 - Manual income and expense transactions
 - Receipt uploads and review states
-- Multiple cash registers and cash counts
+- Cash register and cash counts
 - Fundraising goals and progress tracking
 - Reports and exports
 - Member roles and invite links
 - Admin-only accounting periods
 - Responsive desktop, tablet, and phone layouts
 
-## Run locally
+## Run with local Supabase
 
-See [docs/self-hosting.md](docs/self-hosting.md) for the local demo, Supabase,
-and Docker setup. For a separate Vercel deployment, see
-[docs/vercel-demo.md](docs/vercel-demo.md). The shortest local path is:
+Use this path when changing database-backed actions, migrations, or RPCs. Follow
+[docs/self-hosting.md](docs/self-hosting.md) for the local database setup. It is
+separate from the no-database sample-data demo above. Never copy production
+credentials into `.env.local`.
 
-```text
-pnpm install
-supabase start
-copy .env.example .env.local
-pnpm dev
-```
+## Code map
 
-Use fake data only. Never copy production credentials into `.env.local`.
+- `app/dashboard/` contains the page routes and their page-level state.
+- `features/finance/actions/` contains finance reads and mutations;
+  `features/*/schemas/` contains input validation.
+- `lib/finance/` contains money calculations, projections, and date keys.
+- `components/ui/` contains shared controls; route-specific controls stay near
+  their page.
+- `supabase/migrations/` defines the database schema and server functions.
+- Start with [docs/backend-architecture.md](docs/backend-architecture.md) for
+  data flow and [docs/self-hosting.md](docs/self-hosting.md) for local database
+  work.
 
 ## Contributing
 

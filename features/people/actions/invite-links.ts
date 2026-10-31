@@ -11,6 +11,8 @@ import {
   type InviteLinkRoleInput,
 } from "@/features/people/schemas/invite-links";
 import { actionFailure, actionSuccess, type ActionResult } from "@/lib/api/result";
+import { isDemoData } from "@/lib/demo/mode";
+import { demoReadOnlyFailure } from "@/lib/demo/read-only-action";
 
 const ROLE_LIMITS = {
   supervisor: { days: 30, uses: 30 },
@@ -34,6 +36,8 @@ async function appOrigin() {
 }
 
 export async function createRoleInviteLink(input: InviteLinkRoleInput): Promise<ActionResult<{ id: string; role: "admin" | "supervisor"; expiresAt: string; url: string }>> {
+  if (isDemoData()) return demoReadOnlyFailure();
+
   const parsed = inviteLinkRoleSchema.safeParse(input);
 
   if (!parsed.success) return actionFailure("INVALID_INPUT", "The invitation link data is invalid.");
@@ -69,6 +73,8 @@ export async function createRoleInviteLink(input: InviteLinkRoleInput): Promise<
 }
 
 export async function acceptRoleInviteLink(token: string): Promise<ActionResult<{ organizationId: string; role: "admin" | "supervisor" }>> {
+  if (isDemoData()) return demoReadOnlyFailure();
+
   const session = await auth();
 
   if (!session.userId) return actionFailure("UNAUTHENTICATED", "Sign-in is required.");

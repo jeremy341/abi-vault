@@ -1,7 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useAppAuth } from "@/components/auth/app-auth";
 import { Dialog } from "@/components/ui/dialog";
 import { LoadingCollection, LoadingStatus, LoadingText } from "@/components/ui/loading-state";
@@ -13,6 +13,7 @@ import { getDashboardSnapshot, type DashboardResult } from "@/features/finance/a
 import { createGoal } from "@/features/goals/actions/goals";
 import { archiveGoal, updateGoal } from "@/features/goals/actions/goal-mutations";
 import { useFinanceQuery } from "@/hooks/use-finance-query";
+import { useQueryBackedState } from "@/hooks/use-query-backed-state";
 import { financeScope, invalidateFinanceQuery } from "@/lib/finance/client-cache";
 
 type Goal = {
@@ -26,6 +27,10 @@ type Goal = {
 };
 
 type DashboardGoal = Extract<DashboardResult, { ok: true }>["goals"][number];
+
+type DashboardData = Extract<DashboardResult, { ok: true }>;
+
+const emptyGoals: Goal[] = [];
 
 const displayGoalDate = (iso: string) =>
   new Date(`${iso}T00:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
@@ -57,168 +62,156 @@ function toGoal(goal: DashboardGoal): Goal {
   };
 }
 
+function goalsFromDashboard(data: DashboardData) {
+  return data.goals.map(toGoal);
+}
+
 export default function GoalsPage() {
   const { userId, orgId } = useAppAuth();
   const cacheScope = financeScope(orgId, userId);
   const { data: dashboard, loading, failed } = useFinanceQuery("dashboard-snapshot", getDashboardSnapshot, cacheScope);
   const loadError = failed ? "The goals could not be loaded." : "";
 
-  const [goals, setGoals] = useState<Goal[]>(() => (dashboard?.ok ? dashboard.goals.map(toGoal) : []));
+  const [goals, setGoals] = useQueryBackedState(
+    dashboard?.ok ? dashboard : null,
+    goalsFromDashboard,
+    emptyGoals,
+  );
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingGoalIndex, setEditingGoalIndex] = useState<number | null>(null);
-
   const [goalName, setGoalName] = useState("");
   const [targetAmount, setTargetAmount] = useState("");
-  const [savedAmount, setSavedAmount] = useState("");
   const [deadline, setDeadline] = useState("");
   const [formError, setFormError] = useState("");
   const [saving, setSaving] = useState(false);
   const idempotencyKey = useRef<string | null>(null);
+  const editingGoal = editingGoalIndex === null ? null : goals[editingGoalIndex] ?? null;
 
-  useEffect(() => {
-    if (!dashboard?.ok) return;
-
-    setGoals(dashboard.goals.map(toGoal));
-  }, [dashboard]);
-
-  const totalTarget = useMemo(
-    () => goals.reduce((sum, goal) => sum + goal.target, 0),
-    [goals],
-  );
-
-  const totalSaved = useMemo(
-    () => goals.reduce((sum, goal) => sum + goal.saved, 0),
-    [goals],
-  );
-
-  const overallProgress = totalTarget
-    ? Math.round((totalSaved / totalTarget) * 100)
-    : 0;
+  const totalTarget = goals.reduce((sum, goal) => sum + goal.target, 0);
+  const totalSaved = goals.reduce((sum, goal) => sum + goal.saved, 0);
+  const overallProgress = totalTarget ? Math.round((totalSaved / totalTarget) * 100) : 0;
 
   const previewTarget = Number(targetAmount.replace(",", ".")) || 0;
-  const previewSaved = Number(savedAmount.replace(",", ".")) || 0;
+  const previewSaved = editingGoal?.saved ?? 0;
+  const previewProgress = previewTarget ? Math.min(100, Math.round((previewSaved / previewTarget) * 100)) : 0;
 
-  const previewProgress = previewTarget
-    ? Math.min(100, Math.round((previewSaved / previewTarget) * 100))
-    : 0;
-
-  function closeModal() {
-    setModalOpen(false);
-    setEditingGoalIndex(null);
+  function resetForm() {
+    idempotencyKey.current = null;
     setGoalName("");
     setTargetAmount("");
-    setSavedAmount("");
     setDeadline("");
     setFormError("");
   }
 
-  function openAddModal() {
+  function closeModal() {
+    resetForm();
+    setModalOpen(false);
     setEditingGoalIndex(null);
-    setGoalName("");
-    setTargetAmount("");
-    setSavedAmount("");
-    setDeadline("");
-    setFormError("");
+  }
+
+  function openAddModal() {
+    resetForm();
+    setEditingGoalIndex(null);
     setModalOpen(true);
   }
 
   function openEditModal(goal: Goal, index: number) {
+    idempotencyKey.current = null;
     setEditingGoalIndex(index);
     setGoalName(goal.title);
     setTargetAmount(goal.target.toString());
-    setSavedAmount(goal.saved.toString());
-
     setDeadline(goal.deadline);
-
     setFormError("");
     setModalOpen(true);
+  }
+
+  function changeField(update: () => void) {
+    idempotencyKey.current = null;
+    update();
+    setFormError("");
   }
 
   async function handleSaveGoal(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (saving) return;
+
     setSaving(true);
     setFormError("");
-    idempotencyKey.current ??= `goal-${crypto.randomUUID()}`;
 
     try {
       const formData = new FormData(event.currentTarget);
       const submittedName = String(formData.get("goalName") ?? "").trim();
       const submittedDeadline = String(formData.get("deadline") ?? "");
       const submittedTargetAmount = String(formData.get("targetAmount") ?? "");
-      const submittedSavedAmount = String(formData.get("savedAmount") ?? "");
       const target = Number(submittedTargetAmount.replace(",", "."));
-      const saved = Number(submittedSavedAmount.replace(",", ".")) || 0;
 
-      if (!submittedName || !target || target <= 0 || !submittedDeadline) {
-        setFormError(
-          "Complete the name, target amount, and target date.",
-        );
-
-        return;
-      }
-
-      if (saved < 0 || saved > target) {
-        setFormError(
-          "The amount already saved must be between $0 and the target amount.",
-        );
+      if (!submittedName || !Number.isFinite(target) || target <= 0 || !submittedDeadline) {
+        setFormError("Complete the name, target amount, and target date.");
 
         return;
       }
 
       const [year, month, day] = submittedDeadline.split("-");
       const formattedDate = displayGoalDate(`${year}-${month}-${day}`);
-      const progress = Math.round((saved / target) * 100);
+      const saved = editingGoal?.saved ?? 0;
+      const progress = target ? Math.round((saved / target) * 100) : 0;
 
       if (editingGoalIndex !== null) {
         const currentGoal = goals[editingGoalIndex];
 
-        if (currentGoal && /^[0-9a-f-]{36}$/i.test(currentGoal.id)) {
-          const result = await updateGoal({
-            goalId: currentGoal.id,
-            title: submittedName,
-            description: null,
-            targetAmount: submittedTargetAmount,
-            deadline: submittedDeadline,
-            reason: "Goal updated in the goal dialog",
-          });
+        if (!currentGoal) {
+          setFormError("This goal is no longer available.");
 
-          if (!result.ok) {
-            setFormError("The goal could not be saved.");
+          return;
+        }
 
-            return;
-          }
+        const result = await updateGoal({
+          goalId: currentGoal.id,
+          title: submittedName,
+          description: null,
+          targetAmount: submittedTargetAmount,
+          deadline: submittedDeadline,
+          reason: "Goal updated in the goal dialog",
+        });
+
+        if (!result.ok) {
+          setFormError(result.error.message);
+
+          return;
         }
 
         setGoals((current) =>
-          current.map((goal, index) =>
-            index === editingGoalIndex
+          current.map((goal) =>
+            goal.id === currentGoal.id
               ? {
-                id: goal.id,
-                title: submittedName,
-                target,
-                saved,
-                progress,
-                date: formattedDate,
-                deadline: submittedDeadline,
-              }
+                  ...goal,
+                  title: submittedName,
+                  target,
+                  saved: currentGoal.saved,
+                  progress,
+                  date: formattedDate,
+                  deadline: submittedDeadline,
+                }
               : goal,
           ),
         );
       } else {
+        const requestKey = idempotencyKey.current ?? `goal-${crypto.randomUUID()}`;
+        idempotencyKey.current = requestKey;
+
         const result = await createGoal({
           title: submittedName,
           description: null,
           targetAmount: submittedTargetAmount,
           deadline: submittedDeadline,
           visibility: "private",
-          idempotencyKey: idempotencyKey.current,
+          idempotencyKey: requestKey,
         });
 
         if (!result.success) {
-          setFormError("The goal could not be saved.");
+          setFormError(result.error.message);
 
           return;
         }
@@ -229,8 +222,8 @@ export default function GoalsPage() {
             id: result.data.id,
             title: submittedName,
             target,
-            saved,
-            progress,
+            saved: 0,
+            progress: 0,
             date: formattedDate,
             deadline: submittedDeadline,
           },
@@ -238,7 +231,6 @@ export default function GoalsPage() {
       }
 
       invalidateFinanceQuery("goals", "dashboard-snapshot", "report-snapshot");
-      idempotencyKey.current = null;
       closeModal();
     } catch {
       setFormError("The goal could not be saved.");
@@ -249,34 +241,43 @@ export default function GoalsPage() {
 
   async function handleDeleteGoal() {
     if (editingGoalIndex === null || saving) return;
+
+    const currentGoal = goals[editingGoalIndex];
+
+    if (!currentGoal) {
+      setFormError("This goal is no longer available.");
+
+      return;
+    }
+
     setSaving(true);
 
     try {
-      const currentGoal = goals[editingGoalIndex];
+      const result = await archiveGoal({
+        goalId: currentGoal.id,
+        reason: "Goal archived in the goal dialog",
+      });
 
-      if (/^[0-9a-f-]{36}$/i.test(currentGoal.id)) {
-        const result = await archiveGoal({
-          goalId: currentGoal.id,
-          reason: "Goal archived in the goal dialog",
-        });
+      if (!result.ok) {
+        setFormError(result.error.message);
 
-        if (!result.ok) {
-          setFormError("The goal could not be archived.");
-
-          return;
-        }
+        return;
       }
 
       setGoals((current) => current.filter((_, index) => index !== editingGoalIndex));
       invalidateFinanceQuery("goals", "dashboard-snapshot", "report-snapshot");
       closeModal();
+    } catch {
+      setFormError("The goal could not be archived.");
     } finally {
       setSaving(false);
     }
   }
 
+  const isEditing = editingGoalIndex !== null;
+
   return (
-    <section className={`${ledger.page}`} aria-busy={loading}>
+    <section className={ledger.page} aria-busy={loading}>
       <LoadingStatus loading={loading} label="Loading goals" />
       {loadError ? <LoadError message={loadError} /> : null}
 
@@ -339,7 +340,7 @@ export default function GoalsPage() {
 
       {modalOpen && (
         <Dialog
-          label={editingGoalIndex !== null ? "Edit goal" : "Add goal"}
+          label={isEditing ? "Edit goal" : "Add goal"}
           onClose={closeModal}
           overlayClassName={dlg.overlay}
           dialogClassName={dlg.modal}
@@ -347,10 +348,10 @@ export default function GoalsPage() {
           <form onSubmit={handleSaveGoal} noValidate>
             <header className={dlg.header}>
               <div className={dlg.heading}>
-                <h2>{editingGoalIndex !== null ? "Edit goal" : "Add goal"}</h2>
+                <h2>{isEditing ? "Edit goal" : "Add goal"}</h2>
                 <p>
-                  {editingGoalIndex !== null
-                    ? "Change the name, amounts or target date of this goal."
+                  {isEditing
+                    ? "Change the name, target amount, or target date of this goal."
                     : "Set a shared savings goal for the class."}
                 </p>
               </div>
@@ -373,10 +374,7 @@ export default function GoalsPage() {
                     autoComplete="off"
                     value={goalName}
                     maxLength={30}
-                    onChange={(event) => {
-                      setGoalName(event.target.value);
-                      setFormError("");
-                    }}
+                    onChange={(event) => changeField(() => setGoalName(event.target.value))}
                     placeholder="For example, class trip"
                   />
                 </label>
@@ -389,33 +387,18 @@ export default function GoalsPage() {
                       inputMode="decimal"
                       autoComplete="off"
                       value={targetAmount}
-                      onChange={(event) => {
-                        setTargetAmount(event.target.value);
-                        setFormError("");
-                      }}
+                      onChange={(event) => changeField(() => setTargetAmount(event.target.value))}
                       placeholder="0.00"
                     />
                     <span>$</span>
                   </div>
                 </label>
 
-                <label className={dlg.field}>
+                <div className={dlg.field}>
                   <span>Already saved</span>
-                  <div className={dlg.amountField}>
-                    <input
-                      name="savedAmount"
-                      inputMode="decimal"
-                      autoComplete="off"
-                      value={savedAmount}
-                      onChange={(event) => {
-                        setSavedAmount(event.target.value);
-                        setFormError("");
-                      }}
-                      placeholder="0.00"
-                    />
-                    <span>$</span>
-                  </div>
-                </label>
+                  <output className={dlg.input}>{dollarPrecise.format(previewSaved)}</output>
+                  <small>Read from recorded contributions.</small>
+                </div>
 
                 <label className={`${dlg.field} ${dlg.formFull}`}>
                   <span>Target date</span>
@@ -423,10 +406,7 @@ export default function GoalsPage() {
                     name="deadline"
                     type="date"
                     value={deadline}
-                    onChange={(event) => {
-                      setDeadline(event.target.value);
-                      setFormError("");
-                    }}
+                    onChange={(event) => changeField(() => setDeadline(event.target.value))}
                   />
                 </label>
               </div>
@@ -437,7 +417,7 @@ export default function GoalsPage() {
                 </span>
                 <p>
                   {dollarPrecise.format(previewSaved)} of{" "}
-                  {previewTarget ? dollarPrecise.format(previewTarget) : dollarPrecise.format(0)}, {previewProgress}%
+                  {dollarPrecise.format(previewTarget)}, {previewProgress}%
                 </p>
               </div>
 
@@ -448,8 +428,8 @@ export default function GoalsPage() {
               ) : null}
             </div>
 
-            <footer className={`${dlg.footer} ${editingGoalIndex !== null ? dlg.footerSplit : ""}`}>
-              {editingGoalIndex !== null ? (
+            <footer className={`${dlg.footer} ${isEditing ? dlg.footerSplit : ""}`}>
+              {isEditing ? (
                 <button
                   type="button"
                   className={dlg.destructiveButton}
@@ -470,9 +450,7 @@ export default function GoalsPage() {
                   Cancel
                 </button>
                 <button type="submit" className={dlg.primaryButton} disabled={saving} aria-busy={saving}>
-                  {saving ? "Saving" : editingGoalIndex !== null
-                    ? "Save changes"
-                    : "Add goal"}
+                  {saving ? "Saving" : isEditing ? "Save changes" : "Add goal"}
                 </button>
               </div>
             </footer>

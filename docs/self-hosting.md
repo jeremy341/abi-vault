@@ -4,7 +4,11 @@ Abi Vault can run locally with Docker and a local Supabase instance. The
 production website and its database are not required and must not be used for
 local development.
 
-## Local demo
+## Local Supabase workspace
+
+Use this database-backed setup when working on server actions, database
+migrations, or RPCs. For the faster sample-data demo with no database, follow
+the instructions in the README instead.
 
 Requirements: Node.js 22+, pnpm, Docker Desktop, and the Supabase CLI.
 
@@ -29,7 +33,8 @@ Use the local Supabase publishable/anon key and service-role key printed by
 pnpm dev
 ```
 
-The local demo uses seeded sample data and a fixed demo administrator. It is not meant for real financial data.
+The local database starts with seeded records and a fixed local administrator.
+It is not meant for real financial data.
 
 ## Docker application image
 

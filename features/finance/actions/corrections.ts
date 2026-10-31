@@ -4,6 +4,8 @@ import { requirePermission } from "@/lib/auth/permissions-server";
 import { actionFailure, actionSuccess, type ActionResult } from "@/lib/api/result";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { parseDollarToMinor } from "@/lib/finance/money";
+import { isDemoData } from "@/lib/demo/mode";
+import { demoReadOnlyFailure } from "@/lib/demo/read-only-action";
 import {
   transactionArchiveSchema,
   transactionCorrectionSchema,
@@ -28,6 +30,8 @@ function mapCorrectionError(code?: string) {
 export async function correctTransactionFromUi(
   input: TransactionCorrectionInput,
 ): Promise<ActionResult<{ id: string }>> {
+  if (isDemoData()) return demoReadOnlyFailure();
+
   const parsed = transactionCorrectionSchema.safeParse(input);
 
   if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "Complete all change fields.");
@@ -112,6 +116,8 @@ export async function correctTransactionFromUi(
 export async function archiveTransaction(
   input: TransactionArchiveInput,
 ): Promise<ActionResult<null>> {
+  if (isDemoData()) return demoReadOnlyFailure();
+
   const parsed = transactionArchiveSchema.safeParse(input);
 
   if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "An archive reason is required.");

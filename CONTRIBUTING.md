@@ -6,11 +6,13 @@ member accountability.
 
 ## Development setup
 
-1. Install Node.js 22+, pnpm, Docker Desktop, and the Supabase CLI.
-2. Copy `.env.example` to `.env.local`.
-3. Start local Supabase with `supabase start`.
-4. Set `ABI_VAULT_LOCAL_MODE=true` for the local demo.
-5. Run `pnpm install` and `pnpm dev`.
+For a quick read-only preview, follow the sample-data steps in the README. This
+path needs no database or Clerk account.
+
+When changing database-backed code, use the local Supabase setup in
+[docs/self-hosting.md](docs/self-hosting.md). It explains how to start Supabase,
+which local keys to copy, and how to run the app. Do not connect development to
+a production project.
 
 Please use fake data locally. Never connect local development to a production
 Supabase project or production Clerk instance.

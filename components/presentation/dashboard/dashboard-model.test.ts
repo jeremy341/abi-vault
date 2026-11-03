@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { displayDashboardReviews } from "./dashboard-model";
 
-describe("dashboard view model", () => {
-  it("keeps only transactions that need review and preserves their destinations", () => {
+describe("Dashboard view model", () => {
+  it("Keeps only transactions that need review", () => {
     expect(displayDashboardReviews({
       transactions: [
         { title: "Approved item", reviewStatus: "Approved", receipt: true },

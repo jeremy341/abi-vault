@@ -13,7 +13,7 @@ export function EmptyState({
   icon?: ReactNode;
 }) {
   return (
-    <div className={styles.root} role="status">
+    <div className={styles.root}>
       {icon ? <span className={styles.icon}>{icon}</span> : null}
       <strong>{title}</strong>
       <span>{description}</span>

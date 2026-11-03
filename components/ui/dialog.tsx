@@ -25,25 +25,40 @@ export function Dialog({
   }, [onClose]);
 
   useEffect(() => {
-    // SAFETY: document.activeElement is an HTMLElement or null in this browser focus trap.
     const previouslyFocused = document.activeElement as HTMLElement | null;
     const dialog = dialogRef.current;
 
-    const focusable = dialog?.querySelectorAll<HTMLElement>(
-      'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
-    );
+    const selector =
+      'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-    const first = focusable?.[0];
-    const last = focusable?.[focusable.length - 1];
+    const getFocusable = () =>
+      Array.from(dialog?.querySelectorAll<HTMLElement>(selector) ?? []);
 
-    window.requestAnimationFrame(() => (first ?? dialog)?.focus());
+    window.requestAnimationFrame(() => {
+      if (dialog?.contains(document.activeElement) && document.activeElement !== dialog) return;
+
+      const start =
+        dialog?.querySelector<HTMLElement>("[data-autofocus]") ??
+        dialog?.querySelector<HTMLElement>("input:not([disabled]):not([type=hidden]), textarea:not([disabled]), select:not([disabled])") ??
+        getFocusable()[0] ??
+        dialog;
+
+      start?.focus();
+    });
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") onCloseRef.current();
 
-      if (event.key !== "Tab" || !first || !last) return;
+      if (event.key !== "Tab") return;
 
-      if (event.shiftKey && document.activeElement === first) {
+      const focusable = getFocusable();
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (!first || !last) {
+        event.preventDefault();
+        dialog?.focus();
+      } else if (event.shiftKey && (document.activeElement === first || document.activeElement === dialog)) {
         event.preventDefault();
         last.focus();
       } else if (!event.shiftKey && document.activeElement === last) {

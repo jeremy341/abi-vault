@@ -1,110 +1,66 @@
-.card {
-  transition: box-shadow 160ms ease;
+.summary {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-2);
+  border-block: 1px solid var(--rule);
+  padding-block: var(--space-4);
 }
 
-.switchIn {
-  animation: card-switch-in 220ms cubic-bezier(0.23, 1, 0.32, 1) both;
-}
-
-.card:hover {
-  box-shadow: 0 14px 26px -10px rgb(36 36 40 / 42%);
-}
-
-.cardTint {
-  position: absolute;
-  z-index: 1;
-  inset: 0;
-  background: var(--card-color);
-  mix-blend-mode: color;
-  opacity: 0.82;
-  pointer-events: none;
-}
-
-.cardTintLight {
-  background: #f0f0ee;
-  mix-blend-mode: normal;
-  opacity: 1;
-}
-
-.cardLight {
-  border: 1px solid #dedee1;
-  background: #f0f0ee;
-}
-
-.cardLight::after {
-  display: none;
-}
-
-@keyframes card-switch-in {
-  from {
-    opacity: 0;
-    transform: translateX(8px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .card,
-  .switchIn {
-    animation: none;
-    transition: none;
-  }
-
-  .card:hover {
-    box-shadow: 0 10px 24px rgb(36 36 40 / 16%);
-  }
-}
-.cardFrame {
-  container-type: inline-size;
-}
-
-.cardNumber {
-  font-size: clamp(0.9rem, 6.4cqw, 1.35rem);
-}
-
-.cardName {
-  font-size: clamp(0.75rem, 3.2cqw, 1rem);
-  font-weight: 600;
-  letter-spacing: 0.02em;
-}
-
-.cardMeta {
+.name {
   display: flex;
-  gap: clamp(2.25rem, 11cqw, 5rem);
-  font-size: clamp(0.8rem, 3.1cqw, 1rem);
+  min-width: 0;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: 600;
+  line-height: 1.4;
 }
 
-.cardMetaLabel {
-  display: block;
-  font-size: clamp(0.58rem, 1.9cqw, 0.7rem);
-}
-
-.cardMetaValue {
-  display: block;
-  max-width: 12ch;
+.nameText {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-@media (min-width: 2200px) {
-  .cardNumber {
-    font-size: 1.5rem;
-  }
+.swatch {
+  width: 0.75rem;
+  height: 0.75rem;
+  flex: none;
+  border: 1px solid var(--control);
+  background: var(--swatch);
+}
 
-  .cardName {
-    font-size: 1.15rem;
-  }
+.number {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-base);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
 
-  .cardMeta {
-    font-size: 1.05rem;
-  }
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-8);
+  margin: var(--space-2) 0 0;
+}
 
-  .cardMetaLabel {
-    font-size: 0.78rem;
-  }
+.meta > div {
+  min-width: 0;
+}
+
+.meta dt {
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.meta dd {
+  max-width: 16rem;
+  margin: 0;
+  overflow: hidden;
+  font-size: var(--text-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

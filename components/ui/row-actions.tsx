@@ -47,7 +47,7 @@ export function RowActionMenu({
             aria-label={`${label} Options`}
             title={`${label} Options`}
             onClick={(event) => event.stopPropagation()}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            className="inline-flex h-8 w-8 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11 items-center justify-center rounded-[var(--radius-control)] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           />
         }
       >
@@ -68,7 +68,7 @@ export function RowActionMenu({
         {onReceipt ? <DropdownMenuSeparator /> : null}
         <DropdownMenuItem
           disabled={!canEdit}
-          aria-label={canEdit ? "Edit" : editDisabledLabel}
+          aria-label={canEdit ? undefined : editDisabledLabel}
           title={canEdit ? undefined : editDisabledLabel}
           onClick={canEdit ? onEdit : undefined}
         >
@@ -78,13 +78,13 @@ export function RowActionMenu({
         <DropdownMenuSeparator />
         <DropdownMenuItem
           disabled={!canDelete}
-          aria-label={canDelete ? "Delete" : deleteDisabledLabel}
+          aria-label={canDelete ? undefined : deleteDisabledLabel}
           variant="destructive"
           title={canDelete ? undefined : deleteDisabledLabel}
           onClick={canDelete ? onDelete : undefined}
         >
           <Archive aria-hidden="true" />
-          Delete
+          Archive
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

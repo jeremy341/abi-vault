@@ -57,7 +57,6 @@ export function FieldDropdown({
     if (!open) return;
 
     function handlePointerDown(event: PointerEvent) {
-      // SAFETY: pointer events always expose an EventTarget that can be checked by Node.contains.
       if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
     }
 

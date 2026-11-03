@@ -1,0 +1,164 @@
+const uuid = (number: number) => `00000000-0000-4000-8000-${String(number).padStart(12, "0")}`;
+
+const walletRef: Record<"w1" | "w2", string> = { w1: uuid(1), w2: uuid(2) };
+
+const wallets = [
+  {
+    id: walletRef.w1,
+    name: "Class cash box",
+    type: "cash",
+    openingBalanceMinor: "15000",
+    cardNumberVisual: "0001",
+    cardHolderVisual: "Abi 2026",
+    cardExpiryVisual: "06/26",
+    cardColorVisual: "#141414",
+    lastCountAt: "2026-10-12T14:00:00Z",
+    lastCountedAmountMinor: "48250",
+    lastCountDifferenceMinor: "-200",
+    lastCountedByName: "Mara Lindner",
+    connected: { display_name: null, iban_last4: null, bic: null, account_holder: null },
+  },
+  {
+    id: walletRef.w2,
+    name: "Prom fund",
+    type: "cash",
+    openingBalanceMinor: "0",
+    cardNumberVisual: "0002",
+    cardHolderVisual: "Abi 2026",
+    cardExpiryVisual: "06/26",
+    cardColorVisual: "#5a5a5a",
+    lastCountAt: null,
+    lastCountedAmountMinor: null,
+    lastCountDifferenceMinor: null,
+    lastCountedByName: null,
+    connected: { display_name: null, iban_last4: null, bic: null, account_holder: null },
+  },
+];
+
+const rows: [string, string, string, "w1" | "w2", number, "income" | "expense", boolean, string, string][] = [
+  ["Cake sale, break", "Event", "2026-10-24", "w1", 12480, "income", false, "Approved", "Mara Lindner"],
+  ["Poster printing", "Supplies", "2026-10-22", "w1", -2390, "expense", true, "Approved", "Jonas Albers"],
+  ["Prom deposit, venue", "Event", "2026-10-20", "w2", -50000, "expense", true, "Pending review", "Mara Lindner"],
+  ["Class contributions, October", "Other", "2026-10-18", "w1", 31000, "income", false, "Approved", "Sven Ostermann"],
+  ["Crepe stand supplies", "Supplies", "2026-10-15", "w1", -4185, "expense", true, "Approved", "Jonas Albers"],
+  ["Flea market table fee", "Event", "2026-10-12", "w1", -1500, "expense", false, "Invalid", "Lea Brandt"],
+  ["Donation, parents' association", "Other", "2026-10-09", "w2", 25000, "income", false, "Approved", "Sven Ostermann"],
+  ["T-shirt order, deposit", "Supplies", "2026-10-05", "w2", -18900, "expense", true, "Approved", "Mara Lindner"],
+  ["Cake sale, parents' evening", "Event", "2026-10-02", "w1", 9650, "income", false, "Approved", "Lea Brandt"],
+  ["Cash box lock", "Supplies", "2026-09-28", "w1", -1299, "expense", true, "Approved", "Jonas Albers"],
+  ["Class contributions, September", "Other", "2026-09-18", "w1", 29000, "income", false, "Approved", "Sven Ostermann"],
+  ["Bake sale ingredients", "Supplies", "2026-09-14", "w1", -3320, "expense", true, "Pending review", "Lea Brandt"],
+];
+
+const transactions = rows.map(([title, category, date, walletKey, amount, type, receipt, reviewStatus, createdByName], index) => ({
+  id: uuid(100 + index),
+  title,
+  category,
+  date,
+  amountMinor: String(amount),
+  type,
+  receipt,
+  receiptId: receipt ? uuid(200 + index) : null,
+  receiptFile: receipt ? `receipt-${index}.jpg` : null,
+  receiptType: receipt ? "image/jpeg" : null,
+  reviewStatus,
+  createdByName,
+  createdAt: `${date}T10:00:00Z`,
+  account: walletKey === "w1" ? "Class cash box" : "Prom fund",
+  walletId: walletRef[walletKey],
+  fromWalletId: type === "expense" ? walletRef[walletKey] : null,
+  toWalletId: type === "income" ? walletRef[walletKey] : null,
+  createdBy: "u1",
+  canEdit: true,
+  canDelete: true,
+  periodLocked: false,
+}));
+
+const goals = [
+  { id: uuid(300), title: "Prom", target_amount_minor: "250000", saved_amount_minor: "142000", deadline: "2027-05-30" },
+  { id: uuid(301), title: "Class trip", target_amount_minor: "180000", saved_amount_minor: "61000", deadline: "2027-02-14" },
+  { id: uuid(302), title: "Yearbook", target_amount_minor: "40000", saved_amount_minor: "40000", deadline: "2026-12-01" },
+];
+
+const receipts = transactions.flatMap((t, index) => t.receipt ? [{
+  id: uuid(200 + index),
+  file: `receipt-${index}.${index % 4 === 3 ? "pdf" : "jpg"}`,
+  type: index % 4 === 3 ? "PDF" as const : "JPG" as const,
+  sizeBytes: 180000 + index * 21000,
+  transaction: t.title,
+  transactionId: t.id,
+  assigned: true,
+  date: t.date,
+  amountMinor: t.amountMinor,
+  status: t.reviewStatus === "Approved" ? "approved" : t.reviewStatus === "Invalid" ? "rejected" : "pending",
+  uploadedByName: t.createdByName,
+  uploadedAt: t.createdAt,
+  reviewedByName: t.reviewStatus === "Approved" ? "Mara Lindner" : null,
+  reviewedAt: t.reviewStatus === "Approved" ? t.createdAt : null,
+  canEdit: true,
+  canDelete: true,
+}] : []);
+
+const members = [
+  { id: "u1", name: "Mara Lindner", role: "admin", status: "active" },
+  { id: "u2", name: "Jonas Albers", role: "supervisor", status: "active" },
+  { id: "u3", name: "Sven Ostermann", role: "supervisor", status: "active" },
+  { id: "u4", name: "Lea Brandt", role: "student", status: "active" },
+  { id: "u5", name: "Noah Krüger", role: "student", status: "invited" },
+];
+
+const cashCounts = [
+  {
+    id: uuid(400),
+    walletId: walletRef.w1,
+    countedAmountMinor: "48250",
+    bookAmountMinor: "48450",
+    differenceMinor: "-200",
+    countedByName: "Mara Lindner",
+    createdAt: "2026-10-12T14:00:00Z",
+    note: "Two coins missing",
+  },
+];
+
+const periods = [
+  { id: uuid(500), year: 2026, month: 10, status: "open" as const, lockedAt: null, lockedByName: null, lockReason: null },
+  {
+    id: uuid(501),
+    year: 2026,
+    month: 9,
+    status: "locked" as const,
+    lockedAt: "2026-10-02T10:00:00Z",
+    lockedByName: "Mara Lindner",
+    lockReason: "Month closed after cash count",
+  },
+  {
+    id: uuid(502),
+    year: 2026,
+    month: 8,
+    status: "locked" as const,
+    lockedAt: "2026-09-03T10:00:00Z",
+    lockedByName: "Mara Lindner",
+    lockReason: "Month closed",
+  },
+];
+
+export const demoData = {
+  wallets: { ok: true as const, items: wallets },
+  transactions: { ok: true as const, items: transactions },
+  goals: { ok: true as const, items: goals },
+  receipts: { ok: true as const, items: receipts },
+  members: { ok: true as const, items: members },
+  cashCounts: { ok: true as const, items: cashCounts },
+  settings: { ok: true as const, data: { school_name: "Rheinau High School", graduation_year: 2026, notifications: {} } },
+  periods: { ok: true as const, items: periods },
+  reportKpis: {
+    ok: true as const,
+    liquidMinor: "203724",
+    expenseMinor: "81594",
+    netMinor: "25536",
+    reviewCount: 3,
+    reviewedReceiptCount: 4,
+    unassignedReceiptCount: 1,
+    reconciliationPercent: 67,
+  },
+};

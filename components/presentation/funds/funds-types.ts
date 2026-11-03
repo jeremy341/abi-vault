@@ -1,5 +1,5 @@
+import type { ReactNode } from "react";
 import type { AccountCardDetails } from "@/components/dashboard/AccountCard";
-import type { PresentationMode } from "@/hooks/use-presentation-mode";
 
 export type FundsCard = {
   id: string;
@@ -38,7 +38,6 @@ export type FundsActivity = {
 };
 
 export type AdaptiveFundsViewProps = {
-  mode: PresentationMode;
   loading: boolean;
   error: string | null;
   onRetry: () => void;
@@ -49,6 +48,7 @@ export type AdaptiveFundsViewProps = {
   auditLogs: FundsAudit[];
   activities: FundsActivity[];
   dollar: (value: number) => string;
+  differencePanel?: ReactNode;
   onSwitchCard: (direction: -1 | 1) => void;
   onSelectCard: (index: number) => void;
   onAddCard: () => void;
@@ -56,4 +56,3 @@ export type AdaptiveFundsViewProps = {
   onCountCash: () => void;
 };
 
-export type FundsSection = "overview" | "accounts" | "audit";

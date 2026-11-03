@@ -23,3 +23,8 @@ export {
   getReportKpisForCurrentOrganization,
   getReportSnapshot,
 } from "./snapshot-queries";
+
+import type { getDashboardSnapshot } from "./snapshot-queries";
+
+export type DashboardResult = Awaited<ReturnType<typeof getDashboardSnapshot>>;
+

@@ -2,8 +2,16 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import ResponsiveDashboardShell from "@/components/presentation/ResponsiveDashboardShell";
 import { FinanceCacheLifecycle } from "@/components/finance-cache-lifecycle";
-import { ensureCurrentOrganizationData } from "@/lib/auth/bootstrap";
+import { syncCurrentOrganization } from "@/lib/auth/bootstrap";
 import { isLocalMode } from "@/lib/auth/local";
+import { isDemoData } from "@/lib/demo/mode";
+import { currentDemoClassId, DEMO_CLASSES } from "@/lib/demo/classes";
+
+async function demoClassSwitch() {
+  if (!isDemoData()) return undefined;
+
+  return { classes: DEMO_CLASSES, activeId: await currentDemoClassId() };
+}
 
 export default async function DashboardLayout({
   children,
@@ -12,7 +20,7 @@ export default async function DashboardLayout({
 }>) {
   if (isLocalMode()) {
     return (
-      <ResponsiveDashboardShell isAdmin localMode>
+      <ResponsiveDashboardShell isAdmin localMode demoClasses={await demoClassSwitch()}>
         <FinanceCacheLifecycle />
         {children}
       </ResponsiveDashboardShell>
@@ -25,15 +33,15 @@ export default async function DashboardLayout({
     redirect("/sign-in");
   }
 
-  if (orgId) await ensureCurrentOrganizationData();
+  if (orgId) await syncCurrentOrganization();
 
   return (
-    <ResponsiveDashboardShell isAdmin={orgRole === "org:admin"}>
+    <ResponsiveDashboardShell isAdmin={orgRole === "org:admin"} demoClasses={await demoClassSwitch()}>
       <FinanceCacheLifecycle />
       {orgId ? children : (
         <main className="flex min-h-full items-center justify-center p-6">
-          <section className="w-full max-w-lg rounded-[var(--ui-card-radius)] border border-[var(--ui-border)] bg-[var(--ui-surface)] p-6 text-center shadow-[var(--ui-card-shadow)]">
-            <h1 className="text-lg font-semibold tracking-tight">No workspace selected</h1>
+          <section className="w-full max-w-lg border-t border-[var(--ink)] pt-4">
+            <h1 className="text-lg font-semibold">No workspace selected</h1>
             <p className="mt-2 text-sm text-muted-foreground">Join the Abi workspace through an invitation link or choose an active workspace.</p>
           </section>
         </main>

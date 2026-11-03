@@ -13,6 +13,8 @@ import {
   type WalletUpdateInput,
 } from "@/features/finance/schemas/wallets";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { isDemoData } from "@/lib/demo/mode";
+import { addDemoWallet, findDemoWallet, removeDemoWallet, setDemoPeriodLock, updateDemoWallet } from "@/lib/demo/store";
 
 function mapWalletError(code?: string) {
   if (code === "42501") return actionFailure("FORBIDDEN", "You do not have permission for this action.");
@@ -33,6 +35,18 @@ export async function createWallet(
 
   if (parsed.data.type !== "cash") {
     return actionFailure("INVALID_PAYLOAD", "Only cash registers are supported.");
+  }
+
+  if (isDemoData()) {
+    const id = await addDemoWallet({
+      name: parsed.data.name,
+      cardNumberVisual: parsed.data.cardNumberVisual ?? null,
+      cardHolderVisual: parsed.data.cardHolderVisual ?? null,
+      cardExpiryVisual: parsed.data.cardExpiryVisual ?? null,
+      cardColorVisual: parsed.data.cardColorVisual ?? null,
+    });
+
+    return actionSuccess({ id });
   }
 
   const context = await requirePermission("manageWallets");
@@ -58,6 +72,19 @@ export async function updateWallet(input: WalletUpdateInput) {
   const parsed = walletUpdateSchema.safeParse(input);
 
   if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "The cash register data is invalid.");
+
+  if (isDemoData()) {
+    const updated = await updateDemoWallet(parsed.data.walletId, {
+      name: parsed.data.name,
+      cardNumberVisual: parsed.data.cardNumberVisual ?? null,
+      cardHolderVisual: parsed.data.cardHolderVisual ?? null,
+      cardExpiryVisual: parsed.data.cardExpiryVisual ?? null,
+      cardColorVisual: parsed.data.cardColorVisual ?? null,
+    });
+
+    return updated ? actionSuccess(null) : actionFailure("NOT_FOUND", "The cash register is no longer active.");
+  }
+
   const context = await requirePermission("manageWallets");
   const supabase = await createSupabaseServerClient();
 
@@ -85,6 +112,15 @@ export async function archiveWallet(input: WalletArchiveInput) {
   const parsed = walletArchiveSchema.safeParse(input);
 
   if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "The cash register data is invalid.");
+
+  if (isDemoData()) {
+    if (!await findDemoWallet(parsed.data.walletId)) return actionFailure("NOT_FOUND", "The cash register is no longer active.");
+
+    await removeDemoWallet(parsed.data.walletId);
+
+    return actionSuccess(null);
+  }
+
   const context = await requirePermission("manageWallets");
   const supabase = await createSupabaseServerClient();
 
@@ -110,6 +146,16 @@ async function changePeriod(
   const parsed = periodActionSchema.safeParse(input);
 
   if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "The accounting period action is invalid.");
+
+  if (isDemoData()) {
+    const result = await setDemoPeriodLock(parsed.data.periodId, operation === "lock_accounting_period", parsed.data.reason);
+
+    if (result.ok) return actionSuccess(null);
+
+    return result.code === "NOT_FOUND"
+      ? actionFailure("NOT_FOUND", "The accounting period was not found.")
+      : actionFailure("PERIOD_LOCKED", "The accounting period is already in the requested state.");
+  }
 
   const context = await requirePermission("lockPeriods");
   const supabase = await createSupabaseServerClient();

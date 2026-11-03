@@ -2,11 +2,15 @@
 
 type FinanceCacheValue = { ok?: boolean } | null | undefined;
 
-type CacheEntry<T extends FinanceCacheValue> = { data?: T; promise?: Promise<T>; updatedAt: number };
+type CacheEntry<T extends FinanceCacheValue> = {
+  data?: T;
+  promise?: Promise<T>;
+  updatedAt: number;
+};
 
 export type FinanceCacheOptions = { scope?: string; ttlMs?: number };
 
-type CacheListener<T> = (value: T) => void;
+type CacheListener<T> = (queryResult: T) => void;
 
 const entries = new Map<string, CacheEntry<FinanceCacheValue>>();
 
@@ -18,19 +22,26 @@ function scopedKey(key: string, scope = "anonymous") {
   return `${scope}::${key}`;
 }
 
-function isSuccessfulResult(value: FinanceCacheValue) {
-  return !value || !Object.prototype.hasOwnProperty.call(value, "ok") || value.ok !== false;
+function isSuccessfulResult(queryResult: FinanceCacheValue) {
+  if (!queryResult) return true;
+
+  if (!Object.prototype.hasOwnProperty.call(queryResult, "ok")) return true;
+
+  return queryResult.ok !== false;
 }
 
 export function getFinanceCacheState<T extends FinanceCacheValue>(key: string, scope = "anonymous") {
-  // SAFETY: all cache entries are created by cachedFinanceQuery with the same key and value type.
   const entry = entries.get(scopedKey(key, scope)) as CacheEntry<T> | undefined;
 
-  if (!entry) return { data: undefined, fresh: false, refreshing: false };
+  if (!entry) {
+    return { data: undefined, fresh: false, refreshing: false };
+  }
+
+  const isFresh = entry.data !== undefined && Date.now() - entry.updatedAt < FINANCE_CACHE_TTL_MS;
 
   return {
     data: entry.data,
-    fresh: entry.data !== undefined && Date.now() - entry.updatedAt < FINANCE_CACHE_TTL_MS,
+    fresh: isFresh,
     refreshing: Boolean(entry.promise),
   };
 }
@@ -45,59 +56,71 @@ export function subscribeFinanceQuery<T>(
   scope = "anonymous",
 ) {
   const cacheKey = scopedKey(key, scope);
-  const current = listeners.get(cacheKey) ?? new Set<CacheListener<FinanceCacheValue>>();
-  // SAFETY: the caller's listener type is paired with the same cache key and query value.
-  const typedListener: CacheListener<FinanceCacheValue> = (value) => listener(value as T);
-  current.add(typedListener);
-  listeners.set(cacheKey, current);
+  const keyListeners = listeners.get(cacheKey) ?? new Set<CacheListener<FinanceCacheValue>>();
+  const typedListener: CacheListener<FinanceCacheValue> = (queryResult) => listener(queryResult as T);
+  keyListeners.add(typedListener);
+  listeners.set(cacheKey, keyListeners);
 
   return () => {
-    current.delete(typedListener);
+    keyListeners.delete(typedListener);
 
-    if (!current.size) listeners.delete(cacheKey);
+    if (!keyListeners.size) {
+      listeners.delete(cacheKey);
+    }
   };
 }
 
-function notify(cacheKey: string, value: FinanceCacheValue) {
-  for (const listener of listeners.get(cacheKey) ?? []) listener(value);
+function notify(cacheKey: string, queryResult: FinanceCacheValue) {
+  const cacheListeners = listeners.get(cacheKey) ?? [];
+
+  for (const listener of cacheListeners) {
+    listener(queryResult);
+  }
 }
 
 export function cachedFinanceQuery<T extends FinanceCacheValue>(key: string, query: () => Promise<T>, options: FinanceCacheOptions = {}) {
   const scope = options.scope ?? "anonymous";
   const cacheKey = scopedKey(key, scope);
   const ttl = options.ttlMs ?? FINANCE_CACHE_TTL_MS;
-  // SAFETY: the cache key is paired with the query generic at every call site.
-  const current = entries.get(cacheKey) as CacheEntry<T> | undefined;
+  const existing = entries.get(cacheKey) as CacheEntry<T> | undefined;
 
-  if (current?.promise) return current.promise;
+  if (existing?.promise) {
+    return existing.promise;
+  }
 
-  if (current?.data !== undefined && Date.now() - current.updatedAt < ttl) return Promise.resolve(current.data);
+  if (existing?.data !== undefined && Date.now() - existing.updatedAt < ttl) {
+    return Promise.resolve(existing.data);
+  }
 
   const startedAt = typeof performance === "undefined" ? 0 : performance.now();
   const promise = query();
-  entries.set(cacheKey, { data: current?.data, updatedAt: current?.updatedAt ?? 0, promise });
-  void promise.then((value) => {
-    // SAFETY: this promise is the value stored for the same typed cache key.
-    const latest = entries.get(cacheKey) as CacheEntry<T> | undefined;
+  entries.set(cacheKey, { data: existing?.data, updatedAt: existing?.updatedAt ?? 0, promise });
+  void promise
+    .then((queryResult) => {
+      const latest = entries.get(cacheKey) as CacheEntry<T> | undefined;
 
-    if (!latest || latest.promise !== promise) return;
-    latest.promise = undefined;
+      if (!latest || latest.promise !== promise) return;
+      latest.promise = undefined;
 
-    if (isSuccessfulResult(value)) {
-      latest.data = value;
-      latest.updatedAt = Date.now();
-      notify(cacheKey, value);
-    }
+      if (isSuccessfulResult(queryResult)) {
+        latest.data = queryResult;
+        latest.updatedAt = Date.now();
+        notify(cacheKey, queryResult);
+      }
 
-    const duration = startedAt ? performance.now() - startedAt : 0;
+      const duration = startedAt ? performance.now() - startedAt : 0;
 
-    if (process.env.NODE_ENV === "development" && duration > 300) console.debug(`[finance] ${key} took ${Math.round(duration)}ms`);
-  }).catch(() => {
-    // SAFETY: this promise is the value stored for the same typed cache key.
-    const latest = entries.get(cacheKey) as CacheEntry<T> | undefined;
+      if (process.env.NODE_ENV === "development" && duration > 300) {
+        console.debug(`[finance] ${key} took ${Math.round(duration)}ms`);
+      }
+    })
+    .catch(() => {
+      const latest = entries.get(cacheKey) as CacheEntry<T> | undefined;
 
-    if (latest?.promise === promise) latest.promise = undefined;
-  });
+      if (latest?.promise === promise) {
+        latest.promise = undefined;
+      }
+    });
 
   return promise;
 }
@@ -110,11 +133,22 @@ export function invalidateFinanceQuery(...keys: string[]) {
   }
 
   for (const cacheKey of entries.keys()) {
-    if (keys.some((key) => cacheKey.endsWith(`::${key}`) || cacheKey === key)) entries.delete(cacheKey);
+    const matches = keys.some((key) => cacheKey.endsWith(`::${key}`) || cacheKey === key);
+
+    if (matches) {
+      entries.delete(cacheKey);
+    }
   }
 }
 
 export function clearFinanceCache() {
   entries.clear();
   listeners.clear();
+}
+
+export function financeScope(orgId: string | null | undefined, userId: string | null | undefined) {
+  const orgPart = orgId ?? "no-org";
+  const userPart = userId ?? "anonymous";
+
+  return `${orgPart}:${userPart}`;
 }

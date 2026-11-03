@@ -1,5 +1,6 @@
 import "server-only";
 
+import { isDemoData } from "@/lib/demo/mode";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   AuthorizationError,
@@ -15,6 +16,9 @@ export async function requirePermission(
   permission: keyof typeof PERMISSIONS,
 ) {
   const context = await requireClerkContext();
+
+  if (isDemoData()) return { ...context, role: "admin" as const };
+
   const supabase = await createSupabaseServerClient();
 
   const { data: membership, error } = await supabase
@@ -27,7 +31,6 @@ export async function requirePermission(
 
   if (error || !membership) throw new AuthorizationError();
 
-  // SAFETY: the membership query is constrained to the database role union used by AppRole.
   const role = membership.role as AppRole;
 
   if (!hasPermission(role, permission)) throw new AuthorizationError();

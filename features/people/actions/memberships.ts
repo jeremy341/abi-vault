@@ -10,11 +10,34 @@ import {
   type UpdateMemberRoleInput,
 } from "@/features/people/schemas/memberships";
 import { actionFailure, actionSuccess, type ActionResult } from "@/lib/api/result";
+import { isDemoData } from "@/lib/demo/mode";
+import {
+  countDemoAdmins,
+  DEMO_USER_ID,
+  findDemoMember,
+  removeDemoMember,
+  setDemoMemberRole,
+} from "@/lib/demo/store";
 
 export async function updateMemberRole(input: UpdateMemberRoleInput): Promise<ActionResult<null>> {
   const parsed = updateMemberRoleSchema.safeParse(input);
 
   if (!parsed.success) return actionFailure("INVALID_INPUT", "The member role data is invalid.");
+
+  if (isDemoData()) {
+    const member = await findDemoMember(parsed.data.clerkUserId);
+
+    if (!member || member.status !== "active") return actionFailure("ROLE_UPDATE_FAILED", "The member role could not be updated.");
+
+    if (member.role === "admin" && parsed.data.role !== "admin" && await countDemoAdmins() <= 1) {
+      return actionFailure("LAST_ADMIN_REQUIRED", "The last administrator cannot be removed.");
+    }
+
+    await setDemoMemberRole(member.id, parsed.data.role);
+
+    return actionSuccess(null);
+  }
+
   const context = await requirePermission("manageMemberships");
   const supabase = await createSupabaseServerClient();
 
@@ -66,6 +89,23 @@ export async function removeMember(input: RemoveMemberInput): Promise<ActionResu
   const parsed = removeMemberSchema.safeParse(input);
 
   if (!parsed.success) return actionFailure("INVALID_INPUT", "The member data is invalid.");
+
+  if (isDemoData()) {
+    const member = await findDemoMember(parsed.data.clerkUserId);
+
+    if (!member) return actionFailure("MEMBER_NOT_FOUND", "The member was not found.");
+
+    if (member.id === DEMO_USER_ID) return actionFailure("SELF_REMOVAL_NOT_ALLOWED", "You cannot remove yourself.");
+
+    if (member.role === "admin" && member.status === "active" && await countDemoAdmins() <= 1) {
+      return actionFailure("LAST_ADMIN_REQUIRED", "The last administrator cannot be removed.");
+    }
+
+    await removeDemoMember(member.id);
+
+    return actionSuccess(null);
+  }
+
   const context = await requirePermission("manageMemberships");
 
   if (parsed.data.clerkUserId === context.clerkUserId) {

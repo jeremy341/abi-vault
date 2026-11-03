@@ -11,6 +11,8 @@ import {
   type InviteLinkRoleInput,
 } from "@/features/people/schemas/invite-links";
 import { actionFailure, actionSuccess, type ActionResult } from "@/lib/api/result";
+import { isDemoData } from "@/lib/demo/mode";
+import { addDemoInviteLink } from "@/lib/demo/store";
 
 const ROLE_LIMITS = {
   supervisor: { days: 30, uses: 30 },
@@ -37,6 +39,19 @@ export async function createRoleInviteLink(input: InviteLinkRoleInput): Promise<
   const parsed = inviteLinkRoleSchema.safeParse(input);
 
   if (!parsed.success) return actionFailure("INVALID_INPUT", "The invitation link data is invalid.");
+
+  if (isDemoData()) {
+    const limits = ROLE_LIMITS[parsed.data.role];
+    const expiresAt = new Date(Date.now() + limits.days * 24 * 60 * 60 * 1000).toISOString();
+    const link = await addDemoInviteLink(parsed.data.role, expiresAt);
+
+    return actionSuccess({
+      id: link.id,
+      role: parsed.data.role,
+      expiresAt,
+      url: `${await appOrigin()}/join/${link.token}`,
+    });
+  }
 
   const context = await requirePermission("manageMemberships");
   const admin = createSupabaseAdminClient();
@@ -69,6 +84,10 @@ export async function createRoleInviteLink(input: InviteLinkRoleInput): Promise<
 }
 
 export async function acceptRoleInviteLink(token: string): Promise<ActionResult<{ organizationId: string; role: "admin" | "supervisor" }>> {
+  if (isDemoData()) {
+    return actionFailure("UNAUTHENTICATED", "Joining through an invitation link needs a real account, so it is not available in the demo.");
+  }
+
   const session = await auth();
 
   if (!session.userId) return actionFailure("UNAUTHENTICATED", "Sign-in is required.");
@@ -135,8 +154,6 @@ export async function acceptRoleInviteLink(token: string): Promise<ActionResult<
           userId: session.userId,
         });
       } catch {
-        // The failed link claim must not block the response. The membership
-        // webhook remains the final reconciliation path if cleanup fails.
       }
     }
 
@@ -175,7 +192,6 @@ export async function acceptRoleInviteLink(token: string): Promise<ActionResult<
           userId: session.userId,
         });
       } catch {
-        // The membership webhook remains the final reconciliation path.
       }
     }
 

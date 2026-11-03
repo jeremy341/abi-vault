@@ -9,6 +9,8 @@ import {
   type GoalCreateInput,
 } from "@/features/goals/schemas/goals";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { isDemoData } from "@/lib/demo/mode";
+import { addDemoGoal, addDemoGoalContribution } from "@/lib/demo/store";
 
 function mapGoalError(code?: string) {
   if (code === "42501") return actionFailure("FORBIDDEN", "You do not have permission to manage goals.");
@@ -28,6 +30,16 @@ export async function createGoal(
   const parsed = goalCreateSchema.safeParse(input);
 
   if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "The goal data is invalid.");
+
+  if (isDemoData()) {
+    const id = await addDemoGoal({
+      title: parsed.data.title,
+      targetAmountMinor: parsed.data.targetAmount.toString(),
+      deadline: parsed.data.deadline,
+    });
+
+    return actionSuccess({ id });
+  }
 
   const context = await requirePermission("manageGoals");
   const supabase = await createSupabaseServerClient();
@@ -53,6 +65,12 @@ export async function createGoalContribution(
   const parsed = goalContributionSchema.safeParse(input);
 
   if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "The contribution data is invalid.");
+
+  if (isDemoData()) {
+    const id = await addDemoGoalContribution(parsed.data.goalId, parsed.data.transactionId, BigInt(String(parsed.data.allocatedAmount)));
+
+    return id ? actionSuccess({ id }) : actionFailure("NOT_FOUND", "The goal or transaction was not found.");
+  }
 
   const context = await requirePermission("manageGoals");
   const supabase = await createSupabaseServerClient();

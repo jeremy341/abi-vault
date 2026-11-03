@@ -1,279 +1,154 @@
 "use client";
 
+import { useState } from "react";
+import { useAppAuth } from "@/components/auth/app-auth";
 import {
-  Check,
-  CircleUserRound,
-  Copy,
-  Link2,
-  MoreHorizontal,
-  Plus,
-  Search,
-  ShieldCheck,
-  Users,
-  X,
-} from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import { Dialog } from "@/components/ui/dialog";
-import {
-  LoadingCollection,
   LoadingStatus,
   LoadingText,
 } from "@/components/ui/loading-state";
 import styles from "./people.module.css";
-import phoneStyles from "./people-phone.module.css";
-import { usePresentationMode } from "@/hooks/use-presentation-mode";
+import ledger from "../ledger.module.css";
+import { LoadError } from "@/components/ui/load-error";
 import { listMembersForCurrentOrganization } from "@/features/finance/actions/queries";
+import { useFinanceQuery } from "@/hooks/use-finance-query";
+import { useQueryBackedState } from "@/hooks/use-query-backed-state";
 import { inviteMember } from "@/features/people/actions/invitations";
 import { createRoleInviteLink } from "@/features/people/actions/invite-links";
 import {
   removeMember,
   updateMemberRole,
 } from "@/features/people/actions/memberships";
+import { financeScope } from "@/lib/finance/client-cache";
+import { MemberTable } from "./MemberTable";
+import { RolesSummary } from "./RolesSummary";
+import { InviteLinks } from "./InviteLinks";
+import { InviteDialog } from "./InviteDialog";
+import type {
+  InviteRole,
+  Person,
+  PersonRole,
+  RoleInviteLink,
+  RoleLinks,
+} from "./people-types";
 
-type Person = {
-  id: number | string;
-  name: string;
-  role: string;
-  access: string;
-  status: "Active" | "Invitation pending" | "Inactive";
-  initials: string;
+type RoleLinksState = {
+  scope: string;
+  links: RoleLinks;
 };
 
-type RoleInviteLink = {
-  role: "admin" | "supervisor";
-  url: string;
-  expiresAt: string;
+type MemberListData = Extract<Awaited<ReturnType<typeof listMembersForCurrentOrganization>>, { ok: true }>;
+
+const nextRoleFor: Record<
+  PersonRole,
+  { databaseRole: "admin" | "supervisor"; displayRole: PersonRole; access: string }
+> = {
+  Member: {
+    databaseRole: "supervisor",
+    displayRole: "Supervisor",
+    access: "Manages finances",
+  },
+  Supervisor: {
+    databaseRole: "admin",
+    displayRole: "Administrator",
+    access: "Full access",
+  },
+  Administrator: {
+    databaseRole: "supervisor",
+    displayRole: "Supervisor",
+    access: "Manages finances",
+  },
 };
 
-function PhonePeopleView({
-  loading,
-  people,
-  query,
-  onQueryChange,
-  onAdd,
-}: {
-  loading: boolean;
-  people: Person[];
-  query: string;
-  onQueryChange: (value: string) => void;
-  onAdd: () => void;
-}) {
-  const active = people.filter((person) => person.status === "Active").length;
+const emptyPeople: Person[] = [];
 
-  const admins = people.filter(
-    (person) => person.role === "Administrator",
-  ).length;
+function roleNameFor(databaseRole: string): PersonRole {
+  if (databaseRole === "admin") {
+    return "Administrator";
+  }
 
-  const supervisors = people.filter(
-    (person) => person.role === "Supervisor",
-  ).length;
+  if (databaseRole === "supervisor") {
+    return "Supervisor";
+  }
 
-  const students = people.filter((person) => person.role === "Member").length;
+  return "Member";
+}
 
-  return (
-    <div className={phoneStyles.root} aria-busy={loading}>
-      <section
-        className={phoneStyles.summary}
-        aria-label="Membererstatus"
-        data-ui-slot="summary"
-      >
-        <div>
-          <span>Memberer</span>
-          <strong>
-            <LoadingText loading={loading}>{people.length}</LoadingText>
-          </strong>
-        </div>
-        <div>
-          <span>Active</span>
-          <strong>
-            <LoadingText loading={loading}>{active}</LoadingText>
-          </strong>
-        </div>
-        <div>
-          <span>Administrators</span>
-          <strong>
-            <LoadingText loading={loading}>{admins}</LoadingText>
-          </strong>
-        </div>
-      </section>
+function accessFor(databaseRole: string): string {
+  if (databaseRole === "admin") {
+    return "Full access";
+  }
 
-      <div className={phoneStyles.toolbar} data-ui-slot="toolbar">
-        <label className={phoneStyles.search}>
-          <Search aria-hidden="true" />
-          <span className="sr-only">Memberer suchen</span>
-          <input
-            value={query}
-            disabled={loading}
-            onChange={(event) => onQueryChange(event.target.value)}
-            placeholder="Name or role …"
-          />
-        </label>
-        <button
-          type="button"
-          className={phoneStyles.addButton}
-          onClick={onAdd}
-          disabled={loading}
-          aria-label="Add person"
-        >
-          <Plus aria-hidden="true" />
-        </button>
-      </div>
+  if (databaseRole === "supervisor") {
+    return "Manages finances";
+  }
 
-      <header className={phoneStyles.sectionHeader} data-ui-slot="list-header">
-        <h2>Memberer</h2>
-        <span>Abi 2026</span>
-      </header>
-      <div className={phoneStyles.people} data-ui-slot="list-body">
-        <LoadingCollection
-          loading={loading}
-          knownItemCount={people.length}
-          emptyHeight="12rem"
-          label="Members are loading…"
-        >
-          {people.length ? (
-            people.map((person) => (
-              <article className={phoneStyles.person} key={person.id}>
-                <span className={phoneStyles.avatar}>{person.initials}</span>
-                <span className={phoneStyles.identity}>
-                  <strong>{person.name}</strong>
-                  <span>
-                    {person.role}, {person.access}
-                  </span>
-                </span>
-                <span
-                  className={`${phoneStyles.status} ${person.status === "Active" ? phoneStyles.active : ""}`}
-                >
-                  {person.status}
-                </span>
-              </article>
-            ))
-          ) : (
-            <div className={phoneStyles.empty}>No Memberer gefunden.</div>
-          )}
-        </LoadingCollection>
-      </div>
+  return "Read-only";
+}
 
-      <section
-        className={phoneStyles.roles}
-        aria-label="Role overview"
-        data-ui-slot="secondary-panel"
-      >
-        <div className={phoneStyles.role}>
-          <strong>Admin</strong>
-          <b>
-            <LoadingText loading={loading}>{admins}</LoadingText>
-          </b>
-          <span>Vollzugriff</span>
-        </div>
-        <div className={phoneStyles.role}>
-          <strong>Supervisor</strong>
-          <b>
-            <LoadingText loading={loading}>{supervisors}</LoadingText>
-          </b>
-          <span>Finance</span>
-        </div>
-        <div className={phoneStyles.role}>
-          <strong>Member</strong>
-          <b>
-            <LoadingText loading={loading}>{students}</LoadingText>
-          </b>
-          <span>Transparenz</span>
-        </div>
-      </section>
-    </div>
-  );
+function statusNameFor(databaseStatus: string): Person["status"] {
+  if (databaseStatus === "active") {
+    return "Active";
+  }
+
+  if (databaseStatus === "invited") {
+    return "Invitation pending";
+  }
+
+  return "Inactive";
+}
+
+function peopleFromMemberList(data: MemberListData): Person[] {
+  return data.items.map((member) => ({
+    id: member.id,
+    name: member.name,
+    role: roleNameFor(member.role),
+    access: accessFor(member.role),
+    status: statusNameFor(member.status),
+  }));
 }
 
 export default function PeoplePage() {
-  const mode = usePresentationMode();
-  const [people, setPeople] = useState<Person[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { orgId, userId } = useAppAuth();
+  const scope = financeScope(orgId, userId);
+  const memberQuery = useFinanceQuery(
+    "members",
+    listMembersForCurrentOrganization,
+    scope,
+  );
+  const [loadedPeople, setPeople] = useQueryBackedState(
+    memberQuery.data?.ok ? memberQuery.data : null,
+    peopleFromMemberList,
+    emptyPeople,
+  );
+  const loading = memberQuery.loading;
+  const loadError = memberQuery.failed ? "The members could not be loaded." : "";
+  const people = loading || memberQuery.failed ? emptyPeople : loadedPeople;
   const [query, setQuery] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
-  const [newRole, setNewRole] = useState("Supervisor");
+  const [newRole, setNewRole] = useState<InviteRole>("Supervisor");
   const [inviteEmail, setInviteEmail] = useState("");
-  const [message, setMessage] = useState("");
-  const [loadError, setLoadError] = useState("");
-  const [openMenuId, setOpenMenuId] = useState<number | string | null>(null);
-
-  const [busyPersonId, setBusyPersonId] = useState<number | string | null>(
-    null,
-  );
-
+  const [messageState, setMessageState] = useState<{ scope: string; value: string } | null>(null);
+  const message = messageState?.scope === scope ? messageState.value : "";
+  const [busyPersonId, setBusyPersonId] = useState<string | null>(null);
   const [inviteSaving, setInviteSaving] = useState(false);
+  const [linkSaving, setLinkSaving] = useState<"admin" | "supervisor" | null>(null);
+  const [roleLinkState, setRoleLinkState] = useState<RoleLinksState | null>(null);
+  const roleLinks = roleLinkState?.scope === scope ? roleLinkState.links : {};
 
-  const [linkSaving, setLinkSaving] = useState<"admin" | "supervisor" | null>(
-    null,
+  function setMessage(value: string) {
+    setMessageState({ scope, value });
+  }
+
+  const searchTerm = query.trim().toLowerCase();
+  const filteredPeople = people.filter((person) =>
+    `${person.name} ${person.role}`.toLowerCase().includes(searchTerm),
   );
-
-  const [roleLinks, setRoleLinks] = useState<
-    Partial<Record<RoleInviteLink["role"], RoleInviteLink>>
-  >({});
-
-  useEffect(() => {
-    let active = true;
-    listMembersForCurrentOrganization()
-      .then((result) => {
-        if (!active) return;
-
-        if (!result.ok) {
-          setLoadError("The members could not be loaded.");
-
-          return;
-        }
-
-        setPeople(
-          result.items.map((member) => ({
-            id: member.id,
-            name: member.name,
-            role:
-              member.role === "admin"
-                ? "Administrator"
-                : member.role === "supervisor"
-                  ? "Supervisor"
-                  : "Member",
-            access:
-              member.role === "admin"
-                ? "Vollzugriff"
-                : member.role === "supervisor"
-                  ? "Finance verwalten"
-                  : "Transparenz",
-            status:
-              member.status === "active"
-                ? "Active"
-                : member.status === "invited"
-                  ? "Invitation pending"
-                  : "Inactive",
-            initials: member.name
-              .split(/\s+/)
-              .map((part: string) => part[0])
-              .join("")
-              .slice(0, 2)
-              .toUpperCase(),
-          })),
-        );
-      })
-      .catch(() => {
-        if (active) setLoadError("The members could not be loaded.");
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  const filteredPeople = useMemo(
-    () =>
-      people.filter((person) =>
-        `${person.name} ${person.role}`
-          .toLowerCase()
-          .includes(query.trim().toLowerCase()),
-      ),
-    [people, query],
-  );
+  const counts = {
+    active: people.filter((person) => person.status === "Active").length,
+    administrators: people.filter((person) => person.role === "Administrator").length,
+    supervisors: people.filter((person) => person.role === "Supervisor").length,
+    members: people.filter((person) => person.role === "Member").length,
+  };
 
   function openInviteModal() {
     setInviteEmail("");
@@ -289,113 +164,74 @@ export default function PeoplePage() {
     setMessage("");
   }
 
-  useEffect(() => {
-    if (openMenuId === null) return;
-
-    function closeMenu(event: KeyboardEvent | PointerEvent) {
-      if (event instanceof KeyboardEvent && event.key !== "Escape") return;
-      setOpenMenuId(null);
-    }
-
-    document.addEventListener("keydown", closeMenu);
-    document.addEventListener("pointerdown", closeMenu);
-
-    return () => {
-      document.removeEventListener("keydown", closeMenu);
-      document.removeEventListener("pointerdown", closeMenu);
-    };
-  }, [openMenuId]);
-
-  async function cycleRole(personId: number | string) {
+  async function changeRole(personId: string) {
     if (busyPersonId !== null) return;
-    const selected = people.find((person) => person.id === personId);
+    const person = people.find((item) => item.id === personId);
 
-    if (!selected) return;
-    const nextRole = selected.role === "Administrator" ? "supervisor" : "admin";
+    if (!person) return;
+    const next = nextRoleFor[person.role];
+    setBusyPersonId(personId);
 
-    const personKey = String(personId);
+    try {
+      const result = await updateMemberRole({
+        clerkUserId: personId,
+        role: next.databaseRole,
+        reason: "Role changed through member management",
+      });
 
-    if (/^[^\s]+$/.test(personKey)) {
-      setBusyPersonId(personKey);
+      if (!result.ok) {
+        setMessage(result.error.message);
 
-      try {
-        const result = await updateMemberRole({
-          clerkUserId: personKey,
-          role: nextRole,
-          reason: "Role changed through member management",
-        });
-
-        if (!result.ok) {
-          setMessage("The role could not be updated.");
-          setOpenMenuId(null);
-
-          return;
-        }
-      } catch {
-        setMessage("The role could not be updated.");
-        setOpenMenuId(null);
-      } finally {
-        setBusyPersonId(null);
+        return;
       }
+    } catch {
+      setMessage("The role could not be updated.");
+
+      return;
+    } finally {
+      setBusyPersonId(null);
     }
 
     setPeople((current) =>
-      current.map((person) => {
-        if (person.id !== personId) return person;
-
-        const role =
-          person.role === "Administrator" ? "Supervisor" : "Administrator";
-
-        return {
-          ...person,
-          role,
-          access:
-            role === "Administrator" ? "Vollzugriff" : "Finance verwalten",
-        };
-      }),
+      current.map((item) =>
+        item.id === personId
+          ? { ...item, role: next.displayRole, access: next.access }
+          : item,
+      ),
     );
     setMessage("Role updated.");
-    setOpenMenuId(null);
   }
 
   async function addPerson(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (inviteSaving) return;
+    const email = inviteEmail.trim();
 
-    if (!inviteEmail.trim()) {
-      setMessage("Please enter an email address.");
+    if (!email) {
+      setMessage("Enter an email address.");
 
       return;
     }
 
     setInviteSaving(true);
-
-    const role =
-      newRole === "Administrator"
-        ? "admin"
-        : newRole === "Supervisor"
-          ? "supervisor"
-          : "supervisor";
+    const role = newRole === "Administrator" ? "admin" : "supervisor";
 
     try {
-      const invitation = await inviteMember({
-        email: inviteEmail.trim(),
-        role,
-      });
+      const invitation = await inviteMember({ email, role });
 
       if (!invitation.ok) {
         setMessage(
           invitation.error.code === "INVALID_INPUT"
-            ? "Please enter a valid email address and choose a role."
-            : "The invitation could not be sent.",
+            ? "Enter a valid email address and choose a role."
+            : invitation.error.message,
         );
 
         return;
       }
 
       setInviteEmail("");
-      setMessage(`Invitation sent to ${inviteEmail.trim()}.`);
+      setMessage(`Invitation sent to ${email}.`);
     } catch {
       setMessage("The invitation could not be sent.");
     } finally {
@@ -403,14 +239,13 @@ export default function PeoplePage() {
     }
   }
 
-  async function handleRemovePerson(personId: number | string) {
+  async function removePerson(personId: string) {
     if (busyPersonId !== null) return;
-    const personKey = String(personId);
-    setBusyPersonId(personKey);
+    setBusyPersonId(personId);
 
     try {
       const result = await removeMember({
-        clerkUserId: personKey,
+        clerkUserId: personId,
         reason: "Member removed through member management",
       });
 
@@ -418,25 +253,22 @@ export default function PeoplePage() {
         setMessage(
           result.error.code === "LAST_ADMIN_REQUIRED"
             ? "The last administrator cannot be removed."
-            : "The person could not be removed.",
+            : result.error.message,
         );
-        setOpenMenuId(null);
 
         return;
       }
 
-      setPeople((current) => current.filter((entry) => entry.id !== personId));
+      setPeople((current) => current.filter((person) => person.id !== personId));
       setMessage("Person removed.");
-      setOpenMenuId(null);
     } catch {
       setMessage("The person could not be removed.");
-      setOpenMenuId(null);
     } finally {
       setBusyPersonId(null);
     }
   }
 
-  async function generateRoleLink(role: RoleInviteLink["role"]) {
+  async function createLink(role: RoleInviteLink["role"]) {
     if (linkSaving) return;
     setLinkSaving(role);
     setMessage("");
@@ -445,12 +277,16 @@ export default function PeoplePage() {
       const result = await createRoleInviteLink({ role });
 
       if (!result.ok) {
-        setMessage("The invitation link could not be created.");
+        setMessage(result.error.message);
 
         return;
       }
 
-      setRoleLinks((current) => ({ ...current, [role]: result.data }));
+      setRoleLinkState((current) => {
+        const previousLinks = current?.scope === scope ? current.links : {};
+
+        return { scope, links: { ...previousLinks, [role]: result.data } };
+      });
       setMessage(`${role === "admin" ? "Admin" : "Supervisor"} link created.`);
     } catch {
       setMessage("The invitation link could not be created.");
@@ -459,411 +295,92 @@ export default function PeoplePage() {
     }
   }
 
-  async function copyRoleLink(role: RoleInviteLink["role"]) {
+  async function copyLink(role: RoleInviteLink["role"]) {
     const link = roleLinks[role];
 
     if (!link) return;
-    await navigator.clipboard.writeText(link.url);
-    setMessage("Invitation link copied.");
+
+    try {
+      await navigator.clipboard.writeText(link.url);
+      setMessage("Invitation link copied.");
+    } catch {
+      setMessage("The link could not be copied. Select and copy it manually.");
+    }
   }
 
   return (
-    <section
-      className={mode === "phone" ? phoneStyles.pageShell : styles.page}
-      aria-busy={loading}
-    >
-      <LoadingStatus loading={loading} label="Members are loading…" />
-      {loadError ? (
-        <p
-          className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300"
-          role="alert"
-        >
-          {loadError}
-        </p>
-      ) : null}
-      {mode === "phone" ? (
-        <PhonePeopleView
-          loading={loading}
-          people={filteredPeople}
-          query={query}
-          onQueryChange={setQuery}
-          onAdd={openInviteModal}
-        />
-      ) : (
-        <>
-          <div className={styles.summaryGrid} data-ui-slot="summary">
-            <article className={styles.summaryCard}>
-              <span className={styles.summaryIcon}>
-                <Users aria-hidden="true" />
-              </span>
-              <div>
-                <span>Memberer</span>
-                <strong>
-                  <LoadingText loading={loading}>{people.length}</LoadingText>
-                </strong>
-              </div>
-            </article>
-            <article className={`${styles.summaryCard} ${styles.greenCard}`}>
-              <span className={styles.summaryIcon}>
-                <Check aria-hidden="true" />
-              </span>
-              <div>
-                <span>Active</span>
-                <strong>
-                  <LoadingText loading={loading}>
-                    {
-                      people.filter((person) => person.status === "Active")
-                        .length
-                    }
-                  </LoadingText>
-                </strong>
-              </div>
-            </article>
-            <article className={`${styles.summaryCard} ${styles.violetCard}`}>
-              <span className={styles.summaryIcon}>
-                <ShieldCheck aria-hidden="true" />
-              </span>
-              <div>
-                <span>Administrators</span>
-                <strong>
-                  <LoadingText loading={loading}>
-                    {
-                      people.filter((person) => person.role === "Administrator")
-                        .length
-                    }
-                  </LoadingText>
-                </strong>
-              </div>
-            </article>
+    <section className={ledger.page} aria-busy={loading}>
+      <LoadingStatus loading={loading} label="Loading members" />
+      {loadError ? <LoadError message={loadError} /> : null}
+
+      <div className={ledger.summary}>
+        <dl className={ledger.figures}>
+          <div>
+            <dt>Members</dt>
+            <dd><LoadingText loading={loading}>{people.length}</LoadingText></dd>
+          </div>
+          <div>
+            <dt>Active</dt>
+            <dd><LoadingText loading={loading}>{counts.active}</LoadingText></dd>
+          </div>
+          <div>
+            <dt>Administrators</dt>
+            <dd><LoadingText loading={loading}>{counts.administrators}</LoadingText></dd>
+          </div>
+        </dl>
+        <button type="button" className={ledger.primaryButton} onClick={openInviteModal} disabled={loading}>
+          Add person
+        </button>
+      </div>
+
+      <div className={ledger.cols}>
+        <div className={ledger.col}>
+          <div className={`${ledger.toolbar} ${styles.toolbar}`}>
+            <label className={ledger.searchField}>
+              <span className="sr-only">Search members</span>
+              <input
+                id="people-search"
+                value={query}
+                disabled={loading}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search by name or role"
+              />
+            </label>
           </div>
 
-          <div className={styles.contentGrid} data-ui-slot="content">
-            <article
-              className={styles.peoplePanel}
-              data-ui-slot="primary-panel"
-            >
-              <header className={styles.panelHeader}>
-                <div>
-                  <h2>Memberer</h2>
-                  <p>People and roles in your workspace.</p>
-                </div>
-                <button
-                  type="button"
-                  className={styles.primaryButton}
-                  onClick={openInviteModal}
-                  disabled={loading}
-                  data-ui-slot="primary-action"
-                >
-                  <Plus aria-hidden="true" />
-                  Add person
-                </button>
-              </header>
-              <div className={styles.searchBar}>
-                <Search aria-hidden="true" />
-                <label className="sr-only" htmlFor="people-search">
-                  Memberer suchen
-                </label>
-                <input
-                  id="people-search"
-                  value={query}
-                  disabled={loading}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search by name or role …"
-                />
-              </div>
-              <div className={styles.peopleList} data-ui-slot="list-body">
-                <LoadingCollection
-                  loading={loading}
-                  knownItemCount={people.length}
-                  emptyHeight="16rem"
-                  label="Members are loading…"
-                >
-                  {filteredPeople.map((person) => (
-                    <div className={styles.personRow} key={person.id}>
-                      <span className={styles.avatar}>{person.initials}</span>
-                      <div className={styles.personIdentity}>
-                        <strong>{person.name}</strong>
-                        <span>{person.role}</span>
-                      </div>
-                      <span className={styles.access}>{person.access}</span>
-                      <span
-                        className={
-                          person.status === "Active"
-                            ? styles.activeStatus
-                            : styles.pendingStatus
-                        }
-                      >
-                        {person.status === "Active" ? (
-                          <Check aria-hidden="true" />
-                        ) : null}
-                        {person.status}
-                      </span>
-                      <button
-                        type="button"
-                        className={styles.moreButton}
-                        aria-label={`${person.name} Options`}
-                        aria-haspopup="menu"
-                        aria-expanded={openMenuId === person.id}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setOpenMenuId((current) =>
-                            current === person.id ? null : person.id,
-                          );
-                        }}
-                      >
-                        <MoreHorizontal aria-hidden="true" />
-                      </button>
-                      {openMenuId === person.id ? (
-                        <div
-                          className={styles.personMenu}
-                          role="menu"
-                          aria-label={`${person.name} verwalten`}
-                          onPointerDown={(event) => event.stopPropagation()}
-                        >
-                          <button
-                            type="button"
-                            role="menuitem"
-                            onClick={() => cycleRole(person.id)}
-                            disabled={busyPersonId === person.id}
-                          >
-                            Change role
-                          </button>
-                          <button
-                            type="button"
-                            role="menuitem"
-                            className={styles.destructiveMenuItem}
-                            onClick={() => void handleRemovePerson(person.id)}
-                            disabled={busyPersonId === person.id}
-                          >
-                            Remove person
-                          </button>
-                        </div>
-                      ) : null}
-                    </div>
-                  ))}
-                </LoadingCollection>
-              </div>
-              {!loading && !filteredPeople.length ? (
-                <div className={styles.emptyState}>No Memberer gefunden.</div>
-              ) : null}
-            </article>
+          <MemberTable
+            loading={loading}
+            people={people}
+            filteredPeople={filteredPeople}
+            busyPersonId={busyPersonId}
+            onChangeRole={changeRole}
+            onRemove={removePerson}
+          />
+          <p className={`${ledger.notice} ${styles.notice}`} aria-live="polite">{message}</p>
+        </div>
 
-            <aside className={styles.sideColumn} data-ui-slot="secondary-panel">
-              <article className={styles.rolePanel}>
-                <header className={styles.panelHeader}>
-                  <div>
-                    <h2>Roles</h2>
-                    <p>Overview of permissions.</p>
-                  </div>
-                  <ShieldCheck aria-hidden="true" />
-                </header>
-                <div className={styles.roleList}>
-                  <div>
-                    <span className={`${styles.roleIcon} ${styles.admin}`}>
-                      <ShieldCheck aria-hidden="true" />
-                    </span>
-                    <span>
-                      <strong>Administrator</strong>
-                      <small>Full access to everything</small>
-                    </span>
-                    <b>
-                      {
-                        people.filter(
-                          (person) => person.role === "Administrator",
-                        ).length
-                      }
-                    </b>
-                  </div>
-                  <div>
-                    <span className={`${styles.roleIcon} ${styles.treasurer}`}>
-                      <CircleUserRound aria-hidden="true" />
-                    </span>
-                    <span>
-                      <strong>Supervisor</strong>
-                      <small>Finance verwalten</small>
-                    </span>
-                    <b>
-                      {
-                        people.filter((person) => person.role === "Supervisor")
-                          .length
-                      }
-                    </b>
-                  </div>
-                  <div>
-                    <span className={styles.roleIcon}>
-                      <Users aria-hidden="true" />
-                    </span>
-                    <span>
-                      <strong>Member</strong>
-                      <small>Transparenz</small>
-                    </span>
-                    <b>
-                      {
-                        people.filter((person) => person.role === "Member")
-                          .length
-                      }
-                    </b>
-                  </div>
-                </div>
-              </article>
-              <article className={styles.inviteLinksPanel}>
-                <header className={styles.panelHeader}>
-                  <div>
-                    <h2>Invitation links</h2>
-                    <p>Share a link without collecting email addresses.</p>
-                  </div>
-                  <Link2 aria-hidden="true" />
-                </header>
-                <div className={styles.inviteLinkList}>
-                  {(["supervisor", "admin"] as const).map((role) => {
-                    const link = roleLinks[role];
-
-                    return (
-                      <div className={styles.inviteLinkCard} key={role}>
-                        <span className={styles.inviteLinkIcon}>
-                          <Link2 aria-hidden="true" />
-                        </span>
-                        <div>
-                          <strong>
-                            {role === "admin"
-                              ? "Admin-Link"
-                              : "Supervisor-Link"}
-                          </strong>
-                          <small>
-                            {role === "admin"
-                              ? "Full access to the workspace and settings."
-                              : "Manage finances and review reports."}
-                          </small>
-                          {link ? <code>{link.url}</code> : null}
-                        </div>
-                        <div className={styles.inviteLinkActions}>
-                          {link ? (
-                            <button
-                              type="button"
-                              onClick={() => void copyRoleLink(role)}
-                              aria-label={`${role} Copy link`}
-                            >
-                              <Copy aria-hidden="true" /> Copy
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => void generateRoleLink(role)}
-                              disabled={linkSaving !== null}
-                              aria-busy={linkSaving === role}
-                            >
-                              {linkSaving === role
-                                ? "Erstelle …"
-                                : "Link erstellen"}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </article>
-              <article className={styles.activityPanel}>
-                <header className={styles.panelHeader}>
-                  <div>
-                    <h2>Workspace</h2>
-                    <p>Abi 2026</p>
-                  </div>
-                  <CircleUserRound aria-hidden="true" />
-                </header>
-                <div className={styles.activityBody}>
-                  <div>
-                    <strong>Gemeinsam organisiert</strong>
-                    <span>All members work in the same financial area.</span>
-                  </div>
-                  <div className={styles.activityStat}>
-                    <span>Recent activity</span>
-                    <strong>No activity available</strong>
-                  </div>
-                  <p aria-live="polite">{message || "\u00a0"}</p>
-                </div>
-              </article>
-            </aside>
-          </div>
-        </>
-      )}
+        <div className={ledger.col}>
+          <RolesSummary counts={counts} />
+          <InviteLinks
+            roleLinks={roleLinks}
+            linkSaving={linkSaving}
+            onCreateLink={createLink}
+            onCopyLink={copyLink}
+          />
+        </div>
+      </div>
 
       {modalOpen ? (
-        <Dialog
-          label="Add person"
+        <InviteDialog
+          inviteEmail={inviteEmail}
+          newRole={newRole}
+          message={message}
+          inviteSaving={inviteSaving}
+          onEmailChange={setInviteEmail}
+          onRoleChange={setNewRole}
+          onSubmit={addPerson}
           onClose={closeModal}
-          overlayClassName={styles.overlay}
-          dialogClassName={`${styles.modal} ${mode === "phone" ? phoneStyles.phoneDialog : ""}`}
-        >
-          <form onSubmit={addPerson}>
-            <header className={styles.modalHeader}>
-              <div>
-                <h2>Member einladen</h2>
-                <p>
-                  The person will receive a secure invitation by email and be
-                  added to your Abi workspace.
-                </p>
-              </div>
-              <button
-                type="button"
-                className={styles.closeButton}
-                onClick={closeModal}
-                disabled={inviteSaving}
-                aria-label="Close dialog"
-              >
-                <X aria-hidden="true" />
-              </button>
-            </header>
-            <div className={styles.modalBody}>
-              <label className={styles.formField}>
-                <span>E-Mail-Adresse</span>
-                <input
-                  name="inviteEmail"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={inviteEmail}
-                  onChange={(event) => setInviteEmail(event.target.value)}
-                  placeholder="name@beispiel.de"
-                />
-              </label>
-              <label className={styles.formField}>
-                <span>Role</span>
-                <select
-                  name="personRole"
-                  value={newRole}
-                  onChange={(event) => setNewRole(event.target.value)}
-                >
-                  <option>Supervisor</option>
-                  <option>Administrator</option>
-                </select>
-              </label>
-              {message ? (
-                <p className={styles.formMessage} role="status">
-                  {message}
-                </p>
-              ) : null}
-            </div>
-            <footer className={styles.modalFooter}>
-              <button
-                type="button"
-                className={styles.secondaryButton}
-                onClick={closeModal}
-                disabled={inviteSaving}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className={styles.primaryButton}
-                disabled={inviteSaving}
-                aria-busy={inviteSaving}
-              >
-                {inviteSaving ? "Sending …" : "Send invitation"}
-              </button>
-            </footer>
-          </form>
-        </Dialog>
+        />
       ) : null}
     </section>
   );

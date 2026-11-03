@@ -147,7 +147,6 @@ export async function POST(request: NextRequest) {
       const membership = event.data;
       const organizationId = membership.organization.id;
       const clerkUserId = membership.public_user_data.user_id;
-      // SAFETY: Clerk webhook membership data carries public_metadata at this boundary.
       const membershipMetadata = (membership as { public_metadata?: ClerkApplicationMetadata }).public_metadata;
       const invitedApplicationRole = applicationRoleFromMetadata(membershipMetadata);
 

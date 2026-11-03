@@ -1,5 +1,5 @@
-import AdaptiveDashboardPage from "@/components/presentation/AdaptiveDashboardPage";
+import Overview from "@/components/presentation/dashboard/Overview";
 
 export default function DashboardPage() {
-  return <AdaptiveDashboardPage />;
+  return <Overview />;
 }

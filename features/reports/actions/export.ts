@@ -73,9 +73,8 @@ export async function exportReport(format: "Excel" | "Review log") {
   if (categoryError) return { ok: false as const, error: "EXPORT_FAILED" };
   const categoryMap = new Map((categories ?? []).map((category) => [category.id, category.name]));
 
-  // SAFETY: export rows are assembled from scalar database fields before CSV serialization.
   const rows = [
-    ["Titel", "Typ", "Amount (Cent)", "Currency", "Gebucht am", "Category", "Herkunft", "Provider-ID"],
+    ["Title", "Type", "Amount (Cent)", "Currency", "Booked on", "Category", "Origin", "Provider-ID"],
     ...(transactions ?? []).map((transaction) => [
       transaction.title,
       transaction.type,

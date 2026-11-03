@@ -1,24 +1,27 @@
 import { TooltipProvider } from "@/components/ui/tooltip";
 import type { Metadata } from "next";
-import { Geist_Mono, Manrope } from "next/font/google";
+import { Host_Grotesk, Spline_Sans_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import ClerkThemeProvider from "@/components/clerk-theme-provider";
 
-const manrope = Manrope({
-  variable: "--font-manrope",
+const hostGrotesk = Host_Grotesk({
+  variable: "--font-host-grotesk",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const splineSansMono = Spline_Sans_Mono({
+  variable: "--font-spline-sans-mono",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "Abi Manager",
+  title: "Abi Vault",
   description: "Manage class finances, cash registers, receipts, and savings goals together.",
 };
+
+const THEME_SCRIPT =
+  "try{var t=localStorage.getItem('abi-theme');if(t==='dark'||(t===null&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark')}catch(e){}";
 
 export default function RootLayout({
   children,
@@ -28,8 +31,12 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${manrope.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${hostGrotesk.variable} ${splineSansMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
           <ClerkThemeProvider>

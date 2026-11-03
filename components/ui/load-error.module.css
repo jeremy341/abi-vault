@@ -1,0 +1,24 @@
+.error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-4);
+  color: var(--danger);
+  font-size: var(--text-sm);
+}
+
+.error button {
+  min-height: 2rem;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.error button:hover {
+  text-decoration-thickness: 2px;
+}

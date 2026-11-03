@@ -1,75 +1,62 @@
-import {
-  BarChart3,
-  CalendarClock,
-  FileText,
-  LayoutDashboard,
-  ReceiptText,
-  Settings,
-  Target,
-  Users,
-  WalletCards,
-} from "lucide-react";
-
-export const navigationItems = [
+export const navigationRoutes = [
   {
     label: "Overview",
     shortLabel: "Overview",
     href: "/dashboard",
-    icon: LayoutDashboard,
   },
   {
     label: "Transactions",
     shortLabel: "Transactions",
     href: "/dashboard/transactions",
-    icon: ReceiptText,
   },
   {
     label: "Receipts",
     shortLabel: "Receipts",
     href: "/dashboard/receipts",
-    icon: FileText,
   },
   {
     label: "Goals",
     shortLabel: "Goals",
     href: "/dashboard/goals",
-    icon: Target,
   },
   {
     label: "Cash registers",
     shortLabel: "Cash register",
     href: "/dashboard/funds",
-    icon: WalletCards,
   },
   {
     label: "Reports",
     shortLabel: "Reports",
     href: "/dashboard/reports",
-    icon: BarChart3,
   },
   {
     label: "People",
     shortLabel: "People",
     href: "/dashboard/people",
-    icon: Users,
   },
   {
     label: "Settings",
     shortLabel: "Settings",
     href: "/dashboard/settings",
-    icon: Settings,
   },
   {
     label: "Periods",
     shortLabel: "Periods",
     href: "/dashboard/periods",
-    icon: CalendarClock,
   },
 ] as const;
 
+export const adminOnlyRoutes = ["/dashboard/periods"] as const;
+
+export function isCurrentRoute(pathname: string, href: string) {
+  if (href === "/dashboard") return pathname === href;
+
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 export const pageInformation = {
   "/dashboard": {
-    title: "Financial overview",
+    title: "Overview",
     description: "Class finances at a glance.",
   },
   "/dashboard/transactions": {
@@ -107,6 +94,5 @@ export const pageInformation = {
 } satisfies Record<string, { title: string; description: string }>;
 
 export function pageInformationFor(pathname: string) {
-  // SAFETY: unknown paths intentionally fall back to the dashboard overview.
   return pageInformation[pathname as keyof typeof pageInformation] ?? pageInformation["/dashboard"];
 }

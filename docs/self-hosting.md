@@ -1,24 +1,94 @@
-# Self-hosting Abi Vault
+# Hosting Abi Vault
 
-Abi Vault can run locally with Docker and a local Supabase instance. The
-production website and its database are not required and must not be used for
-local development.
+There are three ways to run Abi Vault. Pick the one that matches what you want
+to do.
 
-## Local Supabase workspace
+| Setup | Needs | Good for |
+| --- | --- | --- |
+| [Sample-data demo](#sample-data-demo) | Node.js, pnpm | Trying it, taking screenshots, UI work |
+| [Docker](#docker) | Docker | Running a built image anywhere |
+| [Local Supabase](#local-supabase) | Node.js, pnpm, Docker, Supabase CLI | Changing database code, migrations or server actions |
 
-Use this database-backed setup when working on server actions, database
-migrations, or RPCs. For the faster sample-data demo with no database, follow
-the instructions in the README instead.
+None of these should ever use a production database, Clerk instance or storage
+bucket. Use fake data.
 
-Requirements: Node.js 22+, pnpm, Docker Desktop, and the Supabase CLI.
+## Sample-data demo
 
-```text
+No database, no sign-in. All data comes from `lib/demo/sample-data.ts`.
+
+```bash
 pnpm install
-supabase start
-copy .env.example .env.local
+cp .env.example .env.local
 ```
 
-Set these values in `.env.local` for a local demo:
+In `.env.local`:
+
+```text
+ABI_VAULT_LOCAL_MODE=true
+NEXT_PUBLIC_ABI_VAULT_LOCAL_MODE=true
+ABI_VAULT_DEMO_DATA=true
+```
+
+```bash
+pnpm dev
+```
+
+Everything you change is kept in server memory and resets on restart. To keep
+changes between restarts (for example on a hosted demo), add a separate
+Supabase project just for demo state:
+
+1. Run `supabase/demo/demo_state.sql` in that project.
+2. Set `DEMO_SUPABASE_URL` and `DEMO_SUPABASE_SERVICE_ROLE_KEY` in the
+   environment.
+
+Without those two values the demo stays in memory. To put the demo online, see
+[vercel-demo.md](vercel-demo.md).
+
+## Docker
+
+The `Dockerfile` builds a standalone production image. Compose runs it with the
+values in `.env.local`:
+
+```bash
+cp .env.example .env.local
+docker compose -f docker-compose.yaml up --build -d
+```
+
+Open <http://localhost:3000>. Stop it with:
+
+```bash
+docker compose -f docker-compose.yaml down
+```
+
+To run the sample-data demo in Docker, use the three demo values from above in
+`.env.local`. `NEXT_PUBLIC_` values are read when the app is built, so rebuild
+(`--build`) after changing them.
+
+To run the image without Compose:
+
+```bash
+docker build -t abi-vault .
+docker run --rm -p 3000:3000 --env-file .env.local abi-vault
+```
+
+For a real deployment, give it its own Supabase URL, publishable key,
+server-only secret key and application encryption key. Keep secrets out of the
+image and out of source control.
+
+## Local Supabase
+
+Use this when working on server actions, database migrations or RPCs.
+
+Requirements: Node.js 22+, pnpm, Docker Desktop and the
+[Supabase CLI](https://supabase.com/docs/guides/cli).
+
+```bash
+pnpm install
+supabase start
+cp .env.example .env.local
+```
+
+Set these in `.env.local`:
 
 ```text
 ABI_VAULT_LOCAL_MODE=true
@@ -26,32 +96,19 @@ NEXT_PUBLIC_ABI_VAULT_LOCAL_MODE=true
 NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
 ```
 
-Use the local Supabase publishable/anon key and service-role key printed by
-`supabase status`. Do not use keys from the production project. Then run:
+Copy the publishable key and the service-role key that `supabase status`
+prints into the matching variables, then:
 
-```text
+```bash
 pnpm dev
 ```
 
 The local database starts with seeded records and a fixed local administrator.
-It is not meant for real financial data.
+It is not meant for real financial data. Reset it any time with
+`supabase db reset`.
 
-## Docker application image
+## Keeping environments apart
 
-Build and run the application image against a separately managed Supabase
-instance:
-
-```text
-docker build -t abi-vault .
-docker run --rm -p 3000:3000 --env-file .env.local abi-vault
-```
-
-For a real deployment, provide the self-hosted instance's own URL, publishable
-key, server-only secret key, and application encryption key. Keep all secrets
-outside the image and outside source control.
-
-## Production isolation
-
-Never point a demo or self-hosted environment at the production database. Use
-separate Supabase projects, Clerk instances, storage buckets, and deployment
-environment variables. Review database migrations, and apply them only to the intended environment.
+Use separate Supabase projects, Clerk instances, storage buckets and deployment
+variables for demo, development and production. Review database migrations
+before applying them, and apply them only to the environment you mean to change.

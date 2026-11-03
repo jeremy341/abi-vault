@@ -90,6 +90,16 @@ Banking) are deferred and not part of the current app.
 Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. Report
 security problems as described in [SECURITY.md](SECURITY.md).
 
+## AI assistance
+
+Parts of this project were written with the help of AI coding assistants
+(Anthropic's Claude). That includes some backend code (finance queries, server
+actions and database migrations), the interface redesign, tests and the
+documentation. As with any codebase that handles money and permissions, read
+the code before you trust it. The checks in [CONTRIBUTING.md](CONTRIBUTING.md)
+(`pnpm lint`, `pnpm test:unit`, `pnpm build`) apply to all code, however it was
+written.
+
 ## Credits
 
 The visual style follows [ripple](https://github.com/0xQuerencia/ripple), which

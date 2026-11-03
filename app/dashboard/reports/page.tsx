@@ -7,13 +7,14 @@ import { getReportKpisForCurrentOrganization } from "@/features/finance/actions/
 import { useReportSnapshot } from "@/hooks/use-report-snapshot";
 import { cachedFinanceQuery, financeScope } from "@/lib/finance/client-cache";
 import ledger from "../ledger.module.css";
+import styles from "./reports.module.css";
 import { LoadError } from "@/components/ui/load-error";
 import { CashflowSection } from "./cashflow-section";
 import { CategoriesSection } from "./categories-section";
 import { ExportSection } from "./export-section";
 import { GoalsSection } from "./goals-section";
 import { ReceiptsSection } from "./receipts-section";
-import { Kpis, LOAD_FAILED_MESSAGE, NOT_REVIEWED_YET, formatMinor, formatSignedMinor } from "./report-helpers";
+import { Kpis, LOAD_FAILED_MESSAGE, NOT_REVIEWED_YET, currency, formatMinor, signed } from "./report-helpers";
 
 export default function ReportsPage() {
   const { userId, orgId } = useAppAuth();
@@ -26,13 +27,13 @@ export default function ReportsPage() {
   const [kpiError, setKpiError] = useState("");
   const [kpis, setKpis] = useState<Kpis>({
     liquidity: "$0.00",
-    expenses: "$0.00",
-    net: "$0.00",
     review: "0",
     reviewed: "0",
     unassigned: "0",
     reconciliation: NOT_REVIEWED_YET,
   });
+  const income = cashflow.reduce((sum, month) => sum + month.income, 0);
+  const expenses = cashflow.reduce((sum, month) => sum + month.expenses, 0);
   const loading = snapshotLoading || kpiLoading;
   const error = snapshotError ?? kpiError;
   useEffect(() => {
@@ -49,8 +50,6 @@ export default function ReportsPage() {
 
         setKpis({
           liquidity: formatMinor(reportKpis.liquidMinor),
-          expenses: formatMinor(reportKpis.expenseMinor),
-          net: formatSignedMinor(reportKpis.netMinor),
           review: String(reportKpis.reviewCount),
           reviewed: String(reportKpis.reviewedReceiptCount),
           unassigned: String(reportKpis.unassignedReceiptCount),
@@ -75,24 +74,25 @@ export default function ReportsPage() {
       {error ? <LoadError message={error} /> : null}
 
       <div className={ledger.summaryBar}>
-        <dl className={ledger.statLine}>
+        <dl className={`${ledger.statLine} ${styles.stats}`}>
           <div>
-            <dt>Net</dt>
-            <dd className="total-rule"><LoadingText loading={loading}>{kpis.net}</LoadingText></dd>
-          </div>
-          <div>
-            <dt>Liquidity</dt>
+            <dt>Cash</dt>
             <dd><LoadingText loading={loading}>{kpis.liquidity}</LoadingText></dd>
           </div>
           <div>
-            <dt>Expenses</dt>
-            <dd><LoadingText loading={loading}>{kpis.expenses}</LoadingText></dd>
+            <dt>Income, 6 mo</dt>
+            <dd><LoadingText loading={loading}>{currency.format(income)}</LoadingText></dd>
           </div>
           <div>
-            <dt>Needs review</dt>
-            <dd><LoadingText loading={loading}>{kpis.review}</LoadingText></dd>
+            <dt>Expenses, 6 mo</dt>
+            <dd><LoadingText loading={loading}>{currency.format(expenses)}</LoadingText></dd>
+          </div>
+          <div>
+            <dt>Net, 6 mo</dt>
+            <dd><LoadingText loading={loading}>{signed(income - expenses)}</LoadingText></dd>
           </div>
         </dl>
+        <ExportSection />
       </div>
 
       <div className={ledger.cols}>
@@ -103,7 +103,6 @@ export default function ReportsPage() {
           <CategoriesSection categories={categories} />
           <GoalsSection goals={goals} />
           <ReceiptsSection loading={loading} kpis={kpis} />
-          <ExportSection />
         </div>
       </div>
     </section>

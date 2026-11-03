@@ -15,16 +15,18 @@ type ChangeRoleDialogProps = {
   saving: boolean;
   error: string;
   onSave: (role: InviteRole) => void;
+  onRemove: () => void;
   onClose: () => void;
 };
 
-export function ChangeRoleDialog({ person, saving, error, onSave, onClose }: ChangeRoleDialogProps) {
+export function ChangeRoleDialog({ person, saving, error, onSave, onRemove, onClose }: ChangeRoleDialogProps) {
   const [role, setRole] = useState<InviteRole>(person.role === "Administrator" ? "Administrator" : "Supervisor");
+  const [confirmingRemove, setConfirmingRemove] = useState(false);
   const unchanged = role === person.role;
 
   return (
     <Dialog
-      label="Change role"
+      label={`Manage ${person.name}`}
       onClose={onClose}
       overlayClassName={dlg.overlay}
       dialogClassName={`${dlg.modal} ${dlg.modalNarrow}`}
@@ -37,8 +39,8 @@ export function ChangeRoleDialog({ person, saving, error, onSave, onClose }: Cha
       >
         <header className={dlg.header}>
           <div className={dlg.heading}>
-            <h2>Change role</h2>
-            <p>{person.name} is currently listed as {person.role}.</p>
+            <h2>{person.name}</h2>
+            <p>Currently {person.role}. Choose a role or remove this person.</p>
           </div>
           <button type="button" className={dlg.closeButton} onClick={onClose} disabled={saving} aria-label="Close">
             <X aria-hidden="true" />
@@ -63,14 +65,31 @@ export function ChangeRoleDialog({ person, saving, error, onSave, onClose }: Cha
           ))}
           {error ? <p className={dlg.error} role="alert">{error}</p> : null}
         </fieldset>
-        <footer className={dlg.footer}>
-          <button type="button" className={dlg.secondaryButton} onClick={onClose} disabled={saving}>
-            Cancel
-          </button>
-          <button type="submit" className={dlg.primaryButton} disabled={unchanged || saving} aria-busy={saving}>
-            {saving ? "Saving" : "Save role"}
-          </button>
-        </footer>
+        {confirmingRemove ? (
+          <footer className={dlg.footer}>
+            <p className={`${dlg.message} ${styles.confirmText}`}>Remove {person.name}? They lose access right away.</p>
+            <button type="button" className={dlg.secondaryButton} onClick={() => setConfirmingRemove(false)} disabled={saving}>
+              Keep
+            </button>
+            <button type="button" className={dlg.destructiveButton} onClick={onRemove} disabled={saving} aria-busy={saving}>
+              {saving ? "Removing" : "Remove"}
+            </button>
+          </footer>
+        ) : (
+          <footer className={`${dlg.footer} ${dlg.footerSplit}`}>
+            <button type="button" className={dlg.destructiveButton} onClick={() => setConfirmingRemove(true)} disabled={saving}>
+              Remove person
+            </button>
+            <div className={dlg.footerActions}>
+              <button type="button" className={dlg.secondaryButton} onClick={onClose} disabled={saving}>
+                Cancel
+              </button>
+              <button type="submit" className={dlg.primaryButton} disabled={unchanged || saving} aria-busy={saving}>
+                {saving ? "Saving" : "Save role"}
+              </button>
+            </div>
+          </footer>
+        )}
       </form>
     </Dialog>
   );

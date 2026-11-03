@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import type { AccountCardDetails } from "@/components/dashboard/account-card-details";
 
 export type FundsCard = {
@@ -39,7 +38,6 @@ export type AdaptiveFundsViewProps = {
   cashBox: FundsCashBox;
   auditLogs: FundsAudit[];
   dollar: (value: number) => string;
-  differencePanel?: ReactNode;
   onSelectCard: (index: number) => void;
   onAddCard: () => void;
   onEditCard: () => void;

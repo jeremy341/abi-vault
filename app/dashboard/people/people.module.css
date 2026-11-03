@@ -10,19 +10,20 @@
   margin-top: var(--space-3);
 }
 
-@media (min-width: 1500px) and (max-width: 2399px) {
-  .roles.roles {
-    grid-template-columns: minmax(0, 1fr);
+.sub {
+  display: block;
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+@media (max-width: 767px) {
+  .access {
+    display: none;
   }
 }
 
-td button.rowAction {
-  min-height: 2rem;
-  padding-inline: var(--space-1);
-}
-td button.rowAction:disabled {
-  color: var(--subtle);
-  cursor: not-allowed;
+.confirmText {
+  margin-right: auto;
 }
 
 .roleChoices {

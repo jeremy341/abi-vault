@@ -127,8 +127,6 @@ export default function FundsView(props: AdaptiveFundsViewProps) {
                 <dd>{cashBox.responsible || "Not set"}</dd>
               </div>
             </dl>
-
-            {props.differencePanel}
           </section>
 
           <section className={ledger.section}>

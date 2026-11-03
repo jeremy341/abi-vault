@@ -37,7 +37,7 @@
   height: calc(100 * var(--dvh));
   flex-direction: column;
   align-self: start;
-  border-right: 4px solid var(--line);
+  box-shadow: inset -4px 0 0 var(--line);
   padding: 22px 14px 14px 20px;
 }
 

@@ -2,6 +2,10 @@ import { currency, Goal, Snapshot } from "./report-helpers";
 import ledger from "../ledger.module.css";
 import styles from "./reports.module.css";
 
+function whole(amount: number) {
+  return currency.format(amount).replace(".00", "");
+}
+
 function goalProgress(goal: Goal) {
   if (!goal.target) {
     return 0;
@@ -25,7 +29,7 @@ export function GoalsSection({ goals }: { goals: Snapshot["goals"] }) {
               <li key={goal.name} className={styles.category}>
                 <span>{goal.name}</span>
                 <span className={ledger.line} role="presentation"><i style={{ width: `${progress}%` }} /></span>
-                <span className={styles.figure}>{currency.format(goal.saved)} of {currency.format(goal.target)}</span>
+                <span className={styles.figure}>{whole(goal.saved)} of {whole(goal.target)}</span>
                 <span className={`${styles.figure} ${ledger.muted}`}>{progress}%</span>
               </li>
             );

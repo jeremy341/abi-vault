@@ -26,20 +26,14 @@ export function ExportSection() {
   }
 
   return (
-    <section className={ledger.section}>
-      <header className={ledger.sectionHeader}>
-        <h2>Export</h2>
-        <p>Download current data as CSV.</p>
-      </header>
-      <div className={styles.exports}>
-        <button type="button" className={ledger.secondaryButton} onClick={() => void prepareExport("Excel")}>
-          Export all data
-        </button>
-        <button type="button" className={ledger.secondaryButton} onClick={() => void prepareExport("Review log")}>
-          Export review log
-        </button>
-      </div>
-      <p className={ledger.notice} aria-live="polite">{exportMessage}</p>
-    </section>
+    <div className={styles.exports}>
+      <button type="button" className={ledger.secondaryButton} onClick={() => void prepareExport("Excel")}>
+        Export data
+      </button>
+      <button type="button" className={ledger.secondaryButton} onClick={() => void prepareExport("Review log")}>
+        Review log
+      </button>
+      <span className={styles.exportNote} aria-live="polite">{exportMessage}</span>
+    </div>
   );
 }

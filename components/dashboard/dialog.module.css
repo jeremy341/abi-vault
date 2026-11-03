@@ -454,6 +454,9 @@
 
   .footer,
   .footerSplit {
+    position: sticky;
+    bottom: 0;
+    background: var(--surface);
     align-items: stretch;
     flex-direction: column-reverse;
   }
@@ -461,6 +464,11 @@
   .footerActions {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .footerActions .primaryButton {
+    grid-column: 1 / -1;
+    order: -1;
   }
 
   .footer > button {

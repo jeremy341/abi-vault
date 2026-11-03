@@ -12,7 +12,7 @@ import {
   lockAccountingPeriod,
   unlockAccountingPeriod,
 } from "@/features/finance/actions/wallets";
-import styles from "./periods.module.css";
+import dlg from "@/components/dashboard/dialog.module.css";
 import ledger from "../ledger.module.css";
 import { LoadError } from "@/components/ui/load-error";
 
@@ -21,10 +21,19 @@ const monthFormatter = new Intl.DateTimeFormat("en-GB", {
   year: "numeric",
 });
 
+const shortMonthFormatter = new Intl.DateTimeFormat("en-GB", {
+  month: "short",
+  year: "numeric",
+});
+
 const loadErrorMessage = "The accounting periods could not be loaded.";
 
 function periodLabel(period: AccountingPeriodListItem) {
   return monthFormatter.format(new Date(period.year, period.month - 1, 1));
+}
+
+function shortLabel(period: AccountingPeriodListItem) {
+  return shortMonthFormatter.format(new Date(period.year, period.month - 1, 1));
 }
 
 export default function PeriodsPage() {
@@ -180,7 +189,7 @@ export default function PeriodsPage() {
           <div>
             <dt>Current period</dt>
             <dd>
-              <LoadingText loading={loading}>{activePeriod ? periodLabel(activePeriod) : "None"}</LoadingText>
+              <LoadingText loading={loading}>{activePeriod ? shortLabel(activePeriod) : "None"}</LoadingText>
             </dd>
           </div>
           <div>
@@ -211,17 +220,17 @@ export default function PeriodsPage() {
           onClose={() => {
             if (!saving) setTarget(null);
           }}
-          overlayClassName={styles.overlay}
-          dialogClassName={styles.dialog}
+          overlayClassName={dlg.overlay}
+          dialogClassName={`${dlg.modal} ${dlg.modalNarrow}`}
         >
-          <header className={styles.dialogHeader}>
-            <div>
+          <header className={dlg.header}>
+            <div className={dlg.heading}>
               <h2>{dialogQuestion}</h2>
               <p>{periodLabel(target)}</p>
             </div>
             <button
               type="button"
-              className={styles.closeButton}
+              className={dlg.closeButton}
               onClick={() => setTarget(null)}
               disabled={saving}
               aria-label="Close dialog"
@@ -229,9 +238,9 @@ export default function PeriodsPage() {
               <X aria-hidden="true" />
             </button>
           </header>
-          <div className={styles.dialogBody}>
-            <p>{dialogExplanation}</p>
-            <label>
+          <div className={dlg.body}>
+            <p className={dlg.hint}>{dialogExplanation}</p>
+            <label className={dlg.field}>
               <span>Reason</span>
               <textarea
                 value={reason}
@@ -241,24 +250,15 @@ export default function PeriodsPage() {
                 autoFocus
               />
             </label>
-            {message ? (
-              <p className={styles.dialogError} role="alert">
-                {message}
-              </p>
-            ) : null}
           </div>
-          <footer className={styles.dialogFooter}>
-            <button
-              type="button"
-              className={styles.cancelButton}
-              onClick={() => setTarget(null)}
-              disabled={saving}
-            >
+          {message ? <p className={dlg.dialogError} role="alert">{message}</p> : null}
+          <footer className={dlg.footer}>
+            <button type="button" className={dlg.secondaryButton} onClick={() => setTarget(null)} disabled={saving}>
               Cancel
             </button>
             <button
               type="button"
-              className={styles.confirmButton}
+              className={dlg.primaryButton}
               onClick={confirmPeriodAction}
               disabled={saving || !reason.trim()}
               aria-busy={saving}

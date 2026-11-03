@@ -94,8 +94,14 @@ export default function TransactionsPage() {
     const transaction = items.find((item) => String(item.id) === editId);
     if (!transaction) return;
 
-    window.history.replaceState(null, "", window.location.pathname);
-    if (transaction.canEdit) openEdit(transaction);
+    const frame = window.requestAnimationFrame(() => {
+      window.history.replaceState(null, "", window.location.pathname);
+      if (transaction.canEdit) openEdit(transaction);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+    // openEdit only forwards to the editor and does not need to restart this lookup.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, loading]);
 
   function closeTransactionModal() {

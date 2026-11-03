@@ -29,6 +29,7 @@ describe("transaction command validation", () => {
     });
 
     expect(result.success).toBe(true);
+
     if (result.success) expect(result.data.amount).toBe(BigInt(1250));
   });
 

@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import * as RechartsPrimitive from "recharts";
-import type { TooltipValueType } from "recharts";
+import type { TooltipPayloadEntry, TooltipValueType } from "recharts";
+import { z } from "zod";
 
 import { cn } from "@/lib/utils";
 
@@ -10,6 +11,7 @@ import { cn } from "@/lib/utils";
 const THEMES = { light: "", dark: ".dark" } as const;
 
 const INITIAL_DIMENSION = { width: 320, height: 200 } as const;
+
 type TooltipNameType = number | string;
 
 export type ChartConfig = Record<
@@ -99,9 +101,11 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
 ${prefix} [data-chart=${id}] {
 ${colorConfig
   .map(([key, itemConfig]) => {
+    // SAFETY: theme is limited to the keys declared in THEMES.
     const color =
       itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ??
       itemConfig.color;
+
     return color ? `  --color-${key}: ${color};` : null;
   })
   .join("\n")}
@@ -154,9 +158,11 @@ function ChartTooltipContent({
     const [item] = payload;
     const key = `${labelKey ?? item?.dataKey ?? item?.name ?? "value"}`;
     const itemConfig = getPayloadConfigFromPayload(config, item, key);
+    const labelValue = parseStringValue(label);
+
     const value =
-      !labelKey && typeof label === "string"
-        ? (config[label]?.label ?? label)
+      !labelKey && labelValue
+        ? (config[labelValue]?.label ?? labelValue)
         : itemConfig?.label;
 
     if (labelFormatter) {
@@ -223,6 +229,7 @@ function ChartTooltipContent({
                         <div
                           className={cn(
                             "shrink-0 rounded-[2px] border-(--color-border) bg-(--color-bg)",
+                            // SAFETY: these custom properties are valid React CSS properties for the chart marker.
                             {
                               "h-2.5 w-2.5": indicator === "dot",
                               "w-1": indicator === "line",
@@ -231,6 +238,7 @@ function ChartTooltipContent({
                               "my-0.5": nestLabel && indicator === "dashed",
                             },
                           )}
+                          // SAFETY: these custom properties are valid React CSS properties for the chart marker.
                           style={
                             {
                               "--color-bg": indicatorColor,
@@ -254,7 +262,7 @@ function ChartTooltipContent({
                       </div>
                       {item.value != null && (
                         <span className="font-mono font-medium text-foreground tabular-nums">
-                          {typeof item.value === "number"
+                          {z.number().safeParse(item.value).success
                             ? item.value.toLocaleString()
                             : String(item.value)}
                         </span>
@@ -300,7 +308,7 @@ function ChartLegendContent({
         .filter((item) => item.type !== "none")
         .map((item, index) => {
           const key = `${nameKey ?? item.dataKey ?? "value"}`;
-          const itemConfig = getPayloadConfigFromPayload(config, item, key);
+          const itemConfig = config[key];
 
           return (
             <div
@@ -327,38 +335,23 @@ function ChartLegendContent({
   );
 }
 
+function parseStringValue<T>(value: T) {
+  const parsed = z.string().safeParse(value);
+
+  return parsed.success ? parsed.data : undefined;
+}
+
 function getPayloadConfigFromPayload(
   config: ChartConfig,
-  payload: unknown,
+  payload: TooltipPayloadEntry,
   key: string,
 ) {
-  if (typeof payload !== "object" || payload === null) {
-    return undefined;
-  }
-
-  const payloadPayload =
-    "payload" in payload &&
-    typeof payload.payload === "object" &&
-    payload.payload !== null
-      ? payload.payload
-      : undefined;
-
-  let configLabelKey: string = key;
-
-  if (
-    key in payload &&
-    typeof payload[key as keyof typeof payload] === "string"
-  ) {
-    configLabelKey = payload[key as keyof typeof payload] as string;
-  } else if (
-    payloadPayload &&
-    key in payloadPayload &&
-    typeof payloadPayload[key as keyof typeof payloadPayload] === "string"
-  ) {
-    configLabelKey = payloadPayload[
-      key as keyof typeof payloadPayload
-    ] as string;
-  }
+  // SAFETY: Recharts provides payload entries with a stable object shape at this boundary.
+  const directValue = parseStringValue(payload[key as keyof typeof payload]);
+  // SAFETY: Recharts payload data is the chart row object; only primitive label values are read.
+  const payloadPayload = payload.payload as Record<string, string | number | null | undefined> | undefined;
+  const nestedValue = payloadPayload ? parseStringValue(payloadPayload[key]) : undefined;
+  const configLabelKey = directValue ?? nestedValue ?? key;
 
   return configLabelKey in config ? config[configLabelKey] : config[key];
 }

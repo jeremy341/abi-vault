@@ -10,12 +10,12 @@
 }
 
 @media (min-width: 768px) and (max-width: 1099px) {
-  .tabletPage .tableWrap {
+.tabletPage .tableWrap {
     flex: 1 1 auto;
     margin-inline: 1.25rem;
     overflow: hidden;
     border: 1px solid var(--ui-border-subtle);
-    border-radius: 0.8rem;
+    border-radius: var(--ui-card-radius);
     box-shadow: var(--ui-data-shadow);
   }
 
@@ -148,8 +148,8 @@
 }
 .primaryButton {
   border: 0;
-  background: #18181b;
-  color: white;
+  background: var(--ui-action-primary);
+  color: var(--ui-action-primary-ink);
 }
 .primaryButton svg,
 .secondaryButton svg {
@@ -247,8 +247,8 @@
 }
 .dropdownOption:hover,
 .dropdownOptionActive {
-  background: #18181b;
-  color: white;
+  background: var(--ui-surface-muted);
+  color: var(--ui-ink);
 }
 .dropdownOption svg {
   width: 0.95rem;
@@ -261,7 +261,7 @@
   margin: 0 1.5rem;
   overflow: hidden;
   border: 1px solid rgb(0 0 0 / 0.09);
-  border-radius: 0.75rem;
+  border-radius: var(--ui-card-radius);
 }
 .tableHeader,
 .row {
@@ -482,16 +482,15 @@
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  background: rgb(0 0 0 / 0.24);
-  backdrop-filter: blur(3px);
+  background: rgb(36 41 35 / 42%);
 }
 .modal {
   width: min(36rem, calc(100vw - 2rem));
   overflow: visible;
   border: 1px solid rgb(0 0 0 / 0.1);
-  border-radius: 1rem;
-  background: white;
-  box-shadow: 0 1.5rem 3rem rgb(0 0 0 / 0.2);
+  border-radius: var(--ui-card-radius);
+  background: var(--ui-surface);
+  box-shadow: var(--ui-modal-shadow);
 }
 .modalHeader {
   display: flex;
@@ -572,10 +571,10 @@
   min-height: 2.5rem;
   align-items: center;
   margin-top: 0.55rem;
-  border-radius: 0.55rem;
-  background: #18181b;
+  border-radius: var(--ui-control-radius);
+  background: var(--ui-action-primary);
   padding: 0 1rem;
-  color: white;
+  color: var(--ui-action-primary-ink);
   font-size: 0.85rem;
   font-weight: 600;
 }
@@ -635,7 +634,7 @@
   width: min(32rem, calc(100vw - 2rem)) !important;
   gap: 0.5rem !important;
   border: 1px solid var(--ui-border) !important;
-  border-radius: 0.8rem !important;
+  border-radius: var(--ui-card-radius) !important;
   background: var(--ui-surface) !important;
   padding: 0.5rem !important;
   color: var(--ui-ink) !important;
@@ -1132,7 +1131,7 @@
 }
 .primaryButton {
   height: 3rem;
-  border-radius: 0.75rem;
+  border-radius: var(--ui-control-radius);
   padding-inline: 1.15rem;
   font-size: 0.875rem;
 }
@@ -1140,7 +1139,7 @@
   min-height: 5rem;
 }
 .tableWrap {
-  border-radius: 0.8rem;
+  border-radius: var(--ui-card-radius);
 }
 .tableHeader {
   min-height: 2.5rem;
@@ -1301,7 +1300,7 @@
     grid-template-columns: minmax(0, 1fr) auto auto;
     gap: 0.65rem 1rem;
     border: 1px solid var(--ui-border-subtle);
-    border-radius: 0.8rem;
+    border-radius: var(--ui-card-radius);
     background: var(--ui-surface);
     padding: 1rem;
     box-shadow: var(--ui-data-shadow);

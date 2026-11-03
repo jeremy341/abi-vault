@@ -19,14 +19,20 @@ export function Dialog({
 }: DialogProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
 
   useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
+    // SAFETY: document.activeElement is an HTMLElement or null in this browser focus trap.
     const previouslyFocused = document.activeElement as HTMLElement | null;
     const dialog = dialogRef.current;
+
     const focusable = dialog?.querySelectorAll<HTMLElement>(
       'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
     );
+
     const first = focusable?.[0];
     const last = focusable?.[focusable.length - 1];
 
@@ -34,6 +40,7 @@ export function Dialog({
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") onCloseRef.current();
+
       if (event.key !== "Tab" || !first || !last) return;
 
       if (event.shiftKey && document.activeElement === first) {
@@ -46,6 +53,7 @@ export function Dialog({
     };
 
     document.addEventListener("keydown", handleKeyDown);
+
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
       previouslyFocused?.focus();

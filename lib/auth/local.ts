@@ -15,6 +15,7 @@ export function createLocalSupabaseJwt() {
   const secret = process.env.SUPABASE_JWT_SECRET ?? "super-secret-jwt-token-with-at-least-32-characters-long";
   const now = Math.floor(Date.now() / 1000);
   const header = base64Url(JSON.stringify({ alg: "HS256", typ: "JWT" }));
+
   const payload = base64Url(JSON.stringify({
     aud: "authenticated",
     role: "authenticated",
@@ -23,7 +24,9 @@ export function createLocalSupabaseJwt() {
     iat: now,
     exp: now + 3600,
   }));
+
   const unsigned = `${header}.${payload}`;
   const signature = createHmac("sha256", secret).update(unsigned).digest("base64url");
+
   return `${unsigned}.${signature}`;
 }

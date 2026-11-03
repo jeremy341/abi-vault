@@ -31,21 +31,25 @@ export function FieldDropdown({
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
+
   const selectedOption =
     options.find((option) => option.value === value) ?? options[0];
 
   function focusOption(index: number) {
     const optionCount = optionRefs.current.length;
+
     if (!optionCount) return;
     optionRefs.current[(index + optionCount) % optionCount]?.focus();
   }
 
   function openAndFocusSelected() {
     setOpen(true);
+
     const selectedIndex = Math.max(
       0,
       options.findIndex((option) => option.value === value),
     );
+
     requestAnimationFrame(() => focusOption(selectedIndex));
   }
 
@@ -53,6 +57,7 @@ export function FieldDropdown({
     if (!open) return;
 
     function handlePointerDown(event: PointerEvent) {
+      // SAFETY: pointer events always expose an EventTarget that can be checked by Node.contains.
       if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
     }
 
@@ -65,6 +70,7 @@ export function FieldDropdown({
 
     document.addEventListener("pointerdown", handlePointerDown);
     document.addEventListener("keydown", handleEscape);
+
     return () => {
       document.removeEventListener("pointerdown", handlePointerDown);
       document.removeEventListener("keydown", handleEscape);
@@ -100,6 +106,7 @@ export function FieldDropdown({
             const currentIndex = optionRefs.current.findIndex(
               (option) => option === document.activeElement,
             );
+
             if (event.key === "ArrowDown") {
               event.preventDefault();
               focusOption(currentIndex + 1);

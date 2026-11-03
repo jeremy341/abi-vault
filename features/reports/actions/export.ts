@@ -3,14 +3,18 @@
 import { requirePermission } from "@/lib/auth/permissions-server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-function csvCell(value: unknown) {
+type CsvCellValue = string | number | null | undefined;
+
+function csvCell(value: CsvCellValue) {
   const text = String(value ?? "");
-  return /[\",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+
+  return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }
 
 export async function exportReport(format: "Excel" | "Review log") {
   const context = await requirePermission("exportData");
   const supabase = await createSupabaseServerClient();
+
   const [{ data: wallets, error: walletError }, { data: rawTransactions, error: transactionError }] = await Promise.all([
     supabase
       .from("wallets")
@@ -28,8 +32,10 @@ export async function exportReport(format: "Excel" | "Review log") {
     .or("correction_role.is.null,correction_role.neq.reversal")
     .order("booked_at", { ascending: false }),
   ]);
+
   if (walletError || transactionError) return { ok: false as const, error: "EXPORT_FAILED" };
   const activeWalletIds = new Set((wallets ?? []).map((wallet) => wallet.id));
+
   const transactions = (rawTransactions ?? []).filter((transaction) =>
     activeWalletIds.has(transaction.from_wallet_id ?? "") || activeWalletIds.has(transaction.to_wallet_id ?? ""),
   );
@@ -41,11 +47,14 @@ export async function exportReport(format: "Excel" | "Review log") {
       .eq("organization_id", context.organizationId)
       .is("archived_at", null)
       .order("created_at", { ascending: false });
+
     if (receiptError) return { ok: false as const, error: "EXPORT_FAILED" };
+
     const rows = [
       ["File", "Status", "Transaction ID", "Uploaded"],
       ...(receipts ?? []).map((receipt) => [receipt.file_name, receipt.review_status, receipt.transaction_id ?? "", receipt.created_at]),
     ];
+
     return {
       ok: true as const,
       filename: `abi-vault-pruefprotokoll-${new Date().toISOString().slice(0, 10)}.csv`,
@@ -54,11 +63,17 @@ export async function exportReport(format: "Excel" | "Review log") {
   }
 
   const categoryIds = [...new Set((transactions ?? []).map((transaction) => transaction.category_id).filter(Boolean))];
+
+  const emptyCategories: Array<{ id: string; name: string }> = [];
+
   const { data: categories, error: categoryError } = categoryIds.length
     ? await supabase.from("categories").select("id, name").in("id", categoryIds)
-    : { data: [] as { id: string; name: string }[], error: null };
+    : { data: emptyCategories, error: null };
+
   if (categoryError) return { ok: false as const, error: "EXPORT_FAILED" };
   const categoryMap = new Map((categories ?? []).map((category) => [category.id, category.name]));
+
+  // SAFETY: export rows are assembled from scalar database fields before CSV serialization.
   const rows = [
     ["Titel", "Typ", "Amount (Cent)", "Currency", "Gebucht am", "Category", "Herkunft", "Provider-ID"],
     ...(transactions ?? []).map((transaction) => [
@@ -72,6 +87,7 @@ export async function exportReport(format: "Excel" | "Review log") {
       transaction.external_transaction_id ?? "",
     ]),
   ];
+
   return {
     ok: true as const,
     filename: `abi-vault-transaktionen-${new Date().toISOString().slice(0, 10)}.csv`,

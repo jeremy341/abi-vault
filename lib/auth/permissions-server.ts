@@ -16,6 +16,7 @@ export async function requirePermission(
 ) {
   const context = await requireClerkContext();
   const supabase = await createSupabaseServerClient();
+
   const { data: membership, error } = await supabase
     .from("committee_memberships")
     .select("role")
@@ -26,7 +27,9 @@ export async function requirePermission(
 
   if (error || !membership) throw new AuthorizationError();
 
+  // SAFETY: the membership query is constrained to the database role union used by AppRole.
   const role = membership.role as AppRole;
+
   if (!hasPermission(role, permission)) throw new AuthorizationError();
 
   return { ...context, role };

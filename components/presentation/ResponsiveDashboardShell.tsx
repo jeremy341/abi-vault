@@ -5,19 +5,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import {
-  BarChart3,
   Bell,
-  CalendarClock,
   CalendarDays,
   ChevronDown,
-  FileText,
-  LayoutDashboard,
   MoreHorizontal,
-  ReceiptText,
   Settings,
-  Target,
-  Users,
-  WalletCards,
 } from "lucide-react";
 import AbiLogo from "@/components/AbiLogo";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -31,10 +23,13 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { usePresentationMode } from "@/hooks/use-presentation-mode";
+import { navigationItems, pageInformationFor } from "./navigation";
 import styles from "./presentation.module.css";
 
 const subscribeToHydration = () => () => {};
+
 const getClientHydrationState = () => true;
+
 const getServerHydrationState = () => false;
 
 const ClerkUserButton = dynamic(
@@ -54,103 +49,6 @@ function ShellUserButton({ localMode }: { localMode: boolean }) {
   return <ClerkUserButton />;
 }
 
-const navigationItems = [
-  {
-    label: "Overview",
-    shortLabel: "Overview",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    label: "Transactions",
-    shortLabel: "Transactions",
-    href: "/dashboard/transactions",
-    icon: ReceiptText,
-  },
-  {
-    label: "Receipts",
-    shortLabel: "Receipts",
-    href: "/dashboard/receipts",
-    icon: FileText,
-  },
-  {
-    label: "Goals",
-    shortLabel: "Goals",
-    href: "/dashboard/goals",
-    icon: Target,
-  },
-  {
-    label: "Cash registers",
-    shortLabel: "Cash register",
-    href: "/dashboard/funds",
-    icon: WalletCards,
-  },
-  {
-    label: "Reports",
-    shortLabel: "Reports",
-    href: "/dashboard/reports",
-    icon: BarChart3,
-  },
-  {
-    label: "People",
-    shortLabel: "People",
-    href: "/dashboard/people",
-    icon: Users,
-  },
-  {
-    label: "Settings",
-    shortLabel: "Settings",
-    href: "/dashboard/settings",
-    icon: Settings,
-  },
-  {
-    label: "Periods",
-    shortLabel: "Periods",
-    href: "/dashboard/periods",
-    icon: CalendarClock,
-  },
-];
-
-const pageInformation: Record<string, { title: string; description: string }> =
-  {
-    "/dashboard": {
-      title: "Financial overview",
-      description: "Class finances at a glance.",
-    },
-    "/dashboard/transactions": {
-      title: "Transactions",
-      description: "All income and expenses in one view.",
-    },
-    "/dashboard/receipts": {
-      title: "Receipts",
-      description: "Upload, review, and assign receipts.",
-    },
-    "/dashboard/goals": {
-      title: "Goals",
-      description: "Plan savings goals and track progress.",
-    },
-    "/dashboard/funds": {
-      title: "Cash registers",
-      description: "Manage cash registers and balances.",
-    },
-    "/dashboard/reports": {
-      title: "Reports",
-      description: "Review financial data with clarity.",
-    },
-    "/dashboard/people": {
-      title: "People",
-      description: "Manage members and roles.",
-    },
-    "/dashboard/settings": {
-      title: "Settings",
-      description: "Configure workspace and access.",
-    },
-    "/dashboard/periods": {
-      title: "Periods",
-      description: "Open and safely close accounting periods.",
-    },
-  };
-
 function isCurrentRoute(pathname: string, href: string) {
   return pathname === href;
 }
@@ -165,6 +63,7 @@ function TabletRail({ pathname, isAdmin }: { pathname: string; isAdmin: boolean 
         {navigationItems.map((item) => {
           const Icon = item.icon;
           const active = isCurrentRoute(pathname, item.href);
+
           return (
             <Link
               key={item.href}
@@ -186,7 +85,8 @@ function TabletRail({ pathname, isAdmin }: { pathname: string; isAdmin: boolean 
 }
 
 function TabletTopbar({ pathname, localMode }: { pathname: string; localMode: boolean }) {
-  const page = pageInformation[pathname] ?? pageInformation["/dashboard"];
+  const page = pageInformationFor(pathname);
+
   return (
     <header className={styles.tabletTopbar}>
       <div className={styles.tabletTitle}>
@@ -212,7 +112,8 @@ function TabletTopbar({ pathname, localMode }: { pathname: string; localMode: bo
 }
 
 function PhoneTopbar({ pathname, localMode }: { pathname: string; localMode: boolean }) {
-  const page = pageInformation[pathname] ?? pageInformation["/dashboard"];
+  const page = pageInformationFor(pathname);
+
   return (
     <header className={styles.phoneTopbar}>
       <div className={styles.phoneTitle}>
@@ -250,6 +151,7 @@ function PhoneNavigation({ pathname, isAdmin }: { pathname: string; isAdmin: boo
       {primary.map((item) => {
         const Icon = item.icon;
         const active = isCurrentRoute(pathname, item.href);
+
         return (
           <Link
             key={item.href}
@@ -281,6 +183,7 @@ function PhoneNavigation({ pathname, isAdmin }: { pathname: string; isAdmin: boo
             {secondary.map((item) => {
               const Icon = item.icon;
               const active = isCurrentRoute(pathname, item.href);
+
               return (
                 <Link
                   key={item.href}
@@ -308,7 +211,7 @@ function DesktopNavGroup({
   pathname,
 }: {
   label: string;
-  items: typeof navigationItems;
+  items: readonly (typeof navigationItems)[number][];
   pathname: string;
 }) {
   return (
@@ -318,6 +221,7 @@ function DesktopNavGroup({
         {items.map((item) => {
           const Icon = item.icon;
           const active = isCurrentRoute(pathname, item.href);
+
           return (
             <Link
               key={item.href}
@@ -346,7 +250,8 @@ function DesktopShell({
   isAdmin: boolean;
   localMode: boolean;
 }) {
-  const page = pageInformation[pathname] ?? pageInformation["/dashboard"];
+  const page = pageInformationFor(pathname);
+
   const [openMenu, setOpenMenu] = useState<"cohort" | "notifications" | null>(
     null,
   );
@@ -361,6 +266,7 @@ function DesktopShell({
 
     document.addEventListener("keydown", closeMenu);
     document.addEventListener("pointerdown", closeMenu);
+
     return () => {
       document.removeEventListener("keydown", closeMenu);
       document.removeEventListener("pointerdown", closeMenu);
@@ -433,7 +339,7 @@ function DesktopShell({
                     <CalendarDays aria-hidden="true" />
                     <span>
                       <strong>Abi 2026</strong>
-                      <small>Activeer Cohort</small>
+                      <small>Activate cohort</small>
                     </span>
                   </button>
                   <Link href="/dashboard/settings" role="menuitem">
@@ -493,6 +399,7 @@ export default function ResponsiveDashboardShell({
 }) {
   const mode = usePresentationMode();
   const pathname = usePathname();
+
   const shellReady = useSyncExternalStore(
     subscribeToHydration,
     getClientHydrationState,

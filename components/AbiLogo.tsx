@@ -20,7 +20,7 @@ export default function AbiLogo({
       aria-label="Abi Manager Startseite"
     >
       <span
-        className={`brand-link flex items-center justify-center rounded-lg bg-ink font-semibold text-white dark:bg-black dark:text-white ${isLarge ? "h-10 w-10 text-base" : "h-8 w-8 text-sm"}`}
+        className={`brand-link flex items-center justify-center rounded-[6px] bg-[#d4ef89] font-semibold text-[#26311f] dark:bg-[#d4ef89] dark:text-[#26311f] ${isLarge ? "h-10 w-10 text-base" : "h-8 w-8 text-sm"}`}
       >
         A
       </span>

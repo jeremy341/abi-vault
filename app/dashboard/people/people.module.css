@@ -175,8 +175,8 @@
 }
 .primaryButton {
   border: 0;
-  background: var(--ui-ink);
-  color: var(--ui-surface);
+  background: var(--ui-action-primary);
+  color: var(--ui-action-primary-ink);
 }
 .primaryButton:hover {
   opacity: 0.82;
@@ -467,8 +467,7 @@
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  background: rgb(0 0 0 / 0.24);
-  backdrop-filter: blur(3px);
+  background: rgb(36 41 35 / 42%);
   overscroll-behavior: contain;
 }
 .modal {
@@ -476,7 +475,7 @@
   max-height: calc(100dvh - 2rem);
   overflow-y: auto;
   border: 1px solid var(--ui-border);
-  border-radius: 1rem;
+  border-radius: var(--ui-card-radius);
   background: var(--ui-surface);
   color: var(--ui-ink);
   box-shadow: var(--ui-modal-shadow);

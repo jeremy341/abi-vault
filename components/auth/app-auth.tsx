@@ -24,6 +24,7 @@ const AppAuthContext = createContext<AppAuth | null>(null);
 
 export function ClerkAuthBridge({ children }: { children: ReactNode }) {
   const auth = useClerkAuth();
+
   return (
     <AppAuthContext.Provider
       value={{
@@ -45,6 +46,8 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
 
 export function useAppAuth() {
   const auth = useContext(AppAuthContext);
+
   if (!auth) throw new Error("useAppAuth must be used inside the app auth provider");
+
   return auth;
 }

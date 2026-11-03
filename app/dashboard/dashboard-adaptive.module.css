@@ -87,7 +87,7 @@
   min-height: 0;
   overflow: hidden;
   border: 1px solid var(--ui-border-subtle);
-  border-radius: 1rem;
+  border-radius: var(--ui-card-radius);
   background: var(--ui-surface);
 }
 
@@ -161,7 +161,7 @@
   justify-content: center;
   gap: 0.45rem;
   border: 1px solid var(--ui-border);
-  border-radius: 0.7rem;
+  border-radius: var(--ui-control-radius);
   background: var(--ui-surface);
   color: var(--ui-ink);
   font-size: 0.72rem;
@@ -170,9 +170,9 @@
 
 .tabletAction:first-child,
 .phoneQuickAction:first-child {
-  border-color: var(--ui-ink);
-  background: var(--ui-ink);
-  color: var(--ui-surface);
+  border-color: var(--ui-action-primary);
+  background: var(--ui-action-primary);
+  color: var(--ui-action-primary-ink);
 }
 
 .tabletAction svg,
@@ -307,7 +307,14 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: var(--ui-ink);
+}
+
+.tabletGoalTrack i {
+  background: var(--ui-data-goal);
+}
+
+.tabletSpendingTrack i {
+  background: var(--ui-data-expense);
 }
 
 .tabletSpendingRow {
@@ -486,7 +493,7 @@
   gap: 0.4rem;
   scroll-snap-align: start;
   border: 1px solid var(--ui-border-subtle);
-  border-radius: 0.85rem;
+  border-radius: var(--ui-card-radius);
   padding: 0.85rem;
 }
 
@@ -523,7 +530,7 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: var(--ui-ink);
+  background: var(--ui-data-goal);
 }
 
 .phoneAttentionRow {

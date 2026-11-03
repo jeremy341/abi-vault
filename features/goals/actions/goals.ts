@@ -12,9 +12,13 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 function mapGoalError(code?: string) {
   if (code === "42501") return actionFailure("FORBIDDEN", "You do not have permission to manage goals.");
+
   if (code === "55000") return actionFailure("CONFLICT", "The goal or accounting period is unavailable.");
+
   if (code === "23514" || code === "22023") return actionFailure("INVALID_PAYLOAD", "The goal data is invalid.");
+
   if (code === "23505") return actionFailure("CONFLICT", "This goal change was already submitted.");
+
   return actionFailure("DATABASE_ERROR", "The goal could not be saved.");
 }
 
@@ -22,10 +26,12 @@ export async function createGoal(
   input: GoalCreateInput,
 ): Promise<ActionResult<{ id: string }>> {
   const parsed = goalCreateSchema.safeParse(input);
+
   if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "The goal data is invalid.");
 
   const context = await requirePermission("manageGoals");
   const supabase = await createSupabaseServerClient();
+
   const { data, error } = await supabase.rpc("create_fundraising_goal", {
     p_organization_id: context.organizationId,
     p_title: parsed.data.title,
@@ -37,6 +43,7 @@ export async function createGoal(
   });
 
   if (error) return mapGoalError(error.code);
+
   return actionSuccess({ id: String(data) });
 }
 
@@ -44,10 +51,12 @@ export async function createGoalContribution(
   input: GoalContributionInput,
 ): Promise<ActionResult<{ id: string }>> {
   const parsed = goalContributionSchema.safeParse(input);
+
   if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "The contribution data is invalid.");
 
   const context = await requirePermission("manageGoals");
   const supabase = await createSupabaseServerClient();
+
   const { data, error } = await supabase.rpc("create_goal_contribution", {
     p_organization_id: context.organizationId,
     p_goal_id: parsed.data.goalId,
@@ -57,5 +66,6 @@ export async function createGoalContribution(
   });
 
   if (error) return mapGoalError(error.code);
+
   return actionSuccess({ id: String(data) });
 }

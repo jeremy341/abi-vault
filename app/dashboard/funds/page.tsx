@@ -57,8 +57,10 @@ type WalletWithCount = {
 
 function formatCountDate(value: string) {
   const date = new Date(value);
+
   if (Number.isNaN(date.getTime())) return value.slice(0, 10);
   const today = new Date();
+
   return date.toDateString() === today.toDateString()
     ? "Heute"
     : date.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" });
@@ -67,6 +69,7 @@ function formatCountDate(value: string) {
 function mapWalletToCashBox(wallet: WalletWithCount): CashBox {
   const difference = Number(String(wallet.lastCountDifferenceMinor ?? 0)) / 100;
   const hasCount = Boolean(wallet.lastCountAt);
+
   return {
     id: wallet.id,
     name: wallet.name,
@@ -103,9 +106,13 @@ export default function FundsPage() {
   const mode = usePresentationMode();
   const { userId, orgId } = useAppAuth();
   const cacheScope = `${orgId ?? "no-org"}:${userId ?? "anonymous"}`;
+
   type DashboardResult = Awaited<ReturnType<typeof getDashboardSnapshot>>;
+
   const initialSnapshot = getFinanceCacheState<DashboardResult>("dashboard-snapshot", cacheScope);
+
   type CashCountResult = Awaited<ReturnType<typeof listCashCountsForCurrentOrganization>>;
+
   const initialCashCounts = getFinanceCacheState<CashCountResult>("cash-counts", cacheScope);
   const initialWallets = initialSnapshot.data?.ok ? initialSnapshot.data.wallets : [];
   const [cards, setCards] = useState<DashboardCard[]>(() => initialWallets.map(mapWalletToCashRegisterCard));
@@ -121,15 +128,18 @@ export default function FundsPage() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isCountOpen, setIsCountOpen] = useState(false);
   const [deleteSaving, setDeleteSaving] = useState(false);
+
   const [countMode, setCountMode] = useState<"direct" | "calculator">(
     "direct",
   );
+
   const [countedAmountInput, setCountedAmountInput] = useState("0,00");
   const [countPerson, setCountPerson] = useState("");
   const [countNote, setCountNote] = useState("");
   const [countError, setCountError] = useState("");
   const [countSaving, setCountSaving] = useState(false);
   const countIdempotencyKey = useRef<string | null>(null);
+
   const [denomCounts, setDenomCounts] = useState<Record<string, number>>({
     "50": 0,
     "20": 0,
@@ -145,8 +155,10 @@ export default function FundsPage() {
   const loadWallets = useCallback(async () => {
     try {
       const result = await cachedFinanceQuery("dashboard-snapshot", getDashboardSnapshot, { scope: cacheScope });
+
       if (!result.ok) {
         setLoadError("Cash registers could not be loaded.");
+
         return;
       }
 
@@ -165,6 +177,7 @@ export default function FundsPage() {
   const loadCashCounts = useCallback(async () => {
     try {
       const result = await cachedFinanceQuery("cash-counts", listCashCountsForCurrentOrganization, { scope: cacheScope });
+
       if (result.ok) setAuditLogs(result.items.map(mapCashCountToAuditEntry));
     } catch {
       // The Cash register data remains usable when the optional audit history is unavailable.
@@ -175,6 +188,7 @@ export default function FundsPage() {
     const timer = window.setTimeout(() => {
       void loadWallets();
     }, 0);
+
     return () => window.clearTimeout(timer);
   }, [loadWallets]);
 
@@ -182,6 +196,7 @@ export default function FundsPage() {
     const timer = window.setTimeout(() => {
       void loadCashCounts();
     }, 0);
+
     return () => window.clearTimeout(timer);
   }, [loadCashCounts]);
 
@@ -201,6 +216,7 @@ export default function FundsPage() {
 
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+
     return () => {
       document.body.style.overflow = previousOverflow;
     };
@@ -208,6 +224,7 @@ export default function FundsPage() {
 
   const safeIndex = Math.min(activeCardIndex, Math.max(0, cards.length - 1));
   const activeCard = cards[safeIndex] ?? cards[0];
+
   const cashBox: CashBox = activeCard
     ? cashBoxes[activeCard.id] ?? {
       id: activeCard.id,
@@ -232,6 +249,7 @@ export default function FundsPage() {
     () => calculateCashDenominationMinor(denomCounts),
     [denomCounts],
   );
+
   const directCountedMinor = useMemo(() => {
     try {
       return parseDollarToMinor(countedAmountInput);
@@ -244,6 +262,7 @@ export default function FundsPage() {
     countMode === "calculator"
       ? calculatedDenomMinor / 100
       : directCountedMinor === null ? 0 : Number(directCountedMinor) / 100;
+
   const activeCountedAmountValid = countMode === "calculator" || directCountedMinor !== null;
   const currentDiffPreview = activeCountedAmount - cashBox.balance;
 
@@ -271,15 +290,19 @@ export default function FundsPage() {
       cardExpiryVisual: details.expiry,
       cardColorVisual: details.color,
     });
+
     if (!persisted.success) {
       setNotice(persisted.error.message);
+
       return false;
     }
+
     const newCard: DashboardCard = {
       id: persisted.data.id,
       details,
       balance: 0,
     };
+
     setCards((current) => [...current, newCard]);
     setCashBoxes((current) => ({
       ...current,
@@ -297,11 +320,13 @@ export default function FundsPage() {
     setIsAddCardOpen(false);
     invalidateFinanceQuery("wallets", "dashboard-snapshot", "transactions", "report-snapshot", "report-kpis");
     setNotice("Cash register added.");
+
     return true;
   }
 
   async function handleUpdateCard(details: AccountCardDetails): Promise<boolean> {
     if (!activeCard) return false;
+
     const result = await updateWallet({
       walletId: activeCard.id,
       name: details.accountName,
@@ -311,10 +336,13 @@ export default function FundsPage() {
       cardExpiryVisual: details.expiry,
       cardColorVisual: details.color,
     });
+
     if (!result.success) {
       setNotice("Card details could not be saved.");
+
       return false;
     }
+
     setCards((current) =>
       current.map((card, index) =>
         index === safeIndex ? { ...card, details } : card,
@@ -327,6 +355,7 @@ export default function FundsPage() {
     setIsEditCardOpen(false);
     invalidateFinanceQuery("wallets", "dashboard-snapshot", "transactions", "report-snapshot", "report-kpis");
     setNotice("Kartendaten gespeichert.");
+
     return true;
   }
 
@@ -380,21 +409,26 @@ export default function FundsPage() {
   async function confirmDeleteCard() {
     if (!activeCard || deleteSaving) return;
     setDeleteSaving(true);
+
     try {
       const result = await archiveWallet({
         walletId: activeCard.id,
         reason: "Cash register archived through cash register management",
       });
+
       if (!result.success) {
         setNotice("The cash register could not be archived.");
+
         return;
       }
+
       setCards((current) =>
         current.filter((_, index) => index !== safeIndex),
       );
       setCashBoxes((current) => {
         const next = { ...current };
         delete next[activeCard.id];
+
         return next;
       });
       setActiveCardIndex((current) => Math.max(0, current - 1));
@@ -410,26 +444,34 @@ export default function FundsPage() {
 
   async function handleSaveCount(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
     if (countSaving) return;
     setCountSaving(true);
+
     try {
     const form = event.currentTarget;
+
     if (!activeCountedAmountValid || activeCountedAmount < 0) {
       setCountError("Please enter a valid counted amount.");
       window.requestAnimationFrame(() => {
+        // SAFETY: the named form control is an HTMLInputElement in this form.
         (
           form.elements.namedItem(
             "countedAmount",
           ) as HTMLInputElement | null
         )?.focus();
       });
+
       return;
     }
 
     const difference = activeCountedAmount - cashBox.balance;
+
     const status =
       Math.abs(difference) < 0.01 ? "matched" : "discrepancy";
+
     const auditor = countPerson.trim() || cashBox.responsible;
+
     if (/^[0-9a-f-]{36}$/i.test(cashBox.id)) {
       const persisted = await recordCashCount({
         walletId: cashBox.id,
@@ -438,8 +480,10 @@ export default function FundsPage() {
         note: countNote.trim(),
         idempotencyKey: countIdempotencyKey.current ?? `count-${cashBox.id}-${crypto.randomUUID()}`,
       });
+
       if (!persisted.ok) {
         setCountError("The cash count could not be saved.");
+
         return;
       }
     }

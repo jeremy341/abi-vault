@@ -13,4 +13,5 @@ export const receiptArchiveSchema = z.object({
 });
 
 export type ReceiptUpdateInput = z.input<typeof receiptUpdateSchema>;
+
 export type ReceiptArchiveInput = z.input<typeof receiptArchiveSchema>;

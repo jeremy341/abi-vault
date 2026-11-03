@@ -10,8 +10,12 @@ export const manualUiTransactionSchema = z.object({
   idempotencyKey: z.string().trim().min(16).max(128),
 });
 
+export type ManualUiTransactionInput = z.input<typeof manualUiTransactionSchema>;
+
 export function parseManualUiAmount(value: string) {
   const amount = parseDollarToMinor(value);
+
   if (amount <= BigInt(0)) throw new Error("INVALID_AMOUNT");
+
   return amount;
 }

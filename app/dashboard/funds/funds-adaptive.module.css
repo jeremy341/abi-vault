@@ -196,7 +196,7 @@
   min-height: 0;
   overflow: hidden;
   border: 1px solid var(--ui-border-subtle);
-  border-radius: 0.75rem;
+  border-radius: var(--ui-card-radius);
   background: var(--ui-surface);
 }
 
@@ -280,9 +280,9 @@
 }
 
 .primaryAction {
-  border: 1px solid var(--ui-ink);
-  background: var(--ui-ink);
-  color: var(--ui-surface);
+  border: 1px solid var(--ui-action-primary);
+  background: var(--ui-action-primary);
+  color: var(--ui-action-primary-ink);
 }
 
 .primaryAction:hover {
@@ -430,7 +430,7 @@
 }
 
 .accountRow[aria-pressed="true"]::before {
-  background: var(--ui-ink);
+  background: var(--ui-action-primary);
 }
 
 .accountIcon {
@@ -533,7 +533,7 @@
   width: min(100%, 21.25rem);
   justify-self: center;
   border: 0;
-  border-radius: 1.25rem;
+  border-radius: var(--ui-card-radius);
   background: transparent;
   padding: 0;
   text-align: left;

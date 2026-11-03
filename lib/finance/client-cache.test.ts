@@ -5,6 +5,7 @@ import {
   FINANCE_CACHE_TTL_MS,
   getCachedFinanceData,
   getFinanceCacheState,
+  subscribeFinanceQuery,
 } from "./client-cache";
 
 describe("finance stale-while-revalidate cache", () => {
@@ -25,9 +26,11 @@ describe("finance stale-while-revalidate cache", () => {
 
   it("keeps stale data visible while starting one background refresh", async () => {
     vi.useFakeTimers();
+
     const query = vi.fn()
       .mockResolvedValueOnce({ ok: true, value: "first" })
       .mockResolvedValueOnce({ ok: true, value: "second" });
+
     await cachedFinanceQuery("reports", query, { scope: "org:user" });
     vi.advanceTimersByTime(FINANCE_CACHE_TTL_MS + 1);
 
@@ -43,5 +46,24 @@ describe("finance stale-while-revalidate cache", () => {
     const query = vi.fn().mockResolvedValue({ ok: false, error: "DATABASE_ERROR" });
     await cachedFinanceQuery("receipts", query, { scope: "org:user" });
     expect(getCachedFinanceData("receipts", "org:user")).toBeUndefined();
+  });
+
+  it("notifies a typed listener with the refreshed query value", async () => {
+    const listener = vi.fn<(value: { ok: true; value: string }) => void>();
+
+    const unsubscribe = subscribeFinanceQuery<{ ok: true; value: string }>(
+      "typed",
+      listener,
+      "org:user",
+    );
+
+    await cachedFinanceQuery(
+      "typed",
+      async () => ({ ok: true as const, value: "fresh" }),
+      { scope: "org:user" },
+    );
+
+    expect(listener).toHaveBeenCalledWith({ ok: true, value: "fresh" });
+    unsubscribe();
   });
 });

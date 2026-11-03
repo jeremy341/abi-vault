@@ -6,7 +6,11 @@ import { auth } from "@clerk/nextjs/server";
 import { headers } from "next/headers";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requirePermission } from "@/lib/auth/permissions-server";
-import { inviteLinkRoleSchema } from "@/features/people/schemas/invite-links";
+import {
+  inviteLinkRoleSchema,
+  type InviteLinkRoleInput,
+} from "@/features/people/schemas/invite-links";
+import { actionFailure, actionSuccess, type ActionResult } from "@/lib/api/result";
 
 const ROLE_LIMITS = {
   supervisor: { days: 30, uses: 30 },
@@ -19,17 +23,20 @@ function hashToken(token: string) {
 
 async function appOrigin() {
   const configured = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");
+
   if (configured) return configured;
 
   const requestHeaders = await headers();
   const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");
   const protocol = requestHeaders.get("x-forwarded-proto") ?? "http";
+
   return host ? `${protocol}://${host}` : "http://localhost:3000";
 }
 
-export async function createRoleInviteLink(input: unknown) {
+export async function createRoleInviteLink(input: InviteLinkRoleInput): Promise<ActionResult<{ id: string; role: "admin" | "supervisor"; expiresAt: string; url: string }>> {
   const parsed = inviteLinkRoleSchema.safeParse(input);
-  if (!parsed.success) return { ok: false as const, error: "INVALID_INPUT" };
+
+  if (!parsed.success) return actionFailure("INVALID_INPUT", "The invitation link data is invalid.");
 
   const context = await requirePermission("manageMemberships");
   const admin = createSupabaseAdminClient();
@@ -51,33 +58,36 @@ export async function createRoleInviteLink(input: unknown) {
     .select("id")
     .single();
 
-  if (error || !data) return { ok: false as const, error: "LINK_CREATE_FAILED" };
+  if (error || !data) return actionFailure("LINK_CREATE_FAILED", "The invitation link could not be created.");
 
-  return {
-    ok: true as const,
+  return actionSuccess({
     id: data.id,
     role: parsed.data.role,
     expiresAt: expiresAt.toISOString(),
     url: `${await appOrigin()}/join/${token}`,
-  };
+  });
 }
 
-export async function acceptRoleInviteLink(token: string) {
+export async function acceptRoleInviteLink(token: string): Promise<ActionResult<{ organizationId: string; role: "admin" | "supervisor" }>> {
   const session = await auth();
-  if (!session.userId) return { ok: false as const, error: "UNAUTHENTICATED" };
-  if (!token || token.length < 32) return { ok: false as const, error: "INVALID_LINK" };
+
+  if (!session.userId) return actionFailure("UNAUTHENTICATED", "Sign-in is required.");
+
+  if (!token || token.length < 32) return actionFailure("INVALID_LINK", "The invitation link is invalid.");
 
   const admin = createSupabaseAdminClient();
   const tokenHash = hashToken(token);
+
   const { data: invite, error: lookupError } = await admin
     .from("organization_invite_links")
     .select("id, organization_id, role, max_uses, uses, expires_at, revoked_at")
     .eq("token_hash", tokenHash)
     .maybeSingle();
 
-  if (lookupError || !invite) return { ok: false as const, error: "INVALID_LINK" };
+  if (lookupError || !invite) return actionFailure("INVALID_LINK", "The invitation link is invalid.");
+
   if (invite.revoked_at || invite.uses >= invite.max_uses || new Date(invite.expires_at).getTime() <= Date.now()) {
-    return { ok: false as const, error: "LINK_EXPIRED" };
+    return actionFailure("LINK_EXPIRED", "The invitation link is no longer valid.");
   }
 
   const clerkRole = invite.role === "admin" ? "org:admin" : "org:member";
@@ -89,10 +99,12 @@ export async function acceptRoleInviteLink(token: string) {
     .eq("clerk_user_id", session.userId)
     .eq("status", "active")
     .maybeSingle();
-  if (existingMembershipError) return { ok: false as const, error: "MEMBERSHIP_SYNC_FAILED" };
+
+  if (existingMembershipError) return actionFailure("MEMBERSHIP_SYNC_FAILED", "The membership could not be synchronized.");
 
   const client = await clerkClient();
   let createdClerkMembership = false;
+
   try {
     if (!existingMembership) {
       await client.organizations.createOrganizationMembership({
@@ -103,7 +115,7 @@ export async function acceptRoleInviteLink(token: string) {
       createdClerkMembership = true;
     }
   } catch {
-    return { ok: false as const, error: "MEMBERSHIP_CREATE_FAILED" };
+    return actionFailure("MEMBERSHIP_CREATE_FAILED", "The membership could not be created.");
   }
 
   const { data: consumed, error: consumeError } = await admin
@@ -127,7 +139,8 @@ export async function acceptRoleInviteLink(token: string) {
         // webhook remains the final reconciliation path if cleanup fails.
       }
     }
-    return { ok: false as const, error: "LINK_ALREADY_USED" };
+
+    return actionFailure("LINK_ALREADY_USED", "The invitation link has already been used.");
   }
 
   const applicationRole = existingMembership?.role === "admin"
@@ -135,6 +148,7 @@ export async function acceptRoleInviteLink(token: string) {
     : invite.role === "admin"
       ? "admin"
       : "supervisor";
+
   const applicationClerkRole = applicationRole === "admin" ? "org:admin" : "org:member";
 
   const { error: membershipError } = await admin
@@ -153,6 +167,7 @@ export async function acceptRoleInviteLink(token: string) {
       .update({ uses: invite.uses })
       .eq("id", invite.id)
       .eq("uses", invite.uses + 1);
+
     if (createdClerkMembership) {
       try {
         await client.organizations.deleteOrganizationMembership({
@@ -163,7 +178,9 @@ export async function acceptRoleInviteLink(token: string) {
         // The membership webhook remains the final reconciliation path.
       }
     }
-    return { ok: false as const, error: "MEMBERSHIP_SYNC_FAILED" };
+
+    return actionFailure("MEMBERSHIP_SYNC_FAILED", "The membership could not be synchronized.");
   }
-  return { ok: true as const, organizationId: invite.organization_id, role: applicationRole };
+
+  return actionSuccess({ organizationId: invite.organization_id, role: applicationRole });
 }

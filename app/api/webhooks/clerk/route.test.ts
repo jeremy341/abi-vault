@@ -1,7 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { NextRequest } from "next/server";
-
-vi.mock("server-only", () => ({}));
 
 import { POST } from "@/app/api/webhooks/clerk/route";
 
@@ -18,6 +16,7 @@ describe("Clerk webhook endpoint", () => {
       headers: { "svix-id": "evt_test" },
       body: JSON.stringify({ type: "user.created", data: {} }),
     }));
+
     expect(response.status).toBe(400);
     await expect(response.text()).resolves.toBe("Webhook verification failed");
   });

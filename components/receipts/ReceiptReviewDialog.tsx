@@ -34,13 +34,16 @@ type ReceiptReviewDialogProps = {
 
 function decisionLabel(decision: ReceiptReviewDecision) {
   if (decision === "approved") return "Approved";
+
   if (decision === "rejected") return "Invalid";
+
   return "Pending review";
 }
 
 function formatTimestamp(value: string | null | undefined) {
   if (!value) return "";
   const date = new Date(value);
+
   return Number.isNaN(date.getTime())
     ? value
     : date.toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" });
@@ -57,6 +60,7 @@ export function ReceiptReviewDialog({
   onDecision,
 }: ReceiptReviewDialogProps) {
   const isPdf = receipt.type === "PDF";
+
   return (
     <Dialog
       label="Review receipt"

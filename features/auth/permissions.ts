@@ -1,6 +1,7 @@
 import "server-only";
 
 export const APP_ROLES = ["admin", "supervisor"] as const;
+
 export type AppRole = (typeof APP_ROLES)[number];
 
 export const PERMISSIONS = {
@@ -26,5 +27,6 @@ export function hasPermission(
   role: AppRole,
   permission: keyof typeof PERMISSIONS,
 ) {
+  // SAFETY: every permission entry is declared as a readonly AppRole array.
   return PERMISSIONS[permission].includes(role as never);
 }

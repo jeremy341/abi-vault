@@ -1,6 +1,7 @@
 "use server";
 
-export async function createTransfer(input: unknown) {
-  void input;
-  return { ok: false as const, error: "TRANSFERS_DISABLED" };
+import { actionFailure, type ActionResult } from "@/lib/api/result";
+
+export async function createTransfer(): Promise<ActionResult<null>> {
+  return actionFailure("TRANSFERS_DISABLED", "Transfers are not supported in this flow.");
 }

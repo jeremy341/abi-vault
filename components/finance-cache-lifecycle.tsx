@@ -10,8 +10,10 @@ export function FinanceCacheLifecycle() {
   useEffect(() => {
     if (!isLoaded) return;
     const scope = `${orgId ?? "no-org"}:${userId ?? "anonymous"}`;
+
     if (previousScope.current && previousScope.current !== scope) clearFinanceCache();
     previousScope.current = scope;
   }, [isLoaded, orgId, userId]);
+
   return null;
 }

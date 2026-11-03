@@ -182,7 +182,7 @@
 }
 .settingSection {
   border: 1px solid var(--ui-border-subtle);
-  border-radius: 0.8rem;
+  border-radius: var(--ui-card-radius);
   padding: 1.1rem;
 }
 .sectionTitle {
@@ -452,9 +452,9 @@
   gap: 0.55rem;
   border: 0;
   border-radius: var(--ui-control-radius);
-  background: var(--ui-ink);
+  background: var(--ui-action-primary);
   padding: 0 1rem;
-  color: var(--ui-surface);
+  color: var(--ui-action-primary-ink);
   cursor: pointer;
   font: inherit;
   font-size: 0.875rem;

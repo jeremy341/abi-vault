@@ -17,6 +17,7 @@ export const transactionCreateSchema = z
             code: "custom",
             message: "Amount must be a positive USD value with up to two decimals",
           });
+
           return z.NEVER;
         }
       })
@@ -74,4 +75,5 @@ export const transactionCreateSchema = z
   });
 
 export type TransactionCreateInput = z.input<typeof transactionCreateSchema>;
+
 export type TransactionCreateCommand = z.output<typeof transactionCreateSchema>;

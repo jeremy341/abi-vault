@@ -1,6 +1,6 @@
 import { LoadingCollection, LoadingText } from "@/components/ui/loading-state";
 import ledger from "../ledger.module.css";
-import { dollar, dollarPrecise, type Goal } from "./goals-format";
+import { dollarPrecise, type Goal } from "./goals-format";
 
 type GoalListProps = {
   goals: Goal[];
@@ -31,7 +31,7 @@ export function GoalList({ goals, loading, onAddGoal, onEditGoal }: GoalListProp
                       <i style={{ width: `${Math.min(100, goal.progress)}%` }} />
                     </span>
                     <span className={ledger.rowEnd}>
-                      <span>{dollarPrecise.format(goal.saved)} of {dollar.format(goal.target)}</span>
+                      <span>{dollarPrecise.format(goal.saved)} of {dollarPrecise.format(goal.target)}</span>
                       <span className={ledger.rowMeta}>{goal.progress}%, {dollarPrecise.format(Math.max(0, goal.target - goal.saved))} to go</span>
                     </span>
                   </button>

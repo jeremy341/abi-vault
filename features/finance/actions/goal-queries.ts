@@ -1,7 +1,7 @@
 "use server";
 
 import { isDemoData } from "@/lib/demo/mode";
-import { demoData } from "@/lib/demo/sample-data";
+import { listDemoGoals } from "@/lib/demo/store";
 
 import { requireClerkContext } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -9,7 +9,7 @@ import { querySuccess, queryFailure } from "@/lib/finance/query-result";
 import { fetchAllRows, fetchRowsInBatches } from "@/lib/supabase/fetch-all-rows";
 
 export async function listGoalsForCurrentOrganization() {
-  if (isDemoData()) return demoData.goals;
+  if (isDemoData()) return querySuccess({ items: await listDemoGoals() });
   const context = await requireClerkContext();
   const supabase = await createSupabaseServerClient();
 

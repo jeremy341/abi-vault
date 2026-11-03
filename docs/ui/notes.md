@@ -2,15 +2,20 @@
 
 Where things live:
 
-- Tokens: `app/globals.css`
-- Shared list, table and dialog styles: `app/dashboard/ledger.module.css`
-- Shell: `components/presentation/ResponsiveDashboardShell.tsx`
-- Shared components: `components/ui/`
+- Tokens and global styles: `app/globals.css`
+- Shared list, table, stat and button styles: `app/dashboard/ledger.module.css`
+- Shared dialog styles: `components/dashboard/dialog.module.css`
+- Shell (sidebar, top bar, phone bar): `components/presentation/`
+- Shared controls: `components/ui/`
 
-Still open:
+Screenshots for the README are taken at 1920×1080 and live in
+`docs/screenshots/`. Retake them after visual changes (see CONTRIBUTING).
 
-- Sample data uses German category names, and amounts are shown in dollars. The design is meant for euros.
+Known gaps:
+
+- Reports still scrolls about 90px on a 1280×720 window.
 - Table headers do not stick when a table scrolls.
 - Dialogs close without an exit animation.
 - Sign-in, sign-up and join were not checked with a real Clerk session.
-- In development the Next.js badge overlaps the theme toggle in the sidebar. It does not appear in production.
+- In development the Next.js badge sits over the theme toggle in the sidebar.
+  It does not appear in production.

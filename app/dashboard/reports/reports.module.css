@@ -1,8 +1,16 @@
+.stats {
+  gap: var(--space-2) var(--space-4);
+}
+.stats > div {
+  flex-direction: column;
+  gap: 0;
+}
+
 .chart {
   width: 100%;
-  height: 16rem;
+  height: clamp(7rem, calc(15 * var(--dvh)), 11rem);
   aspect-ratio: auto;
-  padding-top: var(--space-4);
+  padding-top: var(--space-2);
 }
 
 .tooltip {
@@ -15,7 +23,7 @@
 .legend {
   display: flex;
   gap: var(--space-4);
-  margin: var(--space-2) 0 var(--space-6);
+  margin: 0;
   color: var(--muted);
   font-size: var(--text-xs);
 }
@@ -30,10 +38,15 @@
   height: 0.75rem;
 }
 .keyIncome {
-  background: var(--ink);
+  background: var(--green);
 }
 .keyExpenses {
-  background: var(--control);
+  background: var(--salmon);
+}
+
+.monthTable th,
+.monthTable td {
+  height: 1.5rem;
 }
 
 .total {
@@ -41,22 +54,28 @@
   font-weight: 600;
 }
 .totalLabel {
-  height: var(--row-height);
-  padding: var(--space-2) var(--space-3) var(--space-2) 0;
+  height: 1.5rem;
+  padding: 0 var(--space-3) 0 0;
   font-weight: 600;
   text-align: left;
 }
 
 .category {
   display: grid;
-  grid-template-columns: minmax(7rem, 1fr) minmax(4rem, 1fr) 11rem 3rem;
+  grid-template-columns: minmax(5rem, 1fr) minmax(2rem, 4rem) auto 2.5rem;
   align-items: center;
-  gap: var(--space-4);
-  min-height: var(--row-height);
-  padding: var(--space-2) 0;
+  gap: var(--space-3);
+  min-height: 2.25rem;
+  padding: var(--space-1) 0;
   font-size: var(--text-sm);
 }
+.counts {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3) var(--space-4);
+  padding: var(--space-3) 0;
+}
 .figure {
+  white-space: nowrap;
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
@@ -64,8 +83,13 @@
 .exports {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: var(--space-2);
-  padding-top: var(--space-4);
+  margin-left: auto;
+}
+.exportNote {
+  color: var(--muted);
+  font-size: var(--text-sm);
 }
 
 @media (max-width: 767px) {
@@ -76,8 +100,14 @@
     grid-column: 1 / -1;
     order: 3;
   }
-  .exports button {
+  .exports {
     width: 100%;
+  }
+  .exports button {
+    flex: 1 1 0;
     min-height: 2.75rem;
+  }
+  .exportNote:empty {
+    display: none;
   }
 }

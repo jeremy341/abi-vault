@@ -1,7 +1,7 @@
 "use server";
 
 import { isDemoData } from "@/lib/demo/mode";
-import { demoData } from "@/lib/demo/sample-data";
+import { listDemoTransactions } from "@/lib/demo/store";
 
 import { requireClerkContext } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -17,7 +17,7 @@ function isPeriodLocked(period: { status: string } | { status: string }[] | null
 }
 
 export async function listTransactionsForCurrentOrganization() {
-  if (isDemoData()) return demoData.transactions;
+  if (isDemoData()) return querySuccess({ items: await listDemoTransactions() });
   const context = await requireClerkContext();
   const supabase = await createSupabaseServerClient();
   const { data: membership, error: membershipError } = await supabase

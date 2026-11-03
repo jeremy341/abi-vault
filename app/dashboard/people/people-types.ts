@@ -17,9 +17,3 @@ export type RoleInviteLink = {
 };
 
 export type RoleLinks = Partial<Record<RoleInviteLink["role"], RoleInviteLink>>;
-
-export type RoleCounts = {
-  administrators: number;
-  supervisors: number;
-  members: number;
-};

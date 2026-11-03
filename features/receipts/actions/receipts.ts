@@ -17,8 +17,14 @@ import {
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isDemoData } from "@/lib/demo/mode";
-import { demoReadOnlyFailure } from "@/lib/demo/read-only-action";
-import { demoData } from "@/lib/demo/sample-data";
+import {
+  addDemoReceipt,
+  findDemoReceipt,
+  findDemoTransaction,
+  removeDemoReceipt,
+  setDemoReceiptStatus,
+  updateDemoReceipt,
+} from "@/lib/demo/store";
 
 const MIME_EXTENSIONS = {
   "application/pdf": "pdf",
@@ -30,10 +36,44 @@ function invalidReceipt(message = "The receipt data is invalid.") {
   return actionFailure("INVALID_PAYLOAD", message);
 }
 
+async function uploadDemoReceipt(formData: FormData): Promise<ActionResult<{ id: string }>> {
+  const file = formData.get("file");
+  const fileNameValue = formData.get("fileName");
+  const transactionValue = formData.get("transactionId");
+
+  if (!(file instanceof File)) return invalidReceipt("A receipt file is required.");
+
+  if (file.size > 5 * 1024 * 1024) return invalidReceipt("The receipt must be no larger than 5 MB.");
+
+  const parsed = receiptMetadataSchema.safeParse({
+    transactionId: transactionValue ? String(transactionValue) : null,
+    fileName: fileNameValue === null || fileNameValue instanceof File ? file.name : fileNameValue,
+    mimeType: file.type,
+    fileSizeBytes: file.size,
+  });
+
+  if (!parsed.success) return invalidReceipt("The file type or receipt size is invalid.");
+
+  if (parsed.data.transactionId && !await findDemoTransaction(parsed.data.transactionId)) {
+    return actionFailure("NOT_FOUND", "The transaction was not found.");
+  }
+
+  const encoded = Buffer.from(await file.arrayBuffer()).toString("base64");
+  const id = await addDemoReceipt({
+    fileName: parsed.data.fileName,
+    mimeType: parsed.data.mimeType,
+    sizeBytes: file.size,
+    dataUrl: `data:${parsed.data.mimeType};base64,${encoded}`,
+    transactionId: parsed.data.transactionId,
+  });
+
+  return actionSuccess({ id });
+}
+
 export async function uploadReceipt(
   formData: FormData,
 ): Promise<ActionResult<{ id: string }>> {
-  if (isDemoData()) return demoReadOnlyFailure();
+  if (isDemoData()) return uploadDemoReceipt(formData);
 
   const context = await requirePermission("uploadReceipts");
   const file = formData.get("file");
@@ -110,12 +150,17 @@ export async function uploadReceipt(
 export async function reviewReceipt(
   input: ReceiptReviewInput,
 ): Promise<ActionResult<null>> {
-  if (isDemoData()) return demoReadOnlyFailure();
-
-  const context = await requirePermission("reviewReceipts");
   const parsed = receiptReviewSchema.safeParse(input);
 
   if (!parsed.success) return invalidReceipt();
+
+  if (isDemoData()) {
+    return await setDemoReceiptStatus(parsed.data.receiptId, parsed.data.status)
+      ? actionSuccess(null)
+      : actionFailure("NOT_FOUND", "The receipt is no longer available.");
+  }
+
+  const context = await requirePermission("reviewReceipts");
 
   const supabase = await createSupabaseServerClient();
 
@@ -139,11 +184,26 @@ export async function reviewReceipt(
 export async function updateReceiptMetadata(
   input: ReceiptUpdateInput,
 ): Promise<ActionResult<null>> {
-  if (isDemoData()) return demoReadOnlyFailure();
-
   const parsed = receiptUpdateSchema.safeParse(input);
 
   if (!parsed.success) return invalidReceipt("The receipt data is invalid.");
+
+  if (isDemoData()) {
+    if (!await findDemoReceipt(parsed.data.receiptId)) return actionFailure("NOT_FOUND", "The receipt is no longer available.");
+
+    if (parsed.data.transactionId) {
+      const transaction = await findDemoTransaction(parsed.data.transactionId);
+
+      if (!transaction) return actionFailure("NOT_FOUND", "The transaction was not found.");
+
+      if (transaction.periodLocked) return actionFailure("PERIOD_LOCKED", "The receipt cannot be changed for this transaction.");
+    }
+
+    await updateDemoReceipt(parsed.data.receiptId, { fileName: parsed.data.fileName, transactionId: parsed.data.transactionId });
+
+    return actionSuccess(null);
+  }
+
   const context = await requirePermission("uploadReceipts");
   const supabase = await createSupabaseServerClient();
 
@@ -170,11 +230,16 @@ export async function updateReceiptMetadata(
 export async function archiveReceipt(
   input: ReceiptArchiveInput,
 ): Promise<ActionResult<null>> {
-  if (isDemoData()) return demoReadOnlyFailure();
-
   const parsed = receiptArchiveSchema.safeParse(input);
 
   if (!parsed.success) return invalidReceipt("An archive reason is required.");
+
+  if (isDemoData()) {
+    return await removeDemoReceipt(parsed.data.receiptId)
+      ? actionSuccess(null)
+      : actionFailure("NOT_FOUND", "The receipt is no longer available.");
+  }
+
   const context = await requirePermission("archiveFinanceRecords");
   const supabase = await createSupabaseServerClient();
 
@@ -206,9 +271,17 @@ export async function createReceiptDownloadUrl(
   const id = receiptId.trim();
 
   if (isDemoData()) {
-    const receipt = demoData.receipts.items.find((item) => item.id === id);
+    const receipt = await findDemoReceipt(id);
 
     if (!receipt) return actionFailure("NOT_FOUND", "The receipt was not found.");
+
+    if (receipt.dataUrl) {
+      return actionSuccess({
+        url: receipt.dataUrl,
+        previewUrl: receipt.dataUrl,
+        previewAsImage: receipt.type !== "PDF",
+      });
+    }
 
     const pdfUrl = "/demo-receipts/sample-receipt.pdf";
     const imageUrl = "/demo-receipts/sample-receipt.jpg";

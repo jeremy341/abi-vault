@@ -2,7 +2,7 @@
 
 import { X } from "lucide-react";
 import { Dialog } from "@/components/ui/dialog";
-import styles from "./transactions.module.css";
+import dlg from "@/components/dashboard/dialog.module.css";
 
 type DateRangeDialogProps = {
   open: boolean;
@@ -29,71 +29,45 @@ export function DateRangeDialog({
 
   return (
     <Dialog
-      overlayClassName={styles.overlay}
-      dialogClassName={styles.modal}
+      overlayClassName={dlg.overlay}
+      dialogClassName={`${dlg.modal} ${dlg.modalNarrow}`}
       label="Select period"
       onClose={onClose}
     >
-      <div className={styles.modalHeader}>
-        <div>
+      <header className={dlg.header}>
+        <div className={dlg.heading}>
           <h2>Select period</h2>
           <p>Set the period for the transaction list.</p>
         </div>
-        <button
-          type="button"
-          className={styles.iconButton}
-          onClick={onClose}
-          aria-label="Close dialog"
-        >
-          <X />
+        <button type="button" className={dlg.closeButton} onClick={onClose} aria-label="Close dialog">
+          <X aria-hidden="true" />
         </button>
-      </div>
-      <div className={styles.modalBody}>
-        <div className={styles.dateFields}>
-          <label className={styles.formField}>
+      </header>
+      <div className={dlg.body}>
+        <div className={dlg.formGrid}>
+          <label className={dlg.field}>
             <span>From</span>
-            <input
-              type="date"
-              value={start}
-              onChange={(event) => onStartChange(event.target.value)}
-            />
+            <input type="date" value={start} onChange={(event) => onStartChange(event.target.value)} />
           </label>
-          <label className={styles.formField}>
+          <label className={dlg.field}>
             <span>To</span>
-            <input
-              type="date"
-              min={start}
-              value={end}
-              onChange={(event) => onEndChange(event.target.value)}
-            />
+            <input type="date" min={start} value={end} onChange={(event) => onEndChange(event.target.value)} />
           </label>
         </div>
       </div>
-      <div className={styles.modalFooter}>
-        <button
-          type="button"
-          className={styles.secondaryButton}
-          onClick={onReset}
-        >
+      <footer className={`${dlg.footer} ${dlg.footerSplit}`}>
+        <button type="button" className={dlg.secondaryButton} onClick={onReset}>
           Reset
         </button>
-        <div>
-          <button
-            type="button"
-            className={styles.secondaryButton}
-            onClick={onClose}
-          >
+        <div className={dlg.footerActions}>
+          <button type="button" className={dlg.secondaryButton} onClick={onClose}>
             Cancel
           </button>
-          <button
-            type="button"
-            className={styles.primaryButton}
-            onClick={onApply}
-          >
+          <button type="button" className={dlg.primaryButton} onClick={onApply}>
             Apply
           </button>
         </div>
-      </div>
+      </footer>
     </Dialog>
   );
 }

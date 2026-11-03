@@ -8,14 +8,23 @@ import {
 } from "@/features/settings/schemas/settings";
 import { actionFailure, actionSuccess, type ActionResult } from "@/lib/api/result";
 import { isDemoData } from "@/lib/demo/mode";
-import { demoReadOnlyFailure } from "@/lib/demo/read-only-action";
+import { updateDemoSettings } from "@/lib/demo/store";
 
 export async function updateCommitteeSettings(input: UpdateCommitteeSettingsInput): Promise<ActionResult<null>> {
-  if (isDemoData()) return demoReadOnlyFailure();
-
   const parsed = updateCommitteeSettingsSchema.safeParse(input);
 
   if (!parsed.success) return actionFailure("INVALID_INPUT", "The settings data is invalid.");
+
+  if (isDemoData()) {
+    await updateDemoSettings({
+      school_name: parsed.data.schoolName,
+      graduation_year: parsed.data.graduationYear,
+      notifications: parsed.data.notifications,
+    });
+
+    return actionSuccess(null);
+  }
+
   const context = await requirePermission("manageMemberships");
   const supabase = await createSupabaseServerClient();
 

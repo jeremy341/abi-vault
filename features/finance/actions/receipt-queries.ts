@@ -1,7 +1,7 @@
 "use server";
 
 import { isDemoData } from "@/lib/demo/mode";
-import { demoData } from "@/lib/demo/sample-data";
+import { listDemoReceipts } from "@/lib/demo/store";
 
 import { requireClerkContext } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -11,7 +11,7 @@ import { fetchAllRows, fetchRowsInBatches } from "@/lib/supabase/fetch-all-rows"
 import type { ReceiptFileType } from "@/features/receipts/view-model";
 
 export async function listReceiptsForCurrentOrganization() {
-  if (isDemoData()) return demoData.receipts;
+  if (isDemoData()) return querySuccess({ items: await listDemoReceipts() });
   const context = await requireClerkContext();
   const supabase = await createSupabaseServerClient();
 

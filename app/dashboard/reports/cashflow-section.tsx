@@ -10,8 +10,8 @@ import styles from "./reports.module.css";
 import { Snapshot, currency, signed } from "./report-helpers";
 
 const chartConfig = {
-  income: { label: "Income", color: "var(--ink)" },
-  expenses: { label: "Expenses", color: "var(--control)" },
+  income: { label: "Income", color: "var(--green)" },
+  expenses: { label: "Expenses", color: "var(--salmon)" },
 } satisfies ChartConfig;
 
 function formatAxisTick(amount: number) {
@@ -43,7 +43,11 @@ export function CashflowSection({ cashflow }: { cashflow: Snapshot["cashflow"] }
     <section className={ledger.section}>
       <header className={ledger.sectionHeader}>
         <h2>Cash flow</h2>
-        <p>Last 6 months</p>
+        <p className={styles.legend}>
+          <span>Last 6 months</span>
+          <span><i className={styles.keyIncome} /> Income</span>
+          <span><i className={styles.keyExpenses} /> Expenses</span>
+        </p>
       </header>
       {cashflow.length ? (
         <>
@@ -65,11 +69,7 @@ export function CashflowSection({ cashflow }: { cashflow: Snapshot["cashflow"] }
               <Bar dataKey="expenses" fill="var(--color-expenses)" radius={0} isAnimationActive={false} />
             </BarChart>
           </ChartContainer>
-          <p className={styles.legend}>
-            <span><i className={styles.keyIncome} /> Income</span>
-            <span><i className={styles.keyExpenses} /> Expenses</span>
-          </p>
-          <table className={ledger.table}>
+          <table className={`${ledger.table} ${styles.monthTable}`}>
             <thead>
               <tr>
                 <th scope="col">Month</th>

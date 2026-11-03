@@ -1,6 +1,10 @@
+const uuid = (number: number) => `00000000-0000-4000-8000-${String(number).padStart(12, "0")}`;
+
+const walletRef: Record<"w1" | "w2", string> = { w1: uuid(1), w2: uuid(2) };
+
 const wallets = [
   {
-    id: "w1",
+    id: walletRef.w1,
     name: "Class cash box",
     type: "cash",
     openingBalanceMinor: "15000",
@@ -15,7 +19,7 @@ const wallets = [
     connected: { display_name: null, iban_last4: null, bic: null, account_holder: null },
   },
   {
-    id: "w2",
+    id: walletRef.w2,
     name: "Prom fund",
     type: "cash",
     openingBalanceMinor: "0",
@@ -31,7 +35,7 @@ const wallets = [
   },
 ];
 
-const rows: [string, string, string, string, number, "income" | "expense", boolean, string, string][] = [
+const rows: [string, string, string, "w1" | "w2", number, "income" | "expense", boolean, string, string][] = [
   ["Cake sale, break", "Event", "2026-10-24", "w1", 12480, "income", false, "Approved", "Mara Lindner"],
   ["Poster printing", "Supplies", "2026-10-22", "w1", -2390, "expense", true, "Approved", "Jonas Albers"],
   ["Prom deposit, venue", "Event", "2026-10-20", "w2", -50000, "expense", true, "Pending review", "Mara Lindner"],
@@ -46,24 +50,24 @@ const rows: [string, string, string, string, number, "income" | "expense", boole
   ["Bake sale ingredients", "Supplies", "2026-09-14", "w1", -3320, "expense", true, "Pending review", "Lea Brandt"],
 ];
 
-const transactions = rows.map(([title, category, date, walletId, amount, type, receipt, reviewStatus, createdByName], index) => ({
-  id: `t${index}`,
+const transactions = rows.map(([title, category, date, walletKey, amount, type, receipt, reviewStatus, createdByName], index) => ({
+  id: uuid(100 + index),
   title,
   category,
   date,
   amountMinor: String(amount),
   type,
   receipt,
-  receiptId: receipt ? `r${index}` : null,
+  receiptId: receipt ? uuid(200 + index) : null,
   receiptFile: receipt ? `receipt-${index}.jpg` : null,
   receiptType: receipt ? "image/jpeg" : null,
   reviewStatus,
   createdByName,
   createdAt: `${date}T10:00:00Z`,
-  account: walletId === "w1" ? "Class cash box" : "Prom fund",
-  walletId,
-  fromWalletId: type === "expense" ? walletId : null,
-  toWalletId: type === "income" ? walletId : null,
+  account: walletKey === "w1" ? "Class cash box" : "Prom fund",
+  walletId: walletRef[walletKey],
+  fromWalletId: type === "expense" ? walletRef[walletKey] : null,
+  toWalletId: type === "income" ? walletRef[walletKey] : null,
   createdBy: "u1",
   canEdit: true,
   canDelete: true,
@@ -71,14 +75,14 @@ const transactions = rows.map(([title, category, date, walletId, amount, type, r
 }));
 
 const goals = [
-  { id: "g1", title: "Prom", target_amount_minor: "250000", saved_amount_minor: "142000", deadline: "2027-05-30" },
-  { id: "g2", title: "Class trip", target_amount_minor: "180000", saved_amount_minor: "61000", deadline: "2027-02-14" },
-  { id: "g3", title: "Yearbook", target_amount_minor: "40000", saved_amount_minor: "40000", deadline: "2026-12-01" },
+  { id: uuid(300), title: "Prom", target_amount_minor: "250000", saved_amount_minor: "142000", deadline: "2027-05-30" },
+  { id: uuid(301), title: "Class trip", target_amount_minor: "180000", saved_amount_minor: "61000", deadline: "2027-02-14" },
+  { id: uuid(302), title: "Yearbook", target_amount_minor: "40000", saved_amount_minor: "40000", deadline: "2026-12-01" },
 ];
 
 const receipts = transactions.flatMap((t, index) => t.receipt ? [{
-  id: `r${index}`,
-  file: `receipt-${t.id.slice(1)}.${index % 4 === 3 ? "pdf" : "jpg"}`,
+  id: uuid(200 + index),
+  file: `receipt-${index}.${index % 4 === 3 ? "pdf" : "jpg"}`,
   type: index % 4 === 3 ? "PDF" as const : "JPG" as const,
   sizeBytes: 180000 + index * 21000,
   transaction: t.title,
@@ -105,14 +109,36 @@ const members = [
 
 const cashCounts = [
   {
-    id: "c1",
-    walletId: "w1",
+    id: uuid(400),
+    walletId: walletRef.w1,
     countedAmountMinor: "48250",
     bookAmountMinor: "48450",
     differenceMinor: "-200",
     countedByName: "Mara Lindner",
     createdAt: "2026-10-12T14:00:00Z",
     note: "Two coins missing",
+  },
+];
+
+const periods = [
+  { id: uuid(500), year: 2026, month: 10, status: "open" as const, lockedAt: null, lockedByName: null, lockReason: null },
+  {
+    id: uuid(501),
+    year: 2026,
+    month: 9,
+    status: "locked" as const,
+    lockedAt: "2026-10-02T10:00:00Z",
+    lockedByName: "Mara Lindner",
+    lockReason: "Month closed after cash count",
+  },
+  {
+    id: uuid(502),
+    year: 2026,
+    month: 8,
+    status: "locked" as const,
+    lockedAt: "2026-09-03T10:00:00Z",
+    lockedByName: "Mara Lindner",
+    lockReason: "Month closed",
   },
 ];
 
@@ -124,30 +150,7 @@ export const demoData = {
   members: { ok: true as const, items: members },
   cashCounts: { ok: true as const, items: cashCounts },
   settings: { ok: true as const, data: { school_name: "Rheinau High School", graduation_year: 2026, notifications: {} } },
-  periods: {
-    ok: true as const,
-    items: [
-      { id: "p1", year: 2026, month: 10, status: "open" as const, lockedAt: null, lockedByName: null, lockReason: null },
-      {
-        id: "p2",
-        year: 2026,
-        month: 9,
-        status: "locked" as const,
-        lockedAt: "2026-10-02T10:00:00Z",
-        lockedByName: "Mara Lindner",
-        lockReason: "Month closed after cash count",
-      },
-      {
-        id: "p3",
-        year: 2026,
-        month: 8,
-        status: "locked" as const,
-        lockedAt: "2026-09-03T10:00:00Z",
-        lockedByName: "Mara Lindner",
-        lockReason: "Month closed",
-      },
-    ],
-  },
+  periods: { ok: true as const, items: periods },
   reportKpis: {
     ok: true as const,
     liquidMinor: "203724",

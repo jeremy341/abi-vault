@@ -20,9 +20,9 @@ import {
 } from "@/features/people/actions/memberships";
 import { financeScope } from "@/lib/finance/client-cache";
 import { MemberTable } from "./MemberTable";
-import { RolesSummary } from "./RolesSummary";
 import { InviteLinks } from "./InviteLinks";
 import { InviteDialog } from "./InviteDialog";
+import { ChangeRoleDialog } from "./ChangeRoleDialog";
 import type {
   InviteRole,
   Person,
@@ -38,25 +38,9 @@ type RoleLinksState = {
 
 type MemberListData = Extract<Awaited<ReturnType<typeof listMembersForCurrentOrganization>>, { ok: true }>;
 
-const nextRoleFor: Record<
-  PersonRole,
-  { databaseRole: "admin" | "supervisor"; displayRole: PersonRole; access: string }
-> = {
-  Member: {
-    databaseRole: "supervisor",
-    displayRole: "Supervisor",
-    access: "Manages finances",
-  },
-  Supervisor: {
-    databaseRole: "admin",
-    displayRole: "Administrator",
-    access: "Full access",
-  },
-  Administrator: {
-    databaseRole: "supervisor",
-    displayRole: "Supervisor",
-    access: "Manages finances",
-  },
+const roleChoices: Record<InviteRole, { databaseRole: "admin" | "supervisor"; access: string }> = {
+  Administrator: { databaseRole: "admin", access: "Full access" },
+  Supervisor: { databaseRole: "supervisor", access: "Manages finances" },
 };
 
 const emptyPeople: Person[] = [];
@@ -130,6 +114,8 @@ export default function PeoplePage() {
   const [messageState, setMessageState] = useState<{ scope: string; value: string } | null>(null);
   const message = messageState?.scope === scope ? messageState.value : "";
   const [busyPersonId, setBusyPersonId] = useState<string | null>(null);
+  const [roleTargetId, setRoleTargetId] = useState<string | null>(null);
+  const [roleError, setRoleError] = useState("");
   const [inviteSaving, setInviteSaving] = useState(false);
   const [linkSaving, setLinkSaving] = useState<"admin" | "supervisor" | null>(null);
   const [roleLinkState, setRoleLinkState] = useState<RoleLinksState | null>(null);
@@ -143,13 +129,6 @@ export default function PeoplePage() {
   const filteredPeople = people.filter((person) =>
     `${person.name} ${person.role}`.toLowerCase().includes(searchTerm),
   );
-  const counts = {
-    active: people.filter((person) => person.status === "Active").length,
-    administrators: people.filter((person) => person.role === "Administrator").length,
-    supervisors: people.filter((person) => person.role === "Supervisor").length,
-    members: people.filter((person) => person.role === "Member").length,
-  };
-
   function openInviteModal() {
     setInviteEmail("");
     setNewRole("Supervisor");
@@ -164,13 +143,19 @@ export default function PeoplePage() {
     setMessage("");
   }
 
-  async function changeRole(personId: string) {
-    if (busyPersonId !== null) return;
-    const person = people.find((item) => item.id === personId);
+  const roleTarget = people.find((person) => person.id === roleTargetId) ?? null;
 
-    if (!person) return;
-    const next = nextRoleFor[person.role];
+  function openRoleDialog(personId: string) {
+    setRoleError("");
+    setRoleTargetId(personId);
+  }
+
+  async function changeRole(role: InviteRole) {
+    if (busyPersonId !== null || !roleTarget) return;
+    const personId = roleTarget.id;
+    const next = roleChoices[role];
     setBusyPersonId(personId);
+    setRoleError("");
 
     try {
       const result = await updateMemberRole({
@@ -180,12 +165,16 @@ export default function PeoplePage() {
       });
 
       if (!result.ok) {
-        setMessage(result.error.message);
+        setRoleError(
+          result.error.code === "LAST_ADMIN_REQUIRED"
+            ? "The last administrator cannot be changed."
+            : result.error.message,
+        );
 
         return;
       }
     } catch {
-      setMessage("The role could not be updated.");
+      setRoleError("The role could not be updated.");
 
       return;
     } finally {
@@ -194,11 +183,10 @@ export default function PeoplePage() {
 
     setPeople((current) =>
       current.map((item) =>
-        item.id === personId
-          ? { ...item, role: next.displayRole, access: next.access }
-          : item,
+        item.id === personId ? { ...item, role, access: next.access } : item,
       ),
     );
+    setRoleTargetId(null);
     setMessage("Role updated.");
   }
 
@@ -242,6 +230,7 @@ export default function PeoplePage() {
   async function removePerson(personId: string) {
     if (busyPersonId !== null) return;
     setBusyPersonId(personId);
+    setRoleError("");
 
     try {
       const result = await removeMember({
@@ -250,7 +239,7 @@ export default function PeoplePage() {
       });
 
       if (!result.ok) {
-        setMessage(
+        setRoleError(
           result.error.code === "LAST_ADMIN_REQUIRED"
             ? "The last administrator cannot be removed."
             : result.error.message,
@@ -260,9 +249,10 @@ export default function PeoplePage() {
       }
 
       setPeople((current) => current.filter((person) => person.id !== personId));
+      setRoleTargetId(null);
       setMessage("Person removed.");
     } catch {
-      setMessage("The person could not be removed.");
+      setRoleError("The person could not be removed.");
     } finally {
       setBusyPersonId(null);
     }
@@ -313,19 +303,11 @@ export default function PeoplePage() {
       <LoadingStatus loading={loading} label="Loading members" />
       {loadError ? <LoadError message={loadError} /> : null}
 
-      <div className={ledger.summary}>
-        <dl className={ledger.figures}>
+      <div className={ledger.summaryBar}>
+        <dl className={ledger.statLine}>
           <div>
             <dt>Members</dt>
             <dd><LoadingText loading={loading}>{people.length}</LoadingText></dd>
-          </div>
-          <div>
-            <dt>Active</dt>
-            <dd><LoadingText loading={loading}>{counts.active}</LoadingText></dd>
-          </div>
-          <div>
-            <dt>Administrators</dt>
-            <dd><LoadingText loading={loading}>{counts.administrators}</LoadingText></dd>
           </div>
         </dl>
         <button type="button" className={ledger.primaryButton} onClick={openInviteModal} disabled={loading}>
@@ -343,7 +325,7 @@ export default function PeoplePage() {
                 value={query}
                 disabled={loading}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search by name or role"
+                placeholder="Search members"
               />
             </label>
           </div>
@@ -352,15 +334,12 @@ export default function PeoplePage() {
             loading={loading}
             people={people}
             filteredPeople={filteredPeople}
-            busyPersonId={busyPersonId}
-            onChangeRole={changeRole}
-            onRemove={removePerson}
+            onManage={openRoleDialog}
           />
           <p className={`${ledger.notice} ${styles.notice}`} aria-live="polite">{message}</p>
         </div>
 
         <div className={ledger.col}>
-          <RolesSummary counts={counts} />
           <InviteLinks
             roleLinks={roleLinks}
             linkSaving={linkSaving}
@@ -369,6 +348,18 @@ export default function PeoplePage() {
           />
         </div>
       </div>
+
+      {roleTarget ? (
+        <ChangeRoleDialog
+          key={roleTarget.id}
+          person={roleTarget}
+          saving={busyPersonId === roleTarget.id}
+          error={roleError}
+          onSave={(role) => void changeRole(role)}
+          onRemove={() => void removePerson(roleTarget.id)}
+          onClose={() => setRoleTargetId(null)}
+        />
+      ) : null}
 
       {modalOpen ? (
         <InviteDialog

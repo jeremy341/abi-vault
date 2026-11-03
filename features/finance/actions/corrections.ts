@@ -5,7 +5,7 @@ import { actionFailure, actionSuccess, type ActionResult } from "@/lib/api/resul
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { parseDollarToMinor } from "@/lib/finance/money";
 import { isDemoData } from "@/lib/demo/mode";
-import { demoReadOnlyFailure } from "@/lib/demo/read-only-action";
+import { findDemoTransaction, removeDemoTransaction, updateDemoTransaction } from "@/lib/demo/store";
 import {
   transactionArchiveSchema,
   transactionCorrectionSchema,
@@ -30,11 +30,37 @@ function mapCorrectionError(code?: string) {
 export async function correctTransactionFromUi(
   input: TransactionCorrectionInput,
 ): Promise<ActionResult<{ id: string }>> {
-  if (isDemoData()) return demoReadOnlyFailure();
-
   const parsed = transactionCorrectionSchema.safeParse(input);
 
   if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "Complete all change fields.");
+
+  if (isDemoData()) {
+    let demoAmountMinor: bigint;
+
+    try {
+      demoAmountMinor = parseDollarToMinor(parsed.data.amount);
+    } catch {
+      return actionFailure("INVALID_PAYLOAD", "The amount is invalid.");
+    }
+
+    if (demoAmountMinor <= BigInt(0)) return actionFailure("INVALID_PAYLOAD", "The amount must be greater than 0.");
+
+    const original = await findDemoTransaction(parsed.data.transactionId);
+
+    if (!original) return actionFailure("NOT_FOUND", "The transaction was not found.");
+
+    if (!original.canEdit) return actionFailure("FORBIDDEN", "Only the creator or an admin can edit.");
+
+    await updateDemoTransaction(parsed.data.transactionId, {
+      title: parsed.data.title,
+      categoryName: parsed.data.categoryName,
+      type: parsed.data.direction,
+      amountMinor: demoAmountMinor,
+    });
+
+    return actionSuccess({ id: parsed.data.transactionId });
+  }
+
   const context = await requirePermission("editOpenTransactions");
   let amountMinor: bigint;
 
@@ -116,11 +142,22 @@ export async function correctTransactionFromUi(
 export async function archiveTransaction(
   input: TransactionArchiveInput,
 ): Promise<ActionResult<null>> {
-  if (isDemoData()) return demoReadOnlyFailure();
-
   const parsed = transactionArchiveSchema.safeParse(input);
 
   if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "An archive reason is required.");
+
+  if (isDemoData()) {
+    const original = await findDemoTransaction(parsed.data.transactionId);
+
+    if (!original) return actionFailure("NOT_FOUND", "The transaction was not found.");
+
+    if (!original.canDelete) return actionFailure("FORBIDDEN", "Only an admin can archive transactions.");
+
+    await removeDemoTransaction(parsed.data.transactionId);
+
+    return actionSuccess(null);
+  }
+
   const context = await requirePermission("archiveFinanceRecords");
   const supabase = await createSupabaseServerClient();
 

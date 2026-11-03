@@ -12,7 +12,7 @@ import {
 } from "@/features/people/schemas/invite-links";
 import { actionFailure, actionSuccess, type ActionResult } from "@/lib/api/result";
 import { isDemoData } from "@/lib/demo/mode";
-import { demoReadOnlyFailure } from "@/lib/demo/read-only-action";
+import { addDemoInviteLink } from "@/lib/demo/store";
 
 const ROLE_LIMITS = {
   supervisor: { days: 30, uses: 30 },
@@ -36,11 +36,22 @@ async function appOrigin() {
 }
 
 export async function createRoleInviteLink(input: InviteLinkRoleInput): Promise<ActionResult<{ id: string; role: "admin" | "supervisor"; expiresAt: string; url: string }>> {
-  if (isDemoData()) return demoReadOnlyFailure();
-
   const parsed = inviteLinkRoleSchema.safeParse(input);
 
   if (!parsed.success) return actionFailure("INVALID_INPUT", "The invitation link data is invalid.");
+
+  if (isDemoData()) {
+    const limits = ROLE_LIMITS[parsed.data.role];
+    const expiresAt = new Date(Date.now() + limits.days * 24 * 60 * 60 * 1000).toISOString();
+    const link = await addDemoInviteLink(parsed.data.role, expiresAt);
+
+    return actionSuccess({
+      id: link.id,
+      role: parsed.data.role,
+      expiresAt,
+      url: `${await appOrigin()}/join/${link.token}`,
+    });
+  }
 
   const context = await requirePermission("manageMemberships");
   const admin = createSupabaseAdminClient();
@@ -73,7 +84,9 @@ export async function createRoleInviteLink(input: InviteLinkRoleInput): Promise<
 }
 
 export async function acceptRoleInviteLink(token: string): Promise<ActionResult<{ organizationId: string; role: "admin" | "supervisor" }>> {
-  if (isDemoData()) return demoReadOnlyFailure();
+  if (isDemoData()) {
+    return actionFailure("UNAUTHENTICATED", "Joining through an invitation link needs a real account, so it is not available in the demo.");
+  }
 
   const session = await auth();
 

@@ -6,8 +6,6 @@ export type Goal = Snapshot["goals"][number];
 
 export type Kpis = {
   liquidity: string;
-  expenses: string;
-  net: string;
   review: string;
   reviewed: string;
   unassigned: string;
@@ -34,11 +32,4 @@ export function signed(value: number) {
 
 export function formatMinor(minor: string | number) {
   return (Number(minor) / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
-}
-
-export function formatSignedMinor(minor: string) {
-  const net = Number(minor);
-  const sign = net < 0 ? MINUS : "";
-
-  return `${sign}${formatMinor(Math.abs(net))}`;
 }

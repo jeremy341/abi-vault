@@ -9,15 +9,25 @@ export default function StartPage() {
   return (
     <main className={styles.page}>
       <header className={styles.header}>
-        <AbiLogo />
+        <AbiLogo size="large" />
+        <a
+          className={styles.codeLink}
+          href="https://github.com/jeremy341/abi-vault"
+          target="_blank"
+          rel="noreferrer"
+        >
+          read the code
+        </a>
       </header>
 
       <section className={styles.hero}>
-        <h1>Class finances in one record.</h1>
-        <p>Income, expenses, receipts and goals for your graduation class.</p>
+        <p className={styles.kicker}>for the graduating class</p>
+        <h1>
+          <span>class finances,</span> <span>kept in one notebook.</span>
+        </h1>
         <div className={styles.actions}>
           <Link href={localMode ? "/dashboard" : "/sign-in"} className={styles.button}>
-            {localMode ? "Open demo" : "Sign in"}
+            {localMode ? "open the demo" : "sign in"}
           </Link>
         </div>
       </section>

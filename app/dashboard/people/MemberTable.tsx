@@ -7,19 +7,10 @@ type MemberTableProps = {
   loading: boolean;
   people: Person[];
   filteredPeople: Person[];
-  busyPersonId: string | null;
-  onChangeRole: (personId: string) => void;
-  onRemove: (personId: string) => void;
+  onManage: (personId: string) => void;
 };
 
-export function MemberTable({
-  loading,
-  people,
-  filteredPeople,
-  busyPersonId,
-  onChangeRole,
-  onRemove,
-}: MemberTableProps) {
+export function MemberTable({ loading, people, filteredPeople, onManage }: MemberTableProps) {
   return (
     <div className={ledger.tableWrap}>
       <LoadingCollection loading={loading} knownItemCount={people.length} emptyHeight="12rem" label="Loading members">
@@ -30,9 +21,7 @@ export function MemberTable({
             <thead>
               <tr>
                 <th scope="col">Name</th>
-                <th scope="col" className={ledger.hideOnPhone}>Role</th>
-                <th scope="col" className={ledger.hideOnPhone}>Access</th>
-                <th scope="col">Status</th>
+                <th scope="col">Role</th>
                 <th scope="col" className={ledger.actions}><span className="sr-only">Actions</span></th>
               </tr>
             </thead>
@@ -41,25 +30,19 @@ export function MemberTable({
                 <tr key={person.id}>
                   <td>
                     <span className={ledger.title}>{person.name}</span>
-                    <span className={ledger.phoneMeta}>{person.role}</span>
+                    {person.status !== "Active" ? <span className={styles.sub}>{person.status}</span> : null}
                   </td>
-                  <td className={ledger.hideOnPhone}>{person.role}</td>
-                  <td className={`${ledger.muted} ${ledger.hideOnPhone}`}>{person.access}</td>
-                  <td className={person.status === "Active" ? ledger.muted : ledger.attention}>{person.status}</td>
+                  <td>
+                    {person.role}
+                    <span className={`${styles.sub} ${styles.access}`}>{person.access}</span>
+                  </td>
                   <td className={ledger.actions}>
-                    {person.status !== "Active" ? (
-                      <span className={ledger.rowMeta} title="Only active members can be managed here.">
-                        No actions
-                      </span>
+                    {person.status === "Active" ? (
+                      <button type="button" className={ledger.secondaryButton} onClick={() => onManage(person.id)} aria-label={`Manage ${person.name}`}>
+                        Manage
+                      </button>
                     ) : (
-                      <span className={ledger.inlineActions}>
-                        <button type="button" className={`${ledger.textButton} ${styles.rowAction}`} onClick={() => onChangeRole(person.id)} disabled={busyPersonId === person.id} aria-label={`Change role for ${person.name}`}>
-                          Change role
-                        </button>
-                        <button type="button" className={`${ledger.textButton} ${styles.rowAction}`} onClick={() => void onRemove(person.id)} disabled={busyPersonId === person.id} aria-label={`Remove ${person.name}`}>
-                          Remove
-                        </button>
-                      </span>
+                      <span className={ledger.rowMeta}>{person.status}</span>
                     )}
                   </td>
                 </tr>

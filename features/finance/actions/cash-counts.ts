@@ -6,11 +6,9 @@ import { parseDollarToMinor } from "@/lib/finance/money";
 import { cashCountSchema, type CashCountInput } from "@/features/finance/schemas/cash-counts";
 import { actionFailure, actionSuccess, type ActionResult } from "@/lib/api/result";
 import { isDemoData } from "@/lib/demo/mode";
-import { demoReadOnlyFailure } from "@/lib/demo/read-only-action";
+import { addDemoCashCount } from "@/lib/demo/store";
 
 export async function recordCashCount(input: CashCountInput): Promise<ActionResult<{ id: string }>> {
-  if (isDemoData()) return demoReadOnlyFailure();
-
   const parsed = cashCountSchema.safeParse(input);
 
   if (!parsed.success) return actionFailure("INVALID_INPUT", "The cash count data is invalid.");
@@ -20,6 +18,17 @@ export async function recordCashCount(input: CashCountInput): Promise<ActionResu
     amount = parseDollarToMinor(parsed.data.countedAmount);
   } catch {
     return actionFailure("INVALID_AMOUNT", "The cash count amount is invalid.");
+  }
+
+  if (isDemoData()) {
+    const id = await addDemoCashCount({
+      walletId: parsed.data.walletId,
+      countedAmountMinor: amount,
+      countedByName: parsed.data.auditor ?? "Demo user",
+      note: parsed.data.note ?? "",
+    });
+
+    return id ? actionSuccess({ id }) : actionFailure("NOT_FOUND", "The cash register was not found.");
   }
 
   const context = await requirePermission("createTransactions");

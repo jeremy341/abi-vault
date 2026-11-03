@@ -1,5 +1,7 @@
 "use client";
 
+import type { RefObject } from "react";
+
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   LoadingCollection,
@@ -26,6 +28,8 @@ type ReceiptsTableProps = {
   page: number;
   pageCount: number;
   onPageChange: (page: number) => void;
+  probeRef: RefObject<HTMLDivElement | null>;
+  wrapRef: RefObject<HTMLDivElement | null>;
   onResetFilters: () => void;
   onEdit: (receipt: Receipt) => void;
   onDelete: (receipt: Receipt) => void;
@@ -43,6 +47,8 @@ export function ReceiptsTable({
   page,
   pageCount,
   onPageChange,
+  probeRef,
+  wrapRef,
   onResetFilters,
   onEdit,
   onDelete,
@@ -75,7 +81,7 @@ export function ReceiptsTable({
     }
 
     return (
-      <table className={ledger.table}>
+      <table className={`${ledger.table} ${ledger.clickable}`}>
         <thead>
           <tr>
             <th scope="col">Receipt</th>
@@ -88,7 +94,19 @@ export function ReceiptsTable({
         </thead>
         <tbody>
           {visible.map((receipt) => (
-            <tr key={receipt.id}>
+            <tr
+              key={receipt.id}
+              tabIndex={0}
+              onClick={() => onReview(receipt)}
+              onKeyDown={(event) => {
+                if (event.target !== event.currentTarget) return;
+
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  onReview(receipt);
+                }
+              }}
+            >
               <td>
                 <span className={ledger.title}>{receipt.file}</span>
                 <span className={ledger.rowMeta}>Uploaded by {receipt.uploadedByName}</span>
@@ -98,14 +116,14 @@ export function ReceiptsTable({
                 </span>
               </td>
               <td className={ledger.hideOnPhone}>{receipt.transaction}</td>
-              <td className={`${ledger.muted} ${ledger.hideOnPhone}`}>{longDate(receipt.date)}</td>
+              <td className={`${ledger.muted} ${ledger.nowrap} ${ledger.hideOnPhone}`}>{longDate(receipt.date)}</td>
               <td className={ledger.amount}>{receipt.status === "Unassigned" ? "" : formatAmount(receipt.amount)}</td>
               <td className={ledger.hideOnPhone}>
                 <span className={statusClassName(receipt.status)}>
                   {receipt.status}
                 </span>
               </td>
-              <td className={ledger.actions}>
+              <td className={ledger.actions} onClick={(event) => event.stopPropagation()}>
                 <RowActionMenu
                   label={receipt.file}
                   canEdit={receipt.canEdit}
@@ -125,7 +143,8 @@ export function ReceiptsTable({
 
   return (
     <>
-      <div className={ledger.tableWrap}>
+      <div className={ledger.fitProbe} ref={probeRef} aria-hidden="true" />
+      <div className={`${ledger.tableWrap} ${ledger.scrollTable}`} ref={wrapRef}>
         {renderTableBody()}
       </div>
 

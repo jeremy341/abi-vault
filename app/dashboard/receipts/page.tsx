@@ -8,7 +8,7 @@ import {
   LoadingStatus,
   LoadingText,
 } from "@/components/ui/loading-state";
-import { useResponsivePageSize } from "@/hooks/use-responsive-page-size";
+import { useFitPageSize } from "@/hooks/use-fit-page-size";
 import ledger from "../ledger.module.css";
 import dlg from "@/components/dashboard/dialog.module.css";
 import { LoadError } from "@/components/ui/load-error";
@@ -101,11 +101,7 @@ export default function ReceiptsPage() {
   });
   const pendingCount = items.filter((receipt) => receipt.status === "Pending review").length;
   const unassignedCount = items.filter((receipt) => receipt.status === "Unassigned").length;
-  const pageSize = useResponsivePageSize({
-    defaultSize: 9,
-    landscapeSize: 6,
-    wideSize: 10,
-  });
+  const { pageSize, probeRef, wrapRef } = useFitPageSize(items.length);
   const { pageCount, currentPage, offset, rangeStart, rangeEnd } = pageWindow(
     filtered.length,
     pageSize,
@@ -170,8 +166,8 @@ export default function ReceiptsPage() {
       ) : null}
       {loadError ? <LoadError message={loadError} /> : null}
 
-      <div className={ledger.summary}>
-        <dl className={ledger.figures}>
+      <div className={ledger.summaryBar}>
+        <dl className={ledger.statLine}>
           <div>
             <dt>All receipts</dt>
             <dd><LoadingText loading={queryLoading}>{items.length}</LoadingText></dd>
@@ -236,6 +232,8 @@ export default function ReceiptsPage() {
         page={currentPage}
         pageCount={pageCount}
         onPageChange={setPage}
+        probeRef={probeRef}
+        wrapRef={wrapRef}
         onResetFilters={() => {
           setQuery("");
           setStatus("All");

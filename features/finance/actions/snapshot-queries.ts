@@ -1,7 +1,7 @@
 "use server";
 
 import { isDemoData } from "@/lib/demo/mode";
-import { demoData } from "@/lib/demo/sample-data";
+import { reportKpisFromDemo } from "@/lib/demo/store";
 
 import { requireClerkContext } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -16,7 +16,7 @@ function formatShortMonth(date: Date) {
 }
 
 export async function getReportKpisForCurrentOrganization() {
-  if (isDemoData()) return demoData.reportKpis;
+  if (isDemoData()) return querySuccess(await reportKpisFromDemo());
   await requireClerkContext();
   const supabase = await createSupabaseServerClient();
   const snapshot = await readFinanceSnapshot(supabase);

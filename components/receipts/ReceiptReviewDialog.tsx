@@ -7,6 +7,7 @@ import type {
   ReceiptReviewDecision,
   ReceiptReviewDialogReceipt,
 } from "@/features/receipts/view-model";
+import dlg from "@/components/dashboard/dialog.module.css";
 import styles from "./ReceiptReviewDialog.module.css";
 import { formatReceiptDate } from "./format-receipt-date";
 import { renderActivityRow } from "./render-activity-row";
@@ -81,20 +82,20 @@ export function ReceiptReviewDialog({
       onClose={() => {
         if (!saving) onClose();
       }}
-      overlayClassName={styles.overlay}
-      dialogClassName={styles.dialog}
+      overlayClassName={dlg.overlay}
+      dialogClassName={`${dlg.modal} ${styles.dialog}`}
     >
-      <header className={styles.header}>
-        <div className={styles.heading}>
+      <header className={dlg.header}>
+        <div className={dlg.heading}>
           <h2>Review receipt</h2>
           <p>{receipt.file}</p>
         </div>
-        <button type="button" className={styles.closeButton} onClick={onClose} disabled={saving} aria-label="Close">
+        <button type="button" className={dlg.closeButton} onClick={onClose} disabled={saving} aria-label="Close">
           <X aria-hidden="true" />
         </button>
       </header>
 
-      <div className={styles.content}>
+      <div className={`${dlg.body} ${styles.content}`}>
         <div className={styles.previewFrame}>
           {renderPreview()}
         </div>
@@ -121,24 +122,24 @@ export function ReceiptReviewDialog({
         </dl>
       </div>
 
-      {error ? <p className={styles.error} role="alert">{error}</p> : null}
+      {error ? <p className={dlg.dialogError} role="alert">{error}</p> : null}
 
-      <footer className={styles.footer}>
+      <footer className={`${dlg.footer} ${dlg.footerSplit}`}>
         <button
           type="button"
-          className={styles.textButton}
+          className={dlg.secondaryButton}
           onClick={() => decide("pending")}
           disabled={saving}
         >
           {saving && pendingDecision === "pending" ? "Saving" : "Mark as pending"}
         </button>
-        <div className={styles.actions}>
-          <button type="button" className={styles.secondaryButton} onClick={onClose} disabled={saving}>
+        <div className={dlg.footerActions}>
+          <button type="button" className={dlg.secondaryButton} onClick={onClose} disabled={saving}>
             Close
           </button>
           <button
             type="button"
-            className={styles.rejectButton}
+            className={dlg.destructiveButton}
             onClick={() => decide("rejected")}
             disabled={saving}
             aria-busy={saving && pendingDecision === "rejected"}
@@ -147,7 +148,7 @@ export function ReceiptReviewDialog({
           </button>
           <button
             type="button"
-            className={styles.primaryButton}
+            className={dlg.primaryButton}
             onClick={() => decide("approved")}
             disabled={saving}
             aria-busy={saving && pendingDecision === "approved"}

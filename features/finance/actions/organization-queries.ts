@@ -1,7 +1,7 @@
 "use server";
 
 import { isDemoData } from "@/lib/demo/mode";
-import { demoData } from "@/lib/demo/sample-data";
+import { getDemoSettings, listDemoCashCounts, listDemoMembers, listDemoPeriods } from "@/lib/demo/store";
 
 import { requireClerkContext } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -11,7 +11,7 @@ import { querySuccess, queryFailure } from "@/lib/finance/query-result";
 import { fetchAllRows, fetchRowsInBatches } from "@/lib/supabase/fetch-all-rows";
 
 export async function getCommitteeSettingsForCurrentOrganization() {
-  if (isDemoData()) return demoData.settings;
+  if (isDemoData()) return querySuccess({ data: await getDemoSettings() });
   const context = await requireClerkContext();
   const supabase = await createSupabaseServerClient();
 
@@ -27,7 +27,7 @@ export async function getCommitteeSettingsForCurrentOrganization() {
 }
 
 export async function listMembersForCurrentOrganization() {
-  if (isDemoData()) return demoData.members;
+  if (isDemoData()) return querySuccess({ items: await listDemoMembers() });
   const context = await requireClerkContext();
   const supabase = await createSupabaseServerClient();
 
@@ -59,7 +59,7 @@ export async function listMembersForCurrentOrganization() {
 
 
 export async function listCashCountsForCurrentOrganization() {
-  if (isDemoData()) return demoData.cashCounts;
+  if (isDemoData()) return querySuccess({ items: await listDemoCashCounts() });
   const context = await requireClerkContext();
   const supabase = await createSupabaseServerClient();
 
@@ -90,7 +90,7 @@ export async function listCashCountsForCurrentOrganization() {
 }
 
 export async function listAccountingPeriodsForCurrentOrganization() {
-  if (isDemoData()) return demoData.periods;
+  if (isDemoData()) return querySuccess({ items: await listDemoPeriods() });
   const context = await requirePermission("lockPeriods");
   const supabase = await createSupabaseServerClient();
 

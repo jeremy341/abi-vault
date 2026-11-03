@@ -22,8 +22,8 @@ export function TransactionsSummary({
   onAddTransaction,
 }: TransactionsSummaryProps) {
   return (
-    <div className={ledger.summary}>
-      <dl className={ledger.figures}>
+    <div className={ledger.summaryBar}>
+      <dl className={ledger.statLine}>
         <div>
           <dt>Income</dt>
           <dd><LoadingText loading={loading}>{formatTotal(totalIncome)}</LoadingText></dd>
@@ -34,7 +34,7 @@ export function TransactionsSummary({
         </div>
         <div>
           <dt>Net</dt>
-          <dd className={`${ledger.net} total-rule`}><LoadingText loading={loading}>{formatAmount(netBalance)}</LoadingText></dd>
+          <dd className="total-rule"><LoadingText loading={loading}>{formatAmount(netBalance)}</LoadingText></dd>
         </div>
       </dl>
       <button

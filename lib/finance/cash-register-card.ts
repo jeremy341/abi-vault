@@ -1,10 +1,12 @@
-import type { AccountCardDetails } from "@/components/dashboard/AccountCard";
+import type { AccountCardDetails } from "@/components/dashboard/account-card-details";
 
 export type CashRegisterCard = {
   id: string;
   details: Pick<AccountCardDetails, "accountName"> &
     Partial<Omit<AccountCardDetails, "accountName">>;
   balance: number;
+  lastCountAt?: string;
+  lastCountDifference?: number;
 };
 
 export type CashRegisterWallet = {
@@ -34,5 +36,8 @@ export function mapWalletToCashRegisterCard(
       color: wallet.cardColorVisual ?? "#242426",
     },
     balance: Number(wallet.balanceMinor) / 100,
+    lastCountAt: wallet.lastCountAt ?? undefined,
+    lastCountDifference:
+      wallet.lastCountDifferenceMinor == null ? undefined : Number(wallet.lastCountDifferenceMinor) / 100,
   };
 }

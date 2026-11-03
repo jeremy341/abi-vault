@@ -10,14 +10,40 @@ import {
 import { actionFailure, actionSuccess, type ActionResult } from "@/lib/api/result";
 import { financeDateKey } from "@/lib/finance/date-keys";
 import { isDemoData } from "@/lib/demo/mode";
-import { demoReadOnlyFailure } from "@/lib/demo/read-only-action";
+import { addDemoTransaction, findDemoWallet } from "@/lib/demo/store";
 
 export async function createManualTransactionFromUi(input: ManualUiTransactionInput): Promise<ActionResult<{ id: string; bookedAt: string }>> {
-  if (isDemoData()) return demoReadOnlyFailure();
-
   const parsed = manualUiTransactionSchema.safeParse(input);
 
   if (!parsed.success) return actionFailure("INVALID_INPUT", "The transaction data is invalid.");
+
+  if (isDemoData()) {
+    let demoAmountMinor: bigint;
+
+    try {
+      demoAmountMinor = parseManualUiAmount(parsed.data.amount);
+    } catch {
+      return actionFailure("INVALID_AMOUNT", "The transaction amount is invalid.");
+    }
+
+    const demoWallet = await findDemoWallet(parsed.data.walletId);
+
+    if (!demoWallet) return actionFailure("ACCOUNT_SETUP_INCOMPLETE", "The cash register setup is incomplete.");
+
+    const bookedAt = financeDateKey(new Date());
+    const id = await addDemoTransaction({
+      title: parsed.data.title,
+      categoryName: parsed.data.categoryName,
+      type: parsed.data.direction,
+      amountMinor: demoAmountMinor,
+      date: bookedAt,
+      walletId: demoWallet.id,
+      walletName: demoWallet.name,
+    });
+
+    return actionSuccess({ id, bookedAt });
+  }
+
   const context = await requirePermission("createTransactions");
   const supabase = await createSupabaseServerClient();
   let amountMinor: bigint;

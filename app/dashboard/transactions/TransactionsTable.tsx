@@ -1,5 +1,7 @@
 "use client";
 
+import type { RefObject } from "react";
+
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   LoadingCollection,
@@ -25,6 +27,8 @@ type TransactionsTableProps = {
   page: number;
   pageCount: number;
   onPageChange: (page: number) => void;
+  probeRef: RefObject<HTMLDivElement | null>;
+  wrapRef: RefObject<HTMLDivElement | null>;
   onResetFilters: () => void;
   onSelect: (transaction: Transaction) => void;
   onEdit: (transaction: Transaction) => void;
@@ -67,6 +71,8 @@ export function TransactionsTable({
   page,
   pageCount,
   onPageChange,
+  probeRef,
+  wrapRef,
   onResetFilters,
   onSelect,
   onEdit,
@@ -142,7 +148,7 @@ export function TransactionsTable({
                   </span>
                 </td>
                 <td className={`${ledger.muted} ${ledger.hideOnPhone}`}>{transaction.category}</td>
-                <td className={`${ledger.muted} ${ledger.hideOnPhone}`}>{formatLongDate(transaction.date)}</td>
+                <td className={`${ledger.muted} ${ledger.nowrap} ${ledger.hideOnPhone}`}>{formatLongDate(transaction.date)}</td>
                 <td className={ledger.hideOnPhone}>
                   {transaction.receipt ? <span className={ledger.muted}>Attached</span> : null}
                   {missingReceipt ? <b>Missing</b> : null}
@@ -176,7 +182,8 @@ export function TransactionsTable({
 
   return (
     <>
-      <div className={ledger.tableWrap}>
+      <div className={ledger.fitProbe} ref={probeRef} aria-hidden="true" />
+      <div className={`${ledger.tableWrap} ${ledger.scrollTable}`} ref={wrapRef}>
         {renderTableContent()}
       </div>
 

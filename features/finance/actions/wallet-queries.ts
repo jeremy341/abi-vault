@@ -1,7 +1,7 @@
 "use server";
 
 import { isDemoData } from "@/lib/demo/mode";
-import { demoData } from "@/lib/demo/sample-data";
+import { listDemoWallets } from "@/lib/demo/store";
 
 import { requireClerkContext } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -9,7 +9,7 @@ import { querySuccess, queryFailure } from "@/lib/finance/query-result";
 import { mapFinanceSnapshotWallet, readFinanceSnapshot } from "./finance-snapshot";
 
 export async function listWalletsForCurrentOrganization(options?: { includeBalances?: boolean }) {
-  if (isDemoData()) return demoData.wallets;
+  if (isDemoData()) return querySuccess({ items: await listDemoWallets() });
   const context = await requireClerkContext();
   const supabase = await createSupabaseServerClient();
 

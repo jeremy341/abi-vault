@@ -1,7 +1,7 @@
 "use server";
 
 import { isDemoData } from "@/lib/demo/mode";
-import { demoData } from "@/lib/demo/sample-data";
+import { listDemoReceipts, listDemoTransactions } from "@/lib/demo/store";
 import { requirePermission } from "@/lib/auth/permissions-server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { fetchAllRows, fetchRowsInBatches } from "@/lib/supabase/fetch-all-rows";
@@ -35,13 +35,13 @@ function csvFile(name: string, rows: CsvValue[][], userTextColumns: readonly num
   };
 }
 
-function exportDemoData(format: ExportFormat) {
+async function exportDemoData(format: ExportFormat) {
   const fileDate = financeDateKey(new Date());
 
   if (format === "Review log") {
     return csvFile(`abi-vault-pruefprotokoll-${fileDate}.csv`, [
       ["File", "Status", "Transaction ID", "Uploaded"],
-      ...demoData.receipts.items.map((receipt) => [
+      ...(await listDemoReceipts()).map((receipt) => [
         receipt.file,
         receipt.status,
         receipt.transactionId ?? "",
@@ -52,7 +52,7 @@ function exportDemoData(format: ExportFormat) {
 
   return csvFile(`abi-vault-transaktionen-${fileDate}.csv`, [
     ["Title", "Type", "Amount (Cent)", "Currency", "Booked on", "Category"],
-    ...demoData.transactions.items.map((transaction) => [
+    ...(await listDemoTransactions()).map((transaction) => [
       transaction.title,
       transaction.type,
       signedMinorAmount(transaction.amountMinor, transaction.type),

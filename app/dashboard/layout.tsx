@@ -5,6 +5,13 @@ import { FinanceCacheLifecycle } from "@/components/finance-cache-lifecycle";
 import { syncCurrentOrganization } from "@/lib/auth/bootstrap";
 import { isLocalMode } from "@/lib/auth/local";
 import { isDemoData } from "@/lib/demo/mode";
+import { currentDemoClassId, DEMO_CLASSES } from "@/lib/demo/classes";
+
+async function demoClassSwitch() {
+  if (!isDemoData()) return undefined;
+
+  return { classes: DEMO_CLASSES, activeId: await currentDemoClassId() };
+}
 
 export default async function DashboardLayout({
   children,
@@ -13,7 +20,7 @@ export default async function DashboardLayout({
 }>) {
   if (isLocalMode()) {
     return (
-      <ResponsiveDashboardShell isAdmin localMode demoMode={isDemoData()}>
+      <ResponsiveDashboardShell isAdmin localMode demoClasses={await demoClassSwitch()}>
         <FinanceCacheLifecycle />
         {children}
       </ResponsiveDashboardShell>
@@ -29,7 +36,7 @@ export default async function DashboardLayout({
   if (orgId) await syncCurrentOrganization();
 
   return (
-    <ResponsiveDashboardShell isAdmin={orgRole === "org:admin"} demoMode={isDemoData()}>
+    <ResponsiveDashboardShell isAdmin={orgRole === "org:admin"} demoClasses={await demoClassSwitch()}>
       <FinanceCacheLifecycle />
       {orgId ? children : (
         <main className="flex min-h-full items-center justify-center p-6">

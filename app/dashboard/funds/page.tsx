@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAppAuth } from "@/components/auth/app-auth";
-import type { AccountCardDetails } from "@/components/dashboard/AccountCard";
+import type { AccountCardDetails } from "@/components/dashboard/account-card-details";
 import type { CashBox, CashCountInput, SaveCashCountResult } from "@/app/dashboard/funds/CashCountDialog";
 import {
   getDashboardSnapshot,
@@ -21,7 +21,6 @@ import CardDialogs from "@/app/dashboard/funds/CardDialogs";
 import ArchiveCardDialog from "@/app/dashboard/funds/ArchiveCardDialog";
 import CashCountSection from "@/app/dashboard/funds/CashCountSection";
 import { auditLogsFromQuery, cardsFromDashboard, cashBoxesFromDashboard, createBlankCashBox } from "@/app/dashboard/funds/funds-helpers";
-import { differenceReviewFor } from "@/app/dashboard/funds/difference-review";
 
 const emptyCards: CashRegisterCard[] = [];
 
@@ -102,14 +101,6 @@ export default function FundsPage() {
     cashBox =
       cashBoxes[activeCard.id] ??
       createBlankCashBox(activeCard.id, activeCard.details.accountName, activeCard.balance);
-  }
-
-  const dashboardData = dashboard.data?.ok ? dashboard.data : null;
-  const differenceReview = dashboardData && activeCard ? differenceReviewFor(dashboardData, activeCard.id) : null;
-
-  function switchCard(direction: -1 | 1) {
-    if (cards.length <= 1) return;
-    setActiveCardIndex((current) => (current + direction + cards.length) % cards.length);
   }
 
   function selectCard(index: number) {
@@ -297,7 +288,6 @@ export default function FundsPage() {
       <FundsStatus loading={loading} notice={notice} />
 
       <CashRegisterView
-        differenceReview={differenceReview}
         loading={loading}
         loadError={loadError}
         onRetry={retryWallets}
@@ -306,7 +296,6 @@ export default function FundsPage() {
         activeCardIndex={safeIndex}
         cashBox={cashBox}
         auditLogs={auditLogs}
-        onSwitchCard={switchCard}
         onSelectCard={selectCard}
         onAddCard={() => setIsAddCardOpen(true)}
         onEditCard={() => setIsEditCardOpen(true)}

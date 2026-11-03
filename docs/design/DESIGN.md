@@ -1,28 +1,58 @@
 # Design
 
-Abi Vault should look like a plain accounting ledger: black text on white, thin rules, and the numbers doing the work.
+Abi Vault looks like a pixel notebook: handwriting-style pixel headings, dotted
+rules, soft salmon accents and a pale haze behind a paper-white sheet. The
+numbers still do the work, so figures are set in a plain, readable sans font.
 
-## Colours
+The style follows [ripple](https://github.com/0xQuerencia/ripple), inspired by
+[Jame Gam](https://jamegam.hackclub.com/). See [CREDITS.md](../../CREDITS.md).
 
-Ink on paper. Red is only used for errors and destructive actions. Money is shown with a plus or minus sign, not with colour.
+All tokens live in `app/globals.css`.
 
-Light: paper #fcfcfc, surface #ffffff, sunk #f3f3f3, ink #141414, muted #5a5a5a, subtle #6e6e6e, rule #e2e2e2, control #8c8c8c, danger #b3261e.
+## Colour
 
-Dark: paper #121212, surface #181818, sunk #1c1c1c, ink #ededed, muted #a8a8a8, subtle #8f8f8f, rule #2a2a2a, control #6f6f6f, danger #ff8a80.
+- Paper `#fbfbfb`, surface `#ffffff`, sunk `#f3f3f3`
+- Ink `#2f2b29`, muted `#5a5552`
+- Accent salmon `#db9591`, with `#a8524d` for text on white and `#f0cdca` for
+  soft fills
+- Lines `#d9d4d8` and `#c4bdc2`
+- Sticker colours for navigation and tiles: tan, yellow, green, blue, purple, pink
+- Buttons `#5b5755`
+- Danger `#b3261e`, used for errors and destructive actions
+
+Money is shown with a plus or minus sign, not only with colour.
 
 ## Type
 
-Host Grotesk everywhere. Amounts use tabular figures so columns line up. No negative letter spacing and no uppercase labels.
+- **Augie Pixel** for page titles, section headings, stat labels, table headers
+  and buttons. Never for body text or numbers.
+- **Host Grotesk** for everything else. Figures use weight 600 and tabular
+  numerals so columns line up.
+- No negative letter spacing.
 
 ## Shape and depth
 
-Two radii only: 3px for controls, 6px for dialogs and menus. Everything else is square. No shadows except on menus, popovers and dialogs. No gradients, pills or blur.
+- Controls have 3px corners and dialogs 6px. Cards and tiles may have slightly
+  uneven corners to feel hand-drawn.
+- Buttons are dark with a salmon offset shadow. Secondary buttons are dashed.
+- Sections are separated by dotted salmon rules.
+- Shadows only on dialogs, menus and popovers.
 
 ## Layout
 
-Sidebar 14rem, top bar 3.5rem. Page content is capped at 88rem and centred. From 1500px wide, pages with a main list and supporting sections use two columns.
+- Sidebar 14rem, top bar 3.5rem, page content capped at 88rem.
+- Pages are built to fit the screen without scrolling inside the page. Tables
+  work out how many rows fit and paginate (`useFitPageSize`).
+- On 2560px-wide screens the layout is drawn at 175% zoom so it matches what a
+  1920px screen shows.
+- Wide pages (Reports, People) use two columns from 1100px.
 
-On wide screens the base font size grows from 16px at 1500px to 20px at 2560px, so every rem-based size scales with it.
+## Dialogs
+
+Every dialog uses `components/dashboard/dialog.module.css`: a header with a
+heading and close button, a body, and a footer with the actions. On phones they
+become bottom sheets with the footer pinned to the bottom, and the primary
+action first.
 
 ## Totals
 
@@ -30,7 +60,8 @@ A total sits under a double rule, and the figure lines up with its label.
 
 ## Motion
 
-120 to 180ms, opacity and small movement only. Turned off when the user prefers reduced motion.
+120 to 180ms, opacity and small movement only. Turned off when the user prefers
+reduced motion.
 
 ## Phones
 

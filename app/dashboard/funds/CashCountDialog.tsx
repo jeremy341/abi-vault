@@ -55,7 +55,7 @@ export default function CashCountDialog({
 }: CashCountDialogProps) {
   const [countMode, setCountMode] = useState<CountMode>("direct");
   const [countedAmountInput, setCountedAmountInput] = useState(() =>
-    cashBox.balance.toFixed(2).replace(".", ","),
+    cashBox.balance.toFixed(2),
   );
   const [countedBy, setCountedBy] = useState(cashBox.responsible);
   const [note, setNote] = useState("");

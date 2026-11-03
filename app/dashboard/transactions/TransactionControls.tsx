@@ -6,6 +6,7 @@ import {
   FieldDropdown,
   type FieldDropdownOption,
 } from "@/components/ui/field-dropdown";
+import dlg from "@/components/dashboard/dialog.module.css";
 import styles from "./transactions.module.css";
 
 export function StyledDropdown({
@@ -60,7 +61,7 @@ export function CashRegisterCombobox({
   }
 
   return (
-    <div className={styles.formField}>
+    <div className={dlg.field}>
       <span>Cash register</span>
       <div className={styles.cashRegisterCombobox}>
         <button

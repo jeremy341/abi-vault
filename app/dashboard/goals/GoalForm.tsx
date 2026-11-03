@@ -91,8 +91,8 @@ export function GoalForm({
 
           <div className={dlg.field}>
             <span>Already saved</span>
-            <output className={dlg.input}>{dollarPrecise.format(previewSaved)}</output>
-            <small>Read from recorded contributions.</small>
+            <output className={dlg.readout}>{dollarPrecise.format(previewSaved)}</output>
+            <small className={dlg.hint}>Read from recorded contributions.</small>
           </div>
 
           <label className={`${dlg.field} ${dlg.formFull}`}>

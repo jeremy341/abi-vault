@@ -1,13 +1,46 @@
 # Abi Vault
 
 Abi Vault is an open-source finance workspace for school committees and small
-teams. It helps people manage manual transactions, receipts, cash registers,
-goals, reports, accounting periods, and member accountability in one place.
+teams. It keeps a class's money in one place: transactions, receipts, cash
+registers, goals, reports, accounting periods, and who is responsible for what.
 
-## Try it
+It is drawn like a pixel notebook, with handwriting-style headings, dotted
+rules and a soft haze background. See [CREDITS.md](CREDITS.md) for where that
+look comes from.
 
-The sample-data demo runs the full interface without a database or sign-in. It
-is read-only. To run it locally, copy `.env.example` to `.env.local` and set:
+![The overview page at 1920px](docs/screenshots/overview-1920.png)
+
+<details>
+<summary>More screenshots (1920px)</summary>
+
+![Cash registers](docs/screenshots/cash-registers-1920.png)
+
+![Reports](docs/screenshots/reports-1920.png)
+
+</details>
+
+## Features
+
+- Income and expense transactions with categories, search and filters
+- Receipt uploads with a review step (approve, reject, mark as pending)
+- Cash registers with denomination counts and a book-versus-counted difference
+- Fundraising goals with progress
+- Reports, charts and CSV exports
+- Member roles and invite links
+- Admin-only accounting periods that lock the books
+- Layouts for desktop, tablet and phone
+
+## Quick start (sample data, no database)
+
+The sample-data demo runs the whole interface without a database or sign-in.
+You need Node.js 22+ and [pnpm](https://pnpm.io/).
+
+```bash
+pnpm install
+cp .env.example .env.local
+```
+
+Set these values in `.env.local`:
 
 ```text
 ABI_VAULT_LOCAL_MODE=true
@@ -15,68 +48,60 @@ NEXT_PUBLIC_ABI_VAULT_LOCAL_MODE=true
 ABI_VAULT_DEMO_DATA=true
 ```
 
-Then run `pnpm install` and `pnpm dev`. For a public deployment, follow
-[docs/vercel-demo.md](docs/vercel-demo.md).
+Then start it:
 
-## Features
+```bash
+pnpm dev
+```
 
-- Manual income and expense transactions
-- Receipt uploads and review states
-- Cash register and cash counts
-- Fundraising goals and progress tracking
-- Reports and exports
-- Member roles and invite links
-- Admin-only accounting periods
-- Responsive desktop, tablet, and phone layouts
+Open <http://localhost:3000>. Two sample classes are included; switch between
+them in the header. Changes you make (a transaction, a count, a goal) are kept
+in memory and reset when the server restarts.
 
-## Run with local Supabase
+## Hosting
 
-Use this path when changing database-backed actions, migrations, or RPCs. Follow
-[docs/self-hosting.md](docs/self-hosting.md) for the local database setup. It is
-separate from the no-database sample-data demo above. Never copy production
-credentials into `.env.local`.
+| You want to | Read |
+| --- | --- |
+| Put the sample-data demo online | [docs/vercel-demo.md](docs/vercel-demo.md) |
+| Run it with Docker | [docs/self-hosting.md](docs/self-hosting.md#docker) |
+| Run it against a local Supabase database | [docs/self-hosting.md](docs/self-hosting.md#local-supabase) |
 
-## Code map
+## Project layout
 
-- `app/dashboard/` contains the page routes and their page-level state.
-- `features/finance/actions/` contains finance reads and mutations;
-  `features/*/schemas/` contains input validation.
-- `lib/finance/` contains money calculations, projections, and date keys.
-- `components/ui/` contains shared controls; route-specific controls stay near
-  their page.
+- `app/dashboard/` holds the pages and their page-level state.
+- `features/finance/actions/` holds finance reads and writes;
+  `features/*/schemas/` validates input.
+- `lib/finance/` holds money maths, projections and date keys.
+- `lib/demo/` holds the sample data and the demo store.
+- `components/ui/` holds shared controls; `components/dashboard/dialog.module.css`
+  holds the shared dialog styles.
 - `supabase/migrations/` defines the database schema and server functions.
-- Start with [docs/backend-architecture.md](docs/backend-architecture.md) for
-  data flow and [docs/self-hosting.md](docs/self-hosting.md) for local database
-  work.
 
-## Contributing
-
-Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. For
-security issues, follow [SECURITY.md](SECURITY.md).
-
-## Docker Compose
-
-The Dockerfile builds the Next.js application as a standalone production image.
-Compose runs that app against the Supabase URL configured in `.env.local`:
-
-```bash
-cp .env.example .env.local
-docker compose -f docker-compose.yaml up --build -d
-```
-
-Open <http://localhost:3000>. To stop it:
-
-```bash
-docker compose -f docker-compose.yaml down
-```
-
-For an entirely local database, run `supabase start` and `supabase db reset`
-first, then use the local keys printed by `supabase status`. Never use production credentials in the demo.
+[docs/backend-architecture.md](docs/backend-architecture.md) explains the data
+flow, and [docs/design/DESIGN.md](docs/design/DESIGN.md) explains the look.
 
 ## Scope
 
-Abi Vault currently focuses on manual class finance. Direct bank connections
-and Open Banking are deferred.
+Abi Vault is about manual class finance. Direct bank connections (Open
+Banking) are deferred and not part of the current app.
+
+## Contributing
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. Report
+security problems as described in [SECURITY.md](SECURITY.md).
+
+## AI assistance
+
+AI coding assistants (Anthropic's Claude) were used mostly for backend code:
+finance queries, server actions and database migrations. Read that code before
+you trust it with real money.
+
+## Credits
+
+The visual style follows [ripple](https://github.com/0xQuerencia/ripple), which
+is itself inspired by [Jame Gam](https://jamegam.hackclub.com/) from Hack Club.
+Full attributions, including the pixel font and icons, are in
+[CREDITS.md](CREDITS.md).
 
 ## License
 

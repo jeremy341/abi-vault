@@ -21,7 +21,13 @@ import {
   navigationRoutes,
   pageInformationFor,
 } from "./navigation";
+import { selectDemoClass } from "@/lib/demo/select-class";
 import styles from "./presentation.module.css";
+
+type DemoClassSwitch = {
+  classes: readonly { id: string; name: string }[];
+  activeId: string;
+};
 
 const ClerkUserButton = dynamic(
   () => import("@clerk/nextjs").then((clerkModule) => clerkModule.UserButton),
@@ -33,8 +39,6 @@ type NavigationRoute = (typeof navigationRoutes)[number];
 type MenuKind = "dialog" | "menu";
 
 const phonePrimaryCount = 3;
-
-const adminGroupStart = 6;
 
 function joinClasses(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
@@ -235,13 +239,14 @@ export default function ResponsiveDashboardShell({
   children,
   isAdmin = false,
   localMode = false,
-  demoMode = false,
+  demoClasses,
 }: {
   children: React.ReactNode;
   isAdmin?: boolean;
   localMode?: boolean;
-  demoMode?: boolean;
+  demoClasses?: DemoClassSwitch;
 }) {
+  const activeClass = demoClasses?.classes.find((item) => item.id === demoClasses.activeId);
   const pathname = usePathname();
   const page = pageInformationFor(pathname);
   const visibleRoutes = navigationRoutes.filter((route) => {
@@ -251,8 +256,6 @@ export default function ResponsiveDashboardShell({
 
     return !isAdminOnlyRoute(route);
   });
-  const mainRoutes = visibleRoutes.slice(0, adminGroupStart);
-  const adminRoutes = visibleRoutes.slice(adminGroupStart);
 
   return (
     <div className={styles.shell}>
@@ -262,10 +265,10 @@ export default function ResponsiveDashboardShell({
 
       <aside className={styles.sidebar}>
         <div className={styles.brand}>
-          <AbiLogo />
+          <AbiLogo size="large" />
         </div>
         <nav className={styles.nav} aria-label="Main navigation">
-          {mainRoutes.map((route) => (
+          {visibleRoutes.map((route) => (
             <NavigationLink
               key={route.href}
               route={route}
@@ -274,47 +277,48 @@ export default function ResponsiveDashboardShell({
               activeClassName={styles.navLinkActive}
             />
           ))}
-          {adminRoutes.length > 0 ? (
-            <>
-              <hr className={styles.navRule} />
-              {adminRoutes.map((route) => (
-                <NavigationLink
-                  key={route.href}
-                  route={route}
-                  pathname={pathname}
-                  className={styles.navLink}
-                  activeClassName={styles.navLinkActive}
-                />
-              ))}
-            </>
-          ) : null}
         </nav>
         <div className={styles.sidebarFooter}>
+          <p className={styles.sidebarNote}>count twice, write once</p>
           <ThemeToggle />
         </div>
       </aside>
 
       <div className={styles.workspace}>
-        {demoMode ? (
-          <p className={styles.demoNotice}>
-            Demo with sample data. Changes are not saved.
-          </p>
-        ) : null}
         <header className={styles.topbar}>
-          <h1 className={styles.title}>{page.title}</h1>
+          <AbiLogo className={styles.phoneLogo} />
+          <div className={styles.pageHead}>
+            <h1 className={styles.title}>{page.title}</h1>
+            <p className={styles.note}>{page.description}</p>
+          </div>
           <div className={styles.actions}>
             <TopbarMenu
               anchorClassName={styles.menuAnchor}
-              label="Class of 2026"
+              label={activeClass?.name ?? "Class"}
               showChevron
               kind="menu"
               popupLabel="Select class"
               renderPopup={(close) => (
                 <>
-                  <button type="button" role="menuitem" onClick={close}>
-                    <strong>Class of 2026</strong>
-                    <small>Active</small>
-                  </button>
+                  {demoClasses
+                    ? demoClasses.classes.map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          role="menuitemradio"
+                          aria-checked={item.id === demoClasses.activeId}
+                          onClick={() => {
+                            if (item.id === demoClasses.activeId) return close();
+
+                            void selectDemoClass(item.id).then((saved) => {
+                              if (saved) window.location.reload();
+                            });
+                          }}
+                        >
+                          {item.name}
+                        </button>
+                      ))
+                    : null}
                   <Link
                     href="/dashboard/settings"
                     role="menuitem"
@@ -340,8 +344,9 @@ export default function ResponsiveDashboardShell({
             <ShellUserButton localMode={localMode} />
           </div>
         </header>
+
         <main id="dashboard-content" className={styles.content}>
-          {children}
+          <div className={styles.paper}>{children}</div>
         </main>
       </div>
 

@@ -396,6 +396,15 @@ body {
   }
 }
 
+/* Keep mobile form controls at Safari's no-zoom threshold on focus. */
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 1rem !important;
+  }
+}
+
 ::selection {
   background: var(--ink);
   color: var(--surface);

@@ -436,7 +436,6 @@ function TransactionCombobox({
             <Search aria-hidden="true" />
             <span className="sr-only">Transactions durchsuchen</span>
             <input
-              autoFocus
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search name, date, or amount …"
@@ -684,6 +683,12 @@ export default function ReceiptsPage() {
   const [archiveReason, setArchiveReason] = useState("");
   const [actionError, setActionError] = useState("");
   const [fileName, setFileName] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
+  const filePreviewUrl = useMemo(
+    () => selectedFile?.type.startsWith("image/") ? URL.createObjectURL(selectedFile) : null,
+    [selectedFile],
+  );
   const [transaction, setTransaction] = useState("");
   const [availableTransactions, setAvailableTransactions] =
     useState<readonly TransactionOption[]>([]);
@@ -785,7 +790,30 @@ export default function ReceiptsPage() {
 
   function handleFile(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
-    if (file) setFileName(file.name);
+    if (!file) return;
+    setSelectedFile(file);
+    setFileName(file.name);
+  }
+
+  useEffect(() => () => {
+    if (filePreviewUrl) URL.revokeObjectURL(filePreviewUrl);
+  }, [filePreviewUrl]);
+
+  useEffect(() => {
+    if (!imagePreviewOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setImagePreviewOpen(false);
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [imagePreviewOpen]);
+
+  function removeSelectedFile() {
+    setSelectedFile(null);
+    setImagePreviewOpen(false);
+    setFileName("");
+    setImagePreviewOpen(false);
+    if (fileInput.current) fileInput.current.value = "";
   }
 
   function openEditReceipt(receipt: Receipt) {
@@ -894,6 +922,7 @@ export default function ReceiptsPage() {
     setModalOpen(false);
     setEditingReceipt(null);
     setFileName("");
+    setSelectedFile(null);
     setTransaction("");
   }
 
@@ -1164,24 +1193,30 @@ export default function ReceiptsPage() {
                   ref={fileInput}
                   type="file"
                   accept=".pdf,image/jpeg,image/png"
-                  capture="environment"
                   hidden
                   onChange={handleFile}
                 />
-                <button
-                  type="button"
-                  className={styles.uploadArea}
-                  onClick={() => fileInput.current?.click()}
-                >
-                  <Upload />
-                  <strong>{fileName || "Receipt hier ablegen"}</strong>
-                  <span>
-                    {fileName
-                      ? "File selected"
-                      : "PDF or JPG/PNG up to 5 MB. On mobile, the camera is also available."}
-                  </span>
-                  <span className={styles.uploadButton}>Choose file</span>
-                </button>
+                {selectedFile ? (
+                  <div className={styles.uploadPreview}>
+                    {filePreviewUrl ? (
+                      <button type="button" className={styles.uploadPreviewButton} onClick={() => setImagePreviewOpen(true)} aria-label={`Open full preview of ${selectedFile.name}`}>
+                        <img width="1200" height="900" src={filePreviewUrl} alt={`Preview of ${selectedFile.name}`} className={styles.uploadPreviewImage} />
+                      </button>
+                    ) : <FileText className={styles.uploadPreviewIcon} aria-hidden="true" />}
+                    <div className={styles.uploadPreviewMeta}>
+                      <strong>{selectedFile.name}</strong>
+                      <span>{selectedFile.type === "application/pdf" ? "PDF document" : "Image file"}</span>
+                    </div>
+                    <button type="button" className={styles.removeFileButton} onClick={removeSelectedFile} aria-label="Remove selected file"><X aria-hidden="true" /></button>
+                  </div>
+                ) : (
+                  <button type="button" className={styles.uploadArea} onClick={() => fileInput.current?.click()}>
+                    <Upload />
+                    <strong>Drop receipt here</strong>
+                    <span>PDF or JPG/PNG up to 5 MB. On mobile, the camera is also available.</span>
+                    <span className={styles.uploadButton}>Choose file</span>
+                  </button>
+                )}
               </>
             ) : null}
             <label className={styles.formField}>
@@ -1237,6 +1272,12 @@ export default function ReceiptsPage() {
               <h2>Receipt archivieren?</h2>
               <p>The file is kept for traceability and removed from the active list.</p>
             </div>
+            {imagePreviewOpen && filePreviewUrl && selectedFile ? (
+              <div className={styles.imageLightbox} role="dialog" aria-modal="true" aria-label={`Full preview of ${selectedFile.name}`} onClick={() => setImagePreviewOpen(false)}>
+                <button type="button" className={styles.imageLightboxClose} onClick={() => setImagePreviewOpen(false)} aria-label="Close image preview"><X aria-hidden="true" /></button>
+                <img width="1600" height="1200" src={filePreviewUrl} alt={`Full preview of ${selectedFile.name}`} className={styles.imageLightboxImage} onClick={(event) => event.stopPropagation()} />
+              </div>
+            ) : null}
             <button type="button" className={styles.closeButton} onClick={() => setArchiveTarget(null)} disabled={saving} aria-label="Close dialog"><X /></button>
           </header>
           <div className={styles.modalBody}>

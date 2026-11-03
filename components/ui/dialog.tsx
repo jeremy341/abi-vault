@@ -18,6 +18,8 @@ export function Dialog({
   dialogClassName,
 }: DialogProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     const previouslyFocused = document.activeElement as HTMLElement | null;
@@ -31,7 +33,7 @@ export function Dialog({
     window.requestAnimationFrame(() => (first ?? dialog)?.focus());
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") onCloseRef.current();
       if (event.key !== "Tab" || !first || !last) return;
 
       if (event.shiftKey && document.activeElement === first) {
@@ -48,7 +50,7 @@ export function Dialog({
       document.removeEventListener("keydown", handleKeyDown);
       previouslyFocused?.focus();
     };
-  }, [onClose]);
+  }, []);
 
   return (
     <div

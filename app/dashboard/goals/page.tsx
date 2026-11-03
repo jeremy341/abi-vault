@@ -12,7 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useAppAuth } from "@/components/auth/app-auth";
 import { Dialog } from "@/components/ui/dialog";
 import { LoadingCollection, LoadingStatus, LoadingText } from "@/components/ui/loading-state";
 import styles from "./goals.module.css";
@@ -32,14 +32,14 @@ type Goal = {
   date: string;
 };
 
-const euro = new Intl.NumberFormat("de-DE", {
+const dollar = new Intl.NumberFormat("en-US", {
   style: "currency",
-  currency: "EUR",
+  currency: "USD",
   maximumFractionDigits: 0,
 });
-const euroPrecise = new Intl.NumberFormat("de-DE", {
+const dollarPrecise = new Intl.NumberFormat("en-US", {
   style: "currency",
-  currency: "EUR",
+  currency: "USD",
   minimumFractionDigits: 2,
 });
 
@@ -63,9 +63,9 @@ function PhoneGoalsView({
   return (
     <div className={phoneStyles.root} aria-busy={loading}>
       <section className={phoneStyles.hero} aria-label="Gesamtfortschritt" data-ui-slot="summary">
-        <span>Gesamt gespart</span>
-        <strong><LoadingText loading={loading}>{euro.format(totalSaved)}</LoadingText></strong>
-        <p>von <LoadingText loading={loading}>{euro.format(totalTarget)}</LoadingText></p>
+        <span>Total saved</span>
+        <strong><LoadingText loading={loading}>{dollar.format(totalSaved)}</LoadingText></strong>
+        <p>by <LoadingText loading={loading}>{dollar.format(totalTarget)}</LoadingText></p>
         <div className={phoneStyles.heroProgress}>
           <b><LoadingText loading={loading}>{progress}%</LoadingText></b>
           <span>erreicht</span>
@@ -73,11 +73,11 @@ function PhoneGoalsView({
       </section>
 
       <header className={phoneStyles.sectionHeader} data-ui-slot="list-header">
-        <h2>Sparziele</h2>
+        <h2>Savings goals</h2>
         <span><LoadingText loading={loading}>{goals.length} aktiv</LoadingText></span>
       </header>
       <div className={phoneStyles.goals} data-ui-slot="list-body">
-        <LoadingCollection loading={loading} knownItemCount={goals.length} emptyHeight="12rem" label="Ziele werden geladen…">
+        <LoadingCollection loading={loading} knownItemCount={goals.length} emptyHeight="12rem" label="Goals are loading…">
           {goals.length ? goals.map((goal, index) => (
             <button
               type="button"
@@ -86,24 +86,24 @@ function PhoneGoalsView({
               onClick={() => onEdit(goal, index)}
             >
               <strong>{goal.title}</strong>
-              <b>{euro.format(goal.target)}</b>
+              <b>{dollar.format(goal.target)}</b>
               <span className={phoneStyles.goalMeta}>
-                {euroPrecise.format(goal.saved)} gespart
+                {dollarPrecise.format(goal.saved)} saved
               </span>
               <span className={phoneStyles.goalMeta}>{goal.progress}%</span>
               <div className={phoneStyles.goalTrack} aria-hidden="true">
                 <i style={{ width: `${goal.progress}%` }} />
               </div>
               <span className={phoneStyles.goalFooter}>
-                <span>Ziel: {goal.date}</span>
-                <span>{euroPrecise.format(goal.target - goal.saved)} offen</span>
+                <span>Goal: {goal.date}</span>
+                <span>{dollarPrecise.format(goal.target - goal.saved)} pending</span>
               </span>
             </button>
-          )) : <div className={phoneStyles.empty}>Noch keine Sparziele vorhanden.</div>}
+          )) : <div className={phoneStyles.empty}>Noch keine Savings goals vorhanden.</div>}
         </LoadingCollection>
       </div>
       <button type="button" className={phoneStyles.addButton} onClick={onAdd} disabled={loading} data-ui-slot="primary-action">
-        <Plus aria-hidden="true" /> Ziel hinzufügen
+        <Plus aria-hidden="true" /> Add goal
       </button>
     </div>
   );
@@ -111,7 +111,7 @@ function PhoneGoalsView({
 
 export default function GoalsPage() {
   const mode = usePresentationMode();
-  const { userId, orgId } = useAuth();
+  const { userId, orgId } = useAppAuth();
   const cacheScope = `${orgId ?? "no-org"}:${userId ?? "anonymous"}`;
   type DashboardResult = Awaited<ReturnType<typeof getDashboardSnapshot>>;
   const initialSnapshot = getFinanceCacheState<DashboardResult>("dashboard-snapshot", cacheScope);
@@ -125,7 +125,7 @@ export default function GoalsPage() {
       target,
       saved,
       progress: target ? Math.round((saved / target) * 100) : 0,
-      date: new Date(`${goal.deadline}T00:00:00`).toLocaleDateString("de-DE"),
+      date: new Date(`${goal.deadline}T00:00:00`).toLocaleDateString("en-GB"),
     };
   }));
   const [loading, setLoading] = useState(!initialSnapshot.data?.ok);
@@ -146,7 +146,7 @@ export default function GoalsPage() {
       .then((result) => {
         if (!active) return;
         if (!result.ok) {
-          setLoadError("Die Ziele konnten nicht geladen werden.");
+          setLoadError("The goals could not be loaded.");
           return;
         }
         setGoals(result.goals.map((goal) => {
@@ -158,12 +158,12 @@ export default function GoalsPage() {
             target,
             saved,
             progress: target ? Math.round((saved / target) * 100) : 0,
-            date: new Date(`${goal.deadline}T00:00:00`).toLocaleDateString("de-DE"),
+            date: new Date(`${goal.deadline}T00:00:00`).toLocaleDateString("en-GB"),
           };
         }));
       })
       .catch(() => {
-        if (active) setLoadError("Die Ziele konnten nicht geladen werden.");
+        if (active) setLoadError("The goals could not be loaded.");
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -245,13 +245,13 @@ export default function GoalsPage() {
 
     if (!submittedName || !target || target <= 0 || !submittedDeadline) {
       setFormError(
-        "Bitte Name, Zielbetrag und Zieldatum vollständig ausfüllen.",
+        "Please complete the name, target amount, and target date.",
       );
       return;
     }
     if (saved < 0 || saved > target) {
       setFormError(
-        "Der bereits gesparte Betrag muss zwischen 0 € und dem Zielbetrag liegen.",
+        "The amount already saved must be between $0 and the target amount.",
       );
       return;
     }
@@ -269,10 +269,10 @@ export default function GoalsPage() {
           description: null,
           targetAmount: submittedTargetAmount,
           deadline: submittedDeadline,
-          reason: "Ziel im Ziel-Dialog aktualisiert",
+          reason: "Goal updated in the goal dialog",
         });
         if (!result.ok) {
-          setFormError("Das Ziel konnte nicht gespeichert werden.");
+          setFormError("The goal could not be saved.");
           return;
         }
       }
@@ -301,7 +301,7 @@ export default function GoalsPage() {
         idempotencyKey: idempotencyKey.current,
       });
       if (!result.success) {
-        setFormError("Das Ziel konnte nicht gespeichert werden.");
+        setFormError("The goal could not be saved.");
         return;
       }
       // Add new goal
@@ -321,7 +321,7 @@ export default function GoalsPage() {
     idempotencyKey.current = null;
     closeModal();
     } catch {
-      setFormError("Das Ziel konnte nicht gespeichert werden.");
+      setFormError("The goal could not be saved.");
     } finally {
       setSaving(false);
     }
@@ -335,10 +335,10 @@ export default function GoalsPage() {
       if (/^[0-9a-f-]{36}$/i.test(currentGoal.id)) {
         const result = await archiveGoal({
           goalId: currentGoal.id,
-          reason: "Ziel im Ziel-Dialog archiviert",
+          reason: "Goal archived in the goal dialog",
         });
         if (!result.ok) {
-          setFormError("Das Ziel konnte nicht archiviert werden.");
+          setFormError("The goal could not be archived.");
           return;
         }
       }
@@ -352,7 +352,7 @@ export default function GoalsPage() {
 
   return (
     <section className={mode === "phone" ? phoneStyles.pageShell : styles.page} aria-busy={loading}>
-      <LoadingStatus loading={loading} label="Ziele werden geladen…" />
+      <LoadingStatus loading={loading} label="Goals are loading…" />
       {loadError ? <p className={styles.formError} role="alert">{loadError}</p> : null}
       {mode === "phone" ? (
         <PhoneGoalsView
@@ -373,7 +373,7 @@ export default function GoalsPage() {
                   <Target aria-hidden="true" />
                 </span>
                 <div>
-                  <span>Aktive Ziele</span>
+                  <span>Activee Goals</span>
                   <strong><LoadingText loading={loading}>{goals.length}</LoadingText></strong>
                 </div>
               </article>
@@ -382,8 +382,8 @@ export default function GoalsPage() {
                   <CircleDollarSign aria-hidden="true" />
                 </span>
                 <div>
-                  <span>Gesamt gespart</span>
-                  <strong><LoadingText loading={loading}>{euro.format(totalSaved)}</LoadingText></strong>
+                  <span>Total saved</span>
+                  <strong><LoadingText loading={loading}>{dollar.format(totalSaved)}</LoadingText></strong>
                 </div>
               </article>
             </div>
@@ -402,9 +402,9 @@ export default function GoalsPage() {
             <article className={styles.goalsPanel} data-ui-slot="primary-panel">
               <header className={styles.panelHeader}>
                 <div>
-                  <h2>Meine Ziele</h2>
+                  <h2>Meine Goals</h2>
                   <p>
-                    Klicke auf ein Ziel, um Beträge oder Fristen anzupassen.
+                    Select a goal to adjust amounts or deadlines.
                   </p>
                 </div>
                 <button
@@ -415,11 +415,11 @@ export default function GoalsPage() {
                   data-ui-slot="primary-action"
                 >
                   <Plus aria-hidden="true" />
-                  Ziel hinzufügen
+                  Add goal
                 </button>
               </header>
               <div className={styles.goalGrid} data-ui-slot="list-body">
-                <LoadingCollection loading={loading} knownItemCount={goals.length} emptyHeight="14rem" label="Ziele werden geladen…">
+                <LoadingCollection loading={loading} knownItemCount={goals.length} emptyHeight="14rem" label="Goals are loading…">
                   {goals.map((goal, idx) => (
                     <article
                       className={styles.goalCard}
@@ -433,17 +433,17 @@ export default function GoalsPage() {
                           openEditModal(goal, idx);
                         }
                       }}
-                      title="Klicken zum Anpassen"
+                      title="Click to edit"
                     >
                       <div className={styles.goalCardHeader}>
                         <h3>{goal.title}</h3>
                         <Target aria-hidden="true" />
                       </div>
                       <strong className={styles.goalTarget}>
-                        {euro.format(goal.target)}
+                        {dollar.format(goal.target)}
                       </strong>
                       <p className={styles.goalSaved}>
-                        {euroPrecise.format(goal.saved)} gesammelt
+                        {dollarPrecise.format(goal.saved)} saved
                       </p>
                       <div className={styles.progressLine}>
                         <div className={styles.progressTrack}>
@@ -454,10 +454,10 @@ export default function GoalsPage() {
                       <div className={styles.goalFooter}>
                         <span>
                           <CalendarDays aria-hidden="true" />
-                          Ziel: {goal.date}
+                          Goal: {goal.date}
                         </span>
                         <span>
-                          {euroPrecise.format(goal.target - goal.saved)} offen
+                          {dollarPrecise.format(goal.target - goal.saved)} pending
                         </span>
                       </div>
                     </article>
@@ -471,7 +471,7 @@ export default function GoalsPage() {
                 <header className={styles.panelHeader}>
                   <div>
                     <h2>Gesamtfortschritt</h2>
-                    <p>Über alle aktiven Ziele</p>
+                    <p>Across all active goals</p>
                   </div>
                   <span className={styles.progressPercent}>
                     <LoadingText loading={loading}>{overallProgress}%</LoadingText>
@@ -481,21 +481,21 @@ export default function GoalsPage() {
                   <span style={{ width: `${overallProgress}%` }} />
                 </div>
                 <div className={styles.progressStats}>
-                  <span><LoadingText loading={loading}>{euroPrecise.format(totalSaved)} gespart</LoadingText></span>
-                  <span>von <LoadingText loading={loading}>{euro.format(totalTarget)}</LoadingText></span>
+                  <span><LoadingText loading={loading}>{dollarPrecise.format(totalSaved)} saved</LoadingText></span>
+                  <span>by <LoadingText loading={loading}>{dollar.format(totalTarget)}</LoadingText></span>
                 </div>
               </article>
 
               <article className={styles.upcomingPanel}>
                 <header className={styles.panelHeader}>
                   <div>
-                    <h2>Nächste Ziele</h2>
+                    <h2>Upcoming goals</h2>
                     <p>Bevorstehende Fristen</p>
                   </div>
                   <CalendarDays aria-hidden="true" />
                 </header>
                 <div className={styles.upcomingList}>
-                  <LoadingCollection loading={loading} knownItemCount={goals.length} emptyHeight="10rem" label="Fristen werden geladen…">
+                  <LoadingCollection loading={loading} knownItemCount={goals.length} emptyHeight="10rem" label="Deadlines are loading…">
                     {goals
                       .slice()
                       .sort((a, b) =>
@@ -541,7 +541,7 @@ export default function GoalsPage() {
       {modalOpen && (
         <Dialog
           label={
-            editingGoalIndex !== null ? "Ziel anpassen" : "Ziel hinzufügen"
+            editingGoalIndex !== null ? "Edit goal" : "Add goal"
           }
           onClose={closeModal}
           overlayClassName={styles.overlay}
@@ -560,13 +560,13 @@ export default function GoalsPage() {
                 <div>
                   <h2>
                     {editingGoalIndex !== null
-                      ? "Ziel anpassen"
-                      : "Ziel hinzufügen"}
+                      ? "Edit goal"
+                      : "Add goal"}
                   </h2>
                   <p>
                     {editingGoalIndex !== null
-                      ? "Details, Beträge und Fortschritt dieses Sparziels bearbeiten."
-                      : "Lege ein neues gemeinsames Sparziel fest."}
+                      ? "Edit the details, amounts, and progress of this savings goal."
+                      : "Set a new shared savings goal."}
                   </p>
                 </div>
               </div>
@@ -574,7 +574,7 @@ export default function GoalsPage() {
                 type="button"
                 className={styles.closeButton}
                 onClick={closeModal}
-                aria-label="Dialog schließen"
+                aria-label="Close dialog"
               >
                 <X aria-hidden="true" />
               </button>
@@ -583,19 +583,19 @@ export default function GoalsPage() {
             <div className={styles.modalBody}>
               <section
                 className={styles.goalPreview}
-                aria-label="Vorschau des Ziels"
+                aria-label="Goal preview"
               >
                 <div className={styles.goalCardHeader}>
                   <h3>
                     {goalName.trim() ||
-                      (editingGoalIndex !== null ? "Zielname" : "Neues Ziel")}
+                      (editingGoalIndex !== null ? "Goalname" : "News Goal")}
                   </h3>
                   <Target aria-hidden="true" />
                 </div>
                 <strong>
-                  {previewTarget ? euro.format(previewTarget) : "0 €"}
+                  {previewTarget ? dollar.format(previewTarget) : "0 $"}
                 </strong>
-                <p>{euroPrecise.format(previewSaved)} gesammelt</p>
+                <p>{dollarPrecise.format(previewSaved)} saved</p>
                 <div className={styles.progressLine}>
                   <div className={styles.progressTrack}>
                     <span style={{ width: `${previewProgress}%` }} />
@@ -606,7 +606,7 @@ export default function GoalsPage() {
 
               <div className={styles.formGrid}>
                 <label className={styles.formField}>
-                  <span>Zielname</span>
+                  <span>Goalname</span>
                   <input
                     name="goalName"
                     autoComplete="off"
@@ -621,7 +621,7 @@ export default function GoalsPage() {
                 </label>
 
                 <label className={styles.formField}>
-                  <span>Zieldatum</span>
+                  <span>Goaldatum</span>
                   <input
                     name="deadline"
                     type="date"
@@ -634,7 +634,7 @@ export default function GoalsPage() {
                 </label>
 
                 <label className={styles.formField}>
-                  <span>Zielbetrag</span>
+                  <span>Target amount</span>
                   <div className={styles.amountField}>
                     <input
                       name="targetAmount"
@@ -647,12 +647,12 @@ export default function GoalsPage() {
                       }}
                       placeholder="0,00"
                     />
-                    <span>€</span>
+                    <span>$</span>
                   </div>
                 </label>
 
                 <label className={styles.formField}>
-                  <span>Bereits gespart</span>
+                  <span>Already saved</span>
                   <div className={styles.amountField}>
                     <input
                       name="savedAmount"
@@ -665,7 +665,7 @@ export default function GoalsPage() {
                       }}
                       placeholder="0,00"
                     />
-                    <span>€</span>
+                    <span>$</span>
                   </div>
                 </label>
               </div>
@@ -684,7 +684,7 @@ export default function GoalsPage() {
                   disabled={saving}
                 >
                   <Trash2 className="inline-block size-4 mr-1.5" />
-                  Ziel löschen
+                  Delete goal
                 </button>
               ) : (
                 <div />
@@ -697,12 +697,12 @@ export default function GoalsPage() {
                   onClick={closeModal}
                   disabled={saving}
                 >
-                  Abbrechen
+                  Cancel
                 </button>
                 <button type="submit" className={styles.primaryButton} disabled={saving} aria-busy={saving}>
-                  {saving ? "Wird gespeichert …" : editingGoalIndex !== null
-                    ? "Änderungen speichern"
-                    : "Ziel hinzufügen"}
+                  {saving ? "Saving …" : editingGoalIndex !== null
+                    ? "Save changes"
+                    : "Add goal"}
                 </button>
               </div>
             </footer>

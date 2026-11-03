@@ -1,13 +1,14 @@
 import "server-only";
 
 import { auth } from "@clerk/nextjs/server";
-import { isLocalMode, LOCAL_ORGANIZATION_ID, LOCAL_USER_ID } from "@/lib/auth/local";
+import { isLocalMode } from "@/lib/auth/local";
+import { LOCAL_ORGANIZATION_ID, LOCAL_USER_ID } from "@/lib/auth/constants";
 
 export class AuthenticationRequiredError extends Error {
   readonly code = "UNAUTHENTICATED" as const;
 
   constructor() {
-    super("Eine Anmeldung ist erforderlich.");
+    super("Sign-in is required.");
   }
 }
 
@@ -15,7 +16,7 @@ export class OrganizationRequiredError extends Error {
   readonly code = "ORGANIZATION_REQUIRED" as const;
 
   constructor() {
-    super("Ein aktiver Abi-Arbeitsbereich ist erforderlich.");
+    super("An active Abi workspace is required.");
   }
 }
 
@@ -23,7 +24,7 @@ export class AuthorizationError extends Error {
   readonly code = "FORBIDDEN" as const;
 
   constructor() {
-    super("Du hast keine Berechtigung für diese Aktion.");
+    super("You do not have permission for this action.");
   }
 }
 

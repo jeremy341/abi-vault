@@ -2,5 +2,5 @@
   <rect x="1" y="1" width="338" height="194" rx="20" stroke="#C7C7C7" stroke-width="2" stroke-dasharray="8 8"/>
   <circle cx="170" cy="88" r="34" stroke="#C7C7C7" stroke-width="2" stroke-dasharray="7 7"/>
   <path d="M170 73V103M155 88H185" stroke="#111111" stroke-width="3" stroke-linecap="round"/>
-  <text x="170" y="145" text-anchor="middle" fill="#111111" font-family="Arial, sans-serif" font-size="14">Karte hinzufügen</text>
+  <text x="170" y="145" text-anchor="middle" fill="#111111" font-family="Arial, sans-serif" font-size="14">Add card</text>
 </svg>

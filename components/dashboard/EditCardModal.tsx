@@ -17,8 +17,8 @@ import styles from "./AccountCardModal.module.css";
 const cardColors = [
   { name: "Schwarz", value: "#111114" },
   { name: "Graphit", value: "#3b3b40" },
-  { name: "Weiß", value: "#e9e9e7" },
-  { name: "Waldgrün", value: "#25453b" },
+  { name: "White", value: "#e9e9e7" },
+  { name: "Forest green", value: "#25453b" },
   { name: "Burgunder", value: "#542f38" },
   { name: "Navy", value: "#26364d" },
   { name: "Sand", value: "#9a8d78" },
@@ -125,7 +125,7 @@ export default function EditCardModal({
     if (invalidMonth || (next.length === 5 && !isValidFutureExpiry(next))) {
       setErrors((current) => ({
         ...current,
-        expiry: "Ungültiges Ablaufdatum.",
+        expiry: "Invalides Expiry date.",
       }));
     }
   }
@@ -136,16 +136,16 @@ export default function EditCardModal({
     const nextErrors: FormErrors = {};
 
     if (!values.accountName.trim()) {
-      nextErrors.accountName = "Bitte einen Kassennamen eingeben.";
+      nextErrors.accountName = "Please enter a cash register name.";
     }
     if (values.cardNumber.replace(/\D/g, "").length !== 16) {
-      nextErrors.cardNumber = "Die Kartennummer muss 16 Ziffern enthalten.";
+      nextErrors.cardNumber = "The card number must contain 16 digits.";
     }
     if (!values.holder.trim()) {
-      nextErrors.holder = "Bitte den Karteninhaber eingeben.";
+      nextErrors.holder = "Please enter the card holder.";
     }
     if (!isValidFutureExpiry(values.expiry)) {
-      nextErrors.expiry = "Ungültiges Ablaufdatum.";
+      nextErrors.expiry = "Invalides Expiry date.";
     }
 
     setErrors(nextErrors);
@@ -162,9 +162,9 @@ export default function EditCardModal({
     setSubmitError("");
     try {
       const saved = await onSave({ ...values, color: selectedColor });
-      if (!saved) setSubmitError("Die Kasse konnte nicht gespeichert werden.");
+      if (!saved) setSubmitError("The cash register could not be saved.");
     } catch {
-      setSubmitError("Die Kasse konnte nicht gespeichert werden.");
+      setSubmitError("The cash register could not be saved.");
     } finally {
       setSaving(false);
     }
@@ -189,13 +189,13 @@ export default function EditCardModal({
       >
         <header className={styles.header}>
           <div className={styles.heading}>
-            <h2 id="edit-card-title">Kartendaten bearbeiten</h2>
-            <p>Name und Kartendarstellung dieser Kasse aktualisieren.</p>
+            <h2 id="edit-card-title">Kartendaten edit</h2>
+            <p>Update the name and card view for this cash register.</p>
           </div>
           <button
             type="button"
             className={styles.closeButton}
-            aria-label="Dialog schließen"
+            aria-label="Close dialog"
             onClick={onClose}
             disabled={saving}
           >
@@ -204,12 +204,12 @@ export default function EditCardModal({
         </header>
 
         <div className={styles.body}>
-          <div className={styles.preview} aria-label="Kartenvorschau">
+          <div className={styles.preview} aria-label="Card preview">
             <AccountCard
               cardColor={selectedColor}
               details={{
                 ...values,
-                accountName: values.accountName || "Kasse",
+                accountName: values.accountName || "Cash register",
                 cardNumber: values.cardNumber || previewCardNumber,
                 holder: values.holder || "Mike Smith",
                 expiry: values.expiry || "06/21",
@@ -219,7 +219,7 @@ export default function EditCardModal({
 
           <section className={styles.section} aria-labelledby="edit-card-colors">
             <h3 id="edit-card-colors" className={styles.sectionTitle}>
-              Kartenfarbe
+              Card color
             </h3>
             <div className={styles.colorOptions}>
               {cardColors.map((color) => (
@@ -227,7 +227,7 @@ export default function EditCardModal({
                   key={color.value}
                   type="button"
                   className={styles.colorOption}
-                  aria-label={`${color.name} auswählen`}
+                  aria-label={`Select ${color.name}`}
                   aria-pressed={selectedColor === color.value}
                   style={
                     { "--swatch": color.value } as React.CSSProperties
@@ -243,11 +243,11 @@ export default function EditCardModal({
             aria-labelledby="edit-card-information"
           >
             <h3 id="edit-card-information" className={styles.sectionTitle}>
-              Karteninformationen
+              Card information
             </h3>
             <div className={styles.formGrid}>
               <Field
-                label="Kassenname"
+                label="Cash registersname"
                 error={errors.accountName}
                 errorId="edit-account-name-error"
               >
@@ -266,11 +266,11 @@ export default function EditCardModal({
                       filterLetters(event.target.value, 20),
                     )
                   }
-                  placeholder="Zum Beispiel Getränkekasse"
+                  placeholder="For example, drinks cash register"
                 />
               </Field>
               <Field
-                label="Kartennummer"
+                label="Card number"
                 error={errors.cardNumber}
                 errorId="edit-card-number-error"
               >
@@ -294,7 +294,7 @@ export default function EditCardModal({
                 />
               </Field>
               <Field
-                label="Karteninhaber"
+                label="Card holder"
                 error={errors.holder}
                 errorId="edit-holder-error"
               >
@@ -313,11 +313,11 @@ export default function EditCardModal({
                       filterLetters(event.target.value, 20),
                     )
                   }
-                  placeholder="Vor- und Nachname"
+                  placeholder="First and last name"
                 />
               </Field>
               <Field
-                label="Ablaufdatum"
+                label="Expiry date"
                 error={errors.expiry}
                 errorId="edit-expiry-error"
               >
@@ -348,7 +348,7 @@ export default function EditCardModal({
             onClick={onDelete}
             disabled={saving}
           >
-            Kasse archivieren
+            Archive cash register
           </button>
           <div className={styles.footerActions}>
             <button
@@ -357,10 +357,10 @@ export default function EditCardModal({
               onClick={onClose}
               disabled={saving}
             >
-              Abbrechen
+              Cancel
             </button>
             <button type="submit" className={styles.primaryButton} disabled={saving} aria-busy={saving}>
-              {saving ? "Wird gespeichert …" : "Änderungen speichern"}
+              {saving ? "Saving …" : "Save changes"}
             </button>
           </div>
         </footer>

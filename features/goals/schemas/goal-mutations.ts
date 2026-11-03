@@ -1,13 +1,13 @@
 import { z } from "zod";
-import { parseEuroToMinor } from "@/lib/finance/money";
+import { parseDollarToMinor } from "@/lib/finance/money";
 
 const amount = z.string().trim().transform((value, context) => {
   try {
-    const parsed = parseEuroToMinor(value);
+    const parsed = parseDollarToMinor(value);
     if (parsed <= BigInt(0)) throw new Error();
     return parsed;
   } catch {
-    context.addIssue({ code: "custom", message: "Der Betrag ist ungültig." });
+    context.addIssue({ code: "custom", message: "The amount is invalid." });
     return z.NEVER;
   }
 });

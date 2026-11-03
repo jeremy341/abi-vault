@@ -845,10 +845,10 @@
   .transactionCell {
     grid-column: 1 / -1;
   }
-  .row > [data-label="Datum"] {
+  .row > [data-label="Date"] {
     grid-column: 1;
   }
-  .row > [data-label="Betrag"] {
+  .row > [data-label="Amount"] {
     grid-column: 2;
     justify-self: end;
   }
@@ -861,8 +861,8 @@
     grid-row: 3;
     justify-self: end;
   }
-  .row > [data-label="Datum"]::before,
-  .row > [data-label="Betrag"]::before {
+  .row > [data-label="Date"]::before,
+  .row > [data-label="Amount"]::before {
     display: block;
     margin-bottom: 0.2rem;
     color: var(--ui-muted-ink);
@@ -1045,10 +1045,10 @@
   .transactionCell {
     grid-column: 1 / -1;
   }
-  .row > [data-label="Datum"] {
+  .row > [data-label="Date"] {
     grid-column: 1;
   }
-  .row > [data-label="Betrag"] {
+  .row > [data-label="Amount"] {
     grid-column: 2;
     justify-self: end;
   }
@@ -1061,8 +1061,8 @@
     grid-row: 3;
     justify-self: end;
   }
-  .row > [data-label="Datum"]::before,
-  .row > [data-label="Betrag"]::before {
+  .row > [data-label="Date"]::before,
+  .row > [data-label="Amount"]::before {
     display: block;
     margin-bottom: 0.2rem;
     color: var(--ui-muted-ink);
@@ -1296,8 +1296,8 @@
     border-bottom: 1px solid var(--ui-border-subtle);
   }
   .transactionCell::before,
-  .row > [data-label="Datum"]::before,
-  .row > [data-label="Betrag"]::before {
+  .row > [data-label="Date"]::before,
+  .row > [data-label="Amount"]::before {
     display: block;
     margin-bottom: 0.25rem;
     color: var(--ui-muted-ink);
@@ -1313,11 +1313,11 @@
     grid-column: 1 / -1;
     grid-row: 2;
   }
-  .row > [data-label="Datum"] {
+  .row > [data-label="Date"] {
     grid-column: 1;
     grid-row: 3;
   }
-  .row > [data-label="Betrag"] {
+  .row > [data-label="Amount"] {
     grid-column: 2;
     grid-row: 3;
   }
@@ -1367,10 +1367,10 @@
   .transactionCell {
     grid-column: 1 / -1;
   }
-  .row > [data-label="Datum"] {
+  .row > [data-label="Date"] {
     grid-column: 1;
   }
-  .row > [data-label="Betrag"] {
+  .row > [data-label="Amount"] {
     grid-column: 2;
     justify-self: end;
   }
@@ -1383,8 +1383,8 @@
     grid-row: 3;
     justify-self: end;
   }
-  .row > [data-label="Datum"]::before,
-  .row > [data-label="Betrag"]::before {
+  .row > [data-label="Date"]::before,
+  .row > [data-label="Amount"]::before {
     display: block;
     margin-bottom: 0.2rem;
     color: var(--ui-muted-ink);

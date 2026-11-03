@@ -17,7 +17,7 @@ export function Pagination({
     <div className={`ui-pagination-buttons ${className}`}>
       <button
         type="button"
-        aria-label="Vorherige Seite"
+        aria-label="Previous page"
         disabled={page === 1}
         onClick={() => onPageChange(page - 1)}
       >
@@ -33,7 +33,7 @@ export function Pagination({
       </button>
       <button
         type="button"
-        aria-label="Nächste Seite"
+        aria-label="Next page"
         disabled={page === pageCount}
         onClick={() => onPageChange(page + 1)}
       >

@@ -92,7 +92,7 @@ async function bootstrapOrganizationData(session: Awaited<ReturnType<typeof auth
     organization_id: session.orgId,
     school_name: "",
     graduation_year: new Date().getFullYear(),
-    currency: "EUR",
+    currency: "USD",
     timezone: "Europe/Berlin",
   }, { onConflict: "organization_id", ignoreDuplicates: true });
   if (settingsError) throw settingsError;
@@ -108,7 +108,7 @@ async function bootstrapOrganizationData(session: Awaited<ReturnType<typeof auth
     ["Material", "expense", 20],
     ["Sonstiges", "expense", 30],
     ["Spenden", "income", 40],
-    ["Verkäufe", "income", 50],
+    ["Sales", "income", 50],
   ] as const;
   const { error: categoriesError } = await admin.from("categories").upsert(
     defaults.map(([name, kind, display_order]) => ({ organization_id: session.orgId!, name, kind, display_order })),

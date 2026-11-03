@@ -28,7 +28,7 @@ type Person = {
   name: string;
   role: string;
   access: string;
-  status: "Aktiv" | "Einladung offen" | "Nicht aktiv";
+  status: "Active" | "Invitation pending" | "Inactive";
   initials: string;
 };
 
@@ -51,28 +51,28 @@ function PhonePeopleView({
   onQueryChange: (value: string) => void;
   onAdd: () => void;
 }) {
-  const active = people.filter((person) => person.status === "Aktiv").length;
+  const active = people.filter((person) => person.status === "Active").length;
   const admins = people.filter(
     (person) => person.role === "Administrator",
   ).length;
   const supervisors = people.filter((person) =>
     person.role === "Supervisor",
   ).length;
-  const students = people.filter((person) => person.role === "Mitglied").length;
+  const students = people.filter((person) => person.role === "Member").length;
 
   return (
     <div className={phoneStyles.root} aria-busy={loading}>
-      <section className={phoneStyles.summary} aria-label="Mitgliederstatus" data-ui-slot="summary">
+      <section className={phoneStyles.summary} aria-label="Membererstatus" data-ui-slot="summary">
         <div>
-          <span>Mitglieder</span>
+          <span>Memberer</span>
           <strong><LoadingText loading={loading}>{people.length}</LoadingText></strong>
         </div>
         <div>
-          <span>Aktiv</span>
+          <span>Active</span>
           <strong><LoadingText loading={loading}>{active}</LoadingText></strong>
         </div>
         <div>
-          <span>Administratoren</span>
+          <span>Administrators</span>
           <strong><LoadingText loading={loading}>{admins}</LoadingText></strong>
         </div>
       </section>
@@ -80,12 +80,12 @@ function PhonePeopleView({
       <div className={phoneStyles.toolbar} data-ui-slot="toolbar">
         <label className={phoneStyles.search}>
           <Search aria-hidden="true" />
-          <span className="sr-only">Mitglieder suchen</span>
+          <span className="sr-only">Memberer suchen</span>
           <input
             value={query}
             disabled={loading}
             onChange={(event) => onQueryChange(event.target.value)}
-            placeholder="Name oder Rolle …"
+            placeholder="Name or role …"
           />
         </label>
         <button
@@ -93,18 +93,18 @@ function PhonePeopleView({
           className={phoneStyles.addButton}
           onClick={onAdd}
           disabled={loading}
-          aria-label="Person hinzufügen"
+          aria-label="Add person"
         >
           <Plus aria-hidden="true" />
         </button>
       </div>
 
       <header className={phoneStyles.sectionHeader} data-ui-slot="list-header">
-        <h2>Mitglieder</h2>
+        <h2>Memberer</h2>
         <span>Abi 2026</span>
       </header>
       <div className={phoneStyles.people} data-ui-slot="list-body">
-        <LoadingCollection loading={loading} knownItemCount={people.length} emptyHeight="12rem" label="Mitglieder werden geladen…">
+        <LoadingCollection loading={loading} knownItemCount={people.length} emptyHeight="12rem" label="Members are loading…">
           {people.length ? people.map((person) => (
             <article className={phoneStyles.person} key={person.id}>
               <span className={phoneStyles.avatar}>{person.initials}</span>
@@ -115,16 +115,16 @@ function PhonePeopleView({
                 </span>
               </span>
               <span
-                className={`${phoneStyles.status} ${person.status === "Aktiv" ? phoneStyles.active : ""}`}
+                className={`${phoneStyles.status} ${person.status === "Active" ? phoneStyles.active : ""}`}
               >
                 {person.status}
               </span>
             </article>
-          )) : <div className={phoneStyles.empty}>Keine Mitglieder gefunden.</div>}
+          )) : <div className={phoneStyles.empty}>No Memberer gefunden.</div>}
         </LoadingCollection>
       </div>
 
-      <section className={phoneStyles.roles} aria-label="Rollenübersicht" data-ui-slot="secondary-panel">
+      <section className={phoneStyles.roles} aria-label="Role overview" data-ui-slot="secondary-panel">
         <div className={phoneStyles.role}>
           <strong>Admin</strong>
           <b><LoadingText loading={loading}>{admins}</LoadingText></b>
@@ -133,10 +133,10 @@ function PhonePeopleView({
         <div className={phoneStyles.role}>
           <strong>Supervisor</strong>
           <b><LoadingText loading={loading}>{supervisors}</LoadingText></b>
-          <span>Finanzen</span>
+          <span>Finance</span>
         </div>
         <div className={phoneStyles.role}>
-          <strong>Mitglied</strong>
+          <strong>Member</strong>
           <b><LoadingText loading={loading}>{students}</LoadingText></b>
           <span>Transparenz</span>
         </div>
@@ -166,20 +166,20 @@ export default function PeoplePage() {
       .then((result) => {
         if (!active) return;
         if (!result.ok) {
-          setLoadError("Die Mitglieder konnten nicht geladen werden.");
+          setLoadError("The members could not be loaded.");
           return;
         }
         setPeople(result.items.map((member) => ({
           id: member.id,
           name: member.name,
-          role: member.role === "admin" ? "Administrator" : member.role === "supervisor" ? "Supervisor" : "Mitglied",
-          access: member.role === "admin" ? "Vollzugriff" : member.role === "supervisor" ? "Finanzen verwalten" : "Transparenz",
-          status: member.status === "active" ? "Aktiv" : member.status === "invited" ? "Einladung offen" : "Nicht aktiv",
+          role: member.role === "admin" ? "Administrator" : member.role === "supervisor" ? "Supervisor" : "Member",
+          access: member.role === "admin" ? "Vollzugriff" : member.role === "supervisor" ? "Finance verwalten" : "Transparenz",
+          status: member.status === "active" ? "Active" : member.status === "invited" ? "Invitation pending" : "Inactive",
           initials: member.name.split(/\s+/).map((part: string) => part[0]).join("").slice(0, 2).toUpperCase(),
         })));
       })
       .catch(() => {
-        if (active) setLoadError("Die Mitglieder konnten nicht geladen werden.");
+        if (active) setLoadError("The members could not be loaded.");
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -239,15 +239,15 @@ export default function PeoplePage() {
       const result = await updateMemberRole({
         clerkUserId: personId,
         role: nextRole,
-        reason: "Rolle über die Mitgliederverwaltung geändert",
+        reason: "Role changed through member management",
       });
       if (!result.ok) {
-        setMessage("Die Rolle konnte nicht aktualisiert werden.");
+        setMessage("The role could not be updated.");
         setOpenMenuId(null);
         return;
       }
       } catch {
-        setMessage("Die Rolle konnte nicht aktualisiert werden.");
+        setMessage("The role could not be updated.");
         setOpenMenuId(null);
       } finally {
         setBusyPersonId(null);
@@ -263,11 +263,11 @@ export default function PeoplePage() {
           access:
             role === "Administrator"
               ? "Vollzugriff"
-              : "Finanzen verwalten",
+              : "Finance verwalten",
         };
       }),
     );
-    setMessage("Rolle aktualisiert.");
+    setMessage("Role updated.");
     setOpenMenuId(null);
   }
 
@@ -275,7 +275,7 @@ export default function PeoplePage() {
     event.preventDefault();
     if (inviteSaving) return;
     if (!inviteEmail.trim()) {
-      setMessage("Bitte eine E-Mail-Adresse eingeben.");
+      setMessage("Please enter an email address.");
       return;
     }
     setInviteSaving(true);
@@ -290,17 +290,17 @@ export default function PeoplePage() {
       if (!invitation.ok) {
         setMessage(
           invitation.error === "INVALID_INPUT"
-            ? "Bitte eine gültige E-Mail-Adresse und Rolle auswählen."
-            : "Die Einladung konnte nicht gesendet werden.",
+            ? "Please enter a valid email address and choose a role."
+            : "The invitation could not be sent.",
         );
         return;
       }
       setInviteEmail("");
       setMessage(
-        `Einladung an ${inviteEmail.trim()} gesendet.`,
+        `Invitation sent to ${inviteEmail.trim()}.`,
       );
     } catch {
-      setMessage("Die Einladung konnte nicht gesendet werden.");
+      setMessage("The invitation could not be sent.");
     } finally {
       setInviteSaving(false);
     }
@@ -312,22 +312,22 @@ export default function PeoplePage() {
     try {
       const result = await removeMember({
         clerkUserId: personId,
-        reason: "Mitglied über die Mitgliederverwaltung entfernt",
+        reason: "Member removed through member management",
       });
       if (!result.ok) {
         setMessage(
           result.error === "LAST_ADMIN_REQUIRED"
-            ? "Der letzte Administrator kann nicht entfernt werden."
-            : "Die Person konnte nicht entfernt werden.",
+            ? "The last administrator cannot be removed."
+            : "The person could not be removed.",
         );
         setOpenMenuId(null);
         return;
       }
       setPeople((current) => current.filter((entry) => entry.id !== personId));
-      setMessage("Person entfernt.");
+      setMessage("Person removed.");
       setOpenMenuId(null);
     } catch {
-      setMessage("Die Person konnte nicht entfernt werden.");
+      setMessage("The person could not be removed.");
       setOpenMenuId(null);
     } finally {
       setBusyPersonId(null);
@@ -341,13 +341,13 @@ export default function PeoplePage() {
     try {
       const result = await createRoleInviteLink({ role });
       if (!result.ok) {
-        setMessage("Der Einladungslink konnte nicht erstellt werden.");
+        setMessage("The invitation link could not be created.");
         return;
       }
       setRoleLinks((current) => ({ ...current, [role]: result }));
-      setMessage(`${role === "admin" ? "Admin" : "Supervisor"}-Link erstellt.`);
+      setMessage(`${role === "admin" ? "Admin" : "Supervisor"} link created.`);
     } catch {
-      setMessage("Der Einladungslink konnte nicht erstellt werden.");
+      setMessage("The invitation link could not be created.");
     } finally {
       setLinkSaving(null);
     }
@@ -357,12 +357,12 @@ export default function PeoplePage() {
     const link = roleLinks[role];
     if (!link) return;
     await navigator.clipboard.writeText(link.url);
-    setMessage("Einladungslink kopiert.");
+    setMessage("Invitation link copied.");
   }
 
   return (
     <section className={mode === "phone" ? phoneStyles.pageShell : styles.page} aria-busy={loading}>
-      <LoadingStatus loading={loading} label="Mitglieder werden geladen…" />
+      <LoadingStatus loading={loading} label="Members are loading…" />
       {loadError ? <p className="mb-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{loadError}</p> : null}
       {mode === "phone" ? (
         <PhonePeopleView
@@ -380,7 +380,7 @@ export default function PeoplePage() {
                 <Users aria-hidden="true" />
               </span>
               <div>
-                <span>Mitglieder</span>
+                <span>Memberer</span>
                 <strong><LoadingText loading={loading}>{people.length}</LoadingText></strong>
               </div>
             </article>
@@ -389,9 +389,9 @@ export default function PeoplePage() {
                 <Check aria-hidden="true" />
               </span>
               <div>
-                <span>Aktiv</span>
+                <span>Active</span>
                 <strong><LoadingText loading={loading}>
-                  {people.filter((person) => person.status === "Aktiv").length}
+                  {people.filter((person) => person.status === "Active").length}
                 </LoadingText></strong>
               </div>
             </article>
@@ -400,7 +400,7 @@ export default function PeoplePage() {
                 <ShieldCheck aria-hidden="true" />
               </span>
               <div>
-                <span>Administratoren</span>
+                <span>Administrators</span>
                 <strong><LoadingText loading={loading}>
                   {
                     people.filter((person) => person.role === "Administrator")
@@ -415,8 +415,8 @@ export default function PeoplePage() {
             <article className={styles.peoplePanel} data-ui-slot="primary-panel">
               <header className={styles.panelHeader}>
                 <div>
-                  <h2>Mitglieder</h2>
-                  <p>Personen und Rollen in eurem Arbeitsbereich.</p>
+                  <h2>Memberer</h2>
+                  <p>People and roles in your workspace.</p>
                 </div>
                 <button
                   type="button"
@@ -426,24 +426,24 @@ export default function PeoplePage() {
                   data-ui-slot="primary-action"
                 >
                   <Plus aria-hidden="true" />
-                  Person hinzufügen
+                  Add person
                 </button>
               </header>
               <div className={styles.searchBar}>
                 <Search aria-hidden="true" />
                 <label className="sr-only" htmlFor="people-search">
-                  Mitglieder suchen
+                  Memberer suchen
                 </label>
                 <input
                   id="people-search"
                   value={query}
                   disabled={loading}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Nach Name oder Rolle suchen …"
+                  placeholder="Search by name or role …"
                 />
               </div>
               <div className={styles.peopleList} data-ui-slot="list-body">
-                <LoadingCollection loading={loading} knownItemCount={people.length} emptyHeight="16rem" label="Mitglieder werden geladen…">
+                <LoadingCollection loading={loading} knownItemCount={people.length} emptyHeight="16rem" label="Members are loading…">
                   {filteredPeople.map((person) => (
                     <div className={styles.personRow} key={person.id}>
                       <span className={styles.avatar}>{person.initials}</span>
@@ -454,12 +454,12 @@ export default function PeoplePage() {
                       <span className={styles.access}>{person.access}</span>
                       <span
                         className={
-                          person.status === "Aktiv"
+                          person.status === "Active"
                             ? styles.activeStatus
                             : styles.pendingStatus
                         }
                       >
-                        {person.status === "Aktiv" ? (
+                        {person.status === "Active" ? (
                           <Check aria-hidden="true" />
                         ) : null}
                         {person.status}
@@ -467,7 +467,7 @@ export default function PeoplePage() {
                       <button
                         type="button"
                         className={styles.moreButton}
-                        aria-label={`${person.name} Optionen`}
+                        aria-label={`${person.name} Options`}
                         aria-haspopup="menu"
                         aria-expanded={openMenuId === person.id}
                         onClick={(event) => {
@@ -492,7 +492,7 @@ export default function PeoplePage() {
                           onClick={() => cycleRole(person.id)}
                           disabled={busyPersonId === person.id}
                           >
-                            Rolle wechseln
+                            Change role
                           </button>
                           <button
                             type="button"
@@ -501,7 +501,7 @@ export default function PeoplePage() {
                             onClick={() => void handleRemovePerson(person.id)}
                             disabled={busyPersonId === person.id}
                           >
-                            Person entfernen
+                            Remove person
                           </button>
                         </div>
                       ) : null}
@@ -511,7 +511,7 @@ export default function PeoplePage() {
               </div>
               {!loading && !filteredPeople.length ? (
                 <div className={styles.emptyState}>
-                  Keine Mitglieder gefunden.
+                  No Memberer gefunden.
                 </div>
               ) : null}
             </article>
@@ -520,8 +520,8 @@ export default function PeoplePage() {
               <article className={styles.rolePanel}>
                 <header className={styles.panelHeader}>
                   <div>
-                    <h2>Rollen</h2>
-                    <p>Übersicht der Berechtigungen.</p>
+                    <h2>Roles</h2>
+                    <p>Overview of permissions.</p>
                   </div>
                   <ShieldCheck aria-hidden="true" />
                 </header>
@@ -532,7 +532,7 @@ export default function PeoplePage() {
                     </span>
                     <span>
                       <strong>Administrator</strong>
-                      <small>Vollzugriff auf alles</small>
+                      <small>Full access to everything</small>
                     </span>
                     <b>
                       {
@@ -548,7 +548,7 @@ export default function PeoplePage() {
                     </span>
                     <span>
                       <strong>Supervisor</strong>
-                      <small>Finanzen verwalten</small>
+                      <small>Finance verwalten</small>
                     </span>
                     <b>
                       {
@@ -561,12 +561,12 @@ export default function PeoplePage() {
                       <Users aria-hidden="true" />
                     </span>
                     <span>
-                      <strong>Mitglied</strong>
+                      <strong>Member</strong>
                       <small>Transparenz</small>
                     </span>
                     <b>
                       {
-                        people.filter((person) => person.role === "Mitglied").length
+                        people.filter((person) => person.role === "Member").length
                       }
                     </b>
                   </div>
@@ -575,8 +575,8 @@ export default function PeoplePage() {
               <article className={styles.inviteLinksPanel}>
                 <header className={styles.panelHeader}>
                   <div>
-                    <h2>Einladungslinks</h2>
-                    <p>Teile einen Link, ohne E-Mail-Adressen zu sammeln.</p>
+                    <h2>Invitation links</h2>
+                    <p>Share a link without collecting email addresses.</p>
                   </div>
                   <Link2 aria-hidden="true" />
                 </header>
@@ -588,12 +588,12 @@ export default function PeoplePage() {
                         <span className={styles.inviteLinkIcon}><Link2 aria-hidden="true" /></span>
                         <div>
                           <strong>{role === "admin" ? "Admin-Link" : "Supervisor-Link"}</strong>
-                          <small>{role === "admin" ? "Vollzugriff auf Arbeitsbereich und Einstellungen." : "Finanzen verwalten und Berichte prüfen."}</small>
+                          <small>{role === "admin" ? "Full access to the workspace and settings." : "Manage finances and review reports."}</small>
                           {link ? <code>{link.url}</code> : null}
                         </div>
                         <div className={styles.inviteLinkActions}>
                           {link ? (
-                            <button type="button" onClick={() => void copyRoleLink(role)} aria-label={`${role} Link kopieren`}><Copy aria-hidden="true" /> Kopieren</button>
+                            <button type="button" onClick={() => void copyRoleLink(role)} aria-label={`${role} Copy link`}><Copy aria-hidden="true" /> Copy</button>
                           ) : (
                             <button type="button" onClick={() => void generateRoleLink(role)} disabled={linkSaving !== null} aria-busy={linkSaving === role}>
                               {linkSaving === role ? "Erstelle …" : "Link erstellen"}
@@ -608,7 +608,7 @@ export default function PeoplePage() {
               <article className={styles.activityPanel}>
                 <header className={styles.panelHeader}>
                   <div>
-                    <h2>Arbeitsbereich</h2>
+                    <h2>Workspace</h2>
                     <p>Abi 2026</p>
                   </div>
                   <CircleUserRound aria-hidden="true" />
@@ -617,12 +617,12 @@ export default function PeoplePage() {
                   <div>
                     <strong>Gemeinsam organisiert</strong>
                     <span>
-                      Alle Mitglieder arbeiten im selben Finanzbereich.
+                      All members work in the same financial area.
                     </span>
                   </div>
                   <div className={styles.activityStat}>
-                    <span>Letzte Aktivität</span>
-                    <strong>Keine Aktivität verfügbar</strong>
+                    <span>Recent activity</span>
+                    <strong>No activity available</strong>
                   </div>
                   <p aria-live="polite">{message || "\u00a0"}</p>
                 </div>
@@ -634,7 +634,7 @@ export default function PeoplePage() {
 
       {modalOpen ? (
         <Dialog
-          label="Person hinzufügen"
+          label="Add person"
           onClose={closeModal}
           overlayClassName={styles.overlay}
           dialogClassName={`${styles.modal} ${mode === "phone" ? phoneStyles.phoneDialog : ""}`}
@@ -642,15 +642,15 @@ export default function PeoplePage() {
           <form onSubmit={addPerson}>
             <header className={styles.modalHeader}>
               <div>
-              <h2>Mitglied einladen</h2>
-              <p>Die Person erhält eine sichere Clerk-Einladung per E-Mail und wird direkt eurem Abi-Arbeitsbereich zugeordnet.</p>
+              <h2>Member einladen</h2>
+              <p>The person will receive a secure invitation by email and be added to your Abi workspace.</p>
               </div>
               <button
                 type="button"
                 className={styles.closeButton}
                 onClick={closeModal}
                 disabled={inviteSaving}
-                aria-label="Dialog schließen"
+                aria-label="Close dialog"
               >
                 <X aria-hidden="true" />
               </button>
@@ -669,7 +669,7 @@ export default function PeoplePage() {
                 />
               </label>
               <label className={styles.formField}>
-                <span>Rolle</span>
+                <span>Role</span>
                 <select
                   name="personRole"
                   value={newRole}
@@ -688,10 +688,10 @@ export default function PeoplePage() {
                 onClick={closeModal}
                 disabled={inviteSaving}
               >
-                Abbrechen
+                Cancel
               </button>
               <button type="submit" className={styles.primaryButton} disabled={inviteSaving} aria-busy={inviteSaving}>
-                {inviteSaving ? "Wird gesendet …" : "Einladung senden"}
+                {inviteSaving ? "Sending …" : "Send invitation"}
               </button>
             </footer>
           </form>

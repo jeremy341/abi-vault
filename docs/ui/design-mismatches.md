@@ -35,8 +35,8 @@
 - Product tables use the shared data-table contract and shared row/header roles.
 - Category, status, and filter-count pills use the shared badge contract.
 - Transactions and Receipts use shared pagination, dropdown, and dialog behavior; product-facing selectors remain custom rather than native browser menus.
-- Receipt assignment copy is consistently German: `Transaktion auswählen`.
-- The Transactions badge explicitly reports `aktive Filter` and counts active criteria, not selected values inside one criterion.
+- Receipt assignment copy is consistently English: `Select transaction`.
+- The Transactions badge explicitly reports `aktive Filters` and counts active criteria, not selected values inside one criterion.
 
 ## Resolved P2 contracts
 

@@ -1,5 +1,9 @@
 insert into public.committees (organization_id, name)
-values ('org_local_demo', 'Abi 2026')
+values ('org_local_demo', 'Class of 2026')
+on conflict (organization_id) do nothing;
+
+insert into public.committee_settings (organization_id, school_name, graduation_year, notifications)
+values ('org_local_demo', 'Example School Berlin', 2026, '{"receipts": true, "payments": true, "goals": false}'::jsonb)
 on conflict (organization_id) do nothing;
 
 insert into public.profiles (clerk_user_id, display_name, email)
@@ -32,7 +36,7 @@ values
   ('org_local_demo', 'Material', 'expense', 20),
   ('org_local_demo', 'Sonstiges', 'expense', 30),
   ('org_local_demo', 'Spenden', 'income', 40),
-  ('org_local_demo', 'Verkäufe', 'income', 50)
+  ('org_local_demo', 'Sales', 'income', 50)
 on conflict (organization_id, name, kind) do nothing;
 
 insert into public.accounting_periods (organization_id, year, month)
@@ -65,7 +69,7 @@ insert into public.transactions (
   idempotency_key
 )
 select
-  'org_local_demo', 32000, 'EUR', 'Druck Abizeitung', 'Lokaler Beispieldatensatz',
+  'org_local_demo', 32000, 'USD', 'Druck Abizeitung', 'Lokaler Beispieldatensatz',
   'expense', 'posted', 'manual', category.id, wallet.id, period.id,
   '2026-08-15', 'user_local_admin', 'seed-local-transaction'
 from public.categories category
@@ -74,7 +78,7 @@ join public.wallets wallet
 join public.accounting_periods period
   on period.organization_id = 'org_local_demo' and period.year = 2026 and period.month = 8
 where category.organization_id = 'org_local_demo'
-  and category.name = 'Material'
+  and category.name = 'Materials'
   and category.kind = 'expense'
 on conflict (organization_id, idempotency_key) do nothing;
 

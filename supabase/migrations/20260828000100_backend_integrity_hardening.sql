@@ -282,7 +282,7 @@ begin
   ) then
     raise exception 'RECEIPT_FILE_NOT_FOUND' using errcode = '23503';
   end if;
-  perform set_config('app.audit_reason', 'Beleg hochgeladen', true);
+  perform set_config('app.audit_reason', 'Receipt uploaded', true);
   insert into public.receipts (
     id, organization_id, transaction_id, storage_path, file_name,
     mime_type, file_size_bytes, uploaded_by
@@ -314,7 +314,7 @@ begin
     raise exception 'INVALID_RECEIPT_STATUS' using errcode = '22023';
   end if;
 
-  perform set_config('app.audit_reason', 'Belegprüfung aktualisiert', true);
+  perform set_config('app.audit_reason', 'Receipt review updated', true);
   update public.receipts
   set review_status = p_status,
       reviewed_by = app_private.current_clerk_user_id(),
@@ -360,7 +360,7 @@ begin
   end if;
 
   perform app_private.assert_receipt_transaction(p_organization_id, p_transaction_id);
-  perform set_config('app.audit_reason', 'Belegdaten aktualisiert', true);
+  perform set_config('app.audit_reason', 'Receipt data updated', true);
   update public.receipts
   set file_name = btrim(p_file_name),
       transaction_id = p_transaction_id
@@ -409,7 +409,7 @@ begin
     and idempotency_key = p_idempotency_key;
   if wallet_id is not null then return wallet_id; end if;
 
-  perform set_config('app.audit_reason', 'Kasse erstellt', true);
+  perform set_config('app.audit_reason', 'Cash register created', true);
   select public.create_wallet(
     p_organization_id,
     p_name,
@@ -569,7 +569,7 @@ begin
     raise exception 'CONTRIBUTION_EXCEEDS_TRANSACTION' using errcode = '23514';
   end if;
 
-  perform set_config('app.audit_reason', 'Zielbeitrag angelegt', true);
+  perform set_config('app.audit_reason', 'Zielbeitrag created', true);
   insert into public.goal_contributions (
     organization_id, goal_id, transaction_id, allocated_amount_minor,
     idempotency_key, created_by
@@ -848,7 +848,7 @@ begin
     and transaction_item.superseded_at is null
     and (transaction_item.correction_role is null or transaction_item.correction_role <> 'reversal');
 
-  perform set_config('app.audit_reason', coalesce(nullif(btrim(p_note), ''), 'Kassensturz erfasst'), true);
+  perform set_config('app.audit_reason', coalesce(nullif(btrim(p_note), ''), 'Cash count erfasst'), true);
   insert into public.cash_counts (
     organization_id, wallet_id, counted_amount_minor, book_amount_minor,
     difference_minor, counted_by, note
@@ -926,7 +926,7 @@ begin
     and transaction_item.superseded_at is null
     and (transaction_item.correction_role is null or transaction_item.correction_role <> 'reversal');
 
-  perform set_config('app.audit_reason', coalesce(nullif(btrim(p_note), ''), 'Kassensturz erfasst'), true);
+  perform set_config('app.audit_reason', coalesce(nullif(btrim(p_note), ''), 'Cash count erfasst'), true);
   insert into public.cash_counts (
     organization_id, wallet_id, counted_amount_minor, book_amount_minor,
     difference_minor, counted_by, counted_by_name, note, idempotency_key

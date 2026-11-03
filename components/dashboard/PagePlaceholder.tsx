@@ -15,7 +15,7 @@ export default function PagePlaceholder({
       aria-labelledby="page-placeholder-title"
     >
       <div className={styles.emptyState}>
-        <span>Abi 2026</span>
+        <span>Class of 2026</span>
         <h2 id="page-placeholder-title">{title}</h2>
         <p>{description}</p>
       </div>

@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest";
 import { manualUiTransactionSchema } from "./manual-ui";
 
 const validInput = {
-  title: "Kuchenverkauf",
+  title: "Cake sale",
   amount: "12,50",
   direction: "income" as const,
-  categoryName: "Verkäufe",
+  categoryName: "Sales",
   walletId: "00000000-0000-4000-8000-000000000002",
   idempotencyKey: "ui-transaction-test-001",
 };

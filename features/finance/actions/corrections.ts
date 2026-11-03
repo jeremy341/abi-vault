@@ -3,7 +3,7 @@
 import { requirePermission } from "@/lib/auth/permissions-server";
 import { actionFailure, actionSuccess, type ActionResult } from "@/lib/api/result";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { parseEuroToMinor } from "@/lib/finance/money";
+import { parseDollarToMinor } from "@/lib/finance/money";
 import {
   transactionArchiveSchema,
   transactionCorrectionSchema,
@@ -12,28 +12,28 @@ import {
 } from "@/features/finance/schemas/corrections";
 
 function mapCorrectionError(code?: string) {
-  if (code === "42501") return actionFailure("FORBIDDEN", "Du darfst diese Transaktion nicht ändern.");
-  if (code === "55000") return actionFailure("PERIOD_LOCKED", "Der Buchungszeitraum ist gesperrt.");
-  if (code === "23505") return actionFailure("CONFLICT", "Diese Änderung wurde bereits übermittelt.");
+  if (code === "42501") return actionFailure("FORBIDDEN", "You are not allowed to change this transaction.");
+  if (code === "55000") return actionFailure("PERIOD_LOCKED", "The accounting period is locked.");
+  if (code === "23505") return actionFailure("CONFLICT", "This change was already submitted.");
   if (code === "23503" || code === "23514" || code === "22023" || code === "22003") {
-    return actionFailure("INVALID_PAYLOAD", "Die Transaktionsdaten sind ungültig.");
+    return actionFailure("INVALID_PAYLOAD", "The transaction data is invalid.");
   }
-  return actionFailure("DATABASE_ERROR", "Die Transaktion konnte nicht geändert werden.");
+  return actionFailure("DATABASE_ERROR", "The transaction could not be changed.");
 }
 
 export async function correctTransactionFromUi(
   input: TransactionCorrectionInput,
 ): Promise<ActionResult<{ id: string }>> {
   const parsed = transactionCorrectionSchema.safeParse(input);
-  if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "Bitte alle Änderungsfelder ausfüllen.");
+  if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "Please complete all change fields.");
   const context = await requirePermission("editOpenTransactions");
   let amountMinor: bigint;
   try {
-    amountMinor = parseEuroToMinor(parsed.data.amount);
+    amountMinor = parseDollarToMinor(parsed.data.amount);
   } catch {
-    return actionFailure("INVALID_PAYLOAD", "Der Betrag ist ungültig.");
+    return actionFailure("INVALID_PAYLOAD", "The amount is invalid.");
   }
-  if (amountMinor <= BigInt(0)) return actionFailure("INVALID_PAYLOAD", "Der Betrag muss größer als 0 sein.");
+  if (amountMinor <= BigInt(0)) return actionFailure("INVALID_PAYLOAD", "The amount must be greater than 0.");
 
   const supabase = await createSupabaseServerClient();
   const { data: original, error: originalError } = await supabase
@@ -43,11 +43,11 @@ export async function correctTransactionFromUi(
     .eq("organization_id", context.organizationId)
     .maybeSingle();
   if (originalError) return mapCorrectionError(originalError.code);
-  if (!original) return actionFailure("NOT_FOUND", "Die Transaktion wurde nicht gefunden.");
+  if (!original) return actionFailure("NOT_FOUND", "The transaction was not found.");
   if (context.role !== "admin" && original.created_by !== context.clerkUserId) {
-    return actionFailure("FORBIDDEN", "Nur der Ersteller oder ein Admin kann bearbeiten.");
+    return actionFailure("FORBIDDEN", "Only the creator or an admin can edit.");
   }
-  if (original.status !== "posted") return actionFailure("CONFLICT", "Diese Transaktion kann nicht mehr geändert werden.");
+  if (original.status !== "posted") return actionFailure("CONFLICT", "This transaction can no longer be changed.");
 
   const { data: category, error: categoryError } = await supabase
     .from("categories")
@@ -58,7 +58,7 @@ export async function correctTransactionFromUi(
     .is("archived_at", null)
     .maybeSingle();
   if (categoryError) return mapCorrectionError(categoryError.code);
-  if (!category) return actionFailure("INVALID_PAYLOAD", "Die Kategorie ist nicht verfügbar.");
+  if (!category) return actionFailure("INVALID_PAYLOAD", "The category is unavailable.");
 
   const fromWalletId = parsed.data.direction === "expense"
     ? original.type === "expense" ? original.from_wallet_id : original.to_wallet_id
@@ -67,10 +67,10 @@ export async function correctTransactionFromUi(
     ? original.type === "income" ? original.to_wallet_id : original.from_wallet_id
     : null;
   if (!fromWalletId && parsed.data.direction === "expense") {
-    return actionFailure("INVALID_PAYLOAD", "Der Quellbereich der Transaktion fehlt.");
+    return actionFailure("INVALID_PAYLOAD", "The transaction source is missing.");
   }
   if (!toWalletId && parsed.data.direction === "income") {
-    return actionFailure("INVALID_PAYLOAD", "Der Zielbereich der Transaktion fehlt.");
+    return actionFailure("INVALID_PAYLOAD", "The transaction goal is missing.");
   }
 
   const { data, error } = await supabase.rpc("correct_manual_transaction", {
@@ -94,7 +94,7 @@ export async function archiveTransaction(
   input: TransactionArchiveInput,
 ): Promise<ActionResult<null>> {
   const parsed = transactionArchiveSchema.safeParse(input);
-  if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "Ein Archivierungsgrund ist erforderlich.");
+  if (!parsed.success) return actionFailure("INVALID_PAYLOAD", "An archive reason is required.");
   const context = await requirePermission("archiveFinanceRecords");
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.rpc("archive_transaction", {

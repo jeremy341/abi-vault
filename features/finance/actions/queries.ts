@@ -15,7 +15,7 @@ export type TransactionListItem = {
   receiptId: string | null;
   receiptFile: string | null;
   receiptType: string | null;
-  reviewStatus: "Geprüft" | "Zu prüfen" | "Ungültig";
+  reviewStatus: "Approved" | "Pending review" | "Invalid";
   createdByName: string | null;
   createdAt: string;
   account: string;
@@ -79,10 +79,10 @@ export async function listTransactionsForCurrentOrganization() {
         receiptId: null,
         receiptFile: null,
         receiptType: null,
-        reviewStatus: "Geprüft",
+        reviewStatus: "Approved",
         createdByName: null,
         createdAt: "",
-        account: item.wallet_label ?? "Nicht zugeordnet",
+        account: item.wallet_label ?? "Unassigned",
         walletId: null,
         fromWalletId: null,
         toWalletId: null,
@@ -153,13 +153,13 @@ export async function listTransactionsForCurrentOrganization() {
       amountMinor: String(item.type === "expense" ? -item.amount_minor : item.amount_minor),
       type: item.type,
       receipt: receiptMap.has(item.id),
-      reviewStatus: receiptMap.get(item.id)?.status === "approved" ? "Geprüft" : receiptMap.get(item.id)?.status === "rejected" ? "Ungültig" : "Zu prüfen",
+      reviewStatus: receiptMap.get(item.id)?.status === "approved" ? "Approved" : receiptMap.get(item.id)?.status === "rejected" ? "Invalid" : "Pending review",
       createdByName: creatorMap.get(item.created_by) ?? null,
       createdAt: item.created_at,
       receiptId: receiptMap.get(item.id)?.id ?? null,
       receiptFile: receiptMap.get(item.id)?.fileName ?? null,
       receiptType: receiptMap.get(item.id)?.type ?? null,
-      account: walletMap.get(item.type === "income" ? item.to_wallet_id : item.from_wallet_id) ?? "Nicht zugeordnet",
+      account: walletMap.get(item.type === "income" ? item.to_wallet_id : item.from_wallet_id) ?? "Unassigned",
       walletId: item.type === "income" ? item.to_wallet_id : item.from_wallet_id,
       fromWalletId: item.from_wallet_id,
       toWalletId: item.to_wallet_id,
@@ -210,7 +210,7 @@ export async function listReceiptsForCurrentOrganization() {
         file: item.file_name,
         type: item.mime_type === "application/pdf" ? "PDF" : item.mime_type === "image/png" ? "PNG" : "JPG",
         sizeBytes: item.file_size_bytes,
-        transaction: transaction?.title ?? "Nicht zugeordnet",
+        transaction: transaction?.title ?? "Unassigned",
         transactionId: item.transaction_id,
         assigned: Boolean(item.transaction_id),
         date: transaction?.booked_at ?? item.created_at.slice(0, 10),
@@ -564,7 +564,7 @@ export async function getReportSnapshot() {
   const months = Array.from({ length: 6 }, (_, index) => {
     const date = new Date(now.getFullYear(), now.getMonth() - 5 + index, 1);
     const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-    const label = date.toLocaleDateString("de-DE", { month: "short" }).replace(".", "");
+    const label = date.toLocaleDateString("en-GB", { month: "short" }).replace(".", "");
     return { key, label, year: date.getFullYear() };
   });
   const monthly = new Map(months.map((month) => [month.key, { income: 0, expenses: 0 }]));

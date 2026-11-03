@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useAppAuth } from "@/components/auth/app-auth";
 import { getDashboardSnapshot } from "@/features/finance/actions/queries";
 import {
   cachedFinanceQuery,
@@ -12,7 +12,7 @@ import {
 export type DashboardSnapshot = Awaited<ReturnType<typeof getDashboardSnapshot>> & { ok: true };
 
 export function useDashboardSnapshot() {
-  const { userId, orgId } = useAuth();
+  const { userId, orgId } = useAppAuth();
   const scope = `${orgId ?? "no-org"}:${userId ?? "anonymous"}`;
   const cached = getFinanceCacheState<DashboardSnapshot>("dashboard-snapshot", scope);
   const [snapshot, setSnapshot] = useState<DashboardSnapshot | null>(cached.data ?? null);
@@ -27,12 +27,12 @@ export function useDashboardSnapshot() {
         setSnapshot(result);
         setError(null);
       } else {
-        setError("Die Finanzübersicht konnte nicht geladen werden.");
+        setError("The financial overview could not be loaded.");
       }
     };
     const unsubscribe = subscribeFinanceQuery("dashboard-snapshot", (value) => applyResult(value as Awaited<ReturnType<typeof getDashboardSnapshot>>), scope);
     cachedFinanceQuery("dashboard-snapshot", getDashboardSnapshot, { scope }).then(applyResult).catch(() => {
-      if (active) setError("Die Finanzübersicht konnte nicht geladen werden.");
+      if (active) setError("The financial overview could not be loaded.");
     }).finally(() => {
       if (active) {
         setLoading(false);

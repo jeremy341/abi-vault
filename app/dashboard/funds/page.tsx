@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useAppAuth } from "@/components/auth/app-auth";
 import { Banknote, Trash2, X } from "lucide-react";
 import AddCardModal from "@/components/dashboard/AddCardModal";
 import EditCardModal from "@/components/dashboard/EditCardModal";
@@ -17,7 +17,7 @@ import { cachedFinanceQuery, getFinanceCacheState } from "@/lib/finance/client-c
 import { invalidateFinanceQuery } from "@/lib/finance/client-cache";
 import { archiveWallet, createWallet, updateWallet } from "@/features/finance/actions/wallets";
 import { recordCashCount } from "@/features/finance/actions/cash-counts";
-import { parseEuroToMinor } from "@/lib/finance/money";
+import { parseDollarToMinor } from "@/lib/finance/money";
 import { calculateCashDenominationMinor } from "@/lib/finance/cash-count";
 import {
   mapWalletToCashRegisterCard,
@@ -61,7 +61,7 @@ function formatCountDate(value: string) {
   const today = new Date();
   return date.toDateString() === today.toDateString()
     ? "Heute"
-    : date.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
+    : date.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
 function mapWalletToCashBox(wallet: WalletWithCount): CashBox {
@@ -90,18 +90,18 @@ function mapCashCountToAuditEntry(item: CashCountListItem): CashAuditEntry {
   };
 }
 
-const money = new Intl.NumberFormat("de-DE", {
+const money = new Intl.NumberFormat("en-GB", {
   style: "currency",
-  currency: "EUR",
+  currency: "USD",
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 });
 
-const euro = (value: number) => money.format(value);
+const dollar = (value: number) => money.format(value);
 
 export default function FundsPage() {
   const mode = usePresentationMode();
-  const { userId, orgId } = useAuth();
+  const { userId, orgId } = useAppAuth();
   const cacheScope = `${orgId ?? "no-org"}:${userId ?? "anonymous"}`;
   type DashboardResult = Awaited<ReturnType<typeof getDashboardSnapshot>>;
   const initialSnapshot = getFinanceCacheState<DashboardResult>("dashboard-snapshot", cacheScope);
@@ -146,7 +146,7 @@ export default function FundsPage() {
     try {
       const result = await cachedFinanceQuery("dashboard-snapshot", getDashboardSnapshot, { scope: cacheScope });
       if (!result.ok) {
-        setLoadError("Die Kassen konnten nicht geladen werden.");
+        setLoadError("Cash registers could not be loaded.");
         return;
       }
 
@@ -156,7 +156,7 @@ export default function FundsPage() {
       setCashBoxes(Object.fromEntries(cashWallets.map((wallet) => [wallet.id, mapWalletToCashBox(wallet)])));
       setActiveCardIndex((current) => Math.min(current, Math.max(0, cashWallets.length - 1)));
     } catch {
-      setLoadError("Die Kassen konnten nicht geladen werden.");
+      setLoadError("Cash registers could not be loaded.");
     } finally {
       setLoading(false);
     }
@@ -167,7 +167,7 @@ export default function FundsPage() {
       const result = await cachedFinanceQuery("cash-counts", listCashCountsForCurrentOrganization, { scope: cacheScope });
       if (result.ok) setAuditLogs(result.items.map(mapCashCountToAuditEntry));
     } catch {
-      // The Kasse data remains usable when the optional audit history is unavailable.
+      // The Cash register data remains usable when the optional audit history is unavailable.
     }
   }, [cacheScope]);
 
@@ -234,7 +234,7 @@ export default function FundsPage() {
   );
   const directCountedMinor = useMemo(() => {
     try {
-      return parseEuroToMinor(countedAmountInput);
+      return parseDollarToMinor(countedAmountInput);
     } catch {
       return null;
     }
@@ -296,7 +296,7 @@ export default function FundsPage() {
     setActiveCardIndex(cards.length);
     setIsAddCardOpen(false);
     invalidateFinanceQuery("wallets", "dashboard-snapshot", "transactions", "report-snapshot", "report-kpis");
-    setNotice("Kasse hinzugefügt.");
+    setNotice("Cash register added.");
     return true;
   }
 
@@ -305,14 +305,14 @@ export default function FundsPage() {
     const result = await updateWallet({
       walletId: activeCard.id,
       name: details.accountName,
-      reason: "Kasse über die Kassenverwaltung aktualisiert",
+      reason: "Cash register updated through cash register management",
       cardNumberVisual: details.cardNumber,
       cardHolderVisual: details.holder,
       cardExpiryVisual: details.expiry,
       cardColorVisual: details.color,
     });
     if (!result.success) {
-      setNotice("Kartendaten konnten nicht gespeichert werden.");
+      setNotice("Card details could not be saved.");
       return false;
     }
     setCards((current) =>
@@ -383,10 +383,10 @@ export default function FundsPage() {
     try {
       const result = await archiveWallet({
         walletId: activeCard.id,
-        reason: "Kasse über die Kassenverwaltung archiviert",
+        reason: "Cash register archived through cash register management",
       });
       if (!result.success) {
-        setNotice("Kasse konnte nicht archiviert werden.");
+        setNotice("The cash register could not be archived.");
         return;
       }
       setCards((current) =>
@@ -400,9 +400,9 @@ export default function FundsPage() {
       setActiveCardIndex((current) => Math.max(0, current - 1));
       setIsDeleteOpen(false);
       invalidateFinanceQuery("wallets", "dashboard-snapshot", "transactions", "report-snapshot", "report-kpis");
-      setNotice("Kasse archiviert.");
+      setNotice("Cash register archived.");
     } catch {
-      setNotice("Kasse konnte nicht archiviert werden.");
+      setNotice("The cash register could not be archived.");
     } finally {
       setDeleteSaving(false);
     }
@@ -415,7 +415,7 @@ export default function FundsPage() {
     try {
     const form = event.currentTarget;
     if (!activeCountedAmountValid || activeCountedAmount < 0) {
-      setCountError("Bitte einen gültigen Zählbetrag eingeben.");
+      setCountError("Please enter a valid counted amount.");
       window.requestAnimationFrame(() => {
         (
           form.elements.namedItem(
@@ -439,7 +439,7 @@ export default function FundsPage() {
         idempotencyKey: countIdempotencyKey.current ?? `count-${cashBox.id}-${crypto.randomUUID()}`,
       });
       if (!persisted.ok) {
-        setCountError("Der Kassensturz konnte nicht gespeichert werden.");
+        setCountError("The cash count could not be saved.");
         return;
       }
     }
@@ -472,9 +472,9 @@ export default function FundsPage() {
     invalidateFinanceQuery("wallets", "cash-counts", "dashboard-snapshot", "transactions", "report-snapshot", "report-kpis");
     void loadWallets();
     void loadCashCounts();
-    setNotice("Kassensturz gespeichert.");
+    setNotice("Cash count gespeichert.");
     } catch {
-      setCountError("Der Kassensturz konnte nicht gespeichert werden.");
+      setCountError("The cash count could not be saved.");
     } finally {
       setCountSaving(false);
     }
@@ -484,7 +484,7 @@ export default function FundsPage() {
     <section
       className={`${adaptiveStyles.root} ${mode === "desktop" ? adaptiveStyles.desktopPageRoot : ""}`}
     >
-      <LoadingStatus loading={loading} label="Kasse wird geladen…" />
+      <LoadingStatus loading={loading} label="Cash register is loading…" />
       <p className={styles.liveNotice} aria-live="polite">
         {notice}
       </p>
@@ -500,7 +500,7 @@ export default function FundsPage() {
         cashBox={cashBox}
         auditLogs={auditLogs}
         activities={[]}
-        euro={euro}
+        dollar={dollar}
         onSwitchCard={switchCard}
         onSelectCard={selectCard}
         onAddCard={() => setIsAddCardOpen(true)}
@@ -525,7 +525,7 @@ export default function FundsPage() {
 
       {isDeleteOpen ? (
         <Dialog
-          label="Kasse archivieren"
+          label="Archive cash register"
           onClose={closeDeleteDialog}
           overlayClassName={styles.overlay}
           dialogClassName={`${styles.modal} ${styles.confirmationModal}`}
@@ -536,8 +536,8 @@ export default function FundsPage() {
                 <Trash2 aria-hidden="true" />
               </span>
               <div>
-                <h2>Kasse archivieren?</h2>
-                <p>Die Kasse wird aus den aktiven Ansichten entfernt. Historische Buchungen bleiben erhalten.</p>
+                <h2>Archive cash register?</h2>
+                <p>The cash register will be removed from active views. Historical entries will remain available.</p>
               </div>
             </div>
             <button
@@ -545,14 +545,14 @@ export default function FundsPage() {
               className={styles.closeButton}
               onClick={closeDeleteDialog}
               disabled={deleteSaving}
-              aria-label="Schließen"
+              aria-label="Close"
             >
               <X aria-hidden="true" />
             </button>
           </header>
           <div className={styles.confirmationBody}>
             <strong>{activeCard?.details.accountName}</strong>
-            <span>Ledger-basiert · Kartendarstellung</span>
+            <span>Ledger-basiert · Card display</span>
           </div>
           <footer className={styles.modalFooter}>
             <button
@@ -561,7 +561,7 @@ export default function FundsPage() {
               onClick={closeDeleteDialog}
               disabled={deleteSaving}
             >
-              Abbrechen
+              Cancel
             </button>
             <button
               type="button"
@@ -570,7 +570,7 @@ export default function FundsPage() {
               disabled={deleteSaving}
               aria-busy={deleteSaving}
             >
-              {deleteSaving ? "Wird archiviert …" : "Kasse archivieren"}
+              {deleteSaving ? "Archiving …" : "Archive cash register"}
             </button>
           </footer>
         </Dialog>
@@ -578,7 +578,7 @@ export default function FundsPage() {
 
       {isCountOpen ? (
         <Dialog
-          label="Kassenzählung durchführen"
+          label="Perform cash count"
           onClose={closeCountDialog}
           overlayClassName={styles.overlay}
           dialogClassName={`${styles.modal} ${mode !== "desktop" ? adaptiveStyles.adaptiveDialog : ""}`}
@@ -590,8 +590,8 @@ export default function FundsPage() {
                   <Banknote aria-hidden="true" />
                 </span>
                 <div>
-                  <h2>Kassensturz erfassen</h2>
-                  <p>Bargeld zählen und mit dem Buchbestand abgleichen.</p>
+                  <h2>Record cash count</h2>
+                  <p>Count cash and compare it with the book balance.</p>
                 </div>
               </div>
               <button
@@ -599,7 +599,7 @@ export default function FundsPage() {
                 className={styles.closeButton}
                 onClick={closeCountDialog}
                 disabled={countSaving}
-                aria-label="Schließen"
+                aria-label="Close"
               >
                 <X aria-hidden="true" />
               </button>
@@ -609,7 +609,7 @@ export default function FundsPage() {
               <div
                 className={styles.modeTabs}
                 role="tablist"
-                aria-label="Zählmethode"
+                aria-label="Counting method"
               >
                 <button
                   type="button"
@@ -635,7 +635,7 @@ export default function FundsPage() {
                   }
                   onClick={() => setCountMode("calculator")}
                 >
-                  Stückelung
+                  Denominations
                 </button>
               </div>
 
@@ -647,7 +647,7 @@ export default function FundsPage() {
                   aria-label="Gesamtbetrag"
                 >
                   <label className={styles.formField}>
-                    <span>Gezählter Betrag</span>
+                    <span>Counted onount</span>
                     <div className={styles.amountField}>
                       <input
                         name="countedAmount"
@@ -663,11 +663,11 @@ export default function FundsPage() {
                         }
                         placeholder="0,00"
                       />
-                      <span>€</span>
+                      <span>$</span>
                     </div>
                   </label>
                   <label className={styles.formField}>
-                    <span>Gezählt von</span>
+                    <span>Counted by</span>
                     <input
                       name="auditor"
                       type="text"
@@ -675,7 +675,7 @@ export default function FundsPage() {
                       required
                       value={countPerson}
                       onChange={(event) => setCountPerson(event.target.value)}
-                      placeholder="Name der prüfenden Person"
+                      placeholder="Name of the person checking"
                     />
                   </label>
                 </div>
@@ -684,18 +684,18 @@ export default function FundsPage() {
                   id="count-calculator-panel"
                   className={styles.denominationGrid}
                   role="tabpanel"
-                  aria-label="Stückelung"
+                  aria-label="Denominations"
                 >
                   {[
-                    ["50", "50 € Scheine"],
-                    ["20", "20 € Scheine"],
-                    ["10", "10 € Scheine"],
-                    ["5", "5 € Scheine"],
-                    ["2", "2 € Münzen"],
-                    ["1", "1 € Münzen"],
-                    ["0.5", "0,50 € Münzen"],
-                    ["0.2", "0,20 € Münzen"],
-                    ["0.1", "0,10 € Münzen"],
+                    ["50", "50 $ Scheine"],
+                    ["20", "20 $ Scheine"],
+                    ["10", "10 $ Scheine"],
+                    ["5", "5 $ Scheine"],
+                    ["2", "$2 coins"],
+                    ["1", "$1 coins"],
+                    ["0.5", "$0.50 coins"],
+                    ["0.2", "$0.20 coins"],
+                    ["0.1", "$0.10 coins"],
                   ].map(([denomination, label]) => (
                     <label className={styles.denominationItem} key={denomination}>
                       <span>{label}</span>
@@ -721,24 +721,24 @@ export default function FundsPage() {
               )}
 
               <label className={`${styles.formField} ${styles.formFieldFull}`}>
-                <span>Notiz oder Anlass</span>
+                <span>Note or reason</span>
                 <input
                   name="countNote"
                   type="text"
                   autoComplete="off"
                   value={countNote}
                   onChange={(event) => setCountNote(event.target.value)}
-                  placeholder="Zum Beispiel Kuchenverkauf"
+                  placeholder="For example, cake sale"
                 />
               </label>
 
-              <div className={styles.countPreview} aria-label="Zählvorschau">
-                <div><span>Buchbestand</span><strong>{euro(cashBox.balance)}</strong></div>
-                <div><span>Gezählt</span><strong>{euro(activeCountedAmount)}</strong></div>
+              <div className={styles.countPreview} aria-label="Count preview">
+                <div><span>Book balance</span><strong>{dollar(cashBox.balance)}</strong></div>
+                <div><span>Counted</span><strong>{dollar(activeCountedAmount)}</strong></div>
                 <div>
-                  <span>Differenz</span>
+                  <span>Difference</span>
                   <strong className={Math.abs(currentDiffPreview) < 0.01 ? styles.positive : styles.negative}>
-                    {currentDiffPreview > 0 ? "+" : ""}{euro(currentDiffPreview)}
+                    {currentDiffPreview > 0 ? "+" : ""}{dollar(currentDiffPreview)}
                   </strong>
                 </div>
               </div>
@@ -761,10 +761,10 @@ export default function FundsPage() {
                 onClick={closeCountDialog}
                 disabled={countSaving}
               >
-                Abbrechen
+                Cancel
               </button>
               <button type="submit" className={styles.primaryButton} disabled={countSaving} aria-busy={countSaving}>
-                {countSaving ? "Wird gespeichert …" : "Kassensturz speichern"}
+                {countSaving ? "Saving …" : "Save cash count"}
               </button>
             </footer>
           </form>

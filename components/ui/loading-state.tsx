@@ -24,7 +24,7 @@ export function useDelayedLoading(loading: boolean, delay = 160) {
   return loading && visible;
 }
 
-export function LoadingStatus({ loading, label = "Inhalte werden geladen…" }: { loading: boolean; label?: string }) {
+export function LoadingStatus({ loading, label = "Content is loading…" }: { loading: boolean; label?: string }) {
   if (!loading) return null;
   return <span className={styles.status} role="status" aria-live="polite">{label}</span>;
 }
@@ -38,7 +38,7 @@ export function LoadingBlock({ loading, children, className }: { loading: boolea
   return <div aria-hidden="true" className={cn(styles.loadingBlock, className)} />;
 }
 
-export function InlineLoading({ label = "Wird geladen…", className }: { label?: string; className?: string }) {
+export function InlineLoading({ label = "Loading…", className }: { label?: string; className?: string }) {
   return <span className={cn(styles.inlineLoading, className)} role="status"><span className={styles.spinner} aria-hidden="true" />{label}</span>;
 }
 

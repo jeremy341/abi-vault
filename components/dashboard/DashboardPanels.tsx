@@ -20,18 +20,18 @@ import dashboardStyles from "@/app/dashboard/dashboard.module.css";
 
 export const dashboardTransactions = [
   {
-    title: "Druck Abizeitung",
+    title: "Yearbook printing",
     category: "Material",
     date: "12.05.2024",
-    amount: "-320,00 €",
+    amount: "-$320.00",
     tone: "violet",
     icon: FileText,
   },
   {
-    title: "Kuchenverkauf",
+    title: "Cake sale",
     category: "Sonstiges",
     date: "11.05.2024",
-    amount: "+185,50 €",
+    amount: "+$185.50",
     tone: "green",
     icon: CakeSlice,
   },
@@ -39,7 +39,7 @@ export const dashboardTransactions = [
     title: "Dekoration Abiball",
     category: "Veranstaltung",
     date: "08.05.2024",
-    amount: "-184,90 €",
+    amount: "-$184.90",
     tone: "orange",
     icon: PartyPopper,
   },
@@ -47,7 +47,7 @@ export const dashboardTransactions = [
     title: "Spende Eltern",
     category: "Sonstiges",
     date: "07.05.2024",
-    amount: "+250,00 €",
+    amount: "+$250.00",
     tone: "green",
     icon: HandCoins,
   },
@@ -55,15 +55,15 @@ export const dashboardTransactions = [
     title: "Busfahrt Abifahrt",
     category: "Veranstaltung",
     date: "05.05.2024",
-    amount: "-1.200,00 €",
+    amount: "-$1,200.00",
     tone: "violet",
     icon: BusFront,
   },
   {
-    title: "Mitgliedsbeitrag",
+    title: "Membersbeitrag",
     category: "Sonstiges",
     date: "03.05.2024",
-    amount: "+120,00 €",
+    amount: "+$120.00",
     tone: "green",
     icon: HandCoins,
   },
@@ -71,7 +71,7 @@ export const dashboardTransactions = [
     title: "Druck Nachzahlung",
     category: "Material",
     date: "02.05.2024",
-    amount: "-75,00 €",
+    amount: "-$75.00",
     tone: "violet",
     icon: FileText,
   },
@@ -79,7 +79,7 @@ export const dashboardTransactions = [
     title: "Dekoration Klassenraum",
     category: "Material",
     date: "30.04.2024",
-    amount: "-96,40 €",
+    amount: "-$96.40",
     tone: "orange",
     icon: PartyPopper,
   },
@@ -87,7 +87,7 @@ export const dashboardTransactions = [
     title: "Sponsoring Klassenfest",
     category: "Veranstaltung",
     date: "28.04.2024",
-    amount: "+480,00 €",
+    amount: "+$480.00",
     tone: "green",
     icon: HandCoins,
   },
@@ -96,22 +96,22 @@ export const dashboardTransactions = [
 export const dashboardGoals = [
   {
     title: "Abiball",
-    target: "3.000 €",
-    saved: "2.100 € gesammelt",
+    target: "$3,000",
+    saved: "2.100 $ saved",
     progress: 70,
     date: "15.05.2026",
   },
   {
     title: "Abizeitung",
-    target: "1.200 €",
-    saved: "540 € gesammelt",
+    target: "$1,200",
+    saved: "540 $ saved",
     progress: 45,
     date: "30.04.2026",
   },
   {
     title: "Reserve",
-    target: "1.000 €",
-    saved: "800 € gesammelt",
+    target: "$1,000",
+    saved: "800 $ saved",
     progress: 80,
     date: "01.07.2026",
   },
@@ -120,7 +120,7 @@ export const dashboardGoals = [
 export const dashboardCategories = [
   {
     title: "Veranstaltung",
-    amount: "1.740,00 € von 3.000,00 €",
+    amount: "$1,740.00 of $3,000.00",
     progress: 58,
     color: "bg-black dark:bg-white",
     bubble: "bg-black/[0.04] text-ink dark:bg-white/[0.08]",
@@ -128,7 +128,7 @@ export const dashboardCategories = [
   },
   {
     title: "Material",
-    amount: "384,90 € von 1.200,00 €",
+    amount: "$384.90 of $1,200.00",
     progress: 32,
     color: "bg-[var(--ui-positive)]",
     bubble:
@@ -137,7 +137,7 @@ export const dashboardCategories = [
   },
   {
     title: "Sonstiges",
-    amount: "185,50 € von 1.000,00 €",
+    amount: "$185.50 of $1,000.00",
     progress: 10,
     color: "bg-[var(--ui-warning)]",
     bubble:
@@ -171,16 +171,16 @@ export function TransactionHistory() {
     >
       <CardHeader className="px-5 pb-0 pt-5 sm:px-6 lg:px-7 lg:pt-6">
         <CardTitle className="text-xl font-semibold tracking-tight lg:text-2xl">
-          Transaktionsverlauf
+          Transactionsverlauf
         </CardTitle>
       </CardHeader>
       <CardContent className="px-4 pb-4 pt-0 sm:px-5 lg:px-6 lg:pb-5">
         <div className="hidden grid-cols-[minmax(0,1.5fr)_minmax(90px,0.9fr)_100px_110px_24px] gap-3 border-b border-black/10 px-2 pb-2 text-xs text-muted-foreground dark:border-white/15 sm:grid">
           <span />
-          <span>Kategorie</span>
-          <span>Datum</span>
-          <span>Betrag</span>
-          <span>Beleg</span>
+          <span>Category</span>
+          <span>Date</span>
+          <span>Amount</span>
+          <span>Receipt</span>
         </div>
         <div className="divide-y divide-black/10 dark:divide-white/10">
           {dashboardTransactions.map((transaction, index) => {
@@ -218,7 +218,7 @@ export function TransactionHistory() {
           href="/dashboard/transactions"
           className="mt-4 inline-flex items-center gap-2 px-2 text-sm font-semibold text-ink transition-transform hover:translate-x-0.5 min-[1280px]:max-[2199px]:mt-2 min-[1280px]:max-[2199px]:translate-y-[13px]"
         >
-          Alle Transaktionen anzeigen <ArrowRight className="size-4" />
+          All Transactions anzeigen <ArrowRight className="size-4" />
         </Link>
       </CardContent>
     </Card>
@@ -232,13 +232,13 @@ export function GoalsPanel() {
     >
       <CardHeader className="flex-row items-center justify-between px-5 pb-0 pt-5 sm:px-6 lg:px-7 lg:pt-6">
         <CardTitle className="text-xl font-semibold tracking-tight lg:text-2xl">
-          Ziele
+          Goals
         </CardTitle>
         <Link
           href="/dashboard/goals"
           className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-ink"
         >
-          Alle Ziele <ArrowRight className="size-4" />
+          All Goals <ArrowRight className="size-4" />
         </Link>
       </CardHeader>
       <CardContent className="overflow-visible px-4 pb-4 pt-4 sm:px-5 lg:px-6 lg:pb-5">
@@ -273,7 +273,7 @@ export function GoalsPanel() {
               <p
                 className={`${dashboardStyles.goalDate} mt-5 text-sm text-muted-foreground`}
               >
-                Ziel: {goal.date}
+                Goal: {goal.date}
               </p>
             </div>
           ))}
@@ -290,7 +290,7 @@ export function SpendingByCategory() {
     >
       <CardHeader className="px-5 pb-0 pt-5 sm:px-6 lg:px-7 lg:pt-6">
         <CardTitle className="text-xl font-semibold tracking-tight lg:text-2xl">
-          Ausgaben nach Kategorie
+          Expenses by category
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4 px-5 pb-5 pt-4 sm:px-6 lg:px-7 min-[1280px]:max-[2199px]:space-y-2 min-[1280px]:max-[2199px]:pt-2 min-[2200px]:space-y-1 min-[2200px]:pb-6 min-[2200px]:pt-1">
@@ -337,7 +337,7 @@ export function ReviewPanel() {
     >
       <CardHeader className="px-5 pb-0 pt-5 sm:px-6 lg:px-7 lg:pt-6">
         <CardTitle className="text-xl font-semibold tracking-tight lg:text-2xl">
-          Zu prüfen
+          Pending review
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2 px-5 pb-7 pt-2 sm:px-6 lg:px-7 min-[1280px]:max-[2199px]:pt-0">
@@ -346,7 +346,7 @@ export function ReviewPanel() {
           className="flex items-center gap-3 rounded-lg border border-black/[0.08] px-3 py-2.5 text-sm transition-colors hover:bg-black/[0.03] dark:border-white/15 dark:hover:bg-white/[0.06]"
         >
           <AlertTriangle className="size-5 text-[var(--ui-warning)]" />
-          <span className="flex-1">3 Belege warten auf Prüfung</span>
+          <span className="flex-1">3 receipts waiting for review</span>
           <ArrowRight className="size-4" />
         </Link>
         <Link
@@ -354,7 +354,7 @@ export function ReviewPanel() {
           className="flex items-center gap-3 rounded-lg border border-black/[0.08] px-3 py-2.5 text-sm transition-colors hover:bg-black/[0.03] dark:border-white/15 dark:hover:bg-white/[0.06]"
         >
           <Info className="size-5" />
-          <span className="flex-1">1 Bargeldzahlung fehlt</span>
+          <span className="flex-1">1 cash payment missing</span>
           <ArrowRight className="size-4" />
         </Link>
         <Link
@@ -362,14 +362,14 @@ export function ReviewPanel() {
           className="hidden items-center gap-3 rounded-lg border border-black/[0.08] px-3 py-2.5 text-sm transition-colors hover:bg-black/[0.03] min-[2200px]:flex min-[2200px]:py-3 dark:border-white/15 dark:hover:bg-white/[0.06]"
         >
           <FileText className="size-5 text-muted-foreground" />
-          <span className="flex-1">1 Beleg ohne Kategorie</span>
+          <span className="flex-1">1 receipt without a category</span>
           <ArrowRight className="size-4" />
         </Link>
         <Link
           href="/dashboard/transactions"
           className="mt-2 flex h-10 items-center justify-center gap-2 rounded-lg bg-black text-sm font-medium text-white transition-opacity hover:opacity-80 min-[2200px]:mt-3 min-[2200px]:h-12 dark:bg-white dark:text-black"
         >
-          <Plus className="size-5" /> Transaktion hinzufügen
+          <Plus className="size-5" /> Add transaction
         </Link>
       </CardContent>
     </Card>

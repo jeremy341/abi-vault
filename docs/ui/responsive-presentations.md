@@ -18,7 +18,7 @@ Pages keep their existing data, state, calculations, validation, and event handl
 
 - `ResponsiveDashboardShell` owns three separate navigation and topbar trees.
 - `AdaptiveDashboardPage` owns independent desktop, tablet, and phone dashboard compositions.
-- `AdaptiveFundsView` owns independent desktop, tablet, and phone Kasse & Konten compositions while receiving the same state and callbacks.
+- `AdaptiveFundsView` owns independent desktop, tablet, and phone Cash registers compositions while receiving the same state and callbacks.
 - The remaining page files keep their desktop and tablet structures while rendering dedicated phone views from the same state.
 
 ## Desktop isolation
@@ -33,7 +33,7 @@ Desktop-specific presentation files:
 - `components/presentation/AdaptiveFundsView.tsx`
 - `app/dashboard/funds/funds-adaptive.module.css`
 
-Dashboard and Kasse & Konten receive purpose-built desktop compositions. Reports, Transactions, Receipts, Goals, People, and Settings retain their established page structures and receive only shell, density, overflow, and interaction corrections.
+Dashboard and Cash registers receive purpose-built desktop compositions. Reports, Transactions, Receipts, Goals, People, and Settings retain their established page structures and receive only shell, density, overflow, and interaction corrections.
 
 Rules:
 

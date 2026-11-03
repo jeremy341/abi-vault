@@ -17,8 +17,8 @@ import styles from "./AccountCardModal.module.css";
 const cardColors = [
   { name: "Schwarz", value: "#111114" },
   { name: "Graphit", value: "#3b3b40" },
-  { name: "Weiß", value: "#e9e9e7" },
-  { name: "Waldgrün", value: "#25453b" },
+  { name: "White", value: "#e9e9e7" },
+  { name: "Forest green", value: "#25453b" },
   { name: "Burgunder", value: "#542f38" },
   { name: "Navy", value: "#26364d" },
   { name: "Sand", value: "#9a8d78" },
@@ -122,7 +122,7 @@ export default function AddCardModal({
     if (invalidMonth || (next.length === 5 && !isValidFutureExpiry(next))) {
       setErrors((current) => ({
         ...current,
-        expiry: "Ungültiges Ablaufdatum.",
+        expiry: "Invalides Expiry date.",
       }));
     }
   }
@@ -131,16 +131,16 @@ export default function AddCardModal({
     const nextErrors: FormErrors = {};
 
     if (!values.accountName.trim()) {
-      nextErrors.accountName = "Bitte einen Kassennamen eingeben.";
+      nextErrors.accountName = "Please enter a cash register name.";
     }
     if (values.cardNumber.replace(/\D/g, "").length !== 16) {
-      nextErrors.cardNumber = "Die Kartennummer muss 16 Ziffern enthalten.";
+      nextErrors.cardNumber = "The card number must contain 16 digits.";
     }
     if (!values.holder.trim()) {
-      nextErrors.holder = "Bitte den Karteninhaber eingeben.";
+      nextErrors.holder = "Please enter the card holder.";
     }
     if (!isValidFutureExpiry(values.expiry)) {
-      nextErrors.expiry = "Ungültiges Ablaufdatum.";
+      nextErrors.expiry = "Invalides Expiry date.";
     }
 
     setErrors(nextErrors);
@@ -172,10 +172,10 @@ export default function AddCardModal({
         setErrors({});
         idempotencyKey.current = null;
       } else {
-        setSubmitError("Die Kasse konnte nicht gespeichert werden.");
+        setSubmitError("The cash register could not be saved.");
       }
     } catch {
-      setSubmitError("Die Kasse konnte nicht gespeichert werden.");
+      setSubmitError("The cash register could not be saved.");
     } finally {
       setSaving(false);
     }
@@ -200,13 +200,13 @@ export default function AddCardModal({
       >
         <header className={styles.header}>
           <div className={styles.heading}>
-            <h2 id="add-card-title">Kasse hinzufügen</h2>
-            <p>Lege eine weitere Kasse mit eigener Kartendarstellung an.</p>
+            <h2 id="add-card-title">Add cash register</h2>
+            <p>Create another cash register with its own card view.</p>
           </div>
           <button
             type="button"
             className={styles.closeButton}
-            aria-label="Dialog schließen"
+            aria-label="Close dialog"
             onClick={onClose}
             disabled={saving}
           >
@@ -215,12 +215,12 @@ export default function AddCardModal({
         </header>
 
         <div className={styles.body}>
-          <div className={styles.preview} aria-label="Kartenvorschau">
+          <div className={styles.preview} aria-label="Card preview">
             <AccountCard
               cardColor={selectedColor}
               details={{
                 ...values,
-                accountName: values.accountName || "Neue Kasse",
+                accountName: values.accountName || "New Cash register",
                 cardNumber: values.cardNumber || previewCardNumber,
                 holder: values.holder || "Mike Smith",
                 expiry: values.expiry || "06/21",
@@ -230,7 +230,7 @@ export default function AddCardModal({
 
           <section className={styles.section} aria-labelledby="add-card-colors">
             <h3 id="add-card-colors" className={styles.sectionTitle}>
-              Kartenfarbe
+              Card color
             </h3>
             <div className={styles.colorOptions}>
               {cardColors.map((color) => (
@@ -238,7 +238,7 @@ export default function AddCardModal({
                   key={color.value}
                   type="button"
                   className={styles.colorOption}
-                  aria-label={`${color.name} auswählen`}
+                  aria-label={`Select ${color.name}`}
                   aria-pressed={selectedColor === color.value}
                   style={
                     { "--swatch": color.value } as React.CSSProperties
@@ -254,11 +254,11 @@ export default function AddCardModal({
             aria-labelledby="add-card-information"
           >
             <h3 id="add-card-information" className={styles.sectionTitle}>
-              Karteninformationen
+              Card information
             </h3>
             <div className={styles.formGrid}>
               <Field
-                label="Kassenname"
+                label="Cash registersname"
                 error={errors.accountName}
                 errorId="add-account-name-error"
               >
@@ -277,11 +277,11 @@ export default function AddCardModal({
                       filterLetters(event.target.value, 26),
                     )
                   }
-                  placeholder="Zum Beispiel Getränkekasse"
+                  placeholder="For example, drinks cash register"
                 />
               </Field>
               <Field
-                label="Kartennummer"
+                label="Card number"
                 error={errors.cardNumber}
                 errorId="add-card-number-error"
               >
@@ -305,7 +305,7 @@ export default function AddCardModal({
                 />
               </Field>
               <Field
-                label="Karteninhaber"
+                label="Card holder"
                 error={errors.holder}
                 errorId="add-holder-error"
               >
@@ -324,11 +324,11 @@ export default function AddCardModal({
                       filterLetters(event.target.value, 26),
                     )
                   }
-                  placeholder="Vor- und Nachname"
+                  placeholder="First and last name"
                 />
               </Field>
               <Field
-                label="Ablaufdatum"
+                label="Expiry date"
                 error={errors.expiry}
                 errorId="add-expiry-error"
               >
@@ -359,10 +359,10 @@ export default function AddCardModal({
             onClick={onClose}
             disabled={saving}
           >
-            Abbrechen
+            Cancel
           </button>
           <button type="submit" className={styles.primaryButton} disabled={saving} aria-busy={saving}>
-            {saving ? "Kasse wird gespeichert …" : "Kasse hinzufügen"}
+            {saving ? "Saving cash register …" : "Add cash register"}
           </button>
         </footer>
       </form>

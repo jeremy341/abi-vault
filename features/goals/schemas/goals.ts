@@ -1,13 +1,13 @@
 import { z } from "zod";
-import { parseEuroToMinor } from "@/lib/finance/money";
+import { parseDollarToMinor } from "@/lib/finance/money";
 
 const minorAmount = z.string().trim().transform((value, context) => {
   try {
-    const amount = parseEuroToMinor(value);
+    const amount = parseDollarToMinor(value);
     if (amount <= BigInt(0)) throw new Error("not positive");
     return amount;
   } catch {
-    context.addIssue({ code: "custom", message: "Bitte einen positiven Euro-Betrag eingeben." });
+    context.addIssue({ code: "custom", message: "Enter a positive dollar amount." });
     return z.NEVER;
   }
 });

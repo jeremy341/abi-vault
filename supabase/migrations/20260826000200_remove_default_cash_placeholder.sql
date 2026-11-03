@@ -1,4 +1,4 @@
--- Start new committees with a genuinely empty Kasse collection.
+-- Start new committees with a genuinely empty cash register collection.
 -- Historical data remains recoverable because the default wallet is archived,
 -- not deleted.
 

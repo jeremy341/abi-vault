@@ -10,8 +10,8 @@ import styles from "./reports.module.css";
 import { Snapshot, currency, signed } from "./report-helpers";
 
 const chartConfig = {
-  income: { label: "Income", color: "var(--ink)" },
-  expenses: { label: "Expenses", color: "var(--control)" },
+  income: { label: "Income", color: "var(--green)" },
+  expenses: { label: "Expenses", color: "var(--salmon)" },
 } satisfies ChartConfig;
 
 function formatAxisTick(amount: number) {

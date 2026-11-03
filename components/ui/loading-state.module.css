@@ -86,7 +86,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-8);
-  border-bottom: 1px solid var(--rule);
+  border-bottom: 2px dotted var(--line-2);
   animation: loading-wave 1.6s var(--ease) 400ms infinite;
 }
 .skeletonRow > span {

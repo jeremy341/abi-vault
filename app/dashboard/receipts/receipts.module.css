@@ -13,7 +13,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
-  border: 1px solid var(--control);
+  border: 3px solid var(--line-2);
   border-radius: var(--radius-control);
   background: var(--surface);
   padding: var(--space-4);
@@ -58,9 +58,10 @@
   min-height: var(--control-height);
   flex: none;
   align-items: center;
-  border: 1px solid var(--ink);
-  border-radius: var(--radius-control);
-  background: var(--ink);
+  border: 1px solid transparent;
+  border-radius: 6px 8px 7px 9px;
+  background: var(--btn);
+  box-shadow: 3px 3px 0 var(--salmon);
   padding: 0 var(--space-4);
   color: var(--paper);
   font-size: var(--text-sm);
@@ -72,7 +73,7 @@
   grid-template-columns: 5rem minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--space-4);
-  border-block: 1px solid var(--rule);
+  border-block: 2px dotted var(--line-2);
   padding-block: var(--space-3);
 }
 
@@ -80,7 +81,7 @@
   display: block;
   width: 5rem;
   height: 5rem;
-  border: 1px solid var(--rule);
+  border: 3px solid var(--line);
   background: var(--sunk);
   object-fit: contain;
 }
@@ -128,7 +129,7 @@
 
 .removeFileButton {
   min-height: var(--control-height);
-  border: 1px solid var(--control);
+  border: 3px solid var(--line-2);
   border-radius: var(--radius-control);
   background: transparent;
   padding: 0 var(--space-3);
@@ -165,7 +166,7 @@
 
 .imageLightboxImage {
   width: min(100%, 72rem);
-  height: min(100%, 85dvh);
+  height: min(100%, calc(85 * var(--dvh)));
   object-fit: contain;
   cursor: default;
 }
@@ -206,7 +207,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  border: 1px solid var(--control);
+  border: 3px solid var(--line-2);
   border-radius: var(--radius-control);
   background: var(--surface);
   padding: 0 var(--space-3);
@@ -243,9 +244,9 @@
 }
 
 .comboboxContent {
-  width: min(32rem, calc(100vw - 2rem)) !important;
+  width: min(32rem, calc(100 * var(--vw) - 2rem)) !important;
   gap: var(--space-2) !important;
-  border: 1px solid var(--rule);
+  border: 3px solid var(--line);
   border-radius: var(--radius-overlay) !important;
   background: var(--surface) !important;
   padding: var(--space-2) !important;
@@ -258,7 +259,7 @@
   height: var(--control-height);
   align-items: center;
   gap: var(--space-2);
-  border: 1px solid var(--control);
+  border: 3px solid var(--line-2);
   border-radius: var(--radius-control);
   padding: 0 var(--space-3);
 }
@@ -304,7 +305,7 @@
   align-items: center;
   gap: var(--space-3);
   border: 0;
-  border-bottom: 1px solid var(--rule);
+  border-bottom: 2px dotted var(--line-2);
   border-radius: 0;
   background: transparent;
   padding: var(--space-2) var(--space-2);

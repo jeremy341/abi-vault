@@ -12,10 +12,10 @@ export default function AbiLogo({
   return (
     <Link
       href="/"
-      className={`font-semibold text-foreground ${size === "large" ? "text-lg" : "text-[0.9375rem]"} ${className}`}
+      className={`wordmark ${size === "large" ? "wordmark-large" : ""} ${className}`}
       aria-label="Abi Vault home"
     >
-      Abi Vault
+      abi vault<span aria-hidden="true">!</span>
     </Link>
   );
 }

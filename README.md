@@ -78,6 +78,10 @@ first, then use the local keys printed by `supabase status`. Never use productio
 Abi Vault currently focuses on manual class finance. Direct bank connections
 and Open Banking are deferred.
 
+## Credits
+
+The pixel heading font is [augiepixel](https://github.com/0xQuerencia/ripple/blob/main/src/assets/fonts/augiepixel.ttf) by Augie Ruben. The soft pixel look in the headings and annotations follows the style of [ripple](https://github.com/0xQuerencia/ripple) (MIT), which is itself inspired by [jame gam](https://jamegam.hackclub.com/) from Hack Club. The arrow in `public/art/` is a pixel sprite from ripple, rendered from [Phosphor Icons](https://phosphoricons.com/) (MIT).
+
 ## License
 
 Abi Vault is available under the [MIT License](LICENSE).

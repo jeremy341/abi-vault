@@ -69,16 +69,6 @@ export function goalRows(snapshot: DashboardSnapshot | null) {
   });
 }
 
-export function categoryRows(snapshot: DashboardSnapshot | null) {
-  if (!snapshot) return [];
-
-  return snapshot.categories.map((category) => ({
-    title: category.name,
-    amount: formatMoney(category.amountMinor),
-    progress: category.progress,
-  }));
-}
-
 export function cashRegisters(snapshot: DashboardSnapshot | null) {
   return snapshot?.wallets.filter((wallet) => wallet.type === "cash") ?? [];
 }

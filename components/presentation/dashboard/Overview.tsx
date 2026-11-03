@@ -6,7 +6,6 @@ import { LoadingCollection, LoadingStatus, LoadingText } from "@/components/ui/l
 import { useDashboardSnapshot } from "@/hooks/use-dashboard-snapshot";
 import {
   cashRegisters,
-  categoryRows,
   displayDashboardReviews,
   formatMoney,
   goalRows,
@@ -14,7 +13,8 @@ import {
 } from "./dashboard-model";
 import styles from "./overview.module.css";
 
-const RECENT_LIMIT = 8;
+const RECENT_LIMIT = 5;
+const GOAL_LIMIT = 3;
 
 function EmptyLink({ text, href, action }: { text: string; href: string; action: string }) {
   return (
@@ -37,9 +37,9 @@ export default function Overview() {
   const { snapshot, loading, error } = useDashboardSnapshot();
   const registers = cashRegisters(snapshot);
   const transactions = transactionRows(snapshot).slice(0, RECENT_LIMIT);
-  const goals = goalRows(snapshot);
-  const categories = categoryRows(snapshot);
+  const goals = goalRows(snapshot).slice(0, GOAL_LIMIT);
   const reviews = displayDashboardReviews(snapshot);
+  const showAttention = !loading && reviews.length > 0;
   let balance = 0;
 
   for (const wallet of registers) {
@@ -68,7 +68,7 @@ export default function Overview() {
       <div className={styles.summary}>
         <div className={styles.balance}>
           <span className={styles.label}>Balance</span>
-          <strong className={`${styles.figure} total-rule`}>
+          <strong className={styles.figure}>
             <LoadingText loading={loading}>{formatMoney(String(balance))}</LoadingText>
           </strong>
         </div>
@@ -81,10 +81,6 @@ export default function Overview() {
             <dt>Expenses</dt>
             <dd><LoadingText loading={loading}>{formatMoney(String(expenses))}</LoadingText></dd>
           </div>
-          <div>
-            <dt>Needs review</dt>
-            <dd><LoadingText loading={loading}>{reviews.length}</LoadingText></dd>
-          </div>
         </dl>
         <div className={styles.actions}>
           <Link href="/dashboard/transactions" className={styles.primary}>
@@ -96,131 +92,78 @@ export default function Overview() {
         </div>
       </div>
 
-      <div className={styles.columns}>
-        <div className={styles.main}>
-          <section>
-            <Section title="Recent transactions" href="/dashboard/transactions" action="All transactions" />
-            {!loading && transactions.length === 0 ? (
-              <EmptyLink text="No transactions yet." href="/dashboard/transactions" action="Add one" />
-            ) : (
-              <LoadingCollection loading={loading} knownItemCount={transactions.length} emptyHeight="12rem" label="Loading transactions">
-                <table className={styles.table}>
-                  <thead>
-                    <tr>
-                      <th scope="col">Description</th>
-                      <th scope="col" className={styles.hideOnPhone}>Category</th>
-                      <th scope="col" className={styles.hideOnPhone}>Date</th>
-                      <th scope="col" className={styles.amount}>Amount</th>
+      <div className={showAttention ? styles.columns : styles.columnsSingle}>
+        <section className={styles.main}>
+          <Section title="Latest entries" href="/dashboard/transactions" action="All transactions" />
+          {!loading && transactions.length === 0 ? (
+            <EmptyLink text="No transactions yet." href="/dashboard/transactions" action="Add one" />
+          ) : (
+            <LoadingCollection loading={loading} knownItemCount={transactions.length} emptyHeight="10rem" label="Loading transactions">
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th scope="col">Description</th>
+                    <th scope="col" className={styles.hideOnPhone}>Date</th>
+                    <th scope="col" className={styles.amount}>Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transactions.map((transaction) => (
+                    <tr key={transaction.id}>
+                      <td>
+                        {transaction.title}
+                        <span className={styles.phoneMeta}>{transaction.date}</span>
+                      </td>
+                      <td className={`${styles.muted} ${styles.hideOnPhone}`}>{transaction.date}</td>
+                      <td className={styles.amount}>{transaction.amount}</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {transactions.map((transaction) => (
-                      <tr key={transaction.id}>
-                        <td>
-                          {transaction.title}
-                          <span className={styles.phoneMeta}>{transaction.category}, {transaction.date}</span>
-                        </td>
-                        <td className={`${styles.muted} ${styles.hideOnPhone}`}>{transaction.category}</td>
-                        <td className={`${styles.muted} ${styles.hideOnPhone}`}>{transaction.date}</td>
-                        <td className={styles.amount}>{transaction.amount}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </LoadingCollection>
-            )}
-          </section>
-
-          <section>
-            <Section title="Cash registers" href="/dashboard/funds" action="Open" />
-            {!loading && registers.length === 0 ? (
-              <EmptyLink text="No cash register yet." href="/dashboard/funds" action="Add one" />
-            ) : (
-              <LoadingCollection loading={loading} knownItemCount={registers.length} emptyHeight="5rem" label="Loading cash registers">
-                <table className={styles.table}>
-                  <tbody>
-                    {registers.map((wallet) => (
-                      <tr key={wallet.id}>
-                        <td>{wallet.name}</td>
-                        <td className={styles.amount}>{formatMoney(wallet.balanceMinor)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </LoadingCollection>
-            )}
-          </section>
-        </div>
-
-        <aside className={styles.side}>
-          <section>
-            <Section title="Needs attention" href="/dashboard/receipts" action="Receipts" />
-            {!loading && reviews.length === 0 ? (
-              <p className={styles.empty}>Nothing needs review.</p>
-            ) : (
-              <LoadingCollection loading={loading} knownItemCount={reviews.length} emptyHeight="5rem" label="Loading reviews">
-                <ul className={styles.list}>
-                  {reviews.map((review) => (
-                    <li key={review.title}>
-                      <Link href={review.href}>
-                        <span>{review.title}</span>
-                        <small>{review.detail}</small>
-                      </Link>
-                    </li>
                   ))}
-                </ul>
-              </LoadingCollection>
-            )}
-          </section>
+                </tbody>
+              </table>
+            </LoadingCollection>
+          )}
+        </section>
 
-          <section>
-            <Section title="Goals" href="/dashboard/goals" action="All goals" />
-            {!loading && goals.length === 0 ? (
-              <EmptyLink text="No goals yet." href="/dashboard/goals" action="Create a goal" />
-            ) : (
-              <LoadingCollection loading={loading} knownItemCount={goals.length} emptyHeight="6rem" label="Loading goals">
-                <ul className={styles.list}>
-                  {goals.map((goal) => (
-                    <li key={goal.id} className={styles.goal}>
-                      <div>
-                        <span>{goal.title}</span>
-                        <b>{goal.progress}%</b>
-                      </div>
-                      <div className={styles.line} role="presentation">
-                        <i style={{ width: `${goal.progress}%` }} />
-                      </div>
-                      <small>{goal.detail}, by {goal.deadline}</small>
-                    </li>
-                  ))}
-                </ul>
-              </LoadingCollection>
-            )}
+        {showAttention ? (
+          <section className={styles.attention} aria-labelledby="overview-attention">
+            <h2 id="overview-attention" className={`annotation ${styles.attentionTitle}`}>needs attention</h2>
+            <ul className={styles.attentionList}>
+              {reviews.map((review) => (
+                <li key={review.title}>
+                  <Link href={review.href}>
+                    <span>{review.title}</span>
+                    <small>{review.detail}</small>
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </section>
-
-          <section>
-            <Section title="Expenses by category" />
-            {!loading && categories.length === 0 ? (
-              <p className={styles.empty}>No expenses recorded.</p>
-            ) : (
-              <LoadingCollection loading={loading} knownItemCount={categories.length} emptyHeight="5rem" label="Loading expenses">
-                <ul className={styles.list}>
-                  {categories.map((category) => (
-                    <li key={category.title} className={styles.goal}>
-                      <div>
-                        <span>{category.title}</span>
-                        <b>{category.amount}</b>
-                      </div>
-                      <div className={styles.line} role="presentation">
-                        <i style={{ width: `${category.progress}%` }} />
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </LoadingCollection>
-            )}
-          </section>
-        </aside>
+        ) : null}
       </div>
+
+      <section className={styles.goalsRow}>
+        <Section title="Goals" href="/dashboard/goals" action="All goals" />
+        {!loading && goals.length === 0 ? (
+          <EmptyLink text="No goals yet." href="/dashboard/goals" action="Create a goal" />
+        ) : (
+          <LoadingCollection loading={loading} knownItemCount={goals.length} emptyHeight="6rem" label="Loading goals">
+            <ul className={styles.goalGrid}>
+              {goals.map((goal) => (
+                <li key={goal.id} className={styles.goalCard}>
+                  <div>
+                    <span>{goal.title}</span>
+                    <b>{goal.progress}%</b>
+                  </div>
+                  <div className={styles.line} role="presentation">
+                    <i style={{ width: `${goal.progress}%` }} />
+                  </div>
+                  <small>{goal.detail}</small>
+                </li>
+              ))}
+            </ul>
+          </LoadingCollection>
+        )}
+      </section>
     </section>
   );
 }

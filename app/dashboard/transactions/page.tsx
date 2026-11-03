@@ -5,7 +5,7 @@ import { useAppAuth } from "@/components/auth/app-auth";
 import ledger from "../ledger.module.css";
 import { LoadError } from "@/components/ui/load-error";
 import { LoadingStatus } from "@/components/ui/loading-state";
-import { useResponsivePageSize } from "@/hooks/use-responsive-page-size";
+import { useFitPageSize } from "@/hooks/use-fit-page-size";
 import { getDashboardSnapshot } from "@/features/finance/actions/queries";
 import { archiveTransaction as archiveTransactionAction } from "@/features/finance/actions/corrections";
 import { financeScope, invalidateFinanceQuery } from "@/lib/finance/client-cache";
@@ -64,11 +64,7 @@ export default function TransactionsPage() {
   const [archiveTarget, setArchiveTarget] = useState<Transaction | null>(null);
   const [archiveReason, setArchiveReason] = useState("");
   const [actionError, setActionError] = useState("");
-  const pageSize = useResponsivePageSize({
-    defaultSize: 10,
-    landscapeSize: 6,
-    wideSize: 10,
-  });
+  const { pageSize, probeRef, wrapRef } = useFitPageSize(items.length);
   const filters = useTransactionFilters(items, pageSize);
   const transactionEditor = useTransactionEditor({
     cashRegisters,
@@ -202,6 +198,8 @@ export default function TransactionsPage() {
         page={filters.page}
         pageCount={filters.pageCount}
         onPageChange={filters.setPage}
+        probeRef={probeRef}
+        wrapRef={wrapRef}
         onResetFilters={filters.resetFilters}
         onSelect={setSelected}
         onEdit={openEdit}

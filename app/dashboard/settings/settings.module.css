@@ -33,7 +33,7 @@
   gap: var(--space-4);
   margin-top: var(--space-8);
   padding-top: var(--space-4);
-  border-top: 1px solid var(--rule);
+  border-top: 2px dotted var(--line-2);
 }
 .footer p {
   margin: 0;
@@ -56,7 +56,7 @@
   padding: var(--space-3) 0;
 }
 .theme button {
-  border: 1px solid var(--control);
+  border: 3px solid var(--line-2);
   justify-content: center;
   color: var(--ink);
 }

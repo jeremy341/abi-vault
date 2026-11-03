@@ -24,7 +24,7 @@ export function Field({
       <span>{label}</span>
       {children}
       <span id={errorId} className={dlg.fieldError} aria-live="polite">
-        {error || " "}
+        {error}
       </span>
     </label>
   );

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import ledger from "@/app/dashboard/ledger.module.css";
+import styles from "./DifferenceSuggestions.module.css";
 import type { DifferenceReview } from "@/app/dashboard/funds/difference-review";
 import type { DifferenceSuggestion } from "@/lib/finance/difference-detective";
 
@@ -39,9 +40,9 @@ export default function DifferenceSuggestions({ review }: { review: DifferenceRe
   }
 
   return (
-    <section aria-labelledby="difference-suggestions">
-      <h3 id="difference-suggestions">Possible causes</h3>
-      <ul className={ledger.list}>
+    <section className={styles.note} aria-labelledby="difference-suggestions">
+      <h3 id="difference-suggestions" className="annotation">Possible causes</h3>
+      <ul className={styles.list}>
         {review.suggestions.map((suggestion, index) => (
           <li key={`${suggestion.kind}-${index}`}>
             {messageFor(review, suggestion)}

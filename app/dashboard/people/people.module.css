@@ -55,7 +55,7 @@
   margin-top: var(--space-3);
 }
 
-@media (min-width: 1500px) {
+@media (min-width: 1500px) and (max-width: 2399px) {
   .roles.roles {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -83,10 +83,10 @@ td button.rowAction:disabled {
 }
 
 .modal {
-  width: min(34rem, calc(100vw - 2rem));
-  max-height: calc(100dvh - 2rem);
+  width: min(34rem, calc(100 * var(--vw) - 2rem));
+  max-height: calc(calc(100 * var(--dvh)) - 2rem);
   overflow-y: auto;
-  border: 1px solid var(--rule);
+  border: 3px solid var(--line);
   border-radius: var(--radius-overlay);
   background: var(--surface);
   color: var(--ink);
@@ -157,7 +157,7 @@ td button.rowAction:disabled {
 .formField input, .formField select {
   width: 100%;
   min-height: var(--control-height);
-  border: 1px solid var(--control);
+  border: 3px solid var(--line-2);
   border-radius: var(--radius-control);
   background: var(--surface);
   padding: 0 var(--space-3);

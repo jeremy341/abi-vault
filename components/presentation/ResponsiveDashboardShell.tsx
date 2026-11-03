@@ -40,8 +40,6 @@ type MenuKind = "dialog" | "menu";
 
 const phonePrimaryCount = 3;
 
-const adminGroupStart = 6;
-
 function joinClasses(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
@@ -258,8 +256,6 @@ export default function ResponsiveDashboardShell({
 
     return !isAdminOnlyRoute(route);
   });
-  const mainRoutes = visibleRoutes.slice(0, adminGroupStart);
-  const adminRoutes = visibleRoutes.slice(adminGroupStart);
 
   return (
     <div className={styles.shell}>
@@ -269,10 +265,10 @@ export default function ResponsiveDashboardShell({
 
       <aside className={styles.sidebar}>
         <div className={styles.brand}>
-          <AbiLogo />
+          <AbiLogo size="large" />
         </div>
         <nav className={styles.nav} aria-label="Main navigation">
-          {mainRoutes.map((route) => (
+          {visibleRoutes.map((route) => (
             <NavigationLink
               key={route.href}
               route={route}
@@ -281,29 +277,20 @@ export default function ResponsiveDashboardShell({
               activeClassName={styles.navLinkActive}
             />
           ))}
-          {adminRoutes.length > 0 ? (
-            <>
-              <hr className={styles.navRule} />
-              {adminRoutes.map((route) => (
-                <NavigationLink
-                  key={route.href}
-                  route={route}
-                  pathname={pathname}
-                  className={styles.navLink}
-                  activeClassName={styles.navLinkActive}
-                />
-              ))}
-            </>
-          ) : null}
         </nav>
         <div className={styles.sidebarFooter}>
+          <p className={styles.sidebarNote}>count twice, write once</p>
           <ThemeToggle />
         </div>
       </aside>
 
       <div className={styles.workspace}>
         <header className={styles.topbar}>
-          <h1 className={styles.title}>{page.title}</h1>
+          <AbiLogo className={styles.phoneLogo} />
+          <div className={styles.pageHead}>
+            <h1 className={styles.title}>{page.title}</h1>
+            <p className={styles.note}>{page.description}</p>
+          </div>
           <div className={styles.actions}>
             <TopbarMenu
               anchorClassName={styles.menuAnchor}
@@ -357,8 +344,9 @@ export default function ResponsiveDashboardShell({
             <ShellUserButton localMode={localMode} />
           </div>
         </header>
+
         <main id="dashboard-content" className={styles.content}>
-          {children}
+          <div className={styles.paper}>{children}</div>
         </main>
       </div>
 

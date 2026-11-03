@@ -1,5 +1,7 @@
 "use client";
 
+import type { RefObject } from "react";
+
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   LoadingCollection,
@@ -26,6 +28,8 @@ type ReceiptsTableProps = {
   page: number;
   pageCount: number;
   onPageChange: (page: number) => void;
+  probeRef: RefObject<HTMLDivElement | null>;
+  wrapRef: RefObject<HTMLDivElement | null>;
   onResetFilters: () => void;
   onEdit: (receipt: Receipt) => void;
   onDelete: (receipt: Receipt) => void;
@@ -43,6 +47,8 @@ export function ReceiptsTable({
   page,
   pageCount,
   onPageChange,
+  probeRef,
+  wrapRef,
   onResetFilters,
   onEdit,
   onDelete,
@@ -98,7 +104,7 @@ export function ReceiptsTable({
                 </span>
               </td>
               <td className={ledger.hideOnPhone}>{receipt.transaction}</td>
-              <td className={`${ledger.muted} ${ledger.hideOnPhone}`}>{longDate(receipt.date)}</td>
+              <td className={`${ledger.muted} ${ledger.nowrap} ${ledger.hideOnPhone}`}>{longDate(receipt.date)}</td>
               <td className={ledger.amount}>{receipt.status === "Unassigned" ? "" : formatAmount(receipt.amount)}</td>
               <td className={ledger.hideOnPhone}>
                 <span className={statusClassName(receipt.status)}>
@@ -125,7 +131,8 @@ export function ReceiptsTable({
 
   return (
     <>
-      <div className={ledger.tableWrap}>
+      <div className={ledger.fitProbe} ref={probeRef} aria-hidden="true" />
+      <div className={`${ledger.tableWrap} ${ledger.scrollTable}`} ref={wrapRef}>
         {renderTableBody()}
       </div>
 

@@ -57,39 +57,39 @@ export function isCurrentRoute(pathname: string, href: string) {
 export const pageInformation = {
   "/dashboard": {
     title: "Overview",
-    description: "Class finances at a glance.",
+    description: "where the money stands today",
   },
   "/dashboard/transactions": {
     title: "Transactions",
-    description: "All income and expenses in one view.",
+    description: "every coin in, every coin out",
   },
   "/dashboard/receipts": {
     title: "Receipts",
-    description: "Upload, review, and assign receipts.",
+    description: "paper proof, filed away",
   },
   "/dashboard/goals": {
     title: "Goals",
-    description: "Plan savings goals and track progress.",
+    description: "what we are saving for",
   },
   "/dashboard/funds": {
     title: "Cash registers",
-    description: "Manage cash registers and balances.",
+    description: "the tins and what is in them",
   },
   "/dashboard/reports": {
     title: "Reports",
-    description: "Review financial data with clarity.",
+    description: "the numbers, plainly",
   },
   "/dashboard/people": {
     title: "People",
-    description: "Manage members and roles.",
+    description: "who helps keep the books",
   },
   "/dashboard/settings": {
     title: "Settings",
-    description: "Configure workspace and access.",
+    description: "the class and its house rules",
   },
   "/dashboard/periods": {
     title: "Periods",
-    description: "Open and safely close accounting periods.",
+    description: "closing the month, carefully",
   },
 } satisfies Record<string, { title: string; description: string }>;
 

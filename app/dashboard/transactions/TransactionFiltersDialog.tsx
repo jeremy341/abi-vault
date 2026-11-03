@@ -76,9 +76,9 @@ export function TransactionFiltersDialog({
         </button>
       </div>
       <div className={`${styles.modalBody} ${styles.filterModalBody}`}>
-        <div className={styles.filterColumns}>
-          <fieldset className={styles.filterGroup}>
-            <legend>Category</legend>
+        <div role="group" aria-label="Category" className={styles.filterRow}>
+          <span>Category</span>
+          <div className={styles.filterOptions}>
             {categoryOptions.map((value) => (
               <label className={styles.checkRow} key={value}>
                 <input
@@ -86,12 +86,14 @@ export function TransactionFiltersDialog({
                   checked={categories.includes(value)}
                   onChange={() => onToggleCategory(value)}
                 />
-                <span>{value}</span>
+                {value}
               </label>
             ))}
-          </fieldset>
-          <fieldset className={styles.filterGroup}>
-            <legend>Type</legend>
+          </div>
+        </div>
+        <div role="group" aria-label="Type" className={styles.filterRow}>
+          <span>Type</span>
+          <div className={styles.filterOptions}>
             {transactionTypeFilterOptions.map((value) => (
               <label className={styles.checkRow} key={value}>
                 <input
@@ -99,67 +101,59 @@ export function TransactionFiltersDialog({
                   checked={types.includes(value)}
                   onChange={() => onToggleType(value)}
                 />
-                <span>{value}</span>
+                {value}
               </label>
             ))}
-          </fieldset>
-        </div>
-        <div className={styles.modalSection}>
-          <span className={styles.modalSectionLabel}>Amount</span>
-          <div className={styles.dateFields}>
-            <label className={styles.inlineField}>
-              <span>From</span>
-              <input
-                aria-label="Amount from"
-                inputMode="decimal"
-                value={minAmount}
-                onChange={(event) => onMinAmountChange(event.target.value)}
-                placeholder="$0.00"
-              />
-            </label>
-            <label className={styles.inlineField}>
-              <span>To</span>
-              <input
-                aria-label="Amount to"
-                inputMode="decimal"
-                value={maxAmount}
-                onChange={(event) => onMaxAmountChange(event.target.value)}
-                placeholder="$0.00"
-              />
-            </label>
           </div>
         </div>
-        <div className={styles.filterColumns}>
-          <fieldset className={styles.filterGroup}>
-            <legend>Receipt status</legend>
-            <div className={styles.segmented}>
-              {receiptFilterOptions.map((value) => (
-                <button
-                  type="button"
-                  key={value}
-                  className={receiptFilter === value ? styles.segmentActive : ""}
-                  onClick={() => onReceiptFilterChange(value)}
-                >
-                  {value}
-                </button>
-              ))}
-            </div>
-          </fieldset>
-          <fieldset className={styles.filterGroup}>
-            <legend>Review status</legend>
-            <div className={styles.segmented}>
-              {reviewFilterOptions.map((value) => (
-                <button
-                  type="button"
-                  key={value}
-                  className={reviewFilter === value ? styles.segmentActive : ""}
-                  onClick={() => onReviewFilterChange(value)}
-                >
-                  {value}
-                </button>
-              ))}
-            </div>
-          </fieldset>
+        <div role="group" aria-label="Amount" className={styles.filterRow}>
+          <span>Amount</span>
+          <div className={styles.filterOptions}>
+            <input
+              aria-label="Amount from"
+              inputMode="decimal"
+              value={minAmount}
+              onChange={(event) => onMinAmountChange(event.target.value)}
+              placeholder="From $0.00"
+            />
+            <input
+              aria-label="Amount to"
+              inputMode="decimal"
+              value={maxAmount}
+              onChange={(event) => onMaxAmountChange(event.target.value)}
+              placeholder="To $0.00"
+            />
+          </div>
+        </div>
+        <div role="group" aria-label="Receipt status" className={styles.filterRow}>
+          <span>Receipt</span>
+          <div className={styles.segmented}>
+            {receiptFilterOptions.map((value) => (
+              <button
+                type="button"
+                key={value}
+                className={receiptFilter === value ? styles.segmentActive : ""}
+                onClick={() => onReceiptFilterChange(value)}
+              >
+                {value}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div role="group" aria-label="Review status" className={styles.filterRow}>
+          <span>Review</span>
+          <div className={styles.segmented}>
+            {reviewFilterOptions.map((value) => (
+              <button
+                type="button"
+                key={value}
+                className={reviewFilter === value ? styles.segmentActive : ""}
+                onClick={() => onReviewFilterChange(value)}
+              >
+                {value}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
       <div className={styles.modalFooter}>

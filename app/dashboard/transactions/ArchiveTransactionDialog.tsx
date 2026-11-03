@@ -2,7 +2,7 @@
 
 import { X } from "lucide-react";
 import { Dialog } from "@/components/ui/dialog";
-import styles from "./transactions.module.css";
+import dlg from "@/components/dashboard/dialog.module.css";
 
 type ArchiveTransactionDialogProps = {
   reason: string;
@@ -25,32 +25,47 @@ export function ArchiveTransactionDialog({
 }: ArchiveTransactionDialogProps) {
   return (
     <Dialog
-      overlayClassName={styles.overlay}
-      dialogClassName={styles.modal}
+      overlayClassName={dlg.overlay}
+      dialogClassName={`${dlg.modal} ${dlg.modalNarrow}`}
       label="Archive transaction"
       onClose={onDismiss}
     >
-      <div className={styles.modalHeader}>
-        <div>
+      <header className={dlg.header}>
+        <div className={dlg.heading}>
           <h2>Archive transaction?</h2>
           <p>It stays in the review log but no longer counts in totals.</p>
         </div>
-        <button type="button" className={styles.iconButton} onClick={onCancel} disabled={saving} aria-label="Close dialog"><X /></button>
-      </div>
-      <div className={styles.modalBody}>
-        <label className={styles.formField}>
+        <button type="button" className={dlg.closeButton} onClick={onCancel} disabled={saving} aria-label="Close dialog">
+          <X aria-hidden="true" />
+        </button>
+      </header>
+      <div className={dlg.body}>
+        <label className={dlg.field}>
           <span>Reason</span>
-          <textarea value={reason} onChange={(event) => onReasonChange(event.target.value)} placeholder="Why should the transaction be archived?" rows={3} autoFocus />
+          <textarea
+            value={reason}
+            onChange={(event) => onReasonChange(event.target.value)}
+            placeholder="Why should the transaction be archived?"
+            rows={3}
+            autoFocus
+          />
         </label>
-        {actionError ? <p className={styles.error} role="alert">{actionError}</p> : null}
+        {actionError ? <p className={dlg.error} role="alert">{actionError}</p> : null}
       </div>
-      <div className={styles.modalFooter}>
-        <span />
-        <div>
-          <button type="button" className={styles.secondaryButton} onClick={onCancel} disabled={saving}>Cancel</button>
-          <button type="button" className={styles.primaryButton} onClick={onConfirm} disabled={saving || !reason.trim()} aria-busy={saving}>{saving ? "Archiving" : "Archive"}</button>
-        </div>
-      </div>
+      <footer className={dlg.footer}>
+        <button type="button" className={dlg.secondaryButton} onClick={onCancel} disabled={saving}>
+          Cancel
+        </button>
+        <button
+          type="button"
+          className={dlg.destructiveButton}
+          onClick={onConfirm}
+          disabled={saving || !reason.trim()}
+          aria-busy={saving}
+        >
+          {saving ? "Archiving" : "Archive"}
+        </button>
+      </footer>
     </Dialog>
   );
 }

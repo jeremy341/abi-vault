@@ -1,224 +1,8 @@
-.error {
-  margin: 0 0 var(--space-4);
-  color: var(--danger);
-  font-size: var(--text-sm);
-}
-
-.primaryButton, .secondaryButton {
-  display: inline-flex;
-  min-height: var(--control-height);
-  align-items: center;
-  justify-content: center;
-  border: 1px solid transparent;
-  border-radius: var(--radius-control);
-  padding: 0 var(--space-4);
-  cursor: pointer;
-  font: inherit;
-  font-size: var(--text-sm);
-  font-weight: 500;
-  white-space: nowrap;
-  transition: background-color var(--dur-fast) var(--ease),
-    border-color var(--dur-fast) var(--ease),
-    opacity var(--dur-fast) var(--ease);
-}
-
-.primaryButton {
-  background: var(--ink);
-  color: var(--paper);
-}
-
-.primaryButton:hover:not(:disabled) {
-  opacity: 0.85;
-}
-
-.secondaryButton {
-  border-color: var(--control);
-  background: transparent;
-  color: var(--ink);
-}
-
-.secondaryButton:hover:not(:disabled) {
-  border-color: var(--ink);
-  background: var(--sunk);
-}
-
-.primaryButton:disabled, .secondaryButton:disabled {
-  cursor: not-allowed;
-}
-
-.primaryButton:disabled {
-  background: var(--sunk);
-  color: var(--subtle);
-}
-
-.secondaryButton:disabled {
-  border-color: var(--rule);
-  color: var(--subtle);
-}
-
-.iconButton:disabled {
-  cursor: not-allowed;
-  color: var(--subtle);
-}
-
-.iconButton {
-  display: inline-grid;
-  width: 2rem;
-  height: 2rem;
-  flex: none;
-  place-items: center;
-  border: 0;
-  border-radius: var(--radius-control);
-  background: transparent;
-  color: var(--muted);
-  cursor: pointer;
-}
-
-.iconButton:hover {
-  background: var(--sunk);
-  color: var(--ink);
-}
-
-.iconButton svg {
-  width: 1rem;
-  height: 1rem;
-}
-
-.formField input, .formField textarea, .inlineField input, .cashRegisterMenu input {
-  width: 100%;
-  min-height: var(--control-height);
-  border: 3px solid var(--line-2);
-  border-radius: var(--radius-control);
-  background: var(--surface);
-  padding: 0 var(--space-3);
-  color: var(--ink);
-  font: inherit;
-  font-size: var(--text-sm);
-}
-
-.formField textarea {
-  min-height: 5rem;
-  padding: var(--space-2) var(--space-3);
-  resize: vertical;
-}
-
-.formField input::placeholder, .formField textarea::placeholder {
-  color: var(--subtle);
-}
-
-.formField input:hover, .formField textarea:hover {
-  border-color: var(--ink);
-}
-
 .filterDropdown {
   min-width: 0;
 }
 
-.overlay {
-  position: fixed;
-  z-index: 60;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  background: var(--overlay-scrim);
-  padding: var(--space-4);
-}
-
-.modal {
-  display: flex;
-  width: min(32rem, 100%);
-  max-height: calc(calc(100 * var(--dvh)) - 2rem);
-  flex-direction: column;
-  overflow-y: auto;
-  border: 3px solid var(--line);
-  border-radius: var(--radius-overlay);
-  background: var(--surface);
-  padding: var(--space-4) var(--space-6) var(--space-4);
-  box-shadow: var(--shadow-overlay);
-  animation: modal-in var(--dur-base) var(--ease);
-}
-
-.filterModal {
-  width: min(34rem, 100%);
-}
-
-.modalHeader {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-4);
-  padding-bottom: var(--space-4);
-}
-
-.modalHeader h2 {
-  margin: 0;
-  font-size: var(--text-md);
-  font-weight: 600;
-  line-height: 1.3;
-  text-wrap: balance;
-}
-
-.modalHeader p {
-  margin: 2px 0 0;
-  color: var(--muted);
-  font-size: var(--text-sm);
-}
-
-.modalBody {
-  display: grid;
-  gap: var(--space-4);
-  min-width: 0;
-  margin: 0;
-  border: 0;
-  padding: 0 0 var(--space-4);
-}
-
-.modalFooter {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  border-top: 2px dotted var(--line-2);
-  padding-top: var(--space-4);
-}
-
-.modalFooter > div {
-  display: flex;
-  gap: var(--space-2);
-}
-
-.formField, .inlineField {
-  display: grid;
-  min-width: 0;
-  gap: 6px;
-  font-size: var(--text-sm);
-}
-
-.formField > span, .inlineField > span {
-  font-weight: 500;
-}
-
-.formDropdown {
-  min-width: 0;
-}
-
-.dateFields {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-3);
-}
-
-.editWalletNote small {
-  display: block;
-  margin-top: 6px;
-  color: var(--muted);
-  font-size: var(--text-xs);
-}
-
-.filterModalBody {
-  gap: var(--space-3);
-}
-
+/* Filters dialog: one labelled row per filter. */
 .filterRow {
   display: grid;
   grid-template-columns: 5.5rem minmax(0, 1fr);
@@ -257,16 +41,6 @@
   font-size: var(--text-sm);
 }
 
-.modalSection {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.modalSectionLabel {
-  font-size: var(--text-sm);
-  font-weight: 600;
-}
-
 .segmented {
   display: flex;
   flex-wrap: wrap;
@@ -298,6 +72,7 @@
   color: var(--paper);
 }
 
+/* Transaction details dialog. */
 .detailGrid {
   display: grid;
   grid-template-columns: 8rem minmax(0, 1fr);
@@ -313,6 +88,7 @@
   font-weight: 500;
 }
 
+/* Cash register picker in the transaction editor. */
 .cashRegisterCombobox {
   position: relative;
 }
@@ -360,6 +136,18 @@
   box-shadow: var(--shadow-overlay);
 }
 
+.cashRegisterMenu input {
+  width: 100%;
+  min-height: var(--control-height);
+  border: 3px solid var(--line-2);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  padding: 0 var(--space-3);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--text-sm);
+}
+
 .cashRegisterMenu [role="listbox"] {
   display: grid;
 }
@@ -377,7 +165,8 @@
   text-align: left;
 }
 
-.cashRegisterMenu [role="option"]:hover, .cashRegisterMenu [role="option"][aria-selected="true"] {
+.cashRegisterMenu [role="option"]:hover,
+.cashRegisterMenu [role="option"][aria-selected="true"] {
   background: var(--sunk);
 }
 
@@ -385,34 +174,4 @@
   padding: var(--space-2) var(--space-3);
   color: var(--muted);
   font-size: var(--text-sm);
-}
-
-@keyframes modal-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@media (max-width: 767px) {
-  .overlay {
-    place-items: end stretch;
-    padding: 0;
-  }
-
-  .modal {
-    width: 100%;
-    max-height: calc(90 * var(--dvh));
-    border-radius: var(--radius-overlay) var(--radius-overlay) 0 0;
-    padding: var(--space-4);
-    padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
-  }
-
-  .dateFields, .filterColumns {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }

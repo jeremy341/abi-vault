@@ -32,7 +32,7 @@ export function MemberTable({
                 <th scope="col">Name</th>
                 <th scope="col" className={ledger.hideOnPhone}>Role</th>
                 <th scope="col" className={ledger.hideOnPhone}>Access</th>
-                <th scope="col">Status</th>
+                <th scope="col" className={ledger.hideOnPhone}>Status</th>
                 <th scope="col" className={ledger.actions}><span className="sr-only">Actions</span></th>
               </tr>
             </thead>
@@ -41,11 +41,14 @@ export function MemberTable({
                 <tr key={person.id}>
                   <td>
                     <span className={ledger.title}>{person.name}</span>
-                    <span className={ledger.phoneMeta}>{person.role}</span>
+                    <span className={ledger.phoneMeta}>
+                      {person.role}
+                      {person.status !== "Active" ? <b>, {person.status.toLowerCase()}</b> : null}
+                    </span>
                   </td>
                   <td className={ledger.hideOnPhone}>{person.role}</td>
                   <td className={`${ledger.muted} ${ledger.hideOnPhone}`}>{person.access}</td>
-                  <td className={person.status === "Active" ? ledger.muted : ledger.attention}>{person.status}</td>
+                  <td className={`${person.status === "Active" ? ledger.muted : ledger.attention} ${ledger.hideOnPhone}`}>{person.status}</td>
                   <td className={ledger.actions}>
                     {person.status !== "Active" ? (
                       <span className={ledger.rowMeta} title="Only active members can be managed here.">

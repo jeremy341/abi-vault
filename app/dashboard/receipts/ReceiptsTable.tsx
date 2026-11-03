@@ -81,7 +81,7 @@ export function ReceiptsTable({
     }
 
     return (
-      <table className={ledger.table}>
+      <table className={`${ledger.table} ${ledger.clickable}`}>
         <thead>
           <tr>
             <th scope="col">Receipt</th>
@@ -94,7 +94,19 @@ export function ReceiptsTable({
         </thead>
         <tbody>
           {visible.map((receipt) => (
-            <tr key={receipt.id}>
+            <tr
+              key={receipt.id}
+              tabIndex={0}
+              onClick={() => onReview(receipt)}
+              onKeyDown={(event) => {
+                if (event.target !== event.currentTarget) return;
+
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  onReview(receipt);
+                }
+              }}
+            >
               <td>
                 <span className={ledger.title}>{receipt.file}</span>
                 <span className={ledger.rowMeta}>Uploaded by {receipt.uploadedByName}</span>
@@ -111,7 +123,7 @@ export function ReceiptsTable({
                   {receipt.status}
                 </span>
               </td>
-              <td className={ledger.actions}>
+              <td className={ledger.actions} onClick={(event) => event.stopPropagation()}>
                 <RowActionMenu
                   label={receipt.file}
                   canEdit={receipt.canEdit}

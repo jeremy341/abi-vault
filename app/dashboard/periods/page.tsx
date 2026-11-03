@@ -175,8 +175,8 @@ export default function PeriodsPage() {
       <LoadingStatus loading={loading} label="Loading periods" />
       {error ? <LoadError message={error} /> : null}
 
-      <div className={ledger.summary}>
-        <dl className={ledger.figures}>
+      <div className={ledger.summaryBar}>
+        <dl className={ledger.statLine}>
           <div>
             <dt>Current period</dt>
             <dd>

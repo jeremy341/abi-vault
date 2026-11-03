@@ -28,23 +28,42 @@ const notificationOptions = [
   },
 ];
 
+type Notifications = Record<(typeof notificationOptions)[number]["key"], boolean>;
+
+type Form = {
+  workspaceName: string;
+  school: string;
+  notifications: Notifications;
+};
+
+const defaultForm: Form = {
+  workspaceName: "Abi 2026",
+  school: "",
+  notifications: { receipts: true, payments: true, goals: false },
+};
+
 function keepDigits(value: string) {
   return value.replace(/\D/g, "");
 }
 
+function sameForm(a: Form, b: Form) {
+  return (
+    a.workspaceName === b.workspaceName &&
+    a.school === b.school &&
+    notificationOptions.every((option) => a.notifications[option.key] === b.notifications[option.key])
+  );
+}
+
 export default function SettingsPage() {
-  const [workspaceName, setWorkspaceName] = useState("Abi 2026");
-  const [school, setSchool] = useState("");
-  const [notifications, setNotifications] = useState({
-    receipts: true,
-    payments: true,
-    goals: false,
-  });
+  const [form, setForm] = useState<Form>(defaultForm);
+  const [saved, setSaved] = useState<Form>(defaultForm);
   const [statusMessage, setStatusMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [saving, setSaving] = useState(false);
-  const graduationYearDigits = keepDigits(workspaceName);
+  const graduationYearDigits = keepDigits(form.workspaceName);
+  const dirty = !sameForm(form, saved);
+
   useEffect(() => {
     let active = true;
     getCommitteeSettingsForCurrentOrganization()
@@ -57,13 +76,17 @@ export default function SettingsPage() {
           return;
         }
 
-        setSchool(committeeSettings.data.school_name);
-        setWorkspaceName(`Abi ${committeeSettings.data.graduation_year}`);
         const parsedNotifications = updateCommitteeSettingsSchema.shape.notifications.safeParse(
           committeeSettings.data.notifications,
         );
+        const loaded: Form = {
+          workspaceName: `Abi ${committeeSettings.data.graduation_year}`,
+          school: committeeSettings.data.school_name,
+          notifications: parsedNotifications.success ? parsedNotifications.data : defaultForm.notifications,
+        };
 
-        if (parsedNotifications.success) setNotifications(parsedNotifications.data);
+        setForm(loaded);
+        setSaved(loaded);
       })
       .catch(() => {
         if (active) setLoadError("Settings could not be loaded.");
@@ -77,16 +100,23 @@ export default function SettingsPage() {
     };
   }, []);
 
+  function change(changes: Partial<Form>) {
+    setForm((current) => ({ ...current, ...changes }));
+    setStatusMessage("");
+  }
+
   async function saveSettings() {
-    if (saving) return;
+    if (saving || !dirty) return;
     setSaving(true);
 
     try {
       const result = await updateCommitteeSettings({
-        schoolName: school,
+        schoolName: form.school,
         graduationYear: Number(graduationYearDigits) || 2026,
-        notifications,
+        notifications: form.notifications,
       });
+
+      if (result.ok) setSaved(form);
       setStatusMessage(result.ok ? "Changes saved." : "Changes could not be saved.");
     } catch {
       setStatusMessage("Changes could not be saved.");
@@ -95,109 +125,108 @@ export default function SettingsPage() {
     }
   }
 
-  function toggleNotification(key: keyof typeof notifications) {
-    setNotifications((current) => ({ ...current, [key]: !current[key] }));
+  function discardChanges() {
+    setForm(saved);
     setStatusMessage("");
   }
 
   return (
-    <section className={`${ledger.page} ${ledger.narrow} ${ledger.form}`} aria-busy={loading}>
+    <section className={ledger.page} aria-busy={loading}>
       <LoadingStatus loading={loading} label="Loading settings" />
       {loadError ? <LoadError message={loadError} /> : null}
 
-      <section className={ledger.section}>
-        <header className={ledger.sectionHeader}>
-          <h2>Workspace</h2>
-          <p>Basic details for your class.</p>
-        </header>
-        <div className={styles.fields}>
-          <label className={ledger.field}>
-            <span>Workspace name</span>
-            <input
-              name="workspaceName"
-              value={workspaceName}
-              disabled={loading}
-              maxLength={40}
-              onChange={(event) => {
-                setWorkspaceName(event.target.value);
-                setStatusMessage("");
-              }}
-            />
-          </label>
-          <label className={ledger.field}>
-            <span>School</span>
-            <input
-              name="school"
-              value={school}
-              disabled={loading}
-              maxLength={60}
-              onChange={(event) => {
-                setSchool(event.target.value);
-                setStatusMessage("");
-              }}
-            />
-          </label>
-          <label className={ledger.field}>
-            <span>Graduation year</span>
-            <input
-              name="graduationYear"
-              inputMode="numeric"
-              value={graduationYearDigits || "2026"}
-              readOnly
-            />
-          </label>
-          <label className={ledger.field}>
-            <span>Currency</span>
-            <input value="US dollars (USD)" readOnly />
-          </label>
-        </div>
-      </section>
+      <div className={styles.layout}>
+        <section className={ledger.section}>
+          <header className={ledger.sectionHeader}>
+            <h2>Workspace</h2>
+            <p>Basic details for your class.</p>
+          </header>
+          <div className={styles.fields}>
+            <label className={ledger.field}>
+              <span>Workspace name</span>
+              <input
+                name="workspaceName"
+                value={form.workspaceName}
+                disabled={loading}
+                maxLength={40}
+                onChange={(event) => change({ workspaceName: event.target.value })}
+              />
+            </label>
+            <label className={ledger.field}>
+              <span>School</span>
+              <input
+                name="school"
+                value={form.school}
+                disabled={loading}
+                maxLength={60}
+                onChange={(event) => change({ school: event.target.value })}
+              />
+            </label>
+          </div>
+          <dl className={styles.facts}>
+            <div>
+              <dt>Graduation year</dt>
+              <dd>{graduationYearDigits || "2026"}</dd>
+            </div>
+            <div>
+              <dt>Currency</dt>
+              <dd>US dollars (USD)</dd>
+            </div>
+          </dl>
+        </section>
 
-      <section className={`${ledger.section} ${ledger.spaced}`}>
-        <header className={ledger.sectionHeader}>
-          <h2>Notifications</h2>
-          <p>Choose which events notify the committee.</p>
-        </header>
-        <ul className={ledger.list}>
-          {notificationOptions.map((option) => (
-            <li key={option.key}>
-              <label className={styles.option}>
-                <input
-                  type="checkbox"
-                  checked={notifications[option.key]}
-                  disabled={loading}
-                  onChange={() => toggleNotification(option.key)}
-                />
-                <span className={ledger.rowTitle}>
-                  <span>{option.label}</span>
-                  <span className={ledger.rowMeta}>{option.description}</span>
-                </span>
-              </label>
-            </li>
-          ))}
-        </ul>
-      </section>
+        <div className={styles.side}>
+          <section className={ledger.section}>
+            <header className={ledger.sectionHeader}>
+              <h2>Notifications</h2>
+              <p>Choose which events notify the committee.</p>
+            </header>
+            <ul className={ledger.list}>
+              {notificationOptions.map((option) => (
+                <li key={option.key}>
+                  <label className={styles.option}>
+                    <input
+                      type="checkbox"
+                      checked={form.notifications[option.key]}
+                      disabled={loading}
+                      onChange={() =>
+                        change({
+                          notifications: { ...form.notifications, [option.key]: !form.notifications[option.key] },
+                        })
+                      }
+                    />
+                    <span className={ledger.rowTitle}>
+                      <span>{option.label}</span>
+                      <span className={ledger.rowMeta}>{option.description}</span>
+                    </span>
+                  </label>
+                </li>
+              ))}
+            </ul>
+          </section>
 
-      <section className={`${ledger.section} ${ledger.spaced}`}>
-        <header className={ledger.sectionHeader}>
-          <h2>Appearance</h2>
-          <p>Follows your system setting until you change it.</p>
-        </header>
-        <div className={styles.theme}>
-          <ThemeToggle />
+          <section className={ledger.section}>
+            <header className={ledger.sectionHeader}>
+              <h2>Appearance</h2>
+              <p>Follows your system setting until you change it.</p>
+            </header>
+            <div className={styles.theme}>
+              <ThemeToggle />
+            </div>
+          </section>
         </div>
-      </section>
+      </div>
 
       <footer className={styles.footer}>
-        <p aria-live="polite">{statusMessage}</p>
-        <button
-          type="button"
-          className={ledger.primaryButton}
-          onClick={saveSettings}
-          disabled={loading || saving}
-        >
-          {saving ? "Saving" : "Save changes"}
-        </button>
+        <p aria-live="polite">{statusMessage || (dirty ? "You have unsaved changes." : "")}</p>
+        <div className={ledger.inlineActions}>
+          <button type="button" className={ledger.secondaryButton} onClick={discardChanges} disabled={!dirty || saving}>
+            Discard
+          </button>
+          <button type="button" className={ledger.primaryButton} onClick={saveSettings} disabled={loading || saving || !dirty}>
+            {saving ? "Saving" : "Save changes"}
+          </button>
+        </div>
       </footer>
     </section>
   );

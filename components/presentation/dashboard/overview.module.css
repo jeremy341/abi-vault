@@ -329,6 +329,9 @@
   .figure {
     min-width: 0;
   }
+  .figures dd {
+    font-size: 26px;
+  }
   .actions {
     flex-direction: column;
   }

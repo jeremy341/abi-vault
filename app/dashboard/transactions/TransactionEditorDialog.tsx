@@ -2,9 +2,9 @@
 
 import { X } from "lucide-react";
 import { Dialog } from "@/components/ui/dialog";
+import dlg from "@/components/dashboard/dialog.module.css";
 import type { Category, Transaction } from "@/features/finance/transactions/view-model";
 import { CashRegisterCombobox, StyledDropdown } from "./TransactionControls";
-import styles from "./transactions.module.css";
 
 type CashRegisterOption = { id: string; name: string };
 
@@ -62,13 +62,13 @@ export function TransactionEditorDialog({
 
   return (
     <Dialog
-      overlayClassName={styles.overlay}
-      dialogClassName={styles.modal}
+      overlayClassName={dlg.overlay}
+      dialogClassName={dlg.modal}
       label={heading}
       onClose={onClose}
     >
-      <div className={styles.modalHeader}>
-        <div>
+      <header className={dlg.header}>
+        <div className={dlg.heading}>
           <h2>{heading}</h2>
           <p>
             {editing
@@ -76,20 +76,14 @@ export function TransactionEditorDialog({
               : "Record a new income or expense."}
           </p>
         </div>
-        <button
-          type="button"
-          className={styles.iconButton}
-          onClick={onClose}
-          disabled={saving}
-          aria-label="Close dialog"
-        >
-          <X />
+        <button type="button" className={dlg.closeButton} onClick={onClose} disabled={saving} aria-label="Close dialog">
+          <X aria-hidden="true" />
         </button>
-      </div>
+      </header>
 
-      <fieldset className={styles.modalBody} disabled={saving}>
+      <fieldset className={dlg.body} disabled={saving}>
         <legend className="sr-only">Transaction details</legend>
-        <label className={styles.formField}>
+        <label className={dlg.field}>
           <span>Description</span>
           <input
             autoFocus={typeof window !== "undefined" && window.matchMedia("(pointer: fine)").matches}
@@ -99,16 +93,16 @@ export function TransactionEditorDialog({
           />
         </label>
 
-        <div className={editing ? styles.editWalletNote : undefined}>
+        <div className={dlg.cell}>
           <CashRegisterCombobox
             value={editing?.walletId ?? selectedCashRegisterId}
             options={cashRegisters}
             onChange={onCashRegisterChange}
           />
-          {editing ? <small>The cash register of a posted transaction cannot be changed.</small> : null}
+          {editing ? <small className={dlg.hint}>The cash register of a posted transaction cannot be changed.</small> : null}
         </div>
 
-        <div className={styles.dateFields}>
+        <div className={dlg.formGrid}>
           <StyledDropdown
             ariaLabel="Select type"
             label="Type"
@@ -118,7 +112,7 @@ export function TransactionEditorDialog({
                 onTypeChange(value);
               }
             }}
-            className={styles.formDropdown}
+            className={dlg.cell}
             options={[
               { value: "Income", label: "Income" },
               { value: "Expense", label: "Expense" },
@@ -129,23 +123,27 @@ export function TransactionEditorDialog({
             label="Category"
             value={category}
             onChange={onCategoryChange}
-            className={styles.formDropdown}
+            className={dlg.cell}
             options={categoryOptions}
           />
         </div>
 
-        <label className={styles.formField}>
+        <label className={dlg.field}>
           <span>Amount</span>
-          <input
-            inputMode="decimal"
-            value={amount}
-            onChange={(event) => onAmountChange(event.target.value)}
-            placeholder="0,00"
-          />
+          <div className={dlg.amountField}>
+            <input
+              inputMode="decimal"
+              autoComplete="off"
+              value={amount}
+              onChange={(event) => onAmountChange(event.target.value)}
+              placeholder="0.00"
+            />
+            <span>$</span>
+          </div>
         </label>
 
         {editing ? (
-          <label className={styles.formField}>
+          <label className={dlg.field}>
             <span>Correction reason</span>
             <textarea
               value={correctionReason}
@@ -155,32 +153,18 @@ export function TransactionEditorDialog({
             />
           </label>
         ) : null}
+
+        {error ? <p className={dlg.error} role="alert">{error}</p> : null}
       </fieldset>
 
-      {error ? <p className={styles.error} role="alert">{error}</p> : null}
-
-      <div className={styles.modalFooter}>
-        <span />
-        <div>
-          <button
-            type="button"
-            className={styles.secondaryButton}
-            onClick={onClose}
-            disabled={saving}
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            className={styles.primaryButton}
-            onClick={onSave}
-            disabled={saving}
-            aria-busy={saving}
-          >
-            {saving ? "Saving" : editing ? "Save correction" : "Add"}
-          </button>
-        </div>
-      </div>
+      <footer className={dlg.footer}>
+        <button type="button" className={dlg.secondaryButton} onClick={onClose} disabled={saving}>
+          Cancel
+        </button>
+        <button type="button" className={dlg.primaryButton} onClick={onSave} disabled={saving} aria-busy={saving}>
+          {saving ? "Saving" : editing ? "Save correction" : "Add"}
+        </button>
+      </footer>
     </Dialog>
   );
 }

@@ -12,8 +12,8 @@ type GoalSummaryProps = {
 
 export function GoalSummary({ loading, totalSaved, totalTarget, overallProgress, onAddGoal }: GoalSummaryProps) {
   return (
-    <div className={ledger.summary}>
-      <dl className={ledger.figures}>
+    <div className={ledger.summaryBar}>
+      <dl className={ledger.statLine}>
         <div>
           <dt>Saved</dt>
           <dd><LoadingText loading={loading}>{dollar.format(totalSaved)}</LoadingText></dd>

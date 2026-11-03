@@ -36,60 +36,6 @@
   font-size: var(--text-sm);
 }
 
-.summary {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-4) var(--space-8);
-  padding-bottom: var(--space-6);
-}
-.figures {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-4);
-  margin: 0;
-}
-.figures > div {
-  display: grid;
-  gap: 2px;
-  min-width: 8.5rem;
-  border: 3px solid var(--line);
-  border-radius: 8px 12px 9px 14px;
-  background: color-mix(in srgb, var(--chip, var(--sunk)) 28%, var(--surface));
-  padding: var(--space-3) var(--space-4);
-}
-.figures > div:nth-child(3n + 1) {
-  --chip: var(--green);
-  transform: rotate(-1deg);
-}
-.figures > div:nth-child(3n + 2) {
-  --chip: var(--pink);
-  transform: rotate(0.8deg);
-}
-.figures > div:nth-child(3n) {
-  --chip: var(--yellow);
-  transform: rotate(-0.5deg);
-}
-.figures dt {
-  color: var(--muted);
-  font-family: var(--font-pixel);
-  font-size: 18px;
-  -webkit-font-smoothing: none;
-}
-.figures dd {
-  margin: 0;
-  font-family: var(--font-pixel);
-  font-size: 32px;
-  font-weight: 400;
-  line-height: 1.05;
-}
-.net {
-  min-width: 9rem;
-  padding-top: var(--space-1);
-  text-align: left;
-}
-
 .summaryBar {
   display: flex;
   align-items: center;
@@ -334,7 +280,9 @@
 .clickable tbody tr {
   cursor: pointer;
 }
-.table .nowrap,
+.table .nowrap {
+  white-space: nowrap;
+}
 .table .amount,
 .table th.amount {
   font-variant-numeric: tabular-nums;
@@ -495,23 +443,32 @@
   .page {
     padding-top: var(--space-4);
   }
-  .summary {
-    padding-bottom: var(--space-4);
+  .summaryBar {
+    flex-wrap: wrap;
   }
-  .figures {
-    width: 100%;
-    gap: var(--space-6);
-  }
-  .figures > div:has(.net) > dt {
-    text-align: left;
-  }
-  .net {
-    min-width: 0;
-    text-align: left;
-  }
-  .summary > .primaryButton {
+  .summaryBar > button {
     width: 100%;
     min-height: 2.75rem;
+  }
+  .statLine {
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
+    gap: var(--space-3) var(--space-4);
+  }
+  .statLine > div {
+    flex-direction: column;
+    gap: 0;
+  }
+  .statLine dd {
+    font-size: 22px;
+  }
+  .sectionHeader {
+    flex-wrap: wrap;
+  }
+  .inlineActions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
   }
   .toolbar {
     grid-template-columns: repeat(2, minmax(0, 1fr));

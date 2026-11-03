@@ -74,11 +74,11 @@ export default function ReportsPage() {
       <LoadingStatus loading={loading} label="Loading reports" />
       {error ? <LoadError message={error} /> : null}
 
-      <div className={ledger.summary}>
-        <dl className={ledger.figures}>
+      <div className={ledger.summaryBar}>
+        <dl className={ledger.statLine}>
           <div>
             <dt>Net</dt>
-            <dd className={`${ledger.net} total-rule`}><LoadingText loading={loading}>{kpis.net}</LoadingText></dd>
+            <dd className="total-rule"><LoadingText loading={loading}>{kpis.net}</LoadingText></dd>
           </div>
           <div>
             <dt>Liquidity</dt>

@@ -1,50 +1,5 @@
-.primaryButton, .secondaryButton {
-  display: inline-flex;
-  min-height: var(--control-height);
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  border: 1px solid transparent;
-  border-radius: var(--radius-control);
-  padding: 0 var(--space-4);
-  cursor: pointer;
-  font: inherit;
-  font-size: var(--text-sm);
-  font-weight: 500;
-  white-space: nowrap;
-  transition:
-    background-color var(--dur-fast) var(--ease),
-    border-color var(--dur-fast) var(--ease),
-    opacity var(--dur-fast) var(--ease);
-}
-
-.primaryButton {
-  background: var(--ink);
-  color: var(--paper);
-}
-
-.primaryButton:hover:not(:disabled) {
-  opacity: 0.85;
-}
-
-.secondaryButton {
-  border-color: var(--control);
-  background: transparent;
-  color: var(--ink);
-}
-
-.secondaryButton:hover:not(:disabled) {
-  border-color: var(--ink);
-  background: var(--sunk);
-}
-
-.primaryButton:disabled, .secondaryButton:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
 .toolbar.toolbar {
-  grid-template-columns: minmax(12rem, 24rem);
+  grid-template-columns: minmax(0, 24rem);
 }
 
 .notice.notice {
@@ -70,157 +25,38 @@ td button.rowAction:disabled {
   cursor: not-allowed;
 }
 
-.overlay {
-  position: fixed;
-  z-index: 70;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-4);
-  background: var(--overlay-scrim);
-  overscroll-behavior: contain;
+.roleChoices {
+  min-width: 0;
+  margin: 0;
+  border: 0;
 }
 
-.modal {
-  width: min(34rem, calc(100 * var(--vw) - 2rem));
-  max-height: calc(calc(100 * var(--dvh)) - 2rem);
-  overflow-y: auto;
-  border: 3px solid var(--line);
-  border-radius: var(--radius-overlay);
-  background: var(--surface);
-  color: var(--ink);
-  box-shadow: var(--shadow-overlay);
-  animation: people-dialog-in var(--dur-base) var(--ease);
-}
-
-.modalHeader {
+.roleOption {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-4);
-  padding: var(--space-6) var(--space-6) 0;
-}
-
-.modalHeader h2 {
-  margin: 0;
-  font-size: var(--text-md);
-}
-
-.modalHeader p {
-  margin: var(--space-1) 0 0;
-  max-width: 28rem;
-  color: var(--muted);
-  font-size: var(--text-sm);
-}
-
-.closeButton {
-  display: inline-flex;
-  width: 2.75rem;
-  height: 2.75rem;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  margin: calc(var(--space-2) * -1) calc(var(--space-2) * -1) 0 0;
-  border: 0;
-  border-radius: var(--radius-control);
-  background: transparent;
-  color: var(--muted);
-  cursor: pointer;
-  transition: background-color var(--dur-fast) var(--ease);
-}
-
-.closeButton:hover:not(:disabled) {
-  background: var(--sunk);
-  color: var(--ink);
-}
-
-.closeButton svg {
-  width: 1rem;
-  height: 1rem;
-  stroke-width: 1.5;
-}
-
-.modalBody {
-  display: grid;
-  gap: var(--space-4);
-  padding: var(--space-6);
-}
-
-.formField {
-  display: grid;
-  gap: 6px;
-  font-size: var(--text-sm);
-  font-weight: 500;
-}
-
-.formField input, .formField select {
-  width: 100%;
-  min-height: var(--control-height);
+  gap: var(--space-3);
   border: 3px solid var(--line-2);
-  border-radius: var(--radius-control);
-  background: var(--surface);
-  padding: 0 var(--space-3);
-  color: var(--ink);
-  font: inherit;
-  font-size: var(--text-sm);
-  font-weight: 400;
+  border-radius: 6px 8px 7px 9px;
+  padding: var(--space-3);
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease);
 }
-
-.formField input::placeholder {
-  color: var(--subtle);
-}
-
-.formField input:hover, .formField select:hover {
+.roleOption:hover,
+.roleOption:has(input:checked) {
   border-color: var(--ink);
 }
-
-.formMessage {
-  margin: 0;
-  color: var(--muted);
+.roleOption:has(input:checked) {
+  background: var(--salmon-soft);
+}
+.roleOption input {
+  margin-top: 0.2rem;
+}
+.roleOption span {
+  display: grid;
+  gap: 2px;
   font-size: var(--text-sm);
-  line-height: 1.45;
 }
-
-.modalFooter {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-2);
-  padding: 0 var(--space-6) var(--space-6);
-}
-
-@keyframes people-dialog-in {
-  from {
-    opacity: 0;
-    transform: translateY(0.5rem);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@media (max-width: 767px) {
-  .overlay {
-    align-items: flex-end;
-    padding: 0;
-  }
-  .modal {
-    width: 100%;
-    border-bottom: 0;
-    border-radius: var(--radius-overlay) var(--radius-overlay) 0 0;
-  }
-  .modalFooter button {
-    min-height: 2.75rem;
-  }
-  .formField input, .formField select {
-    font-size: 1rem;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .modal {
-    animation: none;
-  }
+.roleOption small {
+  color: var(--muted);
+  font-size: var(--text-xs);
 }

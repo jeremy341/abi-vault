@@ -1,10 +1,12 @@
 import type { ReactNode } from "react";
-import type { AccountCardDetails } from "@/components/dashboard/AccountCard";
+import type { AccountCardDetails } from "@/components/dashboard/account-card-details";
 
 export type FundsCard = {
   id: string;
   details: Pick<AccountCardDetails, "accountName"> & Partial<Omit<AccountCardDetails, "accountName">>;
   balance: number;
+  lastCountAt?: string;
+  lastCountDifference?: number;
 };
 
 export type FundsCashBox = {
@@ -27,16 +29,6 @@ export type FundsAudit = {
   note?: string;
 };
 
-export type FundsActivity = {
-  label: string;
-  meta: string;
-  date: string;
-  type: string;
-  description: string;
-  user: string;
-  amount: number;
-};
-
 export type AdaptiveFundsViewProps = {
   loading: boolean;
   error: string | null;
@@ -46,10 +38,8 @@ export type AdaptiveFundsViewProps = {
   activeCardIndex: number;
   cashBox: FundsCashBox;
   auditLogs: FundsAudit[];
-  activities: FundsActivity[];
   dollar: (value: number) => string;
   differencePanel?: ReactNode;
-  onSwitchCard: (direction: -1 | 1) => void;
   onSelectCard: (index: number) => void;
   onAddCard: () => void;
   onEditCard: () => void;

@@ -11,6 +11,7 @@ import {
   type ReceiptFilter,
   type ReviewFilter,
 } from "@/features/finance/transactions/view-model";
+import dlg from "@/components/dashboard/dialog.module.css";
 import styles from "./transactions.module.css";
 
 type TransactionFiltersDialogProps = {
@@ -56,26 +57,21 @@ export function TransactionFiltersDialog({
 
   return (
     <Dialog
-      overlayClassName={styles.overlay}
-      dialogClassName={`${styles.modal} ${styles.filterModal}`}
+      overlayClassName={dlg.overlay}
+      dialogClassName={dlg.modal}
       label="Filter transactions"
       onClose={onClose}
     >
-      <div className={styles.modalHeader}>
-        <div>
+      <header className={dlg.header}>
+        <div className={dlg.heading}>
           <h2>Filter transactions</h2>
           <p>Filter the list.</p>
         </div>
-        <button
-          type="button"
-          className={styles.iconButton}
-          onClick={onClose}
-          aria-label="Close filters"
-        >
-          <X />
+        <button type="button" className={dlg.closeButton} onClick={onClose} aria-label="Close filters">
+          <X aria-hidden="true" />
         </button>
-      </div>
-      <div className={`${styles.modalBody} ${styles.filterModalBody}`}>
+      </header>
+      <div className={dlg.body}>
         <div role="group" aria-label="Category" className={styles.filterRow}>
           <span>Category</span>
           <div className={styles.filterOptions}>
@@ -156,31 +152,19 @@ export function TransactionFiltersDialog({
           </div>
         </div>
       </div>
-      <div className={styles.modalFooter}>
-        <button
-          type="button"
-          className={styles.secondaryButton}
-          onClick={onReset}
-        >
+      <footer className={`${dlg.footer} ${dlg.footerSplit}`}>
+        <button type="button" className={dlg.secondaryButton} onClick={onReset}>
           Reset
         </button>
-        <div>
-          <button
-            type="button"
-            className={styles.secondaryButton}
-            onClick={onClose}
-          >
+        <div className={dlg.footerActions}>
+          <button type="button" className={dlg.secondaryButton} onClick={onClose}>
             Cancel
           </button>
-          <button
-            type="button"
-            className={styles.primaryButton}
-            onClick={onApply}
-          >
+          <button type="button" className={dlg.primaryButton} onClick={onApply}>
             Apply filters
           </button>
         </div>
-      </div>
+      </footer>
     </Dialog>
   );
 }

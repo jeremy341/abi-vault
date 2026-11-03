@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAppAuth } from "@/components/auth/app-auth";
-import type { AccountCardDetails } from "@/components/dashboard/AccountCard";
+import type { AccountCardDetails } from "@/components/dashboard/account-card-details";
 import type { CashBox, CashCountInput, SaveCashCountResult } from "@/app/dashboard/funds/CashCountDialog";
 import {
   getDashboardSnapshot,
@@ -106,11 +106,6 @@ export default function FundsPage() {
 
   const dashboardData = dashboard.data?.ok ? dashboard.data : null;
   const differenceReview = dashboardData && activeCard ? differenceReviewFor(dashboardData, activeCard.id) : null;
-
-  function switchCard(direction: -1 | 1) {
-    if (cards.length <= 1) return;
-    setActiveCardIndex((current) => (current + direction + cards.length) % cards.length);
-  }
 
   function selectCard(index: number) {
     setActiveCardIndex(index);
@@ -306,7 +301,6 @@ export default function FundsPage() {
         activeCardIndex={safeIndex}
         cashBox={cashBox}
         auditLogs={auditLogs}
-        onSwitchCard={switchCard}
         onSelectCard={selectCard}
         onAddCard={() => setIsAddCardOpen(true)}
         onEditCard={() => setIsEditCardOpen(true)}

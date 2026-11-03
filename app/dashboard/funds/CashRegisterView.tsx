@@ -16,7 +16,6 @@ type CashRegisterViewProps = {
   activeCardIndex: number;
   cashBox: CashBox;
   auditLogs: CashAuditEntry[];
-  onSwitchCard: (direction: -1 | 1) => void;
   onSelectCard: (index: number) => void;
   onAddCard: () => void;
   onEditCard: () => void;
@@ -33,7 +32,6 @@ export default function CashRegisterView({
   activeCardIndex,
   cashBox,
   auditLogs,
-  onSwitchCard,
   onSelectCard,
   onAddCard,
   onEditCard,
@@ -49,10 +47,8 @@ export default function CashRegisterView({
       activeCardIndex={activeCardIndex}
       cashBox={cashBox}
       auditLogs={auditLogs}
-      activities={[]}
       dollar={dollar}
       differencePanel={differenceReview ? <DifferenceSuggestions review={differenceReview} /> : undefined}
-      onSwitchCard={onSwitchCard}
       onSelectCard={onSelectCard}
       onAddCard={onAddCard}
       onEditCard={onEditCard}

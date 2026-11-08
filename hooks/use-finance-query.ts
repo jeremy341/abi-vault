@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   cachedFinanceQuery,
   getFinanceCacheState,
-  invalidateFinanceQuery,
+  refreshFinanceQuery,
   subscribeFinanceQuery,
 } from "@/lib/finance/client-cache";
 
@@ -116,13 +116,12 @@ export function useFinanceQuery<T extends QueryResult>(
     };
   }, [key, query, scope]);
   const refetch = useCallback(() => {
-    invalidateFinanceQuery(key);
     setState((current) => {
       if (!isSameQuery(current, key, scope)) return current;
 
       return { ...current, refreshing: true, failed: false };
     });
-    cachedFinanceQuery(key, query, { scope })
+    refreshFinanceQuery(key, query, { scope })
       .then((result) => {
         setState((current) => {
           if (!isSameQuery(current, key, scope)) return current;

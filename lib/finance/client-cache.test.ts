@@ -5,6 +5,7 @@ import {
   FINANCE_CACHE_TTL_MS,
   getCachedFinanceData,
   getFinanceCacheState,
+  refreshFinanceQuery,
   subscribeFinanceQuery,
 } from "./client-cache";
 
@@ -64,6 +65,21 @@ describe("Finance stale-while-revalidate cache", () => {
     );
 
     expect(listener).toHaveBeenCalledWith({ ok: true, value: "fresh" });
+    unsubscribe();
+  });
+
+  it("refreshes invalidated receipt data and notifies the open page", async () => {
+    const query = vi.fn()
+      .mockResolvedValueOnce({ ok: true, items: [] })
+      .mockResolvedValueOnce({ ok: true, items: [{ id: "new-receipt" }] });
+    const listener = vi.fn();
+    const unsubscribe = subscribeFinanceQuery("receipts", listener, "org:user");
+    await cachedFinanceQuery("receipts", query, { scope: "org:user" });
+
+    await refreshFinanceQuery("receipts", query, { scope: "org:user" });
+
+    expect(listener).toHaveBeenLastCalledWith({ ok: true, items: [{ id: "new-receipt" }] });
+    expect(query).toHaveBeenCalledTimes(2);
     unsubscribe();
   });
 });

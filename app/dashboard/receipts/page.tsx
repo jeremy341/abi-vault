@@ -38,7 +38,7 @@ const emptyReceipts: Receipt[] = [];
 export default function ReceiptsPage() {
   const { userId, orgId } = useAppAuth();
   const cacheScope = financeScope(orgId, userId);
-  const { data, loading: queryLoading, refreshing, failed } = useFinanceQuery(
+  const { data, loading: queryLoading, refreshing, failed, refetch } = useFinanceQuery(
     "receipts",
     listReceiptsForCurrentOrganization,
     cacheScope,
@@ -51,6 +51,7 @@ export default function ReceiptsPage() {
   const receiptEditor = useReceiptEditor({
     cacheScope,
     setReceipts: setItems,
+    refreshReceipts: refetch,
   });
   const receiptReview = useReceiptReview({
     onStatusChange: (receiptId, status) => {

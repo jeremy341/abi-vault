@@ -9,6 +9,7 @@ import { uploadReceipt, updateReceiptMetadata } from "./actions/receipts";
 type UseReceiptEditorOptions = {
   cacheScope: string;
   setReceipts: Dispatch<SetStateAction<Receipt[]>>;
+  refreshReceipts: () => void;
 };
 
 type DashboardSnapshot = Extract<Awaited<ReturnType<typeof getDashboardSnapshot>>, { ok: true }>;
@@ -78,7 +79,7 @@ function handleImagePreviewKey(event: KeyboardEvent, closePreview: () => void) {
   if (event.key === "Tab") event.preventDefault();
 }
 
-export function useReceiptEditor({ cacheScope, setReceipts }: UseReceiptEditorOptions) {
+export function useReceiptEditor({ cacheScope, setReceipts, refreshReceipts }: UseReceiptEditorOptions) {
   const [open, setOpen] = useState(false);
   const [editingReceipt, setEditingReceipt] = useState<Receipt | null>(null);
   const [fileName, setFileName] = useState("");
@@ -261,6 +262,7 @@ export function useReceiptEditor({ cacheScope, setReceipts }: UseReceiptEditorOp
       return receiptWithMetadata(item, newFileName, transactionId, transactionLabel);
     }));
     refreshReceiptData();
+    refreshReceipts();
     close();
   }
 
@@ -284,6 +286,7 @@ export function useReceiptEditor({ cacheScope, setReceipts }: UseReceiptEditorOp
     }
 
     refreshReceiptData();
+    refreshReceipts();
     close();
   }
 

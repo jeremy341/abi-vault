@@ -7,6 +7,8 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import AbiLogo from "@/components/AbiLogo";
 import { DemoClassManager } from "@/components/classes/DemoClassManager";
+import { LocalClassManager } from "@/components/classes/LocalClassManager";
+import { LocalPersonPanel, type LocalPeopleState } from "@/components/auth/local-user-switcher";
 import ThemeToggle from "@/components/ThemeToggle";
 import {
   Sheet,
@@ -23,6 +25,7 @@ import {
   pageInformationFor,
 } from "./navigation";
 import { selectDemoClass } from "@/lib/demo/select-class";
+import { selectLocalClass } from "@/features/classes/actions/classes";
 import styles from "./presentation.module.css";
 
 type DemoClassSwitch = {
@@ -49,7 +52,27 @@ function isAdminOnlyRoute(route: NavigationRoute) {
   return adminOnlyRoutes.some((adminRoute) => adminRoute === route.href);
 }
 
-function ShellUserButton({ localMode }: { localMode: boolean }) {
+function ShellUserButton({
+  localMode,
+  localPeople,
+}: {
+  localMode: boolean;
+  localPeople?: LocalPeopleState;
+}) {
+  if (localPeople) {
+    const current = localPeople.people.find((person) => person.id === localPeople.currentUserId);
+    return (
+      <TopbarMenu
+        anchorClassName={styles.menuAnchor}
+        label={current?.name ?? "Demo person"}
+        showChevron
+        kind="menu"
+        popupLabel="Switch demo person"
+        renderPopup={() => <LocalPersonPanel state={localPeople} />}
+      />
+    );
+  }
+
   if (localMode) {
     return (
       <span className={styles.localUser} aria-label="Demo User">
@@ -241,13 +264,18 @@ export default function ResponsiveDashboardShell({
   isAdmin = false,
   localMode = false,
   demoClasses,
+  localClasses,
+  localPeople,
 }: {
   children: React.ReactNode;
   isAdmin?: boolean;
   localMode?: boolean;
   demoClasses?: DemoClassSwitch;
+  localClasses?: DemoClassSwitch;
+  localPeople?: LocalPeopleState;
 }) {
-  const activeClass = demoClasses?.classes.find((item) => item.id === demoClasses.activeId);
+  const classSwitch = demoClasses ?? localClasses;
+  const activeClass = classSwitch?.classes.find((item) => item.id === classSwitch.activeId);
   const pathname = usePathname();
   const page = pageInformationFor(pathname);
   const visibleRoutes = navigationRoutes.filter((route) => {
@@ -301,17 +329,18 @@ export default function ResponsiveDashboardShell({
               popupLabel="Select class"
               renderPopup={(close) => (
                 <>
-                  {demoClasses
-                    ? demoClasses.classes.map((item) => (
+                  {classSwitch
+                    ? classSwitch.classes.map((item) => (
                         <button
                           key={item.id}
                           type="button"
                           role="menuitemradio"
-                          aria-checked={item.id === demoClasses.activeId}
+                          aria-checked={item.id === classSwitch.activeId}
                           onClick={() => {
-                            if (item.id === demoClasses.activeId) return close();
+                            if (item.id === classSwitch.activeId) return close();
 
-                            void selectDemoClass(item.id).then((saved) => {
+                            const select = demoClasses ? selectDemoClass(item.id) : selectLocalClass(item.id).then(() => true);
+                            void select.then((saved) => {
                               if (saved) window.location.reload();
                             });
                           }}
@@ -322,6 +351,8 @@ export default function ResponsiveDashboardShell({
                     : null}
                   {demoClasses ? (
                     <DemoClassManager activeClassId={demoClasses.activeId} />
+                  ) : localClasses ? (
+                    <LocalClassManager activeClassId={localClasses.activeId} activeClassName={activeClass?.name ?? ""} />
                   ) : (
                     <Link
                       href="/dashboard/settings"
@@ -346,7 +377,7 @@ export default function ResponsiveDashboardShell({
                 <p className={styles.menuNote}>No new notifications.</p>
               )}
             />
-            <ShellUserButton localMode={localMode} />
+            <ShellUserButton localMode={localMode} localPeople={localPeople} />
           </div>
         </header>
 

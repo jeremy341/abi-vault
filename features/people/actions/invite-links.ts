@@ -12,6 +12,8 @@ import {
 } from "@/features/people/schemas/invite-links";
 import { actionFailure, actionSuccess, type ActionResult } from "@/lib/api/result";
 import { isDemoData } from "@/lib/demo/mode";
+import { isLocalMode } from "@/lib/auth/local";
+import { getLocalUserId } from "@/lib/auth/local-class-context";
 import { addDemoInviteLink } from "@/lib/demo/store";
 
 const ROLE_LIMITS = {
@@ -88,9 +90,11 @@ export async function acceptRoleInviteLink(token: string): Promise<ActionResult<
     return actionFailure("UNAUTHENTICATED", "Joining through an invitation link needs a real account, so it is not available in the demo.");
   }
 
-  const session = await auth();
+  // Local demo mode acts as the selected demo person; there is no Clerk session.
+  const localMode = isLocalMode();
+  const userId = localMode ? await getLocalUserId() : (await auth()).userId;
 
-  if (!session.userId) return actionFailure("UNAUTHENTICATED", "Sign-in is required.");
+  if (!userId) return actionFailure("UNAUTHENTICATED", "Sign-in is required.");
 
   if (!token || token.length < 32) return actionFailure("INVALID_LINK", "The invitation link is invalid.");
 
@@ -115,20 +119,21 @@ export async function acceptRoleInviteLink(token: string): Promise<ActionResult<
     .from("committee_memberships")
     .select("role, clerk_role")
     .eq("organization_id", invite.organization_id)
-    .eq("clerk_user_id", session.userId)
+    .eq("clerk_user_id", userId)
     .eq("status", "active")
     .maybeSingle();
 
   if (existingMembershipError) return actionFailure("MEMBERSHIP_SYNC_FAILED", "The membership could not be synchronized.");
 
-  const client = await clerkClient();
+  // Local demo mode has no Clerk organization; memberships live only in the database.
+  const client = localMode ? null : await clerkClient();
   let createdClerkMembership = false;
 
   try {
-    if (!existingMembership) {
+    if (client && !existingMembership) {
       await client.organizations.createOrganizationMembership({
         organizationId: invite.organization_id,
-        userId: session.userId,
+        userId: userId,
         role: clerkRole,
       });
       createdClerkMembership = true;
@@ -147,11 +152,11 @@ export async function acceptRoleInviteLink(token: string): Promise<ActionResult<
     .maybeSingle();
 
   if (consumeError || !consumed) {
-    if (createdClerkMembership) {
+    if (client && createdClerkMembership) {
       try {
         await client.organizations.deleteOrganizationMembership({
           organizationId: invite.organization_id,
-          userId: session.userId,
+          userId: userId,
         });
       } catch {
       }
@@ -172,7 +177,7 @@ export async function acceptRoleInviteLink(token: string): Promise<ActionResult<
     .from("committee_memberships")
     .upsert({
       organization_id: invite.organization_id,
-      clerk_user_id: session.userId,
+      clerk_user_id: userId,
       role: applicationRole,
       clerk_role: applicationClerkRole,
       status: "active",
@@ -185,11 +190,11 @@ export async function acceptRoleInviteLink(token: string): Promise<ActionResult<
       .eq("id", invite.id)
       .eq("uses", invite.uses + 1);
 
-    if (createdClerkMembership) {
+    if (client && createdClerkMembership) {
       try {
         await client.organizations.deleteOrganizationMembership({
           organizationId: invite.organization_id,
-          userId: session.userId,
+          userId: userId,
         });
       } catch {
       }

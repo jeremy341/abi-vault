@@ -5,6 +5,7 @@ import { requirePermission } from "@/lib/auth/permissions-server";
 import { inviteMemberSchema, type InviteMemberInput } from "@/features/people/schemas/invitations";
 import { actionFailure, actionSuccess, type ActionResult } from "@/lib/api/result";
 import { isDemoData } from "@/lib/demo/mode";
+import { isLocalMode } from "@/lib/auth/local";
 import { addDemoInvitedMember } from "@/lib/demo/store";
 
 export async function inviteMember(input: InviteMemberInput): Promise<ActionResult<{ id: string }>> {
@@ -13,6 +14,8 @@ export async function inviteMember(input: InviteMemberInput): Promise<ActionResu
   if (!parsed.success) return actionFailure("INVALID_INPUT", "The invitation data is invalid.");
 
   if (isDemoData()) return actionSuccess({ id: await addDemoInvitedMember(parsed.data.email, parsed.data.role) });
+  // Email delivery needs the Clerk identity service, which the local demo does not run.
+  if (isLocalMode()) return actionFailure("INVITATION_FAILED", "Email invitations are not available in the demo. Create an invite link instead.");
 
   const context = await requirePermission("manageMemberships");
   const client = await clerkClient();

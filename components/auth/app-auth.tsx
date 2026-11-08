@@ -39,8 +39,12 @@ export function ClerkAuthBridge({ children }: { children: ReactNode }) {
   );
 }
 
-export function LocalAuthProvider({ children }: { children: ReactNode }) {
-  return <AppAuthContext.Provider value={localAuth}>{children}</AppAuthContext.Provider>;
+export function LocalAuthProvider({ children, organizationId }: { children: ReactNode; organizationId?: string }) {
+  return (
+    <AppAuthContext.Provider value={{ ...localAuth, orgId: organizationId ?? localAuth.orgId }}>
+      {children}
+    </AppAuthContext.Provider>
+  );
 }
 
 export function useAppAuth() {

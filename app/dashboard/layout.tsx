@@ -4,6 +4,8 @@ import ResponsiveDashboardShell from "@/components/presentation/ResponsiveDashbo
 import { FinanceCacheLifecycle } from "@/components/finance-cache-lifecycle";
 import { ensureCurrentOrganizationData } from "@/lib/auth/bootstrap";
 import { isLocalMode } from "@/lib/auth/local";
+import { getLocalActiveOrganizationId } from "@/lib/auth/local-class-context";
+import { LocalAuthProvider } from "@/components/auth/app-auth";
 
 export default async function DashboardLayout({
   children,
@@ -11,11 +13,14 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }>) {
   if (isLocalMode()) {
+    const organizationId = await getLocalActiveOrganizationId();
     return (
-      <ResponsiveDashboardShell isAdmin localMode>
-        <FinanceCacheLifecycle />
-        {children}
-      </ResponsiveDashboardShell>
+      <LocalAuthProvider organizationId={organizationId}>
+        <ResponsiveDashboardShell isAdmin localMode>
+          <FinanceCacheLifecycle />
+          {children}
+        </ResponsiveDashboardShell>
+      </LocalAuthProvider>
     );
   }
 

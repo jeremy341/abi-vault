@@ -8,8 +8,6 @@ import {
   BarChart3,
   Bell,
   CalendarClock,
-  CalendarDays,
-  ChevronDown,
   FileText,
   LayoutDashboard,
   MoreHorizontal,
@@ -20,6 +18,7 @@ import {
   WalletCards,
 } from "lucide-react";
 import AbiLogo from "@/components/AbiLogo";
+import ClassSwitcher from "@/components/classes/ClassSwitcher";
 import ThemeToggle from "@/components/ThemeToggle";
 import {
   Sheet,
@@ -194,10 +193,7 @@ function TabletTopbar({ pathname, localMode }: { pathname: string; localMode: bo
         <p>{page.description}</p>
       </div>
       <div className={styles.tabletActions}>
-        <button type="button" className={styles.tabletCohort}>
-          <CalendarDays aria-hidden="true" />
-          Class of 2026
-        </button>
+        <ClassSwitcher localMode={localMode} pathname={pathname} variant="tablet" />
         <button
           type="button"
           className={styles.iconButton}
@@ -220,6 +216,7 @@ function PhoneTopbar({ pathname, localMode }: { pathname: string; localMode: boo
         <p>{page.description}</p>
       </div>
       <div className={styles.phoneActions}>
+        <ClassSwitcher localMode={localMode} pathname={pathname} variant="phone" />
         <Sheet>
           <SheetTrigger
             className={styles.iconButton}
@@ -347,9 +344,7 @@ function DesktopShell({
   localMode: boolean;
 }) {
   const page = pageInformation[pathname] ?? pageInformation["/dashboard"];
-  const [openMenu, setOpenMenu] = useState<"cohort" | "notifications" | null>(
-    null,
-  );
+  const [openMenu, setOpenMenu] = useState<"notifications" | null>(null);
 
   useEffect(() => {
     if (!openMenu) return;
@@ -404,43 +399,7 @@ function DesktopShell({
               className={styles.desktopActionControl}
               onPointerDown={(event) => event.stopPropagation()}
             >
-              <button
-                type="button"
-                className={styles.desktopCohort}
-                aria-haspopup="menu"
-                aria-expanded={openMenu === "cohort"}
-                onClick={() =>
-                  setOpenMenu((current) =>
-                    current === "cohort" ? null : "cohort",
-                  )
-                }
-              >
-                <CalendarDays aria-hidden="true" />
-                Class of 2026
-                <ChevronDown aria-hidden="true" />
-              </button>
-              {openMenu === "cohort" ? (
-                <div
-                  className={styles.desktopActionMenu}
-                  role="menu"
-                  aria-label="Select cohort"
-                >
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={() => setOpenMenu(null)}
-                  >
-                    <CalendarDays aria-hidden="true" />
-                    <span>
-                      <strong>Abi 2026</strong>
-                      <small>Activeer Cohort</small>
-                    </span>
-                  </button>
-                  <Link href="/dashboard/settings" role="menuitem">
-                    <Settings aria-hidden="true" /> Cohort verwalten
-                  </Link>
-                </div>
-              ) : null}
+              <ClassSwitcher localMode={localMode} pathname={pathname} variant="desktop" />
             </div>
             <div
               className={styles.desktopActionControl}

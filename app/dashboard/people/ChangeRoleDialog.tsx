@@ -14,12 +14,13 @@ type ChangeRoleDialogProps = {
   person: Person;
   saving: boolean;
   error: string;
+  isCurrentUser: boolean;
   onSave: (role: InviteRole) => void;
   onRemove: () => void;
   onClose: () => void;
 };
 
-export function ChangeRoleDialog({ person, saving, error, onSave, onRemove, onClose }: ChangeRoleDialogProps) {
+export function ChangeRoleDialog({ person, saving, error, isCurrentUser, onSave, onRemove, onClose }: ChangeRoleDialogProps) {
   const [role, setRole] = useState<InviteRole>(person.role === "Administrator" ? "Administrator" : "Supervisor");
   const [confirmingRemove, setConfirmingRemove] = useState(false);
   const unchanged = role === person.role;
@@ -77,8 +78,8 @@ export function ChangeRoleDialog({ person, saving, error, onSave, onRemove, onCl
           </footer>
         ) : (
           <footer className={`${dlg.footer} ${dlg.footerSplit}`}>
-            <button type="button" className={dlg.destructiveButton} onClick={() => setConfirmingRemove(true)} disabled={saving}>
-              Remove person
+          <button type="button" className={dlg.destructiveButton} onClick={() => setConfirmingRemove(true)} disabled={saving || isCurrentUser} title={isCurrentUser ? "You cannot remove your own account." : undefined}>
+              {isCurrentUser ? "You cannot remove yourself" : "Remove person"}
             </button>
             <div className={dlg.footerActions}>
               <button type="button" className={dlg.secondaryButton} onClick={onClose} disabled={saving}>

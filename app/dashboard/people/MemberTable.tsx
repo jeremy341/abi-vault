@@ -2,15 +2,17 @@ import { LoadingCollection } from "@/components/ui/loading-state";
 import styles from "./people.module.css";
 import ledger from "../ledger.module.css";
 import type { Person } from "./people-types";
+import { isCurrentMember } from "@/features/people/member-display";
 
 type MemberTableProps = {
   loading: boolean;
   people: Person[];
   filteredPeople: Person[];
+  userId: string | null;
   onManage: (personId: string) => void;
 };
 
-export function MemberTable({ loading, people, filteredPeople, onManage }: MemberTableProps) {
+export function MemberTable({ loading, people, filteredPeople, userId, onManage }: MemberTableProps) {
   return (
     <div className={ledger.tableWrap}>
       <LoadingCollection loading={loading} knownItemCount={people.length} emptyHeight="12rem" label="Loading members">
@@ -29,7 +31,7 @@ export function MemberTable({ loading, people, filteredPeople, onManage }: Membe
               {filteredPeople.map((person) => (
                 <tr key={person.id}>
                   <td>
-                    <span className={ledger.title}>{person.name}</span>
+                    <span className={ledger.title}>{person.name}{isCurrentMember(person.id, userId) ? " (you)" : ""}</span>
                     {person.status !== "Active" ? <span className={styles.sub}>{person.status}</span> : null}
                   </td>
                   <td>
@@ -38,7 +40,7 @@ export function MemberTable({ loading, people, filteredPeople, onManage }: Membe
                   </td>
                   <td className={ledger.actions}>
                     {person.status === "Active" ? (
-                      <button type="button" className={ledger.secondaryButton} onClick={() => onManage(person.id)} aria-label={`Manage ${person.name}`}>
+                      <button type="button" className={ledger.secondaryButton} onClick={() => onManage(person.id)} aria-label={`Manage ${person.name}${isCurrentMember(person.id, userId) ? " (you)" : ""}`}>
                         Manage
                       </button>
                     ) : (

@@ -19,6 +19,7 @@ import {
   updateMemberRole,
 } from "@/features/people/actions/memberships";
 import { financeScope } from "@/lib/finance/client-cache";
+import { isCurrentMember, memberDisplayName } from "@/features/people/member-display";
 import { MemberTable } from "./MemberTable";
 import { InviteLinks } from "./InviteLinks";
 import { InviteDialog } from "./InviteDialog";
@@ -84,7 +85,7 @@ function statusNameFor(databaseStatus: string): Person["status"] {
 function peopleFromMemberList(data: MemberListData): Person[] {
   return data.items.map((member) => ({
     id: member.id,
-    name: member.name,
+    name: memberDisplayName(member.id, member.name),
     role: roleNameFor(member.role),
     access: accessFor(member.role),
     status: statusNameFor(member.status),
@@ -241,8 +242,10 @@ export default function PeoplePage() {
       if (!result.ok) {
         setRoleError(
           result.error.code === "LAST_ADMIN_REQUIRED"
-            ? "The last administrator cannot be removed."
-            : result.error.message,
+            ? "The last administrator cannot be removed. Assign administrator access to another active member first."
+            : result.error.code === "SELF_REMOVAL_NOT_ALLOWED"
+              ? "You cannot remove your own account."
+              : result.error.message,
         );
 
         return;
@@ -334,6 +337,7 @@ export default function PeoplePage() {
             loading={loading}
             people={people}
             filteredPeople={filteredPeople}
+            userId={userId}
             onManage={openRoleDialog}
           />
           <p className={`${ledger.notice} ${styles.notice}`} aria-live="polite">{message}</p>
@@ -355,6 +359,7 @@ export default function PeoplePage() {
           person={roleTarget}
           saving={busyPersonId === roleTarget.id}
           error={roleError}
+          isCurrentUser={isCurrentMember(roleTarget.id, userId)}
           onSave={(role) => void changeRole(role)}
           onRemove={() => void removePerson(roleTarget.id)}
           onClose={() => setRoleTargetId(null)}

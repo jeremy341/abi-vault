@@ -2,7 +2,8 @@ import "server-only";
 
 import { auth } from "@clerk/nextjs/server";
 import { isLocalMode } from "@/lib/auth/local";
-import { LOCAL_ORGANIZATION_ID, LOCAL_USER_ID } from "@/lib/auth/constants";
+import { getLocalSession } from "@/lib/auth/local-class-context";
+import { localAuthIdentity } from "@/lib/auth/local-identity";
 
 export class AuthenticationRequiredError extends Error {
   readonly code = "UNAUTHENTICATED" as const;
@@ -30,9 +31,9 @@ export class AuthorizationError extends Error {
 
 export async function requireClerkContext() {
   if (isLocalMode()) {
+    const session = await getLocalSession();
     return {
-      clerkUserId: LOCAL_USER_ID,
-      organizationId: LOCAL_ORGANIZATION_ID,
+      ...localAuthIdentity(session.userId, session.organizationId),
       getToken: async () => null,
     };
   }

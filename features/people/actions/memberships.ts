@@ -11,6 +11,7 @@ import {
 } from "@/features/people/schemas/memberships";
 import { actionFailure, actionSuccess, type ActionResult } from "@/lib/api/result";
 import { isDemoData } from "@/lib/demo/mode";
+import { isLocalMode } from "@/lib/auth/local";
 import {
   countDemoAdmins,
   DEMO_USER_ID,
@@ -64,7 +65,7 @@ export async function updateMemberRole(input: UpdateMemberRoleInput): Promise<Ac
       : actionFailure("ROLE_UPDATE_FAILED", "The member role could not be updated.");
   }
 
-  try {
+  if (!isLocalMode()) try {
     const clerk = await clerkClient();
     await clerk.organizations.updateOrganizationMembership({
       organizationId: context.organizationId,
@@ -128,7 +129,7 @@ export async function removeMember(input: RemoveMemberInput): Promise<ActionResu
     return actionFailure("MEMBER_REMOVAL_FAILED", "The member could not be removed.");
   }
 
-  try {
+  if (!isLocalMode()) try {
     const client = await clerkClient();
     await client.organizations.deleteOrganizationMembership({
       organizationId: context.organizationId,

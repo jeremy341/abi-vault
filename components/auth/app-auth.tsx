@@ -40,8 +40,13 @@ export function ClerkAuthBridge({ children }: { children: ReactNode }) {
   );
 }
 
-export function LocalAuthProvider({ children }: { children: ReactNode }) {
-  return <AppAuthContext.Provider value={localAuth}>{children}</AppAuthContext.Provider>;
+export type LocalSession = { userId: string; organizationId: string; orgRole: string };
+
+export function LocalAuthProvider({ children, session }: { children: ReactNode; session?: LocalSession }) {
+  const value: AppAuth = session
+    ? { isLoaded: true, isSignedIn: true, userId: session.userId, orgId: session.organizationId, orgRole: session.orgRole }
+    : localAuth;
+  return <AppAuthContext.Provider value={value}>{children}</AppAuthContext.Provider>;
 }
 
 export function useAppAuth() {

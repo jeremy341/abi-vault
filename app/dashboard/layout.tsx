@@ -4,6 +4,10 @@ import ResponsiveDashboardShell from "@/components/presentation/ResponsiveDashbo
 import { FinanceCacheLifecycle } from "@/components/finance-cache-lifecycle";
 import { syncCurrentOrganization } from "@/lib/auth/bootstrap";
 import { isLocalMode } from "@/lib/auth/local";
+import { getLocalSession } from "@/lib/auth/local-class-context";
+import { LocalAuthProvider } from "@/components/auth/app-auth";
+import { listLocalClasses } from "@/features/classes/actions/classes";
+import { listLocalPeople } from "@/features/classes/actions/local-users";
 import { isDemoData } from "@/lib/demo/mode";
 import { currentDemoClassId, getDemoClasses } from "@/lib/demo/classes";
 
@@ -18,12 +22,38 @@ export default async function DashboardLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  if (isLocalMode()) {
+  if (isLocalMode() && isDemoData()) {
     return (
       <ResponsiveDashboardShell isAdmin localMode demoClasses={await demoClassSwitch()}>
         <FinanceCacheLifecycle />
         {children}
       </ResponsiveDashboardShell>
+    );
+  }
+
+  if (isLocalMode()) {
+    // Supabase-backed local demo: the acting person and role come from the database.
+    const session = await getLocalSession();
+    const isAdmin = session.role === "admin";
+    const [classes, people] = await Promise.all([listLocalClasses(), listLocalPeople()]);
+    return (
+      <LocalAuthProvider
+        session={{
+          userId: session.userId,
+          organizationId: session.organizationId,
+          orgRole: isAdmin ? "org:admin" : "org:member",
+        }}
+      >
+        <ResponsiveDashboardShell
+          isAdmin={isAdmin}
+          localMode
+          localClasses={{ classes, activeId: session.organizationId }}
+          localPeople={people.ok ? people : undefined}
+        >
+          <FinanceCacheLifecycle />
+          {children}
+        </ResponsiveDashboardShell>
+      </LocalAuthProvider>
     );
   }
 

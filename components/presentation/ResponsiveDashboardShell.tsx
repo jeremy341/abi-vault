@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import AbiLogo from "@/components/AbiLogo";
+import { DemoClassManager } from "@/components/classes/DemoClassManager";
 import ThemeToggle from "@/components/ThemeToggle";
 import {
   Sheet,
@@ -51,8 +52,8 @@ function isAdminOnlyRoute(route: NavigationRoute) {
 function ShellUserButton({ localMode }: { localMode: boolean }) {
   if (localMode) {
     return (
-      <span className={styles.localUser} aria-label="Demo user">
-        A
+      <span className={styles.localUser} aria-label="Demo User">
+        D
       </span>
     );
   }
@@ -319,13 +320,17 @@ export default function ResponsiveDashboardShell({
                         </button>
                       ))
                     : null}
-                  <Link
-                    href="/dashboard/settings"
-                    role="menuitem"
-                    onClick={close}
-                  >
-                    Manage classes
-                  </Link>
+                  {demoClasses ? (
+                    <DemoClassManager activeClassId={demoClasses.activeId} />
+                  ) : (
+                    <Link
+                      href="/dashboard/settings"
+                      role="menuitem"
+                      onClick={close}
+                    >
+                      Manage classes
+                    </Link>
+                  )}
                 </>
               )}
             />

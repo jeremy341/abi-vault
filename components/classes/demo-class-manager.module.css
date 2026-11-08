@@ -1,0 +1,82 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: rgb(0 0 0 / 45%);
+  padding: 1rem;
+}
+
+.dialog {
+  width: min(100%, 28rem);
+  border: 3px solid var(--line);
+  border-radius: 10px 14px 9px 12px;
+  background: var(--surface);
+  padding: 1.25rem;
+  box-shadow: 5px 5px 0 var(--line);
+}
+
+.dialog form {
+  display: grid;
+  gap: 1rem;
+}
+
+.dialog h2,
+.dialog p {
+  margin: 0;
+}
+
+.dialog > form > p {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.dialog label {
+  display: grid;
+  gap: 0.4rem;
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.dialog input {
+  min-height: 2.75rem;
+  border: 2px solid var(--line-2);
+  border-radius: var(--radius-control);
+  background: var(--paper);
+  padding: 0 0.75rem;
+  color: var(--ink);
+  font: inherit;
+}
+
+.dialog footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.dialog footer button {
+  min-height: 2.5rem;
+  border: 2px solid var(--line-2);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  padding: 0.4rem 0.75rem;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.dialog footer button[type="submit"] {
+  background: var(--sunk);
+  font-weight: 700;
+}
+
+.dialog footer button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.error {
+  color: #a12222;
+  font-size: var(--text-sm);
+}

@@ -24,10 +24,20 @@ automatically when Vercel's system variables are available.
 
 - Everyone sees the same sample data and the same fixed user, who has
   administrator access.
-- There are two sample classes, switchable in the header.
+- Two sample classes are available in the header. Visitors can also create and
+  rename classes; the class list and names are stored in that browser's signed,
+  HTTP-only cookie. Class IDs only select demo sample state and do not provide
+  privacy or access control.
 - Changes work (adding a transaction, counting a cash register, creating a
   goal), but by default they live in server memory. They reset when the server
   restarts, and on Vercel they may not be shared between requests.
+
+To enable class creation and renaming on Vercel, set a stable server-only
+`DEMO_CLASS_SIGNING_SECRET` value (for example, `openssl rand -hex 32`) in the
+same Preview environment. Keep it private. Without it, only the built-in
+classes can be selected, and attempts to manage classes show a configuration
+error. Locally, a temporary process key is used when no secret is configured;
+restarting the server resets custom class lists.
 
 ## Keeping changes (optional)
 

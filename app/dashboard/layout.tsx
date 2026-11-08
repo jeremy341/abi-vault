@@ -5,12 +5,12 @@ import { FinanceCacheLifecycle } from "@/components/finance-cache-lifecycle";
 import { syncCurrentOrganization } from "@/lib/auth/bootstrap";
 import { isLocalMode } from "@/lib/auth/local";
 import { isDemoData } from "@/lib/demo/mode";
-import { currentDemoClassId, DEMO_CLASSES } from "@/lib/demo/classes";
+import { currentDemoClassId, getDemoClasses } from "@/lib/demo/classes";
 
 async function demoClassSwitch() {
   if (!isDemoData()) return undefined;
 
-  return { classes: DEMO_CLASSES, activeId: await currentDemoClassId() };
+  return { classes: await getDemoClasses(), activeId: await currentDemoClassId() };
 }
 
 export default async function DashboardLayout({

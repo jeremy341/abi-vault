@@ -36,7 +36,7 @@ import {
 } from "@/features/finance/actions/queries";
 import { createReceiptDownloadUrl, reviewReceipt, uploadReceipt } from "@/features/receipts/actions/receipts";
 import { archiveReceipt, updateReceiptMetadata } from "@/features/receipts/actions/receipts";
-import { cachedFinanceQuery, getFinanceCacheState, invalidateFinanceQuery, subscribeFinanceQuery } from "@/lib/finance/client-cache";
+import { cachedFinanceQuery, getFinanceCacheState, invalidateFinanceQuery, refreshFinanceQuery, subscribeFinanceQuery } from "@/lib/finance/client-cache";
 import { RowActionMenu } from "@/components/ui/row-actions";
 import { ReceiptReviewDialog, type ReceiptReviewDecision } from "@/components/receipts/ReceiptReviewDialog";
 
@@ -893,6 +893,7 @@ export default function ReceiptsPage() {
         } : item));
         invalidateFinanceQuery("receipts", "transactions", "dashboard-snapshot", "report-snapshot", "report-kpis");
         closeModal();
+        void refreshReceipts();
       } finally {
         setSaving(false);
       }
@@ -910,11 +911,21 @@ export default function ReceiptsPage() {
       if (result.success) {
         invalidateFinanceQuery("receipts", "transactions", "dashboard-snapshot", "report-snapshot", "report-kpis");
         closeModal();
+        void refreshReceipts();
       } else {
         setUploadError("The receipt could not be uploaded.");
       }
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function refreshReceipts() {
+    try {
+      const result = await refreshFinanceQuery("receipts", listReceiptsForCurrentOrganization, { scope: cacheScope });
+      if (!result.ok) setLoadError("Receipts could not be refreshed. Reload the page to try again.");
+    } catch {
+      setLoadError("Receipts could not be refreshed. Reload the page to try again.");
     }
   }
 

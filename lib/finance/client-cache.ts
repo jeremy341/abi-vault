@@ -85,6 +85,11 @@ export function invalidateFinanceQuery(...keys: string[]) {
   }
 }
 
+export function refreshFinanceQuery<T>(key: string, query: () => Promise<T>, options: FinanceCacheOptions = {}) {
+  entries.delete(scopedKey(key, options.scope));
+  return cachedFinanceQuery(key, query, options);
+}
+
 export function clearFinanceCache() {
   entries.clear();
   listeners.clear();

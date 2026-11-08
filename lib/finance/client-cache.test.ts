@@ -5,6 +5,8 @@ import {
   FINANCE_CACHE_TTL_MS,
   getCachedFinanceData,
   getFinanceCacheState,
+  refreshFinanceQuery,
+  subscribeFinanceQuery,
 } from "./client-cache";
 
 describe("finance stale-while-revalidate cache", () => {
@@ -43,5 +45,19 @@ describe("finance stale-while-revalidate cache", () => {
     const query = vi.fn().mockResolvedValue({ ok: false, error: "DATABASE_ERROR" });
     await cachedFinanceQuery("receipts", query, { scope: "org:user" });
     expect(getCachedFinanceData("receipts", "org:user")).toBeUndefined();
+  });
+
+  it("refreshes receipts after a mutation and notifies the open page", async () => {
+    const query = vi.fn()
+      .mockResolvedValueOnce({ ok: true, items: [] })
+      .mockResolvedValueOnce({ ok: true, items: [{ id: "new-receipt" }] });
+    const listener = vi.fn();
+    await cachedFinanceQuery("receipts", query, { scope: "org:user" });
+    subscribeFinanceQuery("receipts", listener, "org:user");
+
+    await refreshFinanceQuery("receipts", query, { scope: "org:user" });
+
+    expect(listener).toHaveBeenCalledWith({ ok: true, items: [{ id: "new-receipt" }] });
+    expect(query).toHaveBeenCalledTimes(2);
   });
 });

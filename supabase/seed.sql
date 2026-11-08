@@ -8,7 +8,7 @@ on conflict (organization_id) do nothing;
 
 insert into public.profiles (clerk_user_id, display_name, email)
 values
-  ('user_local_admin', 'Local Admin', 'admin@example.test'),
+  ('user_local_admin', 'Demo User', 'admin@example.test'),
   ('user_local_supervisor', 'Local Supervisor', 'supervisor@example.test'),
   ('user_local_student', 'Local Student', 'student@example.test')
 on conflict (clerk_user_id) do nothing;

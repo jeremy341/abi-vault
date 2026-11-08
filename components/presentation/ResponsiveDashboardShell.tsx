@@ -45,8 +45,8 @@ const ClerkUserButton = dynamic(
 function ShellUserButton({ localMode }: { localMode: boolean }) {
   if (localMode) {
     return (
-      <span className={styles.localUserButton} aria-label="Demo-User">
-        A
+      <span className={styles.localUserButton} aria-label="Demo User">
+        D
       </span>
     );
   }

@@ -3,6 +3,9 @@
 import { requireClerkContext } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { requirePermission } from "@/lib/auth/permissions-server";
+import { isLocalMode } from "@/lib/auth/local";
+import { LOCAL_USER_ID } from "@/lib/auth/constants";
+import { getMemberDisplayName } from "@/features/people/member-display-name";
 
 export type TransactionListItem = {
   id: string;
@@ -384,7 +387,11 @@ export async function listMembersForCurrentOrganization() {
       const profile = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles;
       return {
         id: item.clerk_user_id,
-        name: profile?.display_name || profile?.email || "Unbekannt",
+        name: getMemberDisplayName({
+          displayName: profile?.display_name,
+          email: profile?.email,
+          isLocalDemoUser: isLocalMode() && item.clerk_user_id === LOCAL_USER_ID,
+        }),
         role: item.role,
         status: item.status,
       };

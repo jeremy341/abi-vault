@@ -22,6 +22,8 @@ import { listMembersForCurrentOrganization } from "@/features/finance/actions/qu
 import { inviteMember } from "@/features/people/actions/invitations";
 import { createRoleInviteLink } from "@/features/people/actions/invite-links";
 import { removeMember, updateMemberRole } from "@/features/people/actions/memberships";
+import { getMemberRemovalMessage } from "@/features/people/removal-feedback";
+import { useAppAuth } from "@/components/auth/app-auth";
 
 type Person = {
   id: number | string;
@@ -41,12 +43,14 @@ type RoleInviteLink = {
 function PhonePeopleView({
   loading,
   people,
+  userId,
   query,
   onQueryChange,
   onAdd,
 }: {
   loading: boolean;
   people: Person[];
+  userId: string | null;
   query: string;
   onQueryChange: (value: string) => void;
   onAdd: () => void;
@@ -109,7 +113,7 @@ function PhonePeopleView({
             <article className={phoneStyles.person} key={person.id}>
               <span className={phoneStyles.avatar}>{person.initials}</span>
               <span className={phoneStyles.identity}>
-                <strong>{person.name}</strong>
+                <strong>{person.name}{person.id === userId ? " (you)" : ""}</strong>
                 <span>
                   {person.role}, {person.access}
                 </span>
@@ -146,6 +150,7 @@ function PhonePeopleView({
 }
 
 export default function PeoplePage() {
+  const { userId } = useAppAuth();
   const mode = usePresentationMode();
   const [people, setPeople] = useState<Person[]>([]);
   const [loading, setLoading] = useState(true);
@@ -315,11 +320,7 @@ export default function PeoplePage() {
         reason: "Member removed through member management",
       });
       if (!result.ok) {
-        setMessage(
-          result.error === "LAST_ADMIN_REQUIRED"
-            ? "The last administrator cannot be removed."
-            : "The person could not be removed.",
-        );
+        setMessage(getMemberRemovalMessage(result.error));
         setOpenMenuId(null);
         return;
       }
@@ -368,6 +369,7 @@ export default function PeoplePage() {
         <PhonePeopleView
           loading={loading}
           people={filteredPeople}
+          userId={userId}
           query={query}
           onQueryChange={setQuery}
           onAdd={openInviteModal}
@@ -448,7 +450,7 @@ export default function PeoplePage() {
                     <div className={styles.personRow} key={person.id}>
                       <span className={styles.avatar}>{person.initials}</span>
                       <div className={styles.personIdentity}>
-                        <strong>{person.name}</strong>
+                        <strong>{person.name}{person.id === userId ? " (you)" : ""}</strong>
                         <span>{person.role}</span>
                       </div>
                       <span className={styles.access}>{person.access}</span>
@@ -499,9 +501,10 @@ export default function PeoplePage() {
                             role="menuitem"
                             className={styles.destructiveMenuItem}
                             onClick={() => void handleRemovePerson(person.id)}
-                            disabled={busyPersonId === person.id}
+                            disabled={busyPersonId === person.id || person.id === userId}
+                            title={person.id === userId ? "You cannot remove your own account." : undefined}
                           >
-                            Remove person
+                            {person.id === userId ? "You cannot remove yourself" : "Remove person"}
                           </button>
                         </div>
                       ) : null}
